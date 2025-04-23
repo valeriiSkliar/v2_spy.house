@@ -1,0 +1,66 @@
+.answersList {
+  .sAnswerBlock {
+    .answerHeading {
+      position: relative;
+      font-weight: 600;
+      font-size: 18px;
+      line-height: 22px;
+      color: #3B4A51;
+      cursor: pointer;
+      padding-left: 40px;
+      &:before {
+        position: absolute;
+        top: 0;
+        left: 0;
+        content: "+";
+        display: inline-block;
+        @include border-radius(50%); 
+        border: 1px solid #BDC3C7;;
+        width: 24px;
+        height: 24px;
+        line-height: 24px;
+        text-align: center;
+        font-weight: normal;
+        color: #BDC3C7;;
+
+        }
+
+
+    }
+    margin-top: 24px;
+    &:first-child {
+      margin-top: 0;
+    }
+    &.active {
+      .answerHeading {
+        &:before {
+          content: "-";
+          border: 1px solid #3DC98A;
+          color: #3DC98A;
+          line-height: 22px;
+        }
+      }
+      .answerContent {
+        display: block;
+      }
+    }
+    .answerContent {
+      font-size: 14px;
+      line-height: 17px;
+      color: #3B4A51;
+      margin-top: 25px;
+      margin-left: 40px;
+      display: none;
+      p {
+        padding: 0;
+        margin: 0 0 20px 0;
+      }
+    }
+  }
+}
+
+@media (max-width: 767.33px) {
+  .answersList .sAnswerBlock .answerContent {
+    margin-left: 0;
+  }
+}

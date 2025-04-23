@@ -1,0 +1,47 @@
+.promo-tariff{
+  border-radius: 10px;
+  background: linear-gradient(131deg, rgba(247, 207, 109, 0.20) 5.84%, rgba(61, 201, 138, 0.20) 97.72%);
+  margin-bottom: 20px;
+  padding: 0 18px 16px;
+  img{
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin-bottom: 20px;
+  }
+  .promo-tariff__title{
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+  .promo-tariff__desc{
+    margin-bottom: 14px;
+    span{
+      color: #F35030;
+      font-weight: 600;
+    }
+  }
+  .promo-tariff__row{
+    display: flex;
+    align-items: center;
+    gap: 25px;
+  }
+  .promo-tariff__timer{
+    color: #7A868C;
+    font-size: 13px;
+    font-weight: 500;
+  }
+}
+.promo-premium{
+  border-radius: 10px;
+  border: 1px solid rgba(61, 201, 138, 0.20);
+  background: linear-gradient(135deg, rgba(247, 207, 109, 0.20) -8.26%, rgba(61, 201, 138, 0.20) 111.79%);
+  padding: 16px 25px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 25px;
+  margin-bottom: 25px;
+  p{
+    margin: 0;
+  }
+}

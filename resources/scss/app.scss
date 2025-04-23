@@ -1,68 +1,57 @@
-@use 'variables' as *;
-@use 'fonts';
-@use 'lib';
-@use 'global';
-@use "header";
-@use "main";
-@use "aside";
-@use "icons";
-@use "btn";
-@use "user-preview";
-@use "menu-burger";
-@use "tubs";
-@use "message";
-@use "table";
-
-
-@use "base-select";
-@use "date-picker";
-@use "multi-select";
-
-
-@use "promo-tariff";
-@use "pagination-nav";
-@use "input";
-@use "filter";
-@use "filter-push";
-@use "creatives";
-@use "profile-settings";
-@use "notifications";
-@use "payment-methods";
-@use "tariffs";
-
-@use "modal-contacts";
-@use "modal-subscription-activated";
-
-
-@use "not-panel-page";
-@use "blog";
-@use "footer";
-@use "breadcrumbs-block";
-@use "carousel-controls";
-@use "entry-content";
+@import "mixins.scss";
+@import "fonts.scss";
+@import "lib/bootstrap.css";
+@import "lib/bootstrap-select.css";
+@import "lib/bootstrap-select-overwrite.scss";
+@import "lib/select2.min.css";
+@import "lib/select2-overwrite.scss";
+@import "lib/daterangepicker.css";
+@import "lib/daterangepicker-overwrite.scss";
+@import "lib/dataTables.scss";
+@import "lib/popover.scss";
+@import "lib/swiper-bundle.min.css";
+@import "default.scss";
+@import "modals.scss";
+@import "forms.scss";
+@import "buttons.scss";
+@import "tables.scss";
+@import "wrapper.scss";
+@import "leftSide.scss";
+@import "rightSide.scss";
+@import "header.scss";
+@import "footer.scss";
+@import "new/style.scss";
 
 
 
-@use "comment-list";
-@use "market-list";
-@use "landings-list";
+@import "blocks/search.scss";
+@import "blocks/addsList.scss";
+@import "blocks/pagination.scss";
+@import "blocks/faqAnswerList.scss";
+@import "blocks/offerFilter.scss";
+@import "blocks/offerTable.scss";
+@import "blocks/breadCrumbs.scss";
+@import "blocks/video.scss";
 
-@use "api";
 
-.sass-test {
-    background-color: red;
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 10px;
-    border: 1px solid black;
-    font-family: 'Montserrat', sans-serif;
-    h1 {
-        color: white;
-        font-size: 20px;
-        font-weight: bold;
-    }
-}
+@import "pages/index.scss";
+
+@import "pages/tizerPage.scss";
+@import "pages/faqPage.scss";
+@import "pages/profilePage.scss";
+@import "pages/servicePage.scss";
+@import "pages/confPage.scss";
+@import "pages/singleOffer.scss";
+@import "pages/404.scss";
+@import "pages/blogPage.scss";
+@import "pages/sBlogPage.scss";
+
+@import "pages/blogSite.scss";
+@import "pages/creatives.scss";
+
+
+// from dev 
+@import "from-dev/BaseSelect-BMEJFstU.css";
+@import "from-dev/MultiSelect-DLgF6PJh.css";
+@import "from-dev/CreativesSideBarFilters-DWIhj8Ku.css";
+@import "from-dev/FormatSelect-BzMMUbfP.css";

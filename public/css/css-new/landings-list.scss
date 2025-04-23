@@ -1,0 +1,19 @@
+.empty-landing{
+  text-align: center;
+  line-height: 1.5;
+  color: #78888F;
+  padding: 80px 0;
+  @media screen and (max-width: 767px) {
+    padding: 20px 0;
+  }
+  .font-18{
+    color: #3B4A51;
+  }
+  img{
+    margin-bottom: 60px;
+    @media screen and (max-width: 767px) {
+      max-width: 200px;
+      margin-bottom: 40px;
+    }
+  }
+}

@@ -1,0 +1,116 @@
+@import "mixins.scss";
+.mainContent .addsList .singleAddBlock .inner .mainAddImage {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  padding-top: 66.87%;
+  height: auto;
+}
+.mainContent .addsList .singleAddBlock .inner .mainAddImage img {
+  position: absolute;
+  display: block;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
+.mainContent .addsList .singleAddBlock .inner .preText {
+  -ms-word-break: break-all;
+  word-break: break-all;
+  text-align: left;
+}
+@media (min-width: 1400px) {
+
+  .mainContent   .addsList .singleAddBlock > .inner {
+    width: 100%;
+    height: 100%;
+  }
+  .mainContent .addsList {
+    @include flexbox();
+    @include flex-wrap(wrap);
+    @include align-items(stretch);
+    @include justify-content(center);
+
+  }
+  .mainContent .addsList .singleAddBlock .inner .preText {
+    margin-top: 25px;
+  }
+  .mainContent .addsList .singleAddBlock {
+    flex-shrink: 0;
+    width: 18%;
+  }
+
+  .mainContent .addsList .singleAddBlock .inner .mainAddImage {
+
+    @include flexbox();
+    @include align-items(center);
+    @include justify-content(center);
+  }
+}
+
+.addsList .singleAddBlock .inner .addDate {
+  @include flexbox();
+  @include align-items(center);
+  @include justify-content(space-between);
+  padding-left: 5px;
+  padding-right: 5px;
+  margin-right: 0;
+  margin-left: 0;
+}
+.add-date--from,.add-date--to {
+  background: url("../images/calendar.svg") left top 5px no-repeat;
+  background-size: 11px;
+  padding-left: 14px;
+  line-height: 25px;
+}
+.addsList .singleAddBlock .inner {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+.paginationBlock ul li.pageNum.active span, .paginationBlock ul li.pageNum.active a {
+  width: auto !important;
+}
+.addsList .singleAddBlock .inner .addHeading .headingBl {
+  margin-left: 0;
+}
+.addsList .singleAddBlock .inner .addHeading .imgLabelBl {
+  margin-right: 14px;
+}
+.addsList .singleAddBlock .inner .addHeading {
+  height: 57px;
+}
+.tooltip-inner {
+  text-align: left;
+  padding: .5rem .5rem;
+  .text {
+    display: block;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  .copy {
+    display: inline-block;
+    border-radius: 4px;
+    border: 1px solid #acb1b6;
+    margin-right: 10px;
+    padding: 4px 10px;
+    cursor: pointer;
+
+  }
+  .copied {
+
+    border-radius: 4px;
+    border: 1px solid #acb1b6;
+    margin-right: 10px;
+    padding: 4px 10px;
+    cursor: pointer;
+    display: none;
+  }
+}
+@media (min-width: 1800px) {
+  .mainContent .addsList .singleAddBlock {
+    flex-shrink: 0;
+    width: 15%;
+  }
+}
