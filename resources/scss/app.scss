@@ -1,3 +1,54 @@
+@use 'variables' as *;
+@use 'fonts';
+@use 'lib';
+@use 'global';
+@use "header";
+@use "main";
+@use "aside";
+@use "icons";
+@use "btn";
+@use "user-preview";
+@use "menu-burger";
+@use "tubs";
+@use "message";
+@use "table";
+
+
+@use "base-select";
+@use "date-picker";
+@use "multi-select";
+
+
+@use "promo-tariff";
+@use "pagination-nav";
+@use "input";
+@use "filter";
+@use "filter-push";
+@use "creatives";
+@use "profile-settings";
+@use "notifications";
+@use "payment-methods";
+@use "tariffs";
+
+@use "modal-contacts";
+@use "modal-subscription-activated";
+
+
+@use "not-panel-page";
+@use "blog";
+@use "footer";
+@use "breadcrumbs-block";
+@use "carousel-controls";
+@use "entry-content";
+
+
+
+@use "comment-list";
+@use "market-list";
+@use "landings-list";
+
+@use "api";
+
 .sass-test {
     background-color: red;
     width: 100px;
@@ -8,6 +59,7 @@
     align-items: center;
     padding: 10px;
     border: 1px solid black;
+    font-family: 'Montserrat', sans-serif;
     h1 {
         color: white;
         font-size: 20px;
