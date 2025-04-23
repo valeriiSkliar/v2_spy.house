@@ -1,0 +1,16 @@
+.sass-test {
+    background-color: red;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid black;
+    h1 {
+        color: white;
+        font-size: 20px;
+        font-weight: bold;
+    }
+}
