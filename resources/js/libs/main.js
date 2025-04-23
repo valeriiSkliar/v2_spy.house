@@ -1,3 +1,5 @@
+document.addEventListener('DOMContentLoaded', function () {
+
 jQuery(document).ready(function () {
     //$('#subscription-activated-modal').modal('show');
 
@@ -215,3 +217,4 @@ jQuery(document).ready(function () {
         $('.base-select__dropdown, .date-options-dropdown, .multi-select__dropdown').slideUp(200);
     });
 });
+}, false);

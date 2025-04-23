@@ -15,9 +15,11 @@ export default defineConfig({
     resolve: {
         alias: {
             '@': '/resources/js',
-            '@scss': '/resources/scss'
+            '@scss': '/resources/scss',
+            'jquery': 'jquery/dist/jquery.js',
         },
     },
-    
-    
+    optimizeDeps: {
+        include: ['jquery']
+    }
 });
