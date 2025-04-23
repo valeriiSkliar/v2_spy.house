@@ -13,7 +13,6 @@
             @include('partials.sidebar')
         </main>
     </div>
-    @include('partials.footer')
     @include('partials.modals')
 </body>
 @endsection

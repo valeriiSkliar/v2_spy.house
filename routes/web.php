@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Test\LandingController;
 use App\Http\Controllers\Test\NotificationController;
 use App\Http\Controllers\Test\ApiController;
+use App\Http\Controllers\Test\FinanceController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -18,6 +19,8 @@ Route::get('/notifications', [NotificationController::class, 'index'])->name('no
 Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
 Route::post('/notifications/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
 Route::get('/api', [ApiController::class, 'index'])->name('api.index');
+Route::get('/finances', [FinanceController::class, 'index'])->name('finances.index');
+Route::post('/finances/deposit', [FinanceController::class, 'deposit'])->name('finances.deposit');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
