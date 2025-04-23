@@ -23,50 +23,51 @@ jQuery(document).ready(function () {
         });
     }
 
+    // TODO: REFACTOR this code
     //--------slick------------------------------------
-    if ($('#slick-demo-1').length > 0){
-        $('#slick-demo-1').slick({
-            dots: false,
-            infinite: true,
-            speed: 300,
-            slidesToShow: 1,
-            slidesToScroll: 1,
-            prevArrow: '#slick-demo-1-prev',
-            nextArrow: '#slick-demo-1-next',
-            rows: 4,
-            responsive: [
-                {
-                    breakpoint: 1200,
-                    settings: {
-                        variableWidth: true,
-                        rows: 1,
-                    }
-                },
-            ]
-        });
-    }
-    if ($('#slick-demo-2').length > 0){
-        $('#slick-demo-2').slick({
-            dots: false,
-            infinite: true,
-            speed: 300,
-            slidesToShow: 1,
-            slidesToScroll: 1,
-            prevArrow: '#slick-demo-2-prev',
-            nextArrow: '#slick-demo-2-next',
-            variableWidth: true,
-        });
-    }
+    // if ($('#slick-demo-1').length > 0){
+    //     $('#slick-demo-1').slick({
+    //         dots: false,
+    //         infinite: true,
+    //         speed: 300,
+    //         slidesToShow: 1,
+    //         slidesToScroll: 1,
+    //         prevArrow: '#slick-demo-1-prev',
+    //         nextArrow: '#slick-demo-1-next',
+    //         rows: 4,
+    //         responsive: [
+    //             {
+    //                 breakpoint: 1200,
+    //                 settings: {
+    //                     variableWidth: true,
+    //                     rows: 1,
+    //                 }
+    //             },
+    //         ]
+    //     });
+    // }
+    // if ($('#slick-demo-2').length > 0){
+    //     $('#slick-demo-2').slick({
+    //         dots: false,
+    //         infinite: true,
+    //         speed: 300,
+    //         slidesToShow: 1,
+    //         slidesToScroll: 1,
+    //         prevArrow: '#slick-demo-2-prev',
+    //         nextArrow: '#slick-demo-2-next',
+    //         variableWidth: true,
+    //     });
+    // }
     //--------Aside blog------------------------------------
 
-    if ($('.blog-layout__aside').length > 0){
-        $('.blog-layout__aside').stickySidebar({
-            topSpacing: 20,
-            bottomSpacing: 10,
-            resizeSensor: true,
-            minWidth: 1200
-        });
-    }
+    // if ($('.blog-layout__aside').length > 0){
+    //     $('.blog-layout__aside').stickySidebar({
+    //         topSpacing: 20,
+    //         bottomSpacing: 10,
+    //         resizeSensor: true,
+    //         minWidth: 1200
+    //     });
+    // }
 
     //--------Search------------------------------------
     $('.js-toggle-search').click(function () {

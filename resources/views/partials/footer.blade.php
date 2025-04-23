@@ -1,0 +1,54 @@
+<footer class="footer">
+    <div class="container">
+        <div class="footer__content">
+            <div class="footer__left">
+                <div class="footer__logo"><img src="img/logo.svg" alt="" width="167" height="43"></div>
+                <div class="footer__copy">© 2012 - {{ date('Y') }} Spy.House</div>
+                <div class="footer__lang">
+                    @include('partials.language-selector')
+                </div>
+            </div>
+            <div class="footer__center">
+                <div class="footer-nav _mob-two-col">
+                    <p>Creatives Spy</p>
+                    <ul>
+                        <li><a href="#">Push</a></li>
+                        <li><a href="#">In-page</a></li>
+                        <li><a href="#">Facebook</a></li>
+                        <li><a href="#">Tik Tok</a></li>
+                    </ul>
+                </div>
+                <div class="footer-nav">
+                    <p>Useful</p>
+                    <ul>
+                        <li><a href="#">Offers</a></li>
+                        <li><a href="#">Services</a></li>
+                        <li><a href="#">Affiliate program</a></li>
+                        <li><a href="#">Blog</a></li>
+                    </ul>
+                </div>
+                <div class="footer-nav">
+                    <p>Other</p>
+                    <ul>
+                        <li><a href="#">Advertising</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">User Agreement</a></li>
+                        <li><a href="#">FAQ</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer__right">
+                <div class="footer__telegram">
+                    <a href="#" target="_blank" class="telegram-link">
+                        <span class="icon-telegram2"></span>
+                        <span class="telegram-link__label">Telegram</span>
+                        <span class="telegram-link__nickname">@spyhouse_help</span>
+                    </a>
+                </div>
+                <div class="footer__chat">
+                    <a href="#" target="_blank" class="btn _flex _medium _blue min-200 w-100"><span class="icon-chat font-16 mr-2"></span>Telegram chat</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>

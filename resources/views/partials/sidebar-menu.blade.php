@@ -1,0 +1,13 @@
+<nav class="aside-menu">
+    <ul>
+        <li><a href="#" class="active"><span class="icon-creatives"></span> <span class="aside-menu__txt">Creatives</span></a></li>
+        <li><a href="#"><span class="icon-landings"></span> <span class="aside-menu__txt">Landings</span></a></li>
+        <li><a href="#"><span class="icon-offers"></span> <span class="aside-menu__txt">Offers</span></a></li>
+        <li><a href="#"><span class="icon-ai"></span> <span class="aside-menu__txt">Creative AI</span></a></li>
+        <li><a href="#"><span class="icon-services"></span> <span class="aside-menu__txt">Services</span></a></li>
+        <li><a href="#"><span class="icon-finance"></span> <span class="aside-menu__txt">Finance</span></a></li>
+        <li><a href="#"><span class="icon-program"></span> <span class="aside-menu__txt">Referrals</span></a></li>
+        <li><a href="#"><span class="icon-blog"></span> <span class="aside-menu__txt">Blog</span> <span class="aside-menu__count">100</span></a></li>
+        <li><a href="#"><span class="icon-faq"></span> <span class="aside-menu__txt">FAQ</span></a></li>
+    </ul>
+</nav>
