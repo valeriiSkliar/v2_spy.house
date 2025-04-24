@@ -22,6 +22,7 @@ class MockUser extends GenericUser
             'yearly_price' => 300,
             'active_flows' => 'Unlimited',
             'api_requests' => 'Unlimited',
+            'expires_at' => '12.06.2028',
             'features' => [
                 'Unlimited clicks',
                 'Protection from bots',

@@ -21,9 +21,6 @@ class TariffController extends Controller
         // Get user's current tariff
         $currentTariff = Auth::user()->currentTariff();
 
-        if (!isset($userTariff['expires_at'])) {
-            $currentTariff['expires_at'] = '12.06.2024'; // Значение по умолчанию
-        }
 
 
         // Get user's payment history
