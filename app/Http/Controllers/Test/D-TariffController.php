@@ -8,7 +8,7 @@ use App\Models\Payment;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 
-class TariffController extends Controller
+class D_TariffController extends Controller
 {
     /**
      * Display all available tariffs

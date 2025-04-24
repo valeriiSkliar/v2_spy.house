@@ -1,4 +1,3 @@
-<!-- resources/views/tariffs/payment.blade.php -->
 @extends('layouts.authorized')
 
 @section('page-content')
