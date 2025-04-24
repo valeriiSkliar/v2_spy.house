@@ -4,7 +4,7 @@
         <li><a href="{{ route('landings.index') }}" class="{{ request()->routeIs('landings*') ? 'active' : '' }}"><span class="icon-landings"></span> <span class="aside-menu__txt">Landings</span></a></li>
         <li><a href="#"><span class="icon-offers"></span> <span class="aside-menu__txt">Offers</span></a></li>
         <li><a href="#"><span class="icon-ai" class="{{ request()->routeIs('ai*') ? 'active' : '' }}"></span> <span class="aside-menu__txt">Creative AI</span></a></li>
-        <li><a href="#"><span class="icon-services" class="{{ request()->routeIs('services*') ? 'active' : '' }}"></span> <span class="aside-menu__txt">Services</span></a></li>
+        <li><a href="{{ route('services.index') }}" class="{{ request()->routeIs('services*') ? 'active' : '' }}"><span class="icon-services"></span> <span class="aside-menu__txt">Services</span></a></li>
         <li><a href="{{ route('finances.index') }}" class="{{ request()->routeIs('finances*') ? 'active' : '' }}"><span class="icon-finance"></span> <span class="aside-menu__txt">Finance</span></a></li>
         <li><a href="{{ route('tariffs.index') }}" class="{{ request()->routeIs('tariffs*') ? 'active' : '' }}"><span class="icon-tariffs"></span> <span class="aside-menu__txt">Tariffs</span></a></li>
         <li><a href="#"><span class="icon-program" class="{{ request()->routeIs('referrals*') ? 'active' : '' }}"></span> <span class="aside-menu__txt">Referrals</span></a></li>

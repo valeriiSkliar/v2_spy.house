@@ -8,6 +8,7 @@ use App\Http\Controllers\Test\FinanceController;
 use App\Http\Controllers\Test\BlogController;
 use App\Http\Controllers\Test\TariffController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Test\ServicesController;
 
 Route::get('/', function () {
     return view('index');
@@ -30,6 +31,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+// Services
+Route::middleware('web')->group(function () {
+    Route::get('/services', [ServicesController::class, 'index'])->name('services.index');
+    Route::get('/services/{id}', [ServicesController::class, 'show'])->name('services.show');
+    Route::post('/services/{id}/rate', [ServicesController::class, 'rate'])->name('services.rate');
 });
 
 require __DIR__ . '/auth.php';
