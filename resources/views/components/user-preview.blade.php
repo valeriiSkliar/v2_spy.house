@@ -11,7 +11,7 @@
         <nav class="user-menu">
             <ul>
                 <li><a href="{{ route('notifications.index') }}"><span class="icon-notification"><span class="has-notification"></span></span> <span>Notifications</span></a></li>
-                <li><a href="#"><span class="icon-settings"></span> <span>Profile Settings</span></a></li>
+                <li><a href="{{ route('profile.settings') }}"><span class="icon-settings"></span> <span>Profile Settings</span></a></li>
                 <li><a href="#"><span class="icon-tariffs"></span> <span>Tariffs</span></a></li>
             </ul>
             <button class="btn _flex _gray w-100 font-16"><span class="icon-logout mr-3"></span>Log out</button>

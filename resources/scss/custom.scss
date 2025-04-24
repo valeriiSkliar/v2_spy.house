@@ -1,4 +1,4 @@
-/* Add to your main CSS file */
+// Rating star ( rating.js )
 .rating-star {
     font-size: 24px;
     color: #CEF0DE;
@@ -15,4 +15,144 @@
 
 .article-rate__rating {
     display: flex;
+}
+
+// Search form blog ( search-suggestions )
+
+.search-form {
+    position: relative;
+}
+
+.search-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 0 0 10px 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.search-suggestion-item {
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.search-suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.search-suggestion-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+}
+
+.search-suggestion-thumb {
+    width: 60px;
+    height: 60px;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.search-suggestion-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.search-suggestion-info {
+    flex-grow: 1;
+}
+
+.search-suggestion-title {
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.search-suggestion-title mark {
+    background-color: #ffeb3b;
+    padding: 0 2px;
+}
+
+.search-suggestion-category {
+    font-size: 14px;
+}
+
+.search-suggestion-view-all {
+    padding: 15px;
+    text-align: center;
+    font-weight: 500;
+    border-top: 1px solid #eee;
+}
+
+.search-suggestion-view-all a {
+    color: #3DC98A;
+    text-decoration: none;
+}
+
+
+// Carousel ( carousel.js )
+
+.carousel-container {
+    display: flex;
+    transition: transform 0.3s ease;
+}
+
+.carousel-item {
+    flex: 0 0 auto;
+    width: 25%; /* Default for 4 slides */
+    padding: 0 10px;
+}
+
+/* Responsive carousel items */
+@media (max-width: 991px) {
+    .carousel-item {
+        width: 33.333%;
+    }
+}
+
+@media (max-width: 767px) {
+    .carousel-item {
+        width: 50%;
+    }
+}
+
+@media (max-width: 575px) {
+    .carousel-item {
+        width: 100%;
+    }
+}
+
+.carousel-controls {
+    display: flex;
+    align-items: center;
+}
+
+.carousel-prev,
+.carousel-next {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #6c7a89;
+    padding: 5px;
+    transition: color 0.2s ease;
+}
+
+.carousel-prev:hover,
+.carousel-next:hover {
+    color: #3DC98A;
+}
+
+.carousel-prev:disabled,
+.carousel-next:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
