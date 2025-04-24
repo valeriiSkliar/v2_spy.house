@@ -9,7 +9,15 @@
     </div>
     <div class="header__right">
         <div class="header__tariff">
-            <x-tariff-link>@yield('tariff-type', 'Trial')</x-tariff-link>
+            <div class="header__tariff">
+                @if(auth()->check() && auth()->user()->hasTariff())
+                <x-tariff-link :type="auth()->user()->currentTariff()['css_class']">
+                    {{ auth()->user()->currentTariff()['name'] }}
+                </x-tariff-link>
+                @else
+                <x-tariff-link>Free</x-tariff-link>
+                @endif
+            </div>
         </div>
         <div class="header__lang">
             @include('partials.language-selector')

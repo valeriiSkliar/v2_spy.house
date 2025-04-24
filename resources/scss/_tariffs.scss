@@ -1,0 +1,348 @@
+// resources/scss/components/_tariffs.scss
+
+// Tariff styles
+.rate {
+    display: flex;
+    margin-bottom: 30px;
+    overflow: hidden;
+    
+    &__fixed {
+        min-width: 300px;
+        position: sticky;
+        left: 0;
+        z-index: 3;
+        background: #fff;
+    }
+    
+    &__scroll {
+        overflow-x: auto;
+        margin-left: -1px;
+        position: relative;
+        z-index: 2;
+    }
+    
+    &__list {
+        display: flex;
+        min-width: max-content;
+    }
+    
+    &__current {
+        padding: 20px;
+        border: 1px solid #E6EAED;
+        border-bottom: none;
+        height: 120px;
+        display: flex;
+        align-items: center;
+    }
+}
+
+.rate-current {
+    &__title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    &__status {
+        color: #3DC98A;
+        font-weight: 500;
+        margin-bottom: 5px;
+        
+        &._disabled {
+            color: #E74C3C;
+        }
+    }
+    
+    &__term {
+        color: #6C7A89;
+        font-size: 14px;
+        
+        span {
+            font-weight: 500;
+        }
+    }
+}
+
+.rate-item {
+    width: 250px;
+    border: 1px solid #E6EAED;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    
+    &._start {
+        .rate-item-head {
+            background-color: #F0F8FF;
+            
+            &__title {
+                color: #4F98CD;
+            }
+        }
+    }
+    
+    &._basic {
+        .rate-item-head {
+            background-color: #EEF0FF;
+            
+            &__title {
+                color: #694FCD;
+            }
+        }
+    }
+    
+    &._premium {
+        .rate-item-head {
+            background-color: #FCEFE7;
+            
+            &__title {
+                color: #CD4F51;
+            }
+        }
+    }
+    
+    &._enterprise {
+        .rate-item-head {
+            background-color: #EFF7F0;
+            
+            &__title {
+                color: #33B485;
+            }
+        }
+    }
+}
+
+.rate-item-head {
+    padding: 20px;
+    height: 120px;
+    
+    &__title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+    
+    &__price {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+    
+    &__term {
+        color: #6C7A89;
+        font-size: 14px;
+    }
+    
+    & > div:not(.rate-item-head__title) {
+        display: none;
+        
+        &.active {
+            display: block;
+        }
+    }
+}
+
+.rate-item-body {
+    padding: 20px;
+    flex-grow: 1;
+    border-top: 1px solid #E6EAED;
+    border-bottom: 1px solid #E6EAED;
+    
+    &__desc {
+        padding-bottom: 20px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #E6EAED;
+        
+        p {
+            margin-bottom: 5px;
+            
+            &:last-child {
+                margin-bottom: 0;
+            }
+            
+            strong {
+                font-weight: 600;
+            }
+        }
+    }
+    
+    &__row {
+        padding: 10px 0;
+        text-align: center;
+        
+        span {
+            display: inline-block;
+            
+            &.icon-check {
+                color: #3DC98A;
+                font-size: 20px;
+            }
+        }
+    }
+    
+    &__hidden {
+        display: none;
+    }
+    
+    &._fixed {
+        .rate-item-body__row {
+            text-align: left;
+        }
+    }
+    
+    &.show-all {
+        .rate-item-body__hidden {
+            display: block;
+        }
+    }
+}
+
+.rate-item-bottom {
+    padding: 20px;
+}
+
+.tariff-pay {
+    background-color: #F7F9FB;
+    border-radius: 10px;
+    padding: 20px;
+    
+    &__name {
+        margin-bottom: 15px;
+        
+        @media (min-width: 768px) {
+            margin-bottom: 0;
+        }
+    }
+    
+    &__info {
+        color: #6C7A89;
+        
+        strong {
+            color: #333;
+            font-weight: 600;
+        }
+    }
+}
+
+.tariff-name {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    min-width: 120px;
+    padding: 0 15px;
+    border-radius: 5px;
+    color: white;
+    font-weight: 600;
+    
+    &._small {
+        height: 30px;
+        min-width: 90px;
+        font-size: 14px;
+    }
+    
+    &._start {
+        background-color: #4F98CD;
+    }
+    
+    &._basic {
+        background-color: #694FCD;
+    }
+    
+    &._premium {
+        background-color: #CD4F51;
+    }
+    
+    &._enterprise {
+        background-color: #33B485;
+    }
+}
+
+.payment-methods {
+    display: flex;
+    flex-wrap: wrap;
+    margin: -5px;
+    margin-bottom: 30px;
+}
+
+.payment-method {
+    margin: 5px;
+    cursor: pointer;
+    
+    input {
+        display: none;
+        
+        &:checked + .payment-method__content {
+            border-color: #3DC98A;
+            background-color: #F3FAF7;
+        }
+    }
+    
+    &__content {
+        display: flex;
+        align-items: center;
+        padding: 10px 15px;
+        border: 1px solid #E6EAED;
+        border-radius: 5px;
+        transition: all 0.2s ease;
+        
+        img {
+            max-height: 30px;
+            margin-right: 10px;
+        }
+        
+        span {
+            font-weight: 500;
+        }
+    }
+}
+
+.table-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 30px;
+    min-width: 90px;
+    padding: 0 10px;
+    border-radius: 15px;
+    font-size: 14px;
+    font-weight: 500;
+    
+    &._successful {
+        background-color: #F3FAF7;
+        color: #3DC98A;
+    }
+    
+    &._rejected {
+        background-color: #FFEFEF;
+        color: #E74C3C;
+    }
+}
+
+.subscription-activated {
+    text-align: center;
+    padding: 30px;
+    
+    &-icon {
+        width: 100px;
+        height: 100px;
+        background-color: #F3FAF7;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #3DC98A;
+        font-size: 40px;
+        margin: 0 auto 20px;
+        position: relative;
+        
+        .tariff-name {
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            min-width: 90px;
+            height: 30px;
+            font-size: 14px;
+        }
+    }
+}

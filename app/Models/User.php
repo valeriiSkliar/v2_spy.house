@@ -42,7 +42,40 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'tariff_expires_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function currentTariff()
+    {
+        // For the demo, return Enterprise tariff
+        return [
+            'id' => 4,
+            'name' => 'Enterprise',
+            'css_class' => 'enterprise',
+            'expires_at' => '12.06.2024',
+            'status' => 'Активная', // or 'Не активно'
+        ];
+    }
+
+    /**
+     * Check if tariff is active
+     */
+    public function hasTariff($tariffId = null)
+    {
+        if ($tariffId) {
+            return $this->tariff_id == $tariffId && $this->tariff_expires_at > now();
+        }
+
+        return $this->tariff_id && $this->tariff_expires_at > now();
+    }
+
+    /**
+     * Get tariff expiration date
+     */
+    public function tariffExpiresAt()
+    {
+        return $this->tariff_expires_at ? $this->tariff_expires_at->format('d.m.Y') : null;
     }
 }

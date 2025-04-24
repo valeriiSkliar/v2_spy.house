@@ -4,7 +4,13 @@
             @include('partials.language-selector')
         </div>
         <div class="aside__tariff">
-            <x-tariff-link type="enterprise">Enterprise</x-tariff-link>
+            @if(auth()->check() && auth()->user()->hasTariff())
+            <x-tariff-link :type="auth()->user()->currentTariff()['css_class']">
+                {{ auth()->user()->currentTariff()['name'] }}
+            </x-tariff-link>
+            @else
+            <x-tariff-link>Free</x-tariff-link>
+            @endif
         </div>
     </div>
     <div class="aside__content">

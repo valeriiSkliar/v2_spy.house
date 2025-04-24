@@ -6,6 +6,7 @@ use App\Http\Controllers\Test\NotificationController;
 use App\Http\Controllers\Test\ApiController;
 use App\Http\Controllers\Test\FinanceController;
 use App\Http\Controllers\Test\BlogController;
+use App\Http\Controllers\Test\TariffController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -29,6 +30,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/tariffs', [TariffController::class, 'index'])->name('tariffs.index');
 });
 
 require __DIR__ . '/auth.php';
