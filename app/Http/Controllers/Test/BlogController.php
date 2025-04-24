@@ -1,8 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
 
+namespace App\Http\Controllers\Test;
+
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class BlogController extends Controller
 {
@@ -11,7 +14,7 @@ class BlogController extends Controller
     /**
      * Моковые данные для статей
      */
-    private function getArticles()
+    public function getArticles()
     {
         return [
             [
@@ -139,7 +142,7 @@ class BlogController extends Controller
     /**
      * Моковые данные для категорий
      */
-    private function getCategories()
+    public function getCategories()
     {
         return [
             [
@@ -248,9 +251,171 @@ class BlogController extends Controller
         ]);
     }
 
-    /**
-     * Подготовка формы ответа на комментарий
-     */
+
+
+    public function rateArticle(Request $request, $slug)
+    {
+        $request->validate([
+            'rating' => 'required|numeric|min:1|max:5'
+        ]);
+
+        $article = collect($this->getArticles())->firstWhere('slug', $slug);
+
+        if (!$article) {
+            return response()->json(['success' => false, 'message' => 'Article not found'], 404);
+        }
+
+        // В реальном приложении здесь будет код для сохранения рейтинга в БД
+
+        return response()->json([
+            'success' => true,
+            'rating' => $request->rating,
+            'message' => 'Rating saved successfully'
+        ]);
+    }
+
+    // Add to BlogController.php
+    public function category($slug)
+    {
+        $categories = $this->getCategories();
+        $category = collect($categories)->firstWhere('slug', $slug);
+
+        if (!$category) {
+            abort(404);
+        }
+
+        $articles = $this->getArticles();
+
+        // Filter articles by category
+        $articles = collect($articles)
+            ->filter(function ($article) use ($category) {
+                return $article['category']['id'] === $category['id'];
+            })
+            ->all();
+
+        // Paginate
+        $perPage = 6;
+        $currentPage = request()->get('page', 1);
+        $totalArticles = count($articles);
+        $totalPages = ceil($totalArticles / $perPage);
+
+        $articles = collect($articles)
+            ->skip(($currentPage - 1) * $perPage)
+            ->take($perPage)
+            ->all();
+
+        return view('blog.index', [
+            'articles' => $articles,
+            'categories' => $categories,
+            'currentCategory' => $category,
+            'currentPage' => $currentPage,
+            'totalPages' => $totalPages
+        ]);
+    }
+
+    public function search(Request $request)
+    {
+        $query = $request->get('q', '');
+        $categories = $this->getCategories();
+        $articles = $this->getArticles();
+
+        // Filter articles by search query
+        $articles = collect($articles)
+            ->filter(function ($article) use ($query) {
+                return stripos($article['title'], $query) !== false ||
+                    stripos($article['excerpt'], $query) !== false ||
+                    stripos($article['content'], $query) !== false;
+            })
+            ->all();
+
+        // Paginate
+        $perPage = 6;
+        $currentPage = $request->get('page', 1);
+        $totalArticles = count($articles);
+        $totalPages = ceil($totalArticles / $perPage);
+
+        $articles = collect($articles)
+            ->skip(($currentPage - 1) * $perPage)
+            ->take($perPage)
+            ->all();
+
+        return view('blog.search', [
+            'articles' => $articles,
+            'categories' => $categories,
+            'query' => $query,
+            'currentPage' => $currentPage,
+            'totalPages' => $totalPages,
+            'totalResults' => $totalArticles
+        ]);
+    }
+
+    // Modify the storeComment method in BlogController.php
+    public function storeComment(Request $request, $slug)
+    {
+        $request->validate([
+            'content' => 'required|min:5'
+        ]);
+
+        // In a real application, here you would save the comment to the database
+        // For this demo, we'll create a mock comment
+        $comment = [
+            'id' => rand(100, 999),
+            'author' => Auth::user()->name,
+            'date' => date('d.m.Y'),
+            'content' => $request->content,
+            'replies' => []
+        ];
+
+        if ($request->ajax()) {
+            $html = view('components.comment', [
+                'comment' => $comment,
+                'slug' => $slug
+            ])->render();
+
+            return response()->json([
+                'success' => true,
+                'html' => $html,
+                'message' => 'Comment added successfully'
+            ]);
+        }
+
+        return redirect()->route('blog.show', $slug)->with('success', 'Comment added successfully');
+    }
+
+    // Modify the storeReply method in BlogController.php
+    public function storeReply(Request $request, $slug)
+    {
+        $request->validate([
+            'content' => 'required|min:5',
+            'parent_id' => 'required|numeric'
+        ]);
+
+        // In a real application, here you would save the reply to the database
+        // For this demo, we'll create a mock reply
+        $reply = [
+            'id' => rand(100, 999),
+            'author' => Auth::user()->name,
+            'date' => date('d.m.Y'),
+            'content' => $request->content
+        ];
+
+        if ($request->ajax()) {
+            $html = view('components.comment-reply', [
+                'reply' => $reply,
+                'slug' => $slug
+            ])->render();
+
+            return response()->json([
+                'success' => true,
+                'html' => $html,
+                'message' => 'Reply added successfully'
+            ]);
+        }
+
+        return redirect()->route('blog.show', $slug)->with('success', 'Reply added successfully');
+    }
+
+    // Modify the reply method in BlogController.php
     public function reply($slug, $comment_id)
     {
         $article = collect($this->getArticles())->firstWhere('slug', $slug);
@@ -259,7 +424,7 @@ class BlogController extends Controller
             abort(404);
         }
 
-        // Найти комментарий по ID
+        // Find the comment by ID
         $comment = null;
         foreach ($article['comments'] as $articleComment) {
             if ($articleComment['id'] == $comment_id) {
@@ -281,59 +446,20 @@ class BlogController extends Controller
             abort(404);
         }
 
+        if (request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'html' => view('components.comment-reply-form', [
+                    'slug' => $slug,
+                    'comment_id' => $comment_id,
+                    'author' => $comment['author']
+                ])->render()
+            ]);
+        }
+
         return redirect()->route('blog.show', $slug)->with('reply_to', [
             'id' => $comment_id,
             'author' => $comment['author']
-        ]);
-    }
-
-    /**
-     * Сохранение нового комментария
-     */
-    public function storeComment(Request $request, $slug)
-    {
-        $request->validate([
-            'content' => 'required|min:5'
-        ]);
-
-        // В реальном приложении здесь был бы код для сохранения комментария в БД
-
-        return redirect()->route('blog.show', $slug)->with('success', 'Comment added successfully');
-    }
-
-    /**
-     * Сохранение ответа на комментарий
-     */
-    public function storeReply(Request $request, $slug)
-    {
-        $request->validate([
-            'content' => 'required|min:5',
-            'parent_id' => 'required|numeric'
-        ]);
-
-        // В реальном приложении здесь был бы код для сохранения ответа в БД
-
-        return redirect()->route('blog.show', $slug)->with('success', 'Reply added successfully');
-    }
-
-    public function rateArticle(Request $request, $slug)
-    {
-        $request->validate([
-            'rating' => 'required|numeric|min:1|max:5'
-        ]);
-
-        $article = collect($this->getArticles())->firstWhere('slug', $slug);
-
-        if (!$article) {
-            return response()->json(['success' => false, 'message' => 'Article not found'], 404);
-        }
-
-        // В реальном приложении здесь будет код для сохранения рейтинга в БД
-
-        return response()->json([
-            'success' => true,
-            'rating' => $request->rating,
-            'message' => 'Rating saved successfully'
         ]);
     }
 }

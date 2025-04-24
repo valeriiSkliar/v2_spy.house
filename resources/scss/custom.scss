@@ -1,0 +1,18 @@
+/* Add to your main CSS file */
+.rating-star {
+    font-size: 24px;
+    color: #CEF0DE;
+    cursor: pointer;
+    display: inline-block;
+    margin-right: 5px;
+    transition: color 0.2s ease;
+}
+
+.rating-star:hover, 
+.rating-star.active {
+    color: #3DC98A;
+}
+
+.article-rate__rating {
+    display: flex;
+}

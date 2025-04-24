@@ -5,18 +5,12 @@ use App\Http\Controllers\Test\LandingController;
 use App\Http\Controllers\Test\NotificationController;
 use App\Http\Controllers\Test\ApiController;
 use App\Http\Controllers\Test\FinanceController;
-use App\Http\Controllers\BlogController;
+use App\Http\Controllers\Test\BlogController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('index');
 });
-
-Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
-Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
-Route::get('/blog/category/{slug}', [BlogController::class, 'category'])->name('blog.category');
-Route::post('/blog/{articleId}/comments', [BlogController::class, 'storeComment'])->name('blog.comments.store');
-Route::post('/blog/{slug}/rate', [BlogController::class, 'rateArticle'])->name('blog.rate');
 
 
 Route::get('/landings', [LandingController::class, 'index'])->name('landings.index');
@@ -38,3 +32,6 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__ . '/auth.php';
+require __DIR__ . '/api.php';
+require __DIR__ . '/blog.php';
+require __DIR__ . '/profile.php';

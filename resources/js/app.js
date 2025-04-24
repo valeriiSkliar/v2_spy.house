@@ -10,3 +10,6 @@ Alpine.start();
 
 // Импортируем main.js после инициализации jQuery
 import './libs/main';
+import './rating.js';
+import './comments.js';
+import './blog-search.js';

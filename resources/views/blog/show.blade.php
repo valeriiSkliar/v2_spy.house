@@ -221,6 +221,12 @@
             $(this).css('color', color);
         });
     });
+    $(document).ready(function() {
+        $('.cat-links').click(function() {
+            var color = $(this).data('color');
+            $(this).css('color', color);
+        });
+    });
 </script>
 @endsection
 
