@@ -26,7 +26,6 @@
             </div>
             @include('partials.sidebar-blog')
         </main>
-        @include('partials.footer')
     </div>
 </body>
 @endsection

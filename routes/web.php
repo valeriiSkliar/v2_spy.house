@@ -12,8 +12,13 @@ Route::get('/', function () {
 });
 
 Route::get('/blog', function () {
-    return view('blog');
+    return view('blog/index');
 })->name('blog.index');
+
+Route::get('/blog/{slug}', function () {
+    return view('blog/show');
+})->name('blog.show');
+
 Route::get('/landings', [LandingController::class, 'index'])->name('landings.index');
 Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
 Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
