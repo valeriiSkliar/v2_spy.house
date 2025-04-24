@@ -1,5 +1,5 @@
 <div class="promo-tariff">
-    <img src="img/premium.svg" alt="">
+    <img src="/img/premium.svg" alt="">
     <div class="promo-tariff__title">Upgrade to Premium</div>
     <div class="promo-tariff__desc"><span>-50%</span> In the first month</div>
     <div class="promo-tariff__row">

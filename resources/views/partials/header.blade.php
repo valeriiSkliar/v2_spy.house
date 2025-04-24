@@ -5,7 +5,7 @@
         </button>
     </div>
     <div class="header__left">
-        <a href="/" class="header__logo"><img src="img/logo.svg" alt="" width="142" height="36"></a>
+        <a href="/" class="header__logo"><img src="/img/logo.svg" alt="" width="142" height="36"></a>
     </div>
     <div class="header__right">
         <div class="header__tariff">

@@ -2,7 +2,7 @@
     <div class="container">
         <div class="footer__content">
             <div class="footer__left">
-                <div class="footer__logo"><img src="img/logo.svg" alt="" width="167" height="43"></div>
+                <div class="footer__logo"><img src="/img/logo.svg" alt="" width="167" height="43"></div>
                 <div class="footer__copy">© 2012 - {{ date('Y') }} Spy.House</div>
                 <div class="footer__lang">
                     @include('partials.language-selector')

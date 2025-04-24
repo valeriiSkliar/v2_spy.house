@@ -12,7 +12,7 @@
     </ul>
 </nav>
 <a href="#" target="_blank" class="banner-item mb-25">
-    <img src="img/17d29531d484dadde7c2a0c58893953d.gif" alt="">
+    <img src="/img/17d29531d484dadde7c2a0c58893953d.gif" alt="">
 </a>
 <div class="pt-2">
     <div class="d-flex align-items-center justify-content-between mb-20">

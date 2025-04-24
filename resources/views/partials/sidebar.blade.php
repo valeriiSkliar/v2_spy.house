@@ -13,5 +13,5 @@
         <div class="aside__copyright">© 2012 - 2025 Spy.House</div>
     </div>
     <div class="sep _h20"></div>
-    <a href="#" target="_blank" class="banner-item"><img src="img/52400c8bd4719323579fd1a074fff985.gif" alt="" class="d-block w-100 rounded-10"></a>
+    <a href="#" target="_blank" class="banner-item"><img src="/img/52400c8bd4719323579fd1a074fff985.gif" alt="" class="d-block w-100 rounded-10"></a>
 </aside>

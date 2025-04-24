@@ -5,7 +5,7 @@
         </button>
     </div>
     <div class="header__left">
-        <a href="/" class="header__logo"><img src="img/logo.svg" alt="" width="142" height="36"></a>
+        <a href="/" class="header__logo"><img src="/img/logo.svg" alt="" width="142" height="36"></a>
         <div class="header-blog font-roboto">BLOG</div>
         <div class="header__btn">
             <a href="#" class="btn _flex _small _green2 ml-2">Go to ads <span class="icon-next font-16 ml-2"></span></a>

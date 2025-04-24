@@ -6,22 +6,22 @@ jQuery(document).ready(function () {
     //--------1111111------------------------------------
 
     //--------rating------------------------------------
-    if ($('.article-rate__rating').length > 0) {
-        $(".article-rate__rating").starRating({
-            emptyColor: '#CEF0DE',
-            strokeColor: '#CEF0DE',
-            hoverColor: '#3DC98A',
-            useFullStars: true,
-            ratedColor: '#3DC98A',
-            strokeWidth: 0,
-            starSize: 40,
-            disableAfterRate: true,
-            //starShape: 'rounded',
-            callback: function (currentRating, $el) {
+    // if ($('.article-rate__rating').length > 0) {
+    //     $(".article-rate__rating").starRating({
+    //         emptyColor: '#CEF0DE',
+    //         strokeColor: '#CEF0DE',
+    //         hoverColor: '#3DC98A',
+    //         useFullStars: true,
+    //         ratedColor: '#3DC98A',
+    //         strokeWidth: 0,
+    //         starSize: 40,
+    //         disableAfterRate: true,
+    //         //starShape: 'rounded',
+    //         callback: function (currentRating, $el) {
 
-            }
-        });
-    }
+    //         }
+    //     });
+    // }
 
     // TODO: REFACTOR this code
     //--------slick------------------------------------

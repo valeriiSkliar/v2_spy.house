@@ -5,19 +5,19 @@ use App\Http\Controllers\Test\LandingController;
 use App\Http\Controllers\Test\NotificationController;
 use App\Http\Controllers\Test\ApiController;
 use App\Http\Controllers\Test\FinanceController;
+use App\Http\Controllers\BlogController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('index');
 });
 
-Route::get('/blog', function () {
-    return view('blog/index');
-})->name('blog.index');
+Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
+Route::get('/blog/category/{slug}', [BlogController::class, 'category'])->name('blog.category');
+Route::post('/blog/{articleId}/comments', [BlogController::class, 'storeComment'])->name('blog.comments.store');
+Route::post('/blog/{slug}/rate', [BlogController::class, 'rateArticle'])->name('blog.rate');
 
-Route::get('/blog/{slug}', function () {
-    return view('blog/show');
-})->name('blog.show');
 
 Route::get('/landings', [LandingController::class, 'index'])->name('landings.index');
 Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');

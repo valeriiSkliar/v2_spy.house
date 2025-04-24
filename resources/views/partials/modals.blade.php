@@ -40,7 +40,7 @@
                 <div class="col-12 col-md-6 mb-10">
                     <a href="#" target="_blank" class="manager">
                         <span class="icon-telegram"></span>
-                        <span class="manager__thumb"><img src="img/manager-1.png" alt=""></span>
+                        <span class="manager__thumb"><img src="/img/manager-1.png" alt=""></span>
                         <span class="manager__content">
                             <span class="manager__name">Maksim</span>
                             <span class="manager__link">@Max_spy_house</span>
@@ -50,7 +50,7 @@
                 <div class="col-12 col-md-6 mb-10">
                     <a href="#" target="_blank" class="manager">
                         <span class="icon-telegram"></span>
-                        <span class="manager__thumb"><img src="img/manager-2.svg" alt=""></span>
+                        <span class="manager__thumb"><img src="/img/manager-2.svg" alt=""></span>
                         <span class="manager__content">
                             <span class="manager__name">Telegram chat</span>
                             <span class="manager__link">@spy_house_chat</span>
@@ -73,7 +73,7 @@
                         <textarea placeholder="Message"></textarea>
                     </div>
                     <div class="col-6 mb-15">
-                        <img src="img/reCAPTCHA%20v2%20checkbox.png" alt="" class="w-100">
+                        <img src="/img/reCAPTCHA%20v2%20checkbox.png" alt="" class="w-100">
                     </div>
                     <div class="col-12 mb-15">
                         <button type="submit" class="btn _flex _green _medium min-120 w-mob-100">Send</button>
