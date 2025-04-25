@@ -1,6 +1,6 @@
 <nav class="aside-menu">
     <ul>
-        <li><a href="#" class="{{ request()->routeIs('creatives*') ? 'active' : '' }}"><span class="icon-creatives"></span> <span class="aside-menu__txt">Creatives</span></a></li>
+        <li><a href="{{ route('creatives.index') }}" class="{{ request()->routeIs('creatives*') ? 'active' : '' }}"><span class="icon-creatives"></span> <span class="aside-menu__txt">Creatives</span></a></li>
         <li><a href="{{ route('landings.index') }}" class="{{ request()->routeIs('landings*') ? 'active' : '' }}"><span class="icon-landings"></span> <span class="aside-menu__txt">Landings</span></a></li>
         <li><a href="#"><span class="icon-offers"></span> <span class="aside-menu__txt">Offers</span></a></li>
         <li><a href="#"><span class="icon-ai" class="{{ request()->routeIs('ai*') ? 'active' : '' }}"></span> <span class="aside-menu__txt">Creative AI</span></a></li>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Test\CreativesController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Test\LandingController;
 use App\Http\Controllers\Test\NotificationController;
@@ -39,6 +40,10 @@ Route::middleware('web')->group(function () {
     Route::get('/services/{id}', [ServicesController::class, 'show'])->name('services.show');
     Route::post('/services/{id}/rate', [ServicesController::class, 'rate'])->name('services.rate');
 });
+
+// Creatives
+Route::get('/creatives', [CreativesController::class, 'index'])->name('creatives.index');
+
 
 require __DIR__ . '/auth.php';
 require __DIR__ . '/api.php';
