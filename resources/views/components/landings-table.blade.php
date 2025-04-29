@@ -22,9 +22,10 @@
                             <li>
                                 <button type="button"
                                     class="btn-icon icon-remove delete-landing-button"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#deleteLandingModal"
-                                    data-landing-id="{{ $landing->id }}"
+                                    data-confirm="Are you sure you want to delete this landing? This action cannot be undone."
+                                    data-confirm-title="Confirm Deletion"
+                                    data-confirm-btn="Delete"
+                                    data-confirm-cancel="Cancel"
                                     data-delete-url="{{ route('landings.destroy', ['landing' => $landing->id, 'page' => request()->input('page', 1), 'per_page' => request()->input('per_page', 12)]) }}">
                                 </button>
                             </li>

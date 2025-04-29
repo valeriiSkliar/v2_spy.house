@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Frontend\LandingsPageController;
+use App\Http\Controllers\Frontend\ModalController;
 use App\Http\Controllers\Test\CreativesController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Test\NotificationController;
@@ -14,6 +15,9 @@ use App\Http\Controllers\Test\ServicesController;
 Route::get('/', function () {
     return view('index');
 });
+
+Route::get('/modal/{type}', [ModalController::class, 'loadModal'])->name('modal.load');
+
 
 
 Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
