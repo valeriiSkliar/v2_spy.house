@@ -1,19 +1,3 @@
-@if(session('message'))
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
-    <div id="liveToast" class="toast hide bg-{{ session('message.type') === 'error' ? 'danger' : 'success' }} text-white" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="{{ session('message.duration', 3000) }}">
-        <div class="toast-header">
-            {{-- <img src="..." class="rounded me-2" alt="..."> --}}
-            <strong class="me-auto">{{ __('messages.' . session('message.title')) }}</strong>
-            {{-- <small>11 mins ago</small> --}}
-            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-            {{ __('messages.' . session('message.description'), session('message.description_params', [])) }}
-        </div>
-    </div>
-</div>
-@endif
-
 <div class="c-table">
     <div class="inner">
         <table class="table no-wrap-table">
@@ -33,12 +17,17 @@
                     <td><span class="table-date"><span class="icon-calendar"></span> {{ $landing['started_at'] ?? $landing['created_at'] }}</span></td>
                     <td>
                         <ul class="table-controls justify-content-end">
+                            @if($landing['status'] !== 'completed')
+                            <li><x-frontend.status-icon status="{{ $landing['status'] }}" /></li>
+                            @endif
+                            <!-- <li><button class="btn-icon icon-reload {{ $landing['status'] === 'pending' ? 'text-warning' : '' }}" type="button"></button></li> -->
+                            @if($landing['status'] === 'completed')
                             <li>
                                 <a href="{{ route('landings.download', $landing->id) }}" class="btn-icon icon-download"></a>
                             </li>
-                            <li><button class="btn-icon icon-reload" type="button"></button></li>
+                            @endif
                             <li>
-                                <button type="button"
+                                <button @if($landing['status']==='pending' ) disabled @endif type="button"
                                     class="btn-icon icon-remove delete-landing-button"
                                     data-confirm="Are you sure you want to delete this landing? This action cannot be undone."
                                     data-confirm-title="Confirm Deletion"
