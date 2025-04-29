@@ -13,7 +13,7 @@
                 @foreach($landings as $landing)
                 <tr>
                     <td>{{ $landing['id'] }}</td>
-                    <td><a href="{{ $landing['url'] }}" class="table-link icon-link-arrow"><span>{{ $landing['url'] }}</span></a></td>
+                    <td><a target="_blank" href="{{ $landing['url'] }}" class="table-link icon-link-arrow"><span>{{ $landing['url'] }}</span></a></td>
                     <td><span class="table-date"><span class="icon-calendar"></span> {{ $landing['started_at'] ?? $landing['created_at'] }}</span></td>
                     <td>
                         <ul class="table-controls justify-content-end">
