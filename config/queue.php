@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'default' => env('QUEUE_CONNECTION', 'database'),
+    'default' => env('QUEUE_CONNECTION', 'rabbitmq'),
 
     /*
     |--------------------------------------------------------------------------
@@ -33,7 +33,85 @@ return [
         'sync' => [
             'driver' => 'sync',
         ],
+        'rabbitmq' => [
+            'driver' => 'rabbitmq',
+            'queue' => env('RABBITMQ_QUEUE_DEFAULT', 'collect-ads'),
+            'queues' => [
+                'default' => env('RABBITMQ_QUEUE_DEFAULT', 'default'),
+                'collect-ads' => env('RABBITMQ_QUEUE_PRIORITY', 'collect-ads'),
+                'push-house-ads' => env('RABBITMQ_QUEUE_PUSH_HOUSE_ADS', 'push-house-ads'),
+                'delayed' => env('RABBITMQ_QUEUE_DELAYED', 'delayed-queue'),
+                'mail' => env('RABBITMQ_QUEUE_MAIL', 'mail-queue'),
+                'website-downloads' => env('RABBITMQ_QUEUE_WEBSITE_DOWNLOADS', 'website-downloads'),
+            ],
 
+            'hosts' => [
+                [
+                    'host' => env('RABBITMQ_HOST', '127.0.0.1'),
+                    'port' => env('RABBITMQ_PORT', 5672),
+                    'user' => env('RABBITMQ_USER', 'guest'),
+                    'password' => env('RABBITMQ_PASSWORD', 'guest'),
+                    'vhost' => env('RABBITMQ_VHOST', '/'),
+                ],
+            ],
+            'worker' => env('RABBITMQ_WORKER', 'horizon'),
+            'options' => [
+                'queue' => [
+                    'default' => [
+                        'exchange' => 'default_exchange',
+                        'exchange_type' => 'direct',
+                        'routing_key' => 'default.key',
+                        'prefetch_count' => 10,
+                    ],
+                    'collect-ads' => [
+                        'exchange' => 'collect-ads',
+                        'exchange_type' => 'topic',
+                        'routing_key' => 'collect-ads.key',
+                        'prefetch_count' => 10,
+                    ],
+                    'delayed' => [
+                        'exchange' => 'delayed',
+                        'exchange_type' => 'fanout',
+                        'routing_key' => 'delayed.key',
+                        'prefetch_count' => 5,
+                    ],
+                    'mail' => [
+                        'exchange' => 'mail',
+                        'exchange_type' => 'direct',
+                        'routing_key' => 'mail.key',
+                        'prefetch_count' => 10,
+                    ],
+                    'website-downloads' => [
+                        'exchange' => 'website-downloads',
+                        'exchange_type' => 'direct',
+                        'routing_key' => 'website-downloads.key',
+                        'prefetch_count' => 10,
+                    ],
+                    'max_queue_size' => env('RABBITMQ_MAX_QUEUE_SIZE', 100),
+                    'prefetch_size' => 0,
+                    'prefetch_count' => 10,
+                    'prioritize_delayed' => false,
+                    'queue_max_priority' => 10,
+                    'exchange_type' => 'direct',
+                    'reroute_failed' => true,
+                    'failed_exchange' => 'mail.failed',
+                ],
+                'ssl_options' => [
+                    'cafile' => env('RABBITMQ_SSL_CAFILE', null),
+                    'local_cert' => env('RABBITMQ_SSL_LOCALCERT', null),
+                    'local_key' => env('RABBITMQ_SSL_LOCALKEY', null),
+                    'verify_peer' => env('RABBITMQ_SSL_VERIFY_PEER', true),
+                    'passphrase' => env('RABBITMQ_SSL_PASSPHRASE', null),
+                ],
+                'exchange' => [
+                    'name' => env('RABBITMQ_EXCHANGE_NAME', 'mail'),
+                    'type' => env('RABBITMQ_EXCHANGE_TYPE', 'direct'),
+                    'passive' => env('RABBITMQ_EXCHANGE_PASSIVE', false),
+                    'durable' => env('RABBITMQ_EXCHANGE_DURABLE', true),
+                    'auto_delete' => env('RABBITMQ_EXCHANGE_AUTODELETE', false),
+                ],
+            ],
+        ],
         'database' => [
             'driver' => 'database',
             'connection' => env('DB_QUEUE_CONNECTION'),
