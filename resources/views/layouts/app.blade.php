@@ -19,6 +19,9 @@
     </main>
     @include('partials.footer')
 
+    <!-- Global Modal Container -->
+    <div id="global-modal-container"></div>
+
     @if(session('success') && session('success') === 'Subscription activated successfully')
     @php
     $currentTariff = auth()->user()->currentTariff();
@@ -31,15 +34,12 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Show subscription activated modal
-            $('#modal-subscription-activated').modal('show');
+            window.Modal.show('modal-subscription-activated');
         });
     </script>
     @endif
 
-    <!-- {{-- Global Modal Container --}}
-    <div id="global-modal-container"></div> -->
 
-    @include('partials.modals')
 </body>
 
 </html>

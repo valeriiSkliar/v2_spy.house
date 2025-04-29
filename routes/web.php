@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Frontend\LandingsPageController;
+use App\Http\Controllers\Frontend\ModalController;
 use App\Http\Controllers\Test\CreativesController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Test\NotificationController;
@@ -12,8 +13,13 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Test\ServicesController;
 
 Route::get('/', function () {
-    return view('index');
+    return view('index', [
+        'user' => auth(),
+    ]);
 });
+
+Route::get('/modal/{type}', [ModalController::class, 'loadModal'])->name('modal.load');
+
 
 
 Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
@@ -23,9 +29,9 @@ Route::get('/api', [ApiController::class, 'index'])->name('api.index');
 Route::get('/finances', [FinanceController::class, 'index'])->name('finances.index');
 Route::post('/finances/deposit', [FinanceController::class, 'deposit'])->name('finances.deposit');
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Route::get('/dashboard', function () {
+//     return view('dashboard');
+// })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

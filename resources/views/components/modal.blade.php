@@ -1,24 +1,43 @@
 @props([
-'id' => 'dynamicModal', // Default ID, can be overridden
-'titleId' => 'dynamicModalLabel',
-'size' => '' // e.g., 'modal-sm', 'modal-lg', 'modal-xl'
+'id' => 'dynamicModal',
+'title' => '',
+'size' => '', // '', 'sm', 'lg', 'xl'
+'closeButton' => true,
+'staticBackdrop' => false,
+'centered' => false
 ])
 
-<div class="modal fade" id="{{ $id }}" tabindex="-1" aria-labelledby="{{ $titleId }}" aria-hidden="true">
-    <div class="modal-dialog {{ $size }}">
+<div class="modal fade"
+    id="{{ $id }}"
+    tabindex="-1"
+    aria-labelledby="{{ $id }}-label"
+    aria-hidden="true"
+    @if($staticBackdrop) data-bs-backdrop="static" data-bs-keyboard="false" @endif>
+    <div class="modal-dialog {{ $size ? 'modal-'.$size : '' }} {{ $centered ? 'modal-dialog-centered' : '' }}">
         <div class="modal-content">
+            @if($title || $closeButton)
             <div class="modal-header">
-                <h5 class="modal-title" id="{{ $titleId }}">{{-- Title will be set by JS --}}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                @if($title)
+                <h5 class="modal-title" id="{{ $id }}-label">{{ $title }}</h5>
+                @endif
+
+                @if($closeButton)
+                <button type="button" class="btn-icon _gray btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"><span class="icon-x"></span></span>
+                </button>
+                @endif
             </div>
+            @endif
+
             <div class="modal-body">
-                {{ $slot }} {{-- Modal content goes here --}}
+                {{ $slot }}
             </div>
-            @isset($footer)
+
+            @if(isset($footer))
             <div class="modal-footer">
-                {{ $footer }} {{-- Optional footer content --}}
+                {{ $footer }}
             </div>
-            @endisset
+            @endif
         </div>
     </div>
 </div>

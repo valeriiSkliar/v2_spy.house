@@ -8,7 +8,10 @@ import Alpine from "alpinejs";
 window.Alpine = Alpine;
 Alpine.start();
 
-// Импортируем main.js после инициализации jQuery
+// Import the modal system
+import "./components/modal";
+
+// Additional imports
 import "./libs/main";
 import "./rating.js";
 import "./comments.js";
