@@ -36,12 +36,7 @@ class LandingDownloadService
                 ]);
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'landingsPage.sourceFolderNotFound.description' // [
-                    //     'type' => 'error',
-                    //     'title' => 'landingsPage.sourceFolderNotFound.title',
-                    //     'description' => 'landingsPage.sourceFolderNotFound.description',
-                    //     'duration' => 3000
-                    // ]
+                    'message' => 'landings.sourceFolderNotFound.description'
                 ], 404);
             }
 

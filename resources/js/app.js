@@ -11,6 +11,9 @@ Alpine.start();
 // Import the modal system
 import "./components/modal";
 
+// Import the toast system
+import "./components/toasts";
+
 // Additional imports
 import "./libs/main";
 import "./rating.js";

@@ -1,6 +1,6 @@
 @import "mixins.scss";
 @import "fonts.scss";
-@import "lib/bootstrap.css";
+@import "bootstrap/scss/bootstrap.scss";
 @import "lib/bootstrap-select.css";
 @import "lib/bootstrap-select-overwrite.scss";
 @import "lib/select2.min.css";
@@ -22,8 +22,6 @@
 @import "footer.scss";
 @import "new/style.scss";
 
-
-
 @import "blocks/search.scss";
 @import "blocks/addsList.scss";
 @import "blocks/pagination.scss";
@@ -32,7 +30,6 @@
 @import "blocks/offerTable.scss";
 @import "blocks/breadCrumbs.scss";
 @import "blocks/video.scss";
-
 
 @import "pages/index.scss";
 
@@ -49,8 +46,7 @@
 @import "pages/blogSite.scss";
 @import "pages/creatives.scss";
 
-
-// from dev 
+// from dev
 @import "from-dev/BaseSelect-BMEJFstU.css";
 @import "from-dev/MultiSelect-DLgF6PJh.css";
 @import "from-dev/CreativesSideBarFilters-DWIhj8Ku.css";
@@ -59,3 +55,6 @@
 // Castom
 
 @import "custom.scss";
+
+// Toast
+@import "toast.scss";

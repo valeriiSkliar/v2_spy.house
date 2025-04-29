@@ -6,11 +6,10 @@ use App\Http\Controllers\FrontendController;
 use App\Models\Frondend\Landings\WebsiteDownloadMonitor;
 use App\Services\App\AntiFloodService;
 use App\Services\App\Landings\LandingDownloadService;
-use Illuminate\Container\Attributes\Auth;
+use App\Services\Frontend\Toast;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Http\JsonResponse;
@@ -131,12 +130,8 @@ class LandingsPageController extends FrontendController
         // Проверка прав доступа
         if ($landing->user_id !== $userId) {
             // Не используем abort(403), чтобы гарантировать редирект
-            return redirect()->back()->with('message', [
-                'type' => 'error',
-                'title' => 'landingsPage.downloadFailedAuthorization.title', // Ключ для локализации
-                'description' => 'landingsPage.downloadFailedAuthorization.description', // Ключ для локализации
-                'duration' => 3000
-            ]);
+            Toast::error('landings.downloadFailedAuthorization.description');
+            return redirect()->route('landings.index');
         }
 
         try {
@@ -145,18 +140,8 @@ class LandingsPageController extends FrontendController
             // Если сервис вернул JsonResponse с ошибкой
             if ($response instanceof JsonResponse && $response->getStatusCode() !== 200) {
                 $errorData = $response->getData(true);
-                // Используем ключ 'message' или 'error' из ответа сервиса, или дефолтное сообщение
-                $errorMessageKey = $errorData['message_key'] ?? 'landingsPage.downloadServiceFailed.description'; // Предполагаем ключ локализации
-                $errorMessageParams = $errorData['message_params'] ?? []; // Параметры для перевода, если есть
-
-                // Всегда редирект с flash сообщением
-                return redirect()->back()->with('message', [
-                    'title' => 'landingsPage.downloadFailed.title', // Общий заголовок ошибки
-                    'description' => $errorMessageKey, // Ключ для локализации
-                    'description_params' => $errorMessageParams, // Передаем параметры
-                    'type' => 'error',
-                    'duration' => 5000 // Увеличим время показа для ошибок сервиса
-                ]);
+                Toast::error($errorData['message']);
+                return redirect()->route('landings.index');
             }
 
             // Успешный ответ (StreamedResponse)
@@ -170,14 +155,8 @@ class LandingsPageController extends FrontendController
             ]);
 
             // Редирект с сообщением об ошибке (используем ключ для локализации)
-            return redirect()->back()->with('message', [
-                'title' => 'landingsPage.downloadFailed.title', // Общий заголовок
-                'description' => 'landingsPage.downloadException.description', // Ключ для описания
-                // Можно передать текст исключения как параметр, если нужно его показать (но осторожно с XSS)
-                // 'description_params' => ['error' => $e->getMessage()],
-                'type' => 'error',
-                'duration' => 5000
-            ]);
+            Toast::error('landings.downloadException.description');
+            return redirect()->route('landings.index');
         }
     }
 }

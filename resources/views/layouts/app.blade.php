@@ -22,6 +22,23 @@
     <!-- Global Modal Container -->
     <div id="global-modal-container"></div>
 
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1050;">
+        @if (session('toasts'))
+        @foreach (session('toasts') as $toast)
+        <div class="toast toast-{{ $toast['type'] }}" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto">{{ ucfirst($toast['type']) }}</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                {{ __($toast['message']) }}
+            </div>
+        </div>
+        @endforeach
+        @endif
+    </div>
+
     @if(session('success') && session('success') === 'Subscription activated successfully')
     @php
     $currentTariff = auth()->user()->currentTariff();
@@ -35,6 +52,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Show subscription activated modal
             window.Modal.show('modal-subscription-activated');
+
         });
     </script>
     @endif
