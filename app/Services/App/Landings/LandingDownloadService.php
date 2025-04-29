@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Landings;
+namespace App\Services\App\Landings;
 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -8,7 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use ZipArchive;
 use Illuminate\Support\Str;
-use App\Models\WebsiteDownloadMonitor;
+use App\Models\Frondend\Landings\WebsiteDownloadMonitor;
 
 class LandingDownloadService
 {
