@@ -36,6 +36,9 @@
     </script>
     @endif
 
+    <!-- {{-- Global Modal Container --}}
+    <div id="global-modal-container"></div> -->
+
     @include('partials.modals')
 </body>
 

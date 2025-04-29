@@ -1,8 +1,8 @@
 <?php
 
+use App\Http\Controllers\Frontend\LandingsPageController;
 use App\Http\Controllers\Test\CreativesController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Test\LandingController;
 use App\Http\Controllers\Test\NotificationController;
 use App\Http\Controllers\Test\ApiController;
 use App\Http\Controllers\Test\FinanceController;
@@ -16,7 +16,6 @@ Route::get('/', function () {
 });
 
 
-Route::get('/landings', [LandingController::class, 'index'])->name('landings.index');
 Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
 Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
 Route::post('/notifications/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
@@ -50,3 +49,4 @@ require __DIR__ . '/api.php';
 require __DIR__ . '/blog.php';
 require __DIR__ . '/profile.php';
 require __DIR__ . '/tariffs.php';
+require __DIR__ . '/landings.php';
