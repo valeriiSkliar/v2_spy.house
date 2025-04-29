@@ -12,6 +12,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Http\JsonResponse;
 
 class LandingsPageController extends FrontendController
 {
@@ -113,5 +115,69 @@ class LandingsPageController extends FrontendController
             'description' => 'landingsPage.deleted.description',
             'duration' => 3000
         ]);
+    }
+
+    /**
+     * Download the landing page archive.
+     *
+     * @param WebsiteDownloadMonitor $landing
+     * @param Request $request
+     * @return StreamedResponse|JsonResponse|RedirectResponse
+     */
+    public function download(WebsiteDownloadMonitor $landing, Request $request): StreamedResponse|JsonResponse|RedirectResponse
+    {
+        $userId = $request->user()->id ?? 1;
+
+        // Проверка прав доступа
+        if ($landing->user_id !== $userId) {
+            // Не используем abort(403), чтобы гарантировать редирект
+            return redirect()->back()->with('message', [
+                'type' => 'error',
+                'title' => 'landingsPage.downloadFailedAuthorization.title', // Ключ для локализации
+                'description' => 'landingsPage.downloadFailedAuthorization.description', // Ключ для локализации
+                'duration' => 3000
+            ]);
+        }
+
+        try {
+            $response = $this->downloadService->download($landing);
+
+            // Если сервис вернул JsonResponse с ошибкой
+            if ($response instanceof JsonResponse && $response->getStatusCode() !== 200) {
+                $errorData = $response->getData(true);
+                // Используем ключ 'message' или 'error' из ответа сервиса, или дефолтное сообщение
+                $errorMessageKey = $errorData['message_key'] ?? 'landingsPage.downloadServiceFailed.description'; // Предполагаем ключ локализации
+                $errorMessageParams = $errorData['message_params'] ?? []; // Параметры для перевода, если есть
+
+                // Всегда редирект с flash сообщением
+                return redirect()->back()->with('message', [
+                    'title' => 'landingsPage.downloadFailed.title', // Общий заголовок ошибки
+                    'description' => $errorMessageKey, // Ключ для локализации
+                    'description_params' => $errorMessageParams, // Передаем параметры
+                    'type' => 'error',
+                    'duration' => 5000 // Увеличим время показа для ошибок сервиса
+                ]);
+            }
+
+            // Успешный ответ (StreamedResponse)
+            return $response;
+        } catch (\Exception $e) {
+            // Обновляем статус при исключении
+            $landing->update([
+                'status' => 'failed',
+                'error' => $e->getMessage() ?? 'Download failed',
+                'completed_at' => now()
+            ]);
+
+            // Редирект с сообщением об ошибке (используем ключ для локализации)
+            return redirect()->back()->with('message', [
+                'title' => 'landingsPage.downloadFailed.title', // Общий заголовок
+                'description' => 'landingsPage.downloadException.description', // Ключ для описания
+                // Можно передать текст исключения как параметр, если нужно его показать (но осторожно с XSS)
+                // 'description_params' => ['error' => $e->getMessage()],
+                'type' => 'error',
+                'duration' => 5000
+            ]);
+        }
     }
 }
