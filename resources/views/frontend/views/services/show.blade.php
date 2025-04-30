@@ -8,14 +8,14 @@
     <div class="row _offset30">
         <div class="col-12 col-md-auto">
             <div class="single-market__thumb">
-                <img src="{{ $service['image'] }}" alt="{{ $service['name'] }}">
+                <img src="{{ $service['logo'] }}" alt="{{ $service['name'] }}">
             </div>
         </div>
         <div class="col-12 col-md-auto w-1 flex-grow-1">
             <div class="row align-items-center _offset30">
                 <div class="col-12 col-md-auto order-md-3">
                     <div class="single-market__link">
-                        <a href="{{ $service['site_url'] }}" class="site-link" target="_blank"><span class="icon-link"></span>{{ $service['site_url'] }}</a>
+                        <a href="{{ route('services.redirect', $service['id']) }}" class="site-link" target="_blank"><span class="icon-link"></span>{{ $service['url'] }}</a>
                     </div>
                 </div>
                 <div class="col-12 col-md-auto">
@@ -23,15 +23,15 @@
                 </div>
                 <div class="col-12 col-md-auto">
                     <ul class="single-market__info">
-                        <li class="icon-view">{{ number_format($service['views'] / 1000, 1) }}К</li>
-                        <li class="icon-link">{{ number_format($service['transitions'] / 1000, 1) }}К</li>
+                        <li class="icon-view">{{ number_format($service['views']) }}</li>
+                        <li class="icon-link">{{ number_format($service['transitions']) }}</li>
                         <li class="icon-star">{{ $service['rating'] }}</li>
                     </ul>
                 </div>
             </div>
             <div class="single-market__desc">
                 <div class="hidden-txt">
-                    <div class="hidden-txt__content">{{ $service['full_description'] }}</div>
+                    <div class="hidden-txt__content">{{ $service['description'] }}</div>
                     <a class="js-toggle-txt" data-show="Читать больше" data-hide="Скрыть">Читать больше</a>
                 </div>
             </div>
@@ -39,7 +39,7 @@
     </div>
     <div class="row align-items-end _offset30">
         <div class="col-12 col-md-auto col-lg-auto pb-3">
-            <a href="{{ $service['site_url'] }}" target="_blank" class="btn w-100 _flex _green">
+            <a href="{{ route('services.redirect', $service['id']) }}" target="_blank" class="btn w-100 _flex _green">
                 <span class="btn__text">Перейти</span>
                 <span class="icon-next ml-3 font-18"></span>
             </a>
@@ -49,14 +49,14 @@
                 <button class="btn _code _flex w-100 js-toggle-code">Показать промокод</button>
                 <div class="form-item pb-0">
                     <div class="form-item__field _copy mb-0">
-                        <input type="text" readonly="" value="{{ $service['promo_code'] }}">
+                        <input type="text" readonly="" value="{{ $service['code'] }}">
                         <button type="button" class="btn-copy">
                             <span class="icon-copy"></span>
                         </button>
                     </div>
                 </div>
             </div>
-            <div class="single-market__percent">-{{ $service['discount'] }}</div>
+            <div class="single-market__percent">-{{ $service['code_description'] }}</div>
         </div>
         <div class="col-12 col-lg-auto flex-grow-1 pb-3">
             <div class="rate-service">
@@ -81,12 +81,12 @@
         @foreach($relatedServices as $relatedService)
         <div class="col-12 col-md-6 col-lg-4 col-xl-3 d-flex">
             <div class="market-list__item">
-                <div class="market-list__thumb"><img src="{{ $relatedService['image'] }}" alt="{{ $relatedService['name'] }}"></div>
+                <div class="market-list__thumb"><img src="{{ $relatedService['logo'] }}" alt="{{ $relatedService['name'] }}"></div>
                 <h4>{{ $relatedService['name'] }}</h4>
                 <div class="market-list__desc">{{ $relatedService['description'] }}</div>
                 <ul class="market-list__info">
-                    <li class="icon-view">{{ number_format($relatedService['views'] / 1000, 1) }}К</li>
-                    <li class="icon-link">{{ number_format($relatedService['transitions'] / 1000, 1) }}К</li>
+                    <li class="icon-view">{{ number_format($relatedService['views']) }}</li>
+                    <li class="icon-link">{{ number_format($relatedService['transitions']) }}</li>
                     <li class="icon-star">{{ $relatedService['rating'] }}</li>
                 </ul>
                 <div class="market-list__btn">

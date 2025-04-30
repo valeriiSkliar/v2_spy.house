@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Frontend\Service;
 
-use App\Models\Service\Service;
+use App\Http\Controllers\FrontendController;
+use App\Models\Frontend\Service\Service;
 use Illuminate\Http\Request;
 
-class ServiceRedirectController extends Controller
+class ServiceRedirectController extends FrontendController
 {
     /**
      * Handle the service redirect and increment transitions

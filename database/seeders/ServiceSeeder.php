@@ -370,8 +370,8 @@ class ServiceSeeder extends Seeder
                     'category_id' => $category->id,
                     'code' => $discount ? $discount['code'] : strtoupper(Str::random(8)),
                     'code_description' => [
-                        'en' => $discount ? $discount['text'] : 'Default promotion code EN',
-                        'ru' => $discount ? $discount['text'] : 'Default promotion code RU',
+                        'en' => $discount ? $discount['text'] : '10% off',
+                        'ru' => $discount ? $discount['text'] : '10% off',
                     ],
                     'is_active_code' => true,
                     'code_valid_from' => now(),

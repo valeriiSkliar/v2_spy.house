@@ -6,11 +6,11 @@ use App\Http\Controllers\FrontendController;
 use App\Models\Frontend\Service\Service;
 use App\Models\Frontend\Service\ServiceCategory;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Inertia\Inertia;
 
 class ServicesController extends FrontendController
 {
+    private $indexView = 'frontend.views.services.index';
+    private $showView = 'frontend.views.services.show';
     public function index(Request $request)
     {
         $locale = app()->getLocale();
@@ -128,7 +128,7 @@ class ServicesController extends FrontendController
                 ];
             });
 
-        return view('frontend.services.index', [
+        return view($this->indexView, [
             'services'   => $paginator,
             'categories' => $categories,
             'filters'    => $filters,
@@ -137,63 +137,63 @@ class ServicesController extends FrontendController
         ]);
     }
 
-    // public function show($id)
-    // {
-    //     $locale = app()->getLocale();
-    //     $service = Service::where('id', $id)
-    //         ->where('status', 'Active')
-    //         ->with('ratings')
-    //         ->with('category')
-    //         ->firstOrFail();
+    public function show($id)
+    {
+        $locale = app()->getLocale();
+        $service = Service::where('id', $id)
+            ->where('status', 'Active')
+            ->with('ratings')
+            ->with('category')
+            ->firstOrFail();
 
-    //     // Increment views
-    //     $service->increment('views');
+        // Increment views
+        $service->increment('views');
 
-    //     // Get translations for the current locale
-    //     $translatedService = [
-    //         'id' => $service->id,
-    //         'name' => $service->getTranslation('name', $locale),
-    //         'description' => $service->getTranslation('description', $locale),
-    //         'code' => $service->code,
-    //         'code_description' => $service->getTranslation('code_description', $locale),
-    //         'transitions' => $service->transitions,
-    //         'category' => $service->category,
-    //         'rating' => $service->rating,
-    //         'views' => $service->views,
-    //         'url' => $service->url,
-    //         'redirect_url' => $service->redirect_url,
-    //         'logo' => $service->logo,
-    //         'is_active_code' => $service->is_active_code,
-    //     ];
+        // Get translations for the current locale
+        $translatedService = [
+            'id' => $service->id,
+            'name' => $service->getTranslation('name', $locale),
+            'description' => $service->getTranslation('description', $locale),
+            'code' => $service->code,
+            'code_description' => $service->getTranslation('code_description', $locale),
+            'transitions' => $service->transitions,
+            'category' => $service->category,
+            'rating' => $service->rating,
+            'views' => $service->views,
+            'url' => $service->url,
+            'redirect_url' => $service->redirect_url,
+            'logo' => $service->logo,
+            'is_active_code' => $service->is_active_code,
+        ];
 
 
-    //     $relatedServices = Service::where('status', 'Active')
-    //         ->where('id', '!=', $service->id)
-    //         ->take(4)
-    //         ->inRandomOrder()
-    //         ->with('category')
-    //         ->get()
-    //         ->map(function ($service) use ($locale) {
-    //             return [
-    //                 'id' => $service->id,
-    //                 'name' => $service->getTranslation('name', $locale),
-    //                 'description' => $service->getTranslation('description', $locale),
-    //                 'category' => $service->category,
-    //                 'transitions' => $service->transitions,
-    //                 'rating' => $service->rating,
-    //                 'views' => $service->views,
-    //                 'url' => $service->url,
-    //                 'redirect_url' => $service->redirect_url,
-    //                 'logo' => $service->logo,
-    //                 'is_active_code' => $service->is_active_code,
-    //             ];
-    //         });
+        $relatedServices = Service::where('status', 'Active')
+            ->where('id', '!=', $service->id)
+            ->take(4)
+            ->inRandomOrder()
+            ->with('category')
+            ->get()
+            ->map(function ($service) use ($locale) {
+                return [
+                    'id' => $service->id,
+                    'name' => $service->getTranslation('name', $locale),
+                    'description' => $service->getTranslation('description', $locale),
+                    'category' => $service->category,
+                    'transitions' => $service->transitions,
+                    'rating' => $service->rating,
+                    'views' => $service->views,
+                    'url' => $service->url,
+                    'redirect_url' => $service->redirect_url,
+                    'logo' => $service->logo,
+                    'is_active_code' => $service->is_active_code,
+                ];
+            });
 
-    //     return Inertia::render('ServicePage/Show', [
-    //         'service' => $translatedService,
-    //         'relatedServices' => $relatedServices,
-    //     ]);
-    // }
+        return view($this->showView, [
+            'service' => $translatedService,
+            'relatedServices' => $relatedServices,
+        ]);
+    }
 
     // public function rate(Request $request, string $id)
     // {
