@@ -27,16 +27,12 @@ class BlogController extends FrontendController
             $query->where('title', 'like', '%' . $search . '%');
         }
 
-        // return Inertia::render('Blog/Index', [
-        //     'posts' => $query->paginate(12)->appends($request->all()),
-        //     'sidebar' => $this->getSidebarData(),
-        //     'filters' => $request->only(['search', 'category', 'sort'])
-        // ]);
-
         return view('blog.index', [
+            'breadcrumbs' => [],
             'heroArticle' => $query->first(),
             'articles' => $query->paginate(12)->appends($request->all()),
             'categories' => $this->getSidebarData(),
+            'currentCategory' => null,
             'filters' => $request->only(['search', 'category', 'sort']),
             'currentPage' => $request->get('page', 1),
             'totalPages' => ceil($query->count() / 12)
@@ -68,58 +64,61 @@ class BlogController extends FrontendController
         //     'relatedPosts' => $post->relatedPosts,
         //     'canModerate' => false
         // ]);
-        dd($post->toArray());
         return view('blog.show', [
             'breadcrumbs' => [
                 ['title' => 'Blog', 'url' => route('blog.index')],
+                ['title' => $post->categories->first()->name, 'url' => route('blog.category', $post->categories->first()->slug)],
                 ['title' => $post->title, 'url' => route('blog.show', $post->slug)],
             ],
             'article' => $post,
+            'currentCategory' => $post->categories->first(),
             'comments' => $comments,
-            'sidebar' => $this->getSidebarData(),
+            'categories' => $this->getSidebarData(),
             'relatedPosts' => $post->relatedPosts,
             'canModerate' => false
         ]);
     }
 
-    // public function byCategory(string $slug, Request $request)
-    // {
-    //     $category = PostCategory::where('slug', $slug)
-    //         ->with('children')
-    //         ->firstOrFail();
+    public function byCategory(string $slug, Request $request)
+    {
+        $category = PostCategory::where('slug', $slug)
+            ->with('children')
+            ->firstOrFail();
 
-    //     $posts = BlogPost::whereHas('categories', function ($query) use ($category) {
-    //         $query->where('post_categories.id', $category->id)
-    //             ->orWhere('post_categories.parent_id', $category->id);
-    //     })
-    //         ->where('is_published', true)
-    //         ->with(['author', 'categories'])
-    //         ->when($request->input('search'), function ($query, $search) {
-    //             $search = sanitize_input($search);
-    //             $query->where('title', 'like', "%{$search}%")
-    //                 ->orWhere('content', 'like', "%{$search}%");
-    //         })
-    //         ->orderBy('created_at', 'desc')
-    //         ->paginate(9)
-    //         ->withQueryString();
+        $posts = BlogPost::whereHas('categories', function ($query) use ($category) {
+            $query->where('post_categories.id', $category->id)
+                ->orWhere('post_categories.parent_id', $category->id);
+        })
+            ->where('is_published', true)
+            ->with(['author', 'categories'])
+            ->when($request->input('search'), function ($query, $search) {
+                $search = sanitize_input($search);
+                $query->where('title', 'like', "%{$search}%")
+                    ->orWhere('content', 'like', "%{$search}%");
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate(12)
+            ->withQueryString();
 
-    //     $sidebar = $this->getSidebarData();
+        $sidebar = $this->getSidebarData();
 
-    //     return Inertia::render('Blog/Index', [
-    //         'posts' => $posts,
-    //         'sidebar' => $sidebar,
-    //         'filters' => [
-    //             'search' => $request->input('search'),
-    //             'category' => $category,
-    //         ],
-    //         'currentCategory' => [
-    //             'id' => $category->id,
-    //             'name' => $category->name,
-    //             'slug' => $category->slug,
-    //             'posts_count' => $category->posts_count,
-    //         ],
-    //     ]);
-    // }
+        return view('blog.index', [
+            'breadcrumbs' => [
+                ['title' => 'Blog', 'url' => route('blog.index')],
+                ['title' => $category->name, 'url' => route('blog.category', $category->slug)],
+            ],
+            'heroArticle' => $posts->first(),
+            'articles' => $posts,
+            'sidebar' => $sidebar,
+            'categories' => $this->getSidebarData(),
+            'currentCategory' => $category,
+
+            'filters' => [
+                'search' => $request->input('search'),
+                'category' => $category,
+            ],
+        ]);
+    }
 
 
     private function getSidebarData(string $locale = 'en'): array

@@ -1,6 +1,8 @@
 @extends('layouts.blog')
 
-
+@section('breadcrumbs')
+<x-breadcrumbs :items="$breadcrumbs" />
+@endsection
 
 @section('page-content')
 <div class="blog-list">

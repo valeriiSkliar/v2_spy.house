@@ -6,11 +6,11 @@
 
 @section('page-content')
 <div class="article _big _single">
-    <div class="article__thumb thumb"><img src="{{ $article['image'] }}" alt="{{ $article['title'] }}"></div>
+    <div class="article__thumb thumb"><img src="{{ $article['featured_image'] }}" alt="{{ $article['title'] }}"></div>
     <div class="article__row">
         <div class="article__cat">
             <div class="cat-links">
-                <a href="{{ route('blog.category', $article->categories->first()->slug) }}" data-color="{{ $article->categories->first()->color }}">{{ $article->categories->first()->name }}</a>
+                <a href="{{ route('blog.category', $currentCategory->slug) }}" data-color="{{ $currentCategory->color }}">{{ $currentCategory->name }}</a>
             </div>
         </div>
         <div class="article__info">
@@ -73,13 +73,13 @@
     </div>
     <div class="article-similar">
         <div class="carousel-container" id="slick-demo-2">
-            @foreach($relatedArticles as $relatedArticle)
+            @foreach($relatedPosts as $relatedPost)
             <div class="carousel-item">
                 <div class="article _similar">
-                    <a href="{{ route('blog.show', $relatedArticle['slug']) }}" class="article__thumb thumb">
-                        <img src="{{ $relatedArticle['image'] }}" alt="{{ $relatedArticle['title'] }}">
+                    <a href="{{ route('blog.show', $relatedPost['slug']) }}" class="article__thumb thumb">
+                        <img src="{{ $relatedPost['image'] }}" alt="{{ $relatedPost['title'] }}">
                     </a>
-                    <a href="{{ route('blog.show', $relatedArticle['slug']) }}" class="article__title">{{ $relatedArticle['title'] }}</a>
+                    <a href="{{ route('blog.show', $relatedPost['slug']) }}" class="article__title">{{ $relatedPost['title'] }}</a>
                 </div>
             </div>
             @endforeach
@@ -168,8 +168,8 @@
         </div>
         @endguest
 
-        @if($commentsPages > 1)
-        <x-pagination :currentPage="$currentPage" :totalPages="$commentsPages" />
+        @if($comments->lastPage() > 1)
+        <x-pagination :currentPage="$comments->currentPage()" :totalPages="$comments->lastPage()" />
         @endif
     </div>
 </div>
