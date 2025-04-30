@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             BlogPostSeeder::class,
             WebsiteDownloadSeeder::class,
+            ServiceSeeder::class,
             // Add other seeders here if needed
         ]);
     }

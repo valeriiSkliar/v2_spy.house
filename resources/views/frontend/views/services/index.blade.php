@@ -94,31 +94,25 @@
         @foreach($services as $service)
         <div class="col-12 col-md-6 col-lg-4 col-xl-3 d-flex">
             <div class="market-list__item">
-                <div class="market-list__thumb"><img src="{{ $service['image'] }}" alt="{{ $service['name'] }}"></div>
-                <h4>{{ $service['name'] }}</h4>
-                <div class="market-list__desc">{{ $service['description'] }}</div>
+                <div class="market-list__thumb"><a href="{{ route('services.show', $service['id']) }}"><img src="{{ $service['logo'] }}" alt="{{ $service['name'] }}"></a></div>
+                <h4><a href="{{ route('services.show', $service['id']) }}">{{ $service['name'] }}</a></h4>
+                <div class="market-list__desc"><a href="{{ route('services.show', $service['id']) }}">{{ $service['description'] }}</a></div>
                 <ul class="market-list__info">
-                    <li class="icon-view">{{ number_format($service['views'] / 1000, 1) }}К</li>
-                    <li class="icon-link">{{ number_format($service['transitions'] / 1000, 1) }}К</li>
-                    <li class="icon-star">{{ $service['rating'] }}</li>
+                    <li class="icon-view">{{ number_format($service['views']) }}</li>
+                    <li class="icon-link">{{ number_format($service['transitions']) }}</li>
+                    <li class="icon-star">{{ number_format($service['rating'], 1) }}</li>
                 </ul>
                 <div class="market-list__btn">
-                    <a href="{{ route('services.show', $service['id']) }}" class="btn _flex _border-green w-100"><span>Подробнее <span class="icon-more"></span></span></a>
+                    <a href="{{ route('services.redirect', $service['id']) }}" class="btn _flex _border-green w-100" target="_blank">
+                        <span>Visit Site <span class="icon-more"></span></span>
+                    </a>
                 </div>
             </div>
         </div>
         @endforeach
     </div>
 </div>
-<nav class="pagination-nav" role="navigation" aria-label="pagination">
-    <ul class="pagination-list">
-        <li><a class="pagination-link prev disabled" aria-disabled="true" href=""><span class="icon-prev"></span> <span class="pagination-link__txt">Previous</span></a></li>
-        <li><a class="pagination-link active" href="#">1</a></li>
-        <li><a class="pagination-link" href="#">2</a></li>
-        <li><a class="pagination-link" href="#">3</a></li>
-        <li><a class="pagination-link next" aria-disabled="false" href="#"><span class="pagination-link__txt">Next</span> <span class="icon-next"></span></a></li>
-    </ul>
-</nav>
+<x-pagination :currentPage="$currentPage" :totalPages="$totalPages" />
 @endsection
 
 @section('scripts')
