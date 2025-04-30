@@ -131,7 +131,9 @@ class ServicesController extends FrontendController
         return view('frontend.services.index', [
             'services'   => $paginator,
             'categories' => $categories,
-            'filters'    => $filters
+            'filters'    => $filters,
+            'currentPage' => $currentPage,
+            'totalPages' => ceil($totalServices / $perPage)
         ]);
     }
 
