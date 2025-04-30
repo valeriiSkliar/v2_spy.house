@@ -41,7 +41,7 @@ class MockAuthServiceProvider extends ServiceProvider
                 'avatar' => 'https://ui-avatars.com/api/?name=John+Doe&background=random',
             ]);
 
-            Auth::setUser($mockUser);
+            // Auth::setUser($mockUser);
         }
     }
 }

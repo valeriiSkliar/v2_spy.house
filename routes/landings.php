@@ -4,12 +4,17 @@ use App\Http\Controllers\App\WebsiteDownloadController;
 use App\Http\Controllers\Frontend\LandingsPageController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/landings', [LandingsPageController::class, 'index'])->name('landings.index');
-Route::delete('/landings/{landing}', [LandingsPageController::class, 'destroy'])->name('landings.destroy');
-Route::get('/landings/{landing}/download', [LandingsPageController::class, 'download'])->name('landings.download');
+Route::middleware(['web', 'auth'])
+    ->prefix('landings')
+    ->name('landings.')
+    ->group(function () {
+        Route::get('/', [LandingsPageController::class, 'index'])->name('index');
+        Route::delete('/{landing}', [LandingsPageController::class, 'destroy'])->name('destroy');
+        Route::get('/{landing}/download', [LandingsPageController::class, 'download'])->name('download');
+        Route::get('/{landing}/status', [WebsiteDownloadController::class, 'show'])->name('status');
+    });
 
 
-Route::get('/landings/{landing}/status', [WebsiteDownloadController::class, 'show'])->name('landings.status');
 
 Route::get('/website-downloads', [WebsiteDownloadController::class, 'index'])->name('website-downloads.index');
 Route::post('/website-downloads', [WebsiteDownloadController::class, 'store'])->name('website-downloads.store');

@@ -22,9 +22,7 @@ Route::get('/modal/{type}', [ModalController::class, 'loadModal'])->name('modal.
 
 
 
-Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
-Route::post('/notifications/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
+
 Route::get('/api', [ApiController::class, 'index'])->name('api.index');
 Route::get('/finances', [FinanceController::class, 'index'])->name('finances.index');
 Route::post('/finances/deposit', [FinanceController::class, 'deposit'])->name('finances.deposit');
@@ -33,11 +31,11 @@ Route::post('/finances/deposit', [FinanceController::class, 'deposit'])->name('f
 //     return view('dashboard');
 // })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
+// Route::middleware('auth')->group(function () {
+//     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+//     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+//     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+// });
 
 // Services
 Route::middleware('web')->group(function () {
@@ -56,3 +54,4 @@ require __DIR__ . '/blog.php';
 require __DIR__ . '/profile.php';
 require __DIR__ . '/tariffs.php';
 require __DIR__ . '/landings.php';
+require __DIR__ . '/notifications.php';

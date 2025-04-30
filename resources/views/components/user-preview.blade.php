@@ -1,7 +1,7 @@
 <div class="user-preview">
     <div class="user-preview__trigger">
-        <div class="user-preview__avatar thumb"><span>{{ substr(auth()->user()->name, 0, 2) }}</span></div>
-        <div class="user-preview__name">{{ auth()->user()->name }}</div>
+        <div class="user-preview__avatar thumb"><span>{{ substr(auth()?->user()?->name, 0, 2) }}</span></div>
+        <div class="user-preview__name">{{ auth()->user()?->name }}</div>
         <div class="btn-icon _dark">
             <span class="icon-settings"></span>
             <span class="has-notification"></span>
