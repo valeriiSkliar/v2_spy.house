@@ -2,10 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\Frondend\Landings\WebsiteDownloadMonitor;
-use App\Models\Frondend\Landings\WebsiteDownloadNotification;
+use App\Models\Frontend\Landings\WebsiteDownloadMonitor;
+use App\Models\Frontend\Landings\WebsiteDownloadNotification;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class WebsiteDownloadSeeder extends Seeder

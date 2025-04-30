@@ -1,14 +1,14 @@
 <?php
 
-namespace Database\Factories\Frondend\Landings;
+namespace Database\Factories\Frontend\Landings;
 
-use App\Models\Frondend\Landings\WebsiteDownloadMonitor;
+use App\Models\Frontend\Landings\WebsiteDownloadMonitor;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Frondend\Landings\WebsiteDownloadMonitor>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Frontend\Landings\WebsiteDownloadMonitor>
  */
 class WebsiteDownloadMonitorFactory extends Factory
 {

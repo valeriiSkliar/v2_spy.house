@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\Frondend\Landings;
+namespace App\Models\Frontend\Landings;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

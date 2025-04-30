@@ -1,13 +1,13 @@
 <?php
 
-namespace Database\Factories\Frondend\Landings;
+namespace Database\Factories\Frontend\Landings;
 
-use App\Models\Frondend\Landings\WebsiteDownloadNotification;
+use App\Models\Frontend\Landings\WebsiteDownloadNotification;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Frondend\Landings\WebsiteDownloadNotification>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Frontend\Landings\WebsiteDownloadNotification>
  */
 class WebsiteDownloadNotificationFactory extends Factory
 {
