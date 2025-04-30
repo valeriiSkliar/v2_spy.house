@@ -137,13 +137,21 @@ class ServicesController extends FrontendController
             ['value' => 'views', 'label' => 'Views Low to High', 'order' => 'asc'],
         ];
 
+        $perPageOptions = [
+            ['value' => 12, 'label' => '12', 'order' => ''],
+            ['value' => 24, 'label' => '24', 'order' => ''],
+            ['value' => 48, 'label' => '48', 'order' => ''],
+            ['value' => 96, 'label' => '96', 'order' => ''],
+        ];
+
         return view($this->indexView, [
             'services'   => $paginator,
             'categories' => $categories,
             'filters'    => $filters,
             'currentPage' => $currentPage,
             'totalPages' => ceil($totalServices / $perPage),
-            'sortOptions' => $sortOptions
+            'sortOptions' => $sortOptions,
+            'perPageOptions' => $perPageOptions
         ]);
     }
 

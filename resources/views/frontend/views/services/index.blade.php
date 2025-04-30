@@ -20,15 +20,14 @@
     </div>
     <div class="col-12 col-md-6 col-lg-auto mb-15">
         <div class="base-select-icon">
-            <div class="base-select">
-                <div class="base-select__trigger"><span class="base-select__value">On page — 12</span><span class="base-select__arrow"></span></div>
-                <ul class="base-select__dropdown" style="display: none;">
-                    <li class="base-select__option is-selected">12</li>
-                    <li class="base-select__option">24</li>
-                    <li class="base-select__option">48</li>
-                    <li class="base-select__option">96</li>
-                </ul>
-            </div>
+            <x-base-select
+                id="per-page"
+                :selected="[
+                    'value' => $filters['perPage'] ?? '12',
+                    'order' => '',
+                    'label' => 'On page — ' . ($filters['perPage'] ?? '12')
+                ]"
+                :options="$perPageOptions" />
             <span class="icon-list"></span>
         </div>
     </div>

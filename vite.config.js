@@ -16,6 +16,7 @@ export default defineConfig({
     resolve: {
         alias: {
             "@": "/resources/js",
+            "@img": "/resources/img",
             "@scss": "/resources/scss",
             jquery: "jquery/dist/jquery.js",
         },
