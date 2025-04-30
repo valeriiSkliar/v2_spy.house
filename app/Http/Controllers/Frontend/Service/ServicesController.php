@@ -128,12 +128,22 @@ class ServicesController extends FrontendController
                 ];
             });
 
+        $sortOptions = [
+            ['value' => 'transitions', 'label' => 'Transitions High to Low', 'order' => 'desc'],
+            ['value' => 'transitions', 'label' => 'Transitions Low to High', 'order' => 'asc'],
+            ['value' => 'rating', 'label' => 'Rating High to Low', 'order' => 'desc'],
+            ['value' => 'rating', 'label' => 'Rating Low to High', 'order' => 'asc'],
+            ['value' => 'views', 'label' => 'Views High to Low', 'order' => 'desc'],
+            ['value' => 'views', 'label' => 'Views Low to High', 'order' => 'asc'],
+        ];
+
         return view($this->indexView, [
             'services'   => $paginator,
             'categories' => $categories,
             'filters'    => $filters,
             'currentPage' => $currentPage,
-            'totalPages' => ceil($totalServices / $perPage)
+            'totalPages' => ceil($totalServices / $perPage),
+            'sortOptions' => $sortOptions
         ]);
     }
 

@@ -1,6 +1,6 @@
-@props(['selected' => ['value' => '', 'label' => ''], 'options' => [], 'withFlag' => false])
+@props(['selected' => ['value' => '', 'order' => '', 'label' => ''], 'options' => [], 'id' => '', 'withFlag' => false])
 
-<div class="base-select">
+<div class="base-select" id="{{ $id }}">
     <div class="base-select__trigger">
         <span class="base-select__value">
             @if($withFlag)
@@ -12,7 +12,10 @@
     </div>
     <ul class="base-select__dropdown" style="display: none;">
         @foreach($options as $option)
-        <li class="base-select__option {{ $option['value'] == $selected['value'] ? 'is-selected' : '' }}">
+        <li
+            data-value="{{ $option['value'] }}"
+            data-order="{{ $option['order'] }}"
+            class="base-select__option {{ $option['value'] == $selected['value'] && $option['order'] == $selected['order'] ? 'is-selected' : '' }}">
             @if($withFlag)
             <img src="/img/flags/{{ $option['code'] ?? 'US' }}.svg" alt="">
             @endif
