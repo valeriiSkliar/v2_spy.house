@@ -24,7 +24,7 @@
             </div>
             @yield('bottom-banner')
         </div>
-        @include('partials.sidebar-blog')
+        <!-- @include('partials.sidebar-blog') -->
     </main>
 </div>
 @endsection

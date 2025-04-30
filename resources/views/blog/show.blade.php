@@ -10,15 +10,15 @@
     <div class="article__row">
         <div class="article__cat">
             <div class="cat-links">
-                <a href="{{ route('blog.category', $article['category']['slug']) }}" data-color="{{ $article['category']['color'] }}">{{ $article['category']['name'] }}</a>
+                <a href="{{ route('blog.category', $article->categories->first()->slug) }}" data-color="{{ $article->categories->first()->color }}">{{ $article->categories->first()->name }}</a>
             </div>
         </div>
         <div class="article__info">
             <div class="article-info">
-                <div class="article-info__item icon-date">{{ $article['date'] }}</div>
-                <a href="#comments" class="article-info__item icon-comment1">{{ count($article['comments']) }}</a>
-                <div class="article-info__item icon-view">{{ $article['views'] }}</div>
-                <div class="article-info__item icon-rating">{{ $article['rating'] }}</div>
+                <div class="article-info__item icon-date">{{ $article->created_at->format('d.m.y') }}</div>
+                <a href="#comments" class="article-info__item icon-comment1">{{ $article->comments_count }}</a>
+                <div class="article-info__item icon-view">{{ $article->views_count }}</div>
+                <div class="article-info__item icon-rating">{{ $article->rating }}</div>
             </div>
         </div>
     </div>
