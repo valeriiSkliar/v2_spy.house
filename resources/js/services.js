@@ -101,4 +101,52 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     }
+
+    const categoryContainer = $("#category-filter");
+    if (categoryContainer.length) {
+        const categorySelect = $(".base-select__dropdown", categoryContainer);
+        const categoryOptions = $(".base-select__option", categoryContainer);
+        const categoryTrigger = $(".base-select__trigger", categoryContainer);
+        const categoryValue = $("[data-value]", categoryContainer);
+
+        categoryTrigger.on("click", function (e) {
+            e.stopPropagation();
+            categorySelect.show();
+        });
+
+        categoryOptions.each(function () {
+            $(this).on("click", function (e) {
+                e.stopPropagation();
+                categoryOptions.removeClass("is-selected");
+                $(this).addClass("is-selected");
+                categoryValue.data("value", $(this).data("value"));
+                categorySelect.hide();
+
+                let category = categoryValue.data("value");
+
+                const url = new URL(window.location.href);
+                if (category) {
+                    url.searchParams.set("category", category);
+                } else {
+                    url.searchParams.delete("category");
+                }
+                // url.searchParams.set("page", "1");
+                window.location.href = url.toString();
+            });
+        });
+
+        $(document).on("click", function (e) {
+            const clickedElement = $(e.target);
+            const isClickInside =
+                categoryContainer.is(clickedElement) ||
+                categoryContainer.find(clickedElement).length > 0 ||
+                categorySelect.is(clickedElement) ||
+                categoryTrigger.is(clickedElement) ||
+                categoryOptions.is(clickedElement);
+
+            if (!isClickInside) {
+                categorySelect.hide();
+            }
+        });
+    }
 });

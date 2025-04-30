@@ -53,16 +53,15 @@
                         </form>
                     </div>
                     <div class="col-12 col-md-6 col-lg-4 mb-10">
-                        <div class="base-select">
-                            <div class="base-select__trigger"><span class="base-select__value">All Categories</span><span class="base-select__arrow"></span></div>
-                            <ul class="base-select__dropdown" style="display: none;">
-                                <li class="base-select__option is-selected" data-value="">All Categories</li>
-                                @foreach($categories as $category)
-                                <li class="base-select__option" data-value="{{ $category['id'] }}">{{ $category['name'] }}</li>
-                                @endforeach
-                            </ul>
-                            <input type="hidden" name="category" form="searchForm" value="{{ request('category') }}">
-                        </div>
+                        <x-base-select
+                            id="category-filter"
+                            :selected="[
+                                'value' => request('category') ?? '',
+                                'order' => '',
+                                'label' => 'All Categories'
+                            ]"
+                            :options="$categoriesOptions" />
+
                     </div>
                     <div class="col-12 col-md-6 col-lg-4 mb-10">
                         <div class="base-select">

@@ -6,6 +6,7 @@ use App\Http\Controllers\FrontendController;
 use App\Models\Frontend\Service\Service;
 use App\Models\Frontend\Service\ServiceCategory;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class ServicesController extends FrontendController
 {
@@ -110,7 +111,7 @@ class ServicesController extends FrontendController
         });
 
         // Создаём кастомный пагинатор
-        $paginator = new \Illuminate\Pagination\LengthAwarePaginator(
+        $paginator = new LengthAwarePaginator(
             $transformedServices,
             $totalServices,
             $perPage,
@@ -144,6 +145,15 @@ class ServicesController extends FrontendController
             ['value' => 96, 'label' => '96', 'order' => ''],
         ];
 
+        $categoriesOptions = ServiceCategory::all()
+            ->map(function ($category) use ($locale) {
+                return [
+                    'value'   => $category->id,
+                    'label' => $category->getTranslation('name', $locale),
+                    'order' => ''
+                ];
+            });
+
         return view($this->indexView, [
             'services'   => $paginator,
             'categories' => $categories,
@@ -151,7 +161,8 @@ class ServicesController extends FrontendController
             'currentPage' => $currentPage,
             'totalPages' => ceil($totalServices / $perPage),
             'sortOptions' => $sortOptions,
-            'perPageOptions' => $perPageOptions
+            'perPageOptions' => $perPageOptions,
+            'categoriesOptions' => $categoriesOptions
         ]);
     }
 
