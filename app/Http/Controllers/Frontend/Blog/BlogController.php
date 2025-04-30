@@ -57,13 +57,6 @@ class BlogController extends FrontendController
             ->paginate(10)
             ->appends($request->all());
 
-        // return Inertia::render('Blog/Show', [
-        //     'post' => $post,
-        //     'comments' => $comments,
-        //     'sidebar' => $this->getSidebarData(),
-        //     'relatedPosts' => $post->relatedPosts,
-        //     'canModerate' => false
-        // ]);
         return view('blog.show', [
             'breadcrumbs' => [
                 ['title' => 'Blog', 'url' => route('blog.index')],
