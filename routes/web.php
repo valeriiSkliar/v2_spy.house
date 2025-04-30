@@ -37,12 +37,6 @@ Route::post('/finances/deposit', [FinanceController::class, 'deposit'])->name('f
 //     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 // });
 
-// Services
-Route::middleware('web')->group(function () {
-    Route::get('/services', [ServicesController::class, 'index'])->name('services.index');
-    Route::get('/services/{id}', [ServicesController::class, 'show'])->name('services.show');
-    Route::post('/services/{id}/rate', [ServicesController::class, 'rate'])->name('services.rate');
-});
 
 // Creatives
 Route::get('/creatives', [CreativesController::class, 'index'])->name('creatives.index');
@@ -55,3 +49,4 @@ require __DIR__ . '/profile.php';
 require __DIR__ . '/tariffs.php';
 require __DIR__ . '/landings.php';
 require __DIR__ . '/notifications.php';
+require __DIR__ . '/services.php';

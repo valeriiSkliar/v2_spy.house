@@ -1,17 +1,17 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Frontend\Service;
 
-use App\Models\Service\Service;
-use App\Models\Service\ServiceCategory;
+use App\Http\Controllers\FrontendController;
+use App\Models\Frontend\Service\Service;
+use App\Models\Frontend\Service\ServiceCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
-use Inertia\Response;
 
-class ServicesController extends Controller
+class ServicesController extends FrontendController
 {
-    public function index(Request $request): Response
+    public function index(Request $request)
     {
         $locale = app()->getLocale();
 
@@ -128,116 +128,116 @@ class ServicesController extends Controller
                 ];
             });
 
-        return Inertia::render('ServicePage/Index', [
+        return view('frontend.services.index', [
             'services'   => $paginator,
             'categories' => $categories,
             'filters'    => $filters
         ]);
     }
 
-    public function show($id)
-    {
-        $locale = app()->getLocale();
-        $service = Service::where('id', $id)
-            ->where('status', 'Active')
-            ->with('ratings')
-            ->with('category')
-            ->firstOrFail();
+    // public function show($id)
+    // {
+    //     $locale = app()->getLocale();
+    //     $service = Service::where('id', $id)
+    //         ->where('status', 'Active')
+    //         ->with('ratings')
+    //         ->with('category')
+    //         ->firstOrFail();
 
-        // Increment views
-        $service->increment('views');
+    //     // Increment views
+    //     $service->increment('views');
 
-        // Get translations for the current locale
-        $translatedService = [
-            'id' => $service->id,
-            'name' => $service->getTranslation('name', $locale),
-            'description' => $service->getTranslation('description', $locale),
-            'code' => $service->code,
-            'code_description' => $service->getTranslation('code_description', $locale),
-            'transitions' => $service->transitions,
-            'category' => $service->category,
-            'rating' => $service->rating,
-            'views' => $service->views,
-            'url' => $service->url,
-            'redirect_url' => $service->redirect_url,
-            'logo' => $service->logo,
-            'is_active_code' => $service->is_active_code,
-        ];
+    //     // Get translations for the current locale
+    //     $translatedService = [
+    //         'id' => $service->id,
+    //         'name' => $service->getTranslation('name', $locale),
+    //         'description' => $service->getTranslation('description', $locale),
+    //         'code' => $service->code,
+    //         'code_description' => $service->getTranslation('code_description', $locale),
+    //         'transitions' => $service->transitions,
+    //         'category' => $service->category,
+    //         'rating' => $service->rating,
+    //         'views' => $service->views,
+    //         'url' => $service->url,
+    //         'redirect_url' => $service->redirect_url,
+    //         'logo' => $service->logo,
+    //         'is_active_code' => $service->is_active_code,
+    //     ];
 
 
-        $relatedServices = Service::where('status', 'Active')
-            ->where('id', '!=', $service->id)
-            ->take(4)
-            ->inRandomOrder()
-            ->with('category')
-            ->get()
-            ->map(function ($service) use ($locale) {
-                return [
-                    'id' => $service->id,
-                    'name' => $service->getTranslation('name', $locale),
-                    'description' => $service->getTranslation('description', $locale),
-                    'category' => $service->category,
-                    'transitions' => $service->transitions,
-                    'rating' => $service->rating,
-                    'views' => $service->views,
-                    'url' => $service->url,
-                    'redirect_url' => $service->redirect_url,
-                    'logo' => $service->logo,
-                    'is_active_code' => $service->is_active_code,
-                ];
-            });
+    //     $relatedServices = Service::where('status', 'Active')
+    //         ->where('id', '!=', $service->id)
+    //         ->take(4)
+    //         ->inRandomOrder()
+    //         ->with('category')
+    //         ->get()
+    //         ->map(function ($service) use ($locale) {
+    //             return [
+    //                 'id' => $service->id,
+    //                 'name' => $service->getTranslation('name', $locale),
+    //                 'description' => $service->getTranslation('description', $locale),
+    //                 'category' => $service->category,
+    //                 'transitions' => $service->transitions,
+    //                 'rating' => $service->rating,
+    //                 'views' => $service->views,
+    //                 'url' => $service->url,
+    //                 'redirect_url' => $service->redirect_url,
+    //                 'logo' => $service->logo,
+    //                 'is_active_code' => $service->is_active_code,
+    //             ];
+    //         });
 
-        return Inertia::render('ServicePage/Show', [
-            'service' => $translatedService,
-            'relatedServices' => $relatedServices,
-        ]);
-    }
+    //     return Inertia::render('ServicePage/Show', [
+    //         'service' => $translatedService,
+    //         'relatedServices' => $relatedServices,
+    //     ]);
+    // }
 
-    public function rate(Request $request, string $id)
-    {
-        $request->validate([
-            'rating' => 'required|integer|min:1|max:5',
-            'review' => 'nullable|string|max:1000'
-        ]);
+    // public function rate(Request $request, string $id)
+    // {
+    //     $request->validate([
+    //         'rating' => 'required|integer|min:1|max:5',
+    //         'review' => 'nullable|string|max:1000'
+    //     ]);
 
-        $service = Service::findOrFail($id);
+    //     $service = Service::findOrFail($id);
 
-        // Check if user has already rated this service
-        $existingRating = $service->ratings()->where('user_id', Auth::id())->first();
+    //     // Check if user has already rated this service
+    //     $existingRating = $service->ratings()->where('user_id', Auth::id())->first();
 
-        if ($existingRating) {
-            return response()->json([
-                'message' => 'You have already rated this service'
-            ], 422);
-        }
+    //     if ($existingRating) {
+    //         return response()->json([
+    //             'message' => 'You have already rated this service'
+    //         ], 422);
+    //     }
 
-        // Create new rating
-        $rating = $service->ratings()->create([
-            'user_id' => Auth::id(),
-            'rating' => $request->rating,
-            'review' => $request->review
-        ]);
+    //     // Create new rating
+    //     $rating = $service->ratings()->create([
+    //         'user_id' => Auth::id(),
+    //         'rating' => $request->rating,
+    //         'review' => $request->review
+    //     ]);
 
-        // Update average rating
-        $averageRating = $service->ratings()->avg('rating');
-        $service->update(['rating' => $averageRating]);
+    //     // Update average rating
+    //     $averageRating = $service->ratings()->avg('rating');
+    //     $service->update(['rating' => $averageRating]);
 
-        return response()->json([
-            'message' => 'Rating submitted successfully',
-            'rating' => $rating,
-            'averageRating' => $averageRating
-        ]);
-    }
+    //     return response()->json([
+    //         'message' => 'Rating submitted successfully',
+    //         'rating' => $rating,
+    //         'averageRating' => $averageRating
+    //     ]);
+    // }
 
-    public function getUserRating(string $id)
-    {
-        $service = Service::findOrFail($id);
-        $rating = $service->ratings()->where('user_id', Auth::id())->first();
+    // public function getUserRating(string $id)
+    // {
+    //     $service = Service::findOrFail($id);
+    //     $rating = $service->ratings()->where('user_id', Auth::id())->first();
 
-        return response()->json([
-            'rating' => $rating->rating ?? 0,
-            'averageRating' => $service?->rating ?? 0,
-            'hasRated' => $rating ? true : false
-        ]);
-    }
+    //     return response()->json([
+    //         'rating' => $rating->rating ?? 0,
+    //         'averageRating' => $service?->rating ?? 0,
+    //         'hasRated' => $rating ? true : false
+    //     ]);
+    // }
 }
