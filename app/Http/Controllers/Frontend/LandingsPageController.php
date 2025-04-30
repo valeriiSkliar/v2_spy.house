@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\FrontendController;
-use App\Models\Frondend\Landings\WebsiteDownloadMonitor;
+use App\Models\Frontend\Landings\WebsiteDownloadMonitor;
 use App\Services\App\AntiFloodService;
 use App\Services\App\Landings\LandingDownloadService;
 use App\Services\Frontend\Toast;

@@ -8,7 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use ZipArchive;
 use Illuminate\Support\Str;
-use App\Models\Frondend\Landings\WebsiteDownloadMonitor;
+use App\Models\Frontend\Landings\WebsiteDownloadMonitor;
 
 class LandingDownloadService
 {

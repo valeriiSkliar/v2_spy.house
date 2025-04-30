@@ -4,7 +4,7 @@ namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\Landings\DownloadWebsiteJob;
-use App\Models\Frondend\Landings\WebsiteDownloadMonitor;
+use App\Models\Frontend\Landings\WebsiteDownloadMonitor;
 use App\Services\App\AntiFloodService;
 use App\Services\Frontend\Toast;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
