@@ -19,11 +19,12 @@
     </div>
 </div>
 
-<x-landing-form />
+<x-landings.form />
 
-<x-landings-table :landings="$landings" />
+<x-landings.table :landings="$landings" />
 
-<x-pagination :currentPage="$landings->currentPage()" :totalPages="$landings->lastPage()" />
+
+    {{ $landings->links() }}
 
 
 @endsection
