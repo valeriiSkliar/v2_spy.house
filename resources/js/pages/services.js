@@ -1,4 +1,4 @@
-import { initializeSelectComponent } from "./helpers";
+import { initializeSelectComponent } from "@/helpers";
 
 document.addEventListener("DOMContentLoaded", function () {
     // --- Initialize Components ---

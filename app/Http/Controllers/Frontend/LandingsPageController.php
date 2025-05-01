@@ -47,8 +47,18 @@ class LandingsPageController extends FrontendController
             ->paginate($perPage)
             ->withQueryString();
 
-        $sortOptions = $this->getSortOptions()['sortOptions'];
-        $perPageOptions = $this->getSortOptions()['perPageOptions'];
+        // Fetch options using the renamed method
+        $filterOptions = $this->getFilterOptions();
+        $sortOptions = $filterOptions['sortOptions'];
+        $perPageOptions = $filterOptions['perPageOptions'];
+
+        // Find the selected sort option based on current filters
+        $selectedSort = collect($sortOptions)->first(function ($option) use ($sortField, $sortDirection) {
+            return $option['value'] === $sortField && $option['order'] === $sortDirection;
+        }) ?? $sortOptions[0]; // Default to the first option if not found
+
+        // Find the selected per-page option
+        $selectedPerPage = collect($perPageOptions)->firstWhere('value', $perPage) ?? $perPageOptions[0];
 
         return view('landings.index',  [
             'landings' => $landings,
@@ -65,6 +75,9 @@ class LandingsPageController extends FrontendController
             ],
             'sortOptions' => $sortOptions,
             'perPageOptions' => $perPageOptions,
+            // Pass selected options to the view
+            'selectedSort' => $selectedSort,
+            'selectedPerPage' => $selectedPerPage,
         ]);
     }
 
@@ -164,15 +177,17 @@ class LandingsPageController extends FrontendController
         }
     }
 
-    private function getSortOptions()
+    // Renamed method and updated options
+    private function getFilterOptions()
     {
+        // Correct sort options for landings
         $sortOptions = [
-            ['value' => 'transitions', 'label' => 'Transitions High to Low', 'order' => 'desc'],
-            ['value' => 'transitions', 'label' => 'Transitions Low to High', 'order' => 'asc'],
-            ['value' => 'rating', 'label' => 'Rating High to Low', 'order' => 'desc'],
-            ['value' => 'rating', 'label' => 'Rating Low to High', 'order' => 'asc'],
-            ['value' => 'views', 'label' => 'Views High to Low', 'order' => 'desc'],
-            ['value' => 'views', 'label' => 'Views Low to High', 'order' => 'asc'],
+            ['value' => 'created_at', 'label' => 'Sort by Date (Newest First)', 'order' => 'desc'],
+            ['value' => 'created_at', 'label' => 'Sort by Date (Oldest First)', 'order' => 'asc'],
+            ['value' => 'status', 'label' => 'Sort by Status (Asc)', 'order' => 'asc'],
+            ['value' => 'status', 'label' => 'Sort by Status (Desc)', 'order' => 'desc'],
+            ['value' => 'url', 'label' => 'Sort by URL (Asc)', 'order' => 'asc'],
+            ['value' => 'url', 'label' => 'Sort by URL (Desc)', 'order' => 'desc'],
         ];
 
         $perPageOptions = [

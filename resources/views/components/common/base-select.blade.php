@@ -1,6 +1,6 @@
-@props(['selected' => ['value' => '', 'order' => '', 'label' => ''], 'options' => [], 'id' => '', 'withFlag' => false])
+@props(['selected' => ['value' => '', 'order' => '', 'label' => ''], 'options' => [], 'id' => '', 'withFlag' => false, 'icon' => null])
 
-<div class="base-select" id="{{ $id }}">
+<div class="base-select {{ $icon ? 'base-select-icon' : '' }}" id="{{ $id }}">
     <div class="base-select__trigger">
         <span class="base-select__value">
             @if($withFlag)
@@ -23,4 +23,7 @@
         </li>
         @endforeach
     </ul>
+    @if($icon)
+    <span class="icon-{{ $icon }}"></span>
+    @endif
 </div>

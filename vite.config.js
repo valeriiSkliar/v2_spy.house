@@ -8,7 +8,7 @@ export default defineConfig({
                 // 'resources/css/app.css',
                 "resources/scss/app.scss",
                 "resources/js/app.js",
-                "resources/js/pages/landings.js",
+                // "resources/js/pages/landings.js",
             ],
             refresh: true,
         }),
@@ -17,6 +17,7 @@ export default defineConfig({
         alias: {
             "@": "/resources/js",
             "@img": "/resources/img",
+            "@pages": "/resources/js/pages",
             "@scss": "/resources/scss",
             jquery: "jquery/dist/jquery.js",
         },
