@@ -46,11 +46,11 @@
 <h2 class="mb-10">Base select</h2>
 <div class="section mb-20">
     @include('components.base-select', [
-    'selected' => ['value' => 'eng', 'label' => 'Eng'],
+    'selected' => ['value' => 'eng', 'label' => 'Eng', 'order' => ''],
     'options' => [
-    ['value' => 'eng', 'label' => 'Eng'],
-    ['value' => 'uk', 'label' => 'Uk'],
-    ['value' => 'esp', 'label' => 'Esp'],
+    ['value' => 'eng', 'label' => 'Eng', 'order' => ''],
+    ['value' => 'uk', 'label' => 'Uk', 'order' => ''],
+    ['value' => 'esp', 'label' => 'Esp', 'order' => ''],
     ]
     ])
 </div>

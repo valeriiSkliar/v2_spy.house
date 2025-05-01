@@ -1,16 +1,16 @@
 // Rating star ( rating.js )
 .rating-star {
     font-size: 24px;
-    color: #CEF0DE;
+    color: #cef0de;
     cursor: pointer;
     display: inline-block;
     margin-right: 5px;
     transition: color 0.2s ease;
 }
 
-.rating-star:hover, 
+.rating-star:hover,
 .rating-star.active {
-    color: #3DC98A;
+    color: #3dc98a;
 }
 
 .article-rate__rating {
@@ -18,10 +18,6 @@
 }
 
 // Search form blog ( search-suggestions )
-
-.search-form {
-    position: relative;
-}
 
 .search-suggestions {
     position: absolute;
@@ -93,10 +89,9 @@
 }
 
 .search-suggestion-view-all a {
-    color: #3DC98A;
+    color: #3dc98a;
     text-decoration: none;
 }
-
 
 // Carousel ( carousel.js )
 
@@ -148,7 +143,7 @@
 
 .carousel-prev:hover,
 .carousel-next:hover {
-    color: #3DC98A;
+    color: #3dc98a;
 }
 
 .carousel-prev:disabled,

@@ -8,7 +8,12 @@
         <li><a href="{{ route('finances.index') }}" class="{{ request()->routeIs('finances*') ? 'active' : '' }}"><span class="icon-finance"></span> <span class="aside-menu__txt">Finance</span></a></li>
         <li><a href="{{ route('tariffs.index') }}" class="{{ request()->routeIs('tariffs*') ? 'active' : '' }}"><span class="icon-tariffs"></span> <span class="aside-menu__txt">Tariffs</span></a></li>
         <li><a href="#"><span class="icon-program" class="{{ request()->routeIs('referrals*') ? 'active' : '' }}"></span> <span class="aside-menu__txt">Referrals</span></a></li>
-        <li><a href="{{ route('blog.index') }}" class="{{ request()->routeIs('blog*') ? 'active' : '' }}"><span class="icon-blog"></span> <span class="aside-menu__txt">Blog</span> <span class="aside-menu__count">100</span></a></li>
+        <li><a href="{{ route('blog.index') }}" class="{{ request()->routeIs('blog*') ? 'active' : '' }}"><span class="icon-blog"></span> <span class="aside-menu__txt">Blog</span> <span class="aside-menu__count">
+                    @php
+                    $posts = App\Models\Frontend\Blog\BlogPost::all();
+                    echo $posts->count();
+                    @endphp
+                </span></a></li>
         <li><a href="#"><span class="icon-faq" class="{{ request()->routeIs('faq*') ? 'active' : '' }}"></span> <span class="aside-menu__txt">FAQ</span></a></li>
     </ul>
 </nav>

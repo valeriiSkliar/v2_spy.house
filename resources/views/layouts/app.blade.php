@@ -12,11 +12,11 @@
     @vite([ 'resources/js/app.js', 'resources/scss/app.scss'])
 </head>
 
-<body class="font-sans antialiased">
+<body class="">
+    <div class="navigation-bg"></div>
+
     <!-- Page Content -->
-    <main>
-        @yield('content')
-    </main>
+    @yield('content')
     @include('partials.footer')
 
     <!-- Global Modal Container -->
