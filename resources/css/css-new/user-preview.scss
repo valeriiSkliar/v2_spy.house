@@ -1,104 +1,103 @@
-.user-preview{
-  position: relative;
-  .user-preview__trigger{
-    display: flex;
-    align-items: center;
-    gap: 13px;
-    color: #fff;
-    cursor: pointer;
-    height: 60px;
-  }
-  .user-preview__name{
-    font-size: 16px;
-    font-weight: 600;
-    margin-right: 10px;
-    @media screen and (max-width: 767px) {
-      display: none;
-    }
-  }
-  .user-preview__avatar{
-    border-radius: 50%;
-    overflow: hidden;
-    background: rgba($main, .25);
-    width: 37px;
-    height: 37px;
-    display: grid;
-    place-items: center;
-    font-weight: 700;
-    font-size: 16px;
-    color: $main;
-    line-height: 1;
-  }
-  .btn-icon{
-    @media screen and (max-width: 767px) {
-      display: none;
-    }
-  }
-  .user-preview__dropdown{
-    position: absolute;
-    right: -15px;
-    top: 100%;
-    width: 274px;
-    border-radius: 15px;
-    background: #FFF;
-    box-shadow: 0px 55px 75px 0px rgba(16, 24, 37, 0.25);
-    padding: 10px 30px 25px;
-    z-index: 10000;
-    @media screen and (max-width: 1200px) {
-      border-radius: 0;
-    }
-  }
-
-
-  &.open{
-    .user-preview__trigger{
-      .btn-icon{
-        background: #4C5C60;
-      }
-    }
-  }
-}
-
-.has-notification{
-  background: #F6D327;
-  position: absolute;
-  top: 5px;
-  right: 3px;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  box-shadow: 0px 2px 12px rgba(246, 211, 39, 0.80);
-}
-
-.user-menu{
-  ul{
-    list-style: none;
-    margin-bottom: 20px;
-    li{
-      &:not(:last-child){
-        border-bottom: 1px solid #F4F4F6;
-      }
-      a{
+.user-preview {
+    position: relative;
+    .user-preview__trigger {
         display: flex;
-        padding: 20px 0;
-        gap: 14px;
-        font-weight: 500;
-        font-size: 15px;
-        [class^="icon-"],
-        [class*=" icon-"] {
-          font-size: 20px;
-          position: relative;
-        }
-        .has-notification{
-          top: -2px;
-          right: -3px;
-        }
-        @media (hover: hover) {
-          &:hover{
-            color: $main;
-          }
-        }
-      }
+        align-items: center;
+        gap: 13px;
+        color: #fff;
+        cursor: pointer;
+        height: 60px;
     }
-  }
+    .user-preview__name {
+        font-size: 16px;
+        font-weight: 600;
+        margin-right: 10px;
+        @media screen and (max-width: 767px) {
+            display: none;
+        }
+    }
+    .user-preview__avatar {
+        border-radius: 50%;
+        overflow: hidden;
+        background: rgba($main, 0.25);
+        width: 37px;
+        height: 37px;
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+        font-size: 16px;
+        color: $main;
+        line-height: 1;
+    }
+    .btn-icon {
+        @media screen and (max-width: 767px) {
+            display: none;
+        }
+    }
+    .user-preview__dropdown {
+        position: absolute;
+        right: -15px;
+        top: 100%;
+        width: 274px;
+        border-radius: 15px;
+        background: #fff;
+        box-shadow: 0px 55px 75px 0px rgba(16, 24, 37, 0.25);
+        padding: 10px 30px 25px;
+        z-index: 999;
+        @media screen and (max-width: 1200px) {
+            border-radius: 0;
+        }
+    }
+
+    &.open {
+        .user-preview__trigger {
+            .btn-icon {
+                background: #4c5c60;
+            }
+        }
+    }
+}
+
+.has-notification {
+    background: #f6d327;
+    position: absolute;
+    top: 5px;
+    right: 3px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    box-shadow: 0px 2px 12px rgba(246, 211, 39, 0.8);
+}
+
+.user-menu {
+    ul {
+        list-style: none;
+        margin-bottom: 20px;
+        li {
+            &:not(:last-child) {
+                border-bottom: 1px solid #f4f4f6;
+            }
+            a {
+                display: flex;
+                padding: 20px 0;
+                gap: 14px;
+                font-weight: 500;
+                font-size: 15px;
+                [class^="icon-"],
+                [class*=" icon-"] {
+                    font-size: 20px;
+                    position: relative;
+                }
+                .has-notification {
+                    top: -2px;
+                    right: -3px;
+                }
+                @media (hover: hover) {
+                    &:hover {
+                        color: $main;
+                    }
+                }
+            }
+        }
+    }
 }
