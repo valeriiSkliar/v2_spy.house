@@ -7,6 +7,7 @@
             @if($landing['status'] !== 'completed')
             <li><x-frontend.status-icon status="{{ $landing['status'] }}" /></li>
             @endif
+            {{ $landing['status'] }}
             <!-- <li><button class="btn-icon icon-reload {{ $landing['status'] === 'pending' ? 'text-warning' : '' }}" type="button"></button></li> -->
             @if($landing['status'] === 'completed')
             <li>

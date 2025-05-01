@@ -2,6 +2,7 @@
 
 namespace Database\Factories\Frontend\Landings;
 
+use App\Enums\Frontend\WebSiteDownloadMonitorStatus;
 use App\Models\Frontend\Landings\WebsiteDownloadNotification;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -25,13 +26,13 @@ class WebsiteDownloadNotificationFactory extends Factory
      */
     public function definition(): array
     {
-        $status = $this->faker->randomElement(['completed', 'failed']);
+        $status = $this->faker->randomElement(WebSiteDownloadMonitorStatus::values());
 
         return [
             'url' => $this->faker->url,
             'status' => $status,
-            'error' => $status === 'failed' ? $this->faker->sentence : null,
-            'user_id' => User::factory(), // Ensure User factory exists or use an existing user ID
+            'error' => $status === WebSiteDownloadMonitorStatus::FAILED ? $this->faker->sentence : null,
+            'user_id' => User::factory(),
             'read_at' => $this->faker->optional()->dateTimeThisMonth,
         ];
     }
