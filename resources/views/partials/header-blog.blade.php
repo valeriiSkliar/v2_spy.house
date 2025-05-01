@@ -16,7 +16,6 @@
         <div class="header__lang">
             @include('partials.language-selector')
         </div>
-        <a href="#" class="btn _flex _dark _small font-15 d-none d-lg-inline-flex"><span class="icon-login font-16 mr-2 txt-gray-2"></span>Login</a>
-        <a href="#" class="btn-icon _dark d-lg-none"><span class="icon-login font-16"></span></a>
+        @include('components.user-preview')
     </div>
 </header>

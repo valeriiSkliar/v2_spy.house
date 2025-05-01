@@ -1,3 +1,4 @@
+@auth
 <div class="user-preview">
     <div class="user-preview__trigger">
         <div class="user-preview__avatar thumb"><span>{{ substr(auth()?->user()?->name, 0, 2) }}</span></div>
@@ -21,3 +22,8 @@
         </nav>
     </div>
 </div>
+@endauth
+
+@guest
+<a href="{{ route('login') }}" class="btn _flex _dark _small font-15"><span class="icon-login font-16 mr-2 txt-gray-2"></span>Login</a>
+@endguest

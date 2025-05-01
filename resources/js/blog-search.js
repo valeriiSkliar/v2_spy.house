@@ -45,7 +45,6 @@ const performSearch = debounce(function (
         })
         .then((responseData) => {
             setLoadingState(false, searchResults);
-            console.log(responseData);
 
             if (responseData.success) {
                 // Скрываем пагинацию при поиске
