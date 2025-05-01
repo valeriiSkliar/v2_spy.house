@@ -1,0 +1,55 @@
+<?php
+
+return [
+    'title' => 'Información del perfil',
+    'description' => 'Actualiza la información de perfil y la dirección de correo electrónico de tu cuenta.',
+    'name_label' => 'Nombre',
+    'email_label' => 'Correo electrónico',
+    'unverified_email' => 'Tu dirección de correo electrónico no está verificada.',
+    'resend_verification_link' => 'Haz clic aquí para reenviar el correo electrónico de verificación.',
+    'verification_link_sent' => 'Se ha enviado un nuevo enlace de verificación a tu dirección de correo electrónico.',
+    'save_button' => 'Guardar',
+    'saved_status' => 'Guardado.',
+
+    // Settings Page
+    'settings_page_title' => 'Configuración del perfil',
+    'tabs' => [
+        'personal' => 'Información personal',
+        'security' => 'Seguridad',
+        'notifications' => 'Notificaciones',
+    ],
+    'personal_info' => [
+        'change_photo_button' => 'Cambiar foto',
+        'photo_hint' => 'PNG (600x600) 200kb',
+        'login_label' => 'Usuario',
+        'email_label' => 'Correo electrónico',
+        'password_label' => 'Contraseña',
+        'change_password_link' => 'Cambiar contraseña',
+        'phone_label' => 'Teléfono',
+        'telegram_label' => 'Telegram',
+        'scope_label' => 'Ámbito de actividad',
+        'update_success' => 'La información de tu perfil ha sido actualizada.',
+    ],
+    'security_settings' => [
+        'access_settings_title' => 'Configuración de acceso a la cuenta',
+        'change_password_title' => 'Cambiar contraseña',
+        'login_description' => 'El inicio de sesión en el sistema se realiza mediante usuario y contraseña',
+        'change_email_title' => 'Cambiar correo electrónico',
+        'personal_greeting_title' => 'Saludo personal',
+        'phishing_description' => 'Establece un saludo para protegerte contra el phishing.',
+        'ip_restriction_title' => 'Restricción de IP',
+        'ip_description' => 'Restringir el acceso por dirección IP o rango de direcciones IP.',
+        'confirmation_methods_title' => 'Métodos de confirmación',
+        'google_2fa_title' => 'Google 2FA',
+        'google_2fa_description' => 'Autenticación de dos factores de Google para iniciar sesión y confirmar pagos.',
+        'connect_button' => 'Conectar',
+        'pin_code_title' => 'Código PIN',
+        'pin_code_description' => 'Crea tu código PIN y úsalo para confirmar transacciones u otras operaciones',
+    ],
+    'notification_settings' => [
+        'email_title' => 'Notificaciones por correo electrónico',
+        'email_description' => 'El correo electrónico especificado en tu perfil se utilizará para las notifications. (:email)',
+        'system_messages_label' => 'Mensajes del sistema',
+        'bonus_offers_label' => 'Ofertas de bonificación',
+    ],
+];

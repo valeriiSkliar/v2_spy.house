@@ -1,7 +1,7 @@
 <aside class="aside">
     <div class="aside__head">
         <div class="aside__lang">
-            @include('partials.language-selector')
+            <x-frontend.language-selector />
         </div>
     </div>
     <div class="aside__content">

@@ -14,7 +14,7 @@
     <div class="header__right">
         <button class="btn-icon _transparent js-toggle-search"><span class="icon-search font-20"></span></button>
         <div class="header__lang">
-            @include('partials.language-selector')
+            <x-frontend.language-selector />
         </div>
         @include('components.user-preview')
     </div>

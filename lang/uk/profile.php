@@ -1,0 +1,55 @@
+<?php
+
+return [
+    'title' => 'Інформація профілю',
+    'description' => 'Оновіть інформацію профілю вашого облікового запису та адресу електронної пошти.',
+    'name_label' => 'Ім\'я',
+    'email_label' => 'Електронна пошта',
+    'unverified_email' => 'Вашу адресу електронної пошти не підтверджено.',
+    'resend_verification_link' => 'Натисніть тут, щоб повторно надіслати електронний лист для підтвердження.',
+    'verification_link_sent' => 'Нове посилання для підтвердження надіслано на вашу адресу електронної пошти.',
+    'save_button' => 'Зберегти',
+    'saved_status' => 'Збережено.',
+
+    // Settings Page
+    'settings_page_title' => 'Налаштування профілю',
+    'tabs' => [
+        'personal' => 'Особиста інформація',
+        'security' => 'Безпека',
+        'notifications' => 'Сповіщення',
+    ],
+    'personal_info' => [
+        'change_photo_button' => 'Змінити фото',
+        'photo_hint' => 'PNG (600x600) 200кб',
+        'login_label' => 'Логін',
+        'email_label' => 'E-mail',
+        'password_label' => 'Пароль',
+        'change_password_link' => 'Змінити пароль',
+        'phone_label' => 'Телефон',
+        'telegram_label' => 'Telegram',
+        'scope_label' => 'Сфера діяльності',
+        'update_success' => 'Інформацію вашого профілю оновлено.',
+    ],
+    'security_settings' => [
+        'access_settings_title' => 'Налаштування доступу до облікового запису',
+        'change_password_title' => 'Змінити пароль',
+        'login_description' => 'Вхід до системи здійснюється за допомогою логіна та пароля',
+        'change_email_title' => 'Змінити E-mail',
+        'personal_greeting_title' => 'Особисте привітання',
+        'phishing_description' => 'Встановіть привітання для захисту від фішингу.',
+        'ip_restriction_title' => 'Обмеження за IP',
+        'ip_description' => 'Обмежити доступ за IP-адресою або діапазоном IP-адрес.',
+        'confirmation_methods_title' => 'Методи підтвердження',
+        'google_2fa_title' => 'Google 2FA',
+        'google_2fa_description' => 'Двофакторна автентифікація Google для входу та підтвердження платежів.',
+        'connect_button' => 'Підключити',
+        'pin_code_title' => 'PIN-код',
+        'pin_code_description' => 'Створіть свій PIN-код і використовуйте його для підтвердження транзакцій або інших операцій',
+    ],
+    'notification_settings' => [
+        'email_title' => 'Сповіщення електронною поштою',
+        'email_description' => 'Для сповіщень буде використовуватися електронна пошта, вказана у вашому профілі. (:email)',
+        'system_messages_label' => 'Системні повідомлення',
+        'bonus_offers_label' => 'Бонусні пропозиції',
+    ],
+];

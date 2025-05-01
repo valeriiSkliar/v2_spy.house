@@ -5,7 +5,7 @@
                 <div class="footer__logo"><img src="/img/logo.svg" alt="" width="167" height="43"></div>
                 <div class="footer__copy">© 2012 - {{ date('Y') }} Spy.House</div>
                 <div class="footer__lang">
-                    @include('partials.language-selector')
+                    <x-frontend.language-selector />
                 </div>
             </div>
             <div class="footer__center">

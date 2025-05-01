@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Frontend\LandingsPageController;
 use App\Http\Controllers\Frontend\ModalController;
+use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\Test\CreativesController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Test\NotificationController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\Test\BlogController;
 use App\Http\Controllers\Test\TariffController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Test\ServicesController;
+use Illuminate\Support\Facades\Session;
 
 Route::get('/', function () {
     return view('index', [
@@ -41,6 +43,7 @@ Route::post('/finances/deposit', [FinanceController::class, 'deposit'])->name('f
 // Creatives
 Route::get('/creatives', [CreativesController::class, 'index'])->name('creatives.index');
 
+Route::get('/language/{locale}', [LanguageController::class, 'switch'])->name('language.switch');
 
 require __DIR__ . '/auth.php';
 require __DIR__ . '/api.php';

@@ -23,6 +23,7 @@
     <li><a href="api.html">API</a></li>
 </ul> -->
 
+{{ app()->getLocale() }}
 <div style="background: #243035; padding: 10px 10px 5px; border-radius: 10px; margin-bottom: 20px; margin-top: 20px;">
     <div class="row">
         <div class="col-auto mb-2">
@@ -45,14 +46,15 @@
 
 <h2 class="mb-10">Base select</h2>
 <div class="section mb-20">
-    @include('components.base-select', [
+    <!-- @include('components.base-select', [
     'selected' => ['value' => 'eng', 'label' => 'Eng', 'order' => ''],
     'options' => [
     ['value' => 'eng', 'label' => 'Eng', 'order' => ''],
     ['value' => 'uk', 'label' => 'Uk', 'order' => ''],
     ['value' => 'esp', 'label' => 'Esp', 'order' => ''],
     ]
-    ])
+    ]) -->
+    <x-frontend.language-selector />
 </div>
 
 

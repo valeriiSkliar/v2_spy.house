@@ -1,0 +1,55 @@
+<?php
+
+return [
+    'title' => 'Profile Information',
+    'description' => 'Update your account\'s profile information and email address.',
+    'name_label' => 'Name',
+    'email_label' => 'Email',
+    'unverified_email' => 'Your email address is unverified.',
+    'resend_verification_link' => 'Click here to re-send the verification email.',
+    'verification_link_sent' => 'A new verification link has been sent to your email address.',
+    'save_button' => 'Save',
+    'saved_status' => 'Saved.',
+
+    // Settings Page
+    'settings_page_title' => 'Profile Settings',
+    'tabs' => [
+        'personal' => 'Personal information',
+        'security' => 'Security',
+        'notifications' => 'Notifications',
+    ],
+    'personal_info' => [
+        'change_photo_button' => 'Change photo',
+        'photo_hint' => 'PNG (600x600) 200kb',
+        'login_label' => 'Login',
+        'email_label' => 'E-mail',
+        'password_label' => 'Password',
+        'change_password_link' => 'Change password',
+        'phone_label' => 'Phone',
+        'telegram_label' => 'Telegram',
+        'scope_label' => 'Scope of activity',
+        'update_success' => 'Your profile information has been updated.',
+    ],
+    'security_settings' => [
+        'access_settings_title' => 'Account access settings',
+        'change_password_title' => 'Change password',
+        'login_description' => 'Login to the system is done using login and password',
+        'change_email_title' => 'Change E-mail',
+        'personal_greeting_title' => 'Personal greeting',
+        'phishing_description' => 'Set a greeting to protect against phishing.',
+        'ip_restriction_title' => 'IP Restriction',
+        'ip_description' => 'Restrict access by IP address or range of IP addresses.',
+        'confirmation_methods_title' => 'Confirmation methods',
+        'google_2fa_title' => 'Google 2FA',
+        'google_2fa_description' => 'Google two-factor authentication for signing in and confirming payments.',
+        'connect_button' => 'Connect',
+        'pin_code_title' => 'PIN code',
+        'pin_code_description' => 'Create your PIN code and use it to confirm transactions or other operations',
+    ],
+    'notification_settings' => [
+        'email_title' => 'Email notifications',
+        'email_description' => 'The e-mail specified in your profile will be used for notifications. (:email)',
+        'system_messages_label' => 'System messages',
+        'bonus_offers_label' => 'Bonus offers',
+    ],
+];

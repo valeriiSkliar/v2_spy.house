@@ -20,7 +20,7 @@
             </div>
         </div>
         <div class="header__lang">
-            @include('partials.language-selector')
+            <x-frontend.language-selector />
         </div>
         @include('components.user-preview')
     </div>
