@@ -3,16 +3,16 @@
         <table class="table no-wrap-table">
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Ссылка загрузки</th>
-                    <th>Дата добавления</th>
+                    <!-- <th>{{ __('landings.table.header.id') }}</th> -->
+                    <th>{{ __('landings.table.header.downloadLink') }}</th>
+                    <th>{{ __('landings.table.header.dateAdded') }}</th>
                     <th></th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($landings as $landing)
                 <tr>
-                    <td>{{ $landing['id'] }}</td>
+                    <!-- <td>{{ $landing['id'] }}</td> -->
                     <td><a target="_blank" href="{{ $landing['url'] }}" class="table-link icon-link-arrow"><span>{{ $landing['url'] }}</span></a></td>
                     <td><span class="table-date"><span class="icon-calendar"></span> {{ $landing['started_at'] ?? $landing['created_at'] }}</span></td>
                     <td>
@@ -29,10 +29,10 @@
                             <li>
                                 <button @if($landing['status']==='pending' ) disabled @endif type="button"
                                     class="btn-icon icon-remove delete-landing-button"
-                                    data-confirm="Are you sure you want to delete this landing? This action cannot be undone."
-                                    data-confirm-title="Confirm Deletion"
-                                    data-confirm-btn="Delete"
-                                    data-confirm-cancel="Cancel"
+                                    data-confirm="{{ __('landings.table.confirmDelete.message') }}"
+                                    data-confirm-title="{{ __('landings.table.confirmDelete.title') }}"
+                                    data-confirm-btn="{{ __('landings.table.confirmDelete.confirmButton') }}"
+                                    data-confirm-cancel="{{ __('landings.table.confirmDelete.cancelButton') }}"
                                     data-delete-url="{{ route('landings.destroy', ['landing' => $landing->id, 'page' => request()->input('page', 1), 'per_page' => request()->input('per_page', 12)]) }}">
                                 </button>
                             </li>

@@ -57,4 +57,45 @@ return [
         'title' => 'Not In Progress',
         'description' => 'This download is not currently pending or in progress.',
     ],
+    'index' => [
+        'title' => 'Landings',
+        'sort' => [
+            'placeholder' => 'Sort By — :default',
+            'options' => [
+                'newest' => 'Newest First',
+                'oldest' => 'Oldest First',
+                'status_az' => 'Status (A-Z)',
+                'status_za' => 'Status (Z-A)',
+                'url_az' => 'URL (A-Z)',
+                'url_za' => 'URL (Z-A)',
+            ],
+        ],
+        'pagination' => [
+            'placeholder' => 'On page — :default',
+            'options' => [
+                '12' => '12',
+                '24' => '24',
+                '48' => '48',
+                '96' => '96',
+            ],
+        ],
+    ],
+    'form' => [
+        'urlPlaceholder' => 'Enter the link to download the Landing Page',
+        'waitForDownloads' => 'Wait for current downloads to finish',
+        'submitButton' => 'Download',
+    ],
+    'table' => [
+        'header' => [
+            'id' => 'ID',
+            'downloadLink' => 'Download Link',
+            'dateAdded' => 'Date Added',
+        ],
+        'confirmDelete' => [
+            'message' => 'Are you sure you want to delete this landing? This action cannot be undone.',
+            'title' => 'Confirm Deletion',
+            'confirmButton' => 'Delete',
+            'cancelButton' => 'Cancel',
+        ],
+    ],
 ];

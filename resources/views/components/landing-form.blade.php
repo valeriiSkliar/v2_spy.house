@@ -8,7 +8,7 @@
             name="url"
             id="url"
             value="{{ old('url') }}"
-            placeholder="{{ $disabled ? __('landingsPage.waitForDownloads') : 'Enter the link to download the Landing Page' }}"
+            placeholder="{{ $disabled ? __('landings.form.waitForDownloads') : __('landings.form.urlPlaceholder') }}"
             class="input-h-50 w-full {{ $errors->has('url') ? 'border border-red-500' : '' }} {{ $disabled ? 'bg-gray-100 cursor-not-allowed' : '' }}"
             maxlength="300"
             {{ $disabled ? 'disabled' : '' }} />
@@ -31,7 +31,7 @@
             style="height: 50px;" {{-- Match input height approximately if input-h-50 implies 50px --}}
             {{ $disabled ? 'disabled' : '' }}>
             <span class="icon-download mr-2"></span>
-            <span>{{ __('Download') }}</span> {{-- Keep translation --}}
+            <span>{{ __('landings.form.submitButton') }}</span> {{-- Keep translation --}}
         </button>
     </div>
 </form>
