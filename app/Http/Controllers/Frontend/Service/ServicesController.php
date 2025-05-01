@@ -119,7 +119,7 @@ class ServicesController extends FrontendController
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        $filters = $request->only(['search', 'category', 'perPage', 'page', 'sortBy', 'sortOrder']);
+        $filters = $request->only(['search', 'category', 'bonuses', 'perPage', 'page', 'sortBy', 'sortOrder']);
 
         $categories = ServiceCategory::all()
             ->map(function ($category) use ($locale) {
@@ -145,6 +145,12 @@ class ServicesController extends FrontendController
             ['value' => 96, 'label' => '96', 'order' => ''],
         ];
 
+        $bonusesOptions = [
+            ['value' => 'all', 'label' => 'All Bonuses', 'order' => ''],
+            ['value' => 'with_discount', 'label' => 'With Discount', 'order' => ''],
+            ['value' => 'without_discount', 'label' => 'Without Discount', 'order' => ''],
+        ];
+
         $categoriesOptions = ServiceCategory::all()
             ->map(function ($category) use ($locale) {
                 return [
@@ -162,7 +168,8 @@ class ServicesController extends FrontendController
             'totalPages' => ceil($totalServices / $perPage),
             'sortOptions' => $sortOptions,
             'perPageOptions' => $perPageOptions,
-            'categoriesOptions' => $categoriesOptions
+            'categoriesOptions' => $categoriesOptions,
+            'bonusesOptions' => $bonusesOptions
         ]);
     }
 

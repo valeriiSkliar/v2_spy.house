@@ -47,6 +47,8 @@ class LandingsPageController extends FrontendController
             ->paginate($perPage)
             ->withQueryString();
 
+        $sortOptions = $this->getSortOptions()['sortOptions'];
+        $perPageOptions = $this->getSortOptions()['perPageOptions'];
 
         return view('landings.index',  [
             'landings' => $landings,
@@ -61,6 +63,8 @@ class LandingsPageController extends FrontendController
                 'direction' => $sortDirection,
                 'per_page' => $perPage,
             ],
+            'sortOptions' => $sortOptions,
+            'perPageOptions' => $perPageOptions,
         ]);
     }
 
@@ -158,5 +162,29 @@ class LandingsPageController extends FrontendController
             Toast::error('landings.downloadException.description');
             return redirect()->route('landings.index');
         }
+    }
+
+    private function getSortOptions()
+    {
+        $sortOptions = [
+            ['value' => 'transitions', 'label' => 'Transitions High to Low', 'order' => 'desc'],
+            ['value' => 'transitions', 'label' => 'Transitions Low to High', 'order' => 'asc'],
+            ['value' => 'rating', 'label' => 'Rating High to Low', 'order' => 'desc'],
+            ['value' => 'rating', 'label' => 'Rating Low to High', 'order' => 'asc'],
+            ['value' => 'views', 'label' => 'Views High to Low', 'order' => 'desc'],
+            ['value' => 'views', 'label' => 'Views Low to High', 'order' => 'asc'],
+        ];
+
+        $perPageOptions = [
+            ['value' => 12, 'label' => '12', 'order' => ''],
+            ['value' => 24, 'label' => '24', 'order' => ''],
+            ['value' => 48, 'label' => '48', 'order' => ''],
+            ['value' => 96, 'label' => '96', 'order' => ''],
+        ];
+
+        return [
+            'sortOptions' => $sortOptions,
+            'perPageOptions' => $perPageOptions
+        ];
     }
 }

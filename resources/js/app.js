@@ -14,6 +14,9 @@ import "./components/modal";
 // Import the toast system
 import "./components/toasts";
 
+// Import helpers
+import "./helpers";
+
 // Additional imports
 import "./libs/main";
 import "./rating.js";
