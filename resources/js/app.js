@@ -26,5 +26,4 @@ import "./base-select.js";
 // import "./search-suggestions.js";
 import "./carousel.js";
 import "./tariffs";
-import "@pages/services.js";
-import "@pages/landings.js";
+import "@pages";
