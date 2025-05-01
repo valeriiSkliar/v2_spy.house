@@ -339,7 +339,7 @@ class BlogController extends Controller
             ->take($perPage)
             ->all();
 
-        return view('blog.search', [
+        return view('blog.index', [
             'articles' => $articles,
             'categories' => $categories,
             'query' => $query,

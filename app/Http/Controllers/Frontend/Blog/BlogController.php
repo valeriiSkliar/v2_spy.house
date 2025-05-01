@@ -8,12 +8,12 @@ use App\Models\Frontend\Blog\BlogComment;
 use App\Models\Frontend\Blog\BlogPost;
 use App\Models\Frontend\Blog\PostCategory;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 
-use function App\Helpers\sanitize_input;
 
 class BlogController extends FrontendController
 {
+    private $indexView = 'blog.index';
+    private $showView = 'blog.show';
     public function index(Request $request)
     {
 
@@ -23,11 +23,11 @@ class BlogController extends FrontendController
         $search = $request->input('search');
 
         if ($search) {
-            $search = sanitize_input($search);
+            $search = $this->sanitizeInput($search);
             $query->where('title', 'like', '%' . $search . '%');
         }
 
-        return view('blog.index', [
+        return view($this->indexView, [
             'breadcrumbs' => [],
             'heroArticle' => $query->first(),
             'articles' => $query->paginate(12)->appends($request->all()),
@@ -57,7 +57,7 @@ class BlogController extends FrontendController
             ->paginate(10)
             ->appends($request->all());
 
-        return view('blog.show', [
+        return view($this->showView, [
             'breadcrumbs' => [
                 ['title' => 'Blog', 'url' => route('blog.index')],
                 ['title' => $post->categories->first()->name, 'url' => route('blog.category', $post->categories->first()->slug)],
@@ -85,7 +85,7 @@ class BlogController extends FrontendController
             ->where('is_published', true)
             ->with(['author', 'categories'])
             ->when($request->input('search'), function ($query, $search) {
-                $search = sanitize_input($search);
+                $search = $this->sanitizeInput($search);
                 $query->where('title', 'like', "%{$search}%")
                     ->orWhere('content', 'like', "%{$search}%");
             })
@@ -95,7 +95,7 @@ class BlogController extends FrontendController
 
         $sidebar = $this->getSidebarData();
 
-        return view('blog.index', [
+        return view($this->indexView, [
             'breadcrumbs' => [
                 ['title' => 'Blog', 'url' => route('blog.index')],
                 ['title' => $category->name, 'url' => route('blog.category', $category->slug)],
@@ -141,6 +141,54 @@ class BlogController extends FrontendController
                 ->get()
         ];
     }
+
+    public function search(Request $request)
+    {
+        $query = $request->input('q');
+        if (!$query) {
+            return redirect()->route('blog.index');
+        }
+        $search = $this->sanitizeInput($query);
+        $results = $this->getSearchResults($search);
+
+        return view($this->indexView, [
+            'articles' => $results,
+            'heroArticle' => $results->first(),
+            'query' => $query,
+            'categories' => $this->getSidebarData(),
+            'currentCategory' => null,
+            'filters' => $request->only(['search', 'category', 'sort']),
+            'currentPage' => $request->get('page', 1),
+            'totalPages' => ceil($results->count() / 12),
+            'breadcrumbs' => [
+                ['title' => 'Blog', 'url' => route('blog.index')],
+                ['title' => 'Search Results for "' . $query . '"', 'url' => route('blog.search', ['q' => $query])],
+            ],
+        ]);
+    }
+
+
+    private function getSearchResults(string $query)
+    {
+
+        $results = BlogPost::query()
+            ->where('is_published', true)
+            ->where('title', 'like', "%{$query}%")
+            ->orderBy('created_at', 'desc')
+            ->with(['author', 'categories'])
+            ->paginate(12);
+
+        return $results;
+    }
+
+    public function searchApiResults(string $query)
+    {
+
+        $results = $this->getSearchResults($query);
+
+        return $results;
+    }
+
 
     private function buildCategoryTree($categories, $parentId = null): array
     {

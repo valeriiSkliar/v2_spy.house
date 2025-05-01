@@ -8,7 +8,7 @@ Route::prefix('blog')->name('blog.')->group(function () {
     Route::get('/', [BlogController::class, 'index'])->name('index');
     Route::get('/{slug}', [BlogController::class, 'show'])->name('show');
     Route::get('/category/{slug}', [BlogController::class, 'byCategory'])->name('category');
-    Route::get('/search', [TestBlogController::class, 'search'])->name('search');
+    Route::get('/search', [BlogController::class, 'search'])->name('search');
     Route::post('/{slug}/comment', [TestBlogController::class, 'storeComment'])->name('comment.store');
     Route::get('/{slug}/reply/{comment_id}', [TestBlogController::class, 'reply'])->name('reply');
     Route::post('/{slug}/reply', [TestBlogController::class, 'storeReply'])->name('reply.store');

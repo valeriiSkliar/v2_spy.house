@@ -1,99 +1,191 @@
+const debounce = (func, wait) => {
+    let timeout;
+    return function () {
+        const context = this,
+            args = arguments;
+        clearTimeout(timeout);
+        timeout = setTimeout(function () {
+            func.apply(context, args);
+        }, wait);
+    };
+};
+
+// Сохраняем оригинальное содержимое
+let originalBlogListHtml = "";
+let originalPaginationHtml = "";
+let isSearchActive = false;
+let isLoading = false;
+
+const performSearch = debounce(function (
+    query,
+    blogList,
+    pagination,
+    searchResults
+) {
+    if (query.length < 3) {
+        // Возвращаем оригинальное содержимое, если поиск очищен
+        resetToOriginalContent(blogList, pagination, searchResults);
+        return;
+    }
+
+    // Показываем индикатор загрузки
+    setLoadingState(true, searchResults);
+    isSearchActive = true;
+
+    const url = new URL(window.location.href);
+    url.pathname = "/api/blog/search";
+    url.searchParams.set("q", encodeURIComponent(query));
+
+    fetch(url.toString())
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then((responseData) => {
+            setLoadingState(false, searchResults);
+            console.log(responseData);
+
+            if (responseData.success) {
+                // Скрываем пагинацию при поиске
+                pagination.hide();
+
+                if (responseData.data.total > 0) {
+                    const newHtml = responseData.data.html;
+                    blogList.html(newHtml);
+                    blogList.show();
+                    searchResults.show();
+                    searchResults
+                        .find(".search-info")
+                        .text(
+                            `Найдено результатов: ${responseData.data.total}`
+                        );
+                } else {
+                    // Показываем сообщение "ничего не найдено"
+                    const newHtml = responseData.data.html;
+                    showNoResultsMessage(blogList, searchResults, newHtml);
+                }
+            }
+        })
+        .catch((error) => {
+            console.error("Ошибка поиска:", error);
+            setLoadingState(false, searchResults);
+            showErrorMessage(searchResults);
+        });
+},
+300);
+
+function setLoadingState(isLoading, searchResults) {
+    if (isLoading) {
+        searchResults.show();
+        searchResults.find(".search-info").text("Загрузка...");
+    }
+}
+
+function showNoResultsMessage(blogList, searchResults, html) {
+    console.log(html);
+    blogList.html(html);
+    blogList.show();
+    // searchResults.find(".search-info").text("Результатов не найдено");
+}
+
+function showErrorMessage(searchResults) {
+    searchResults
+        .find(".search-info")
+        .text("Произошла ошибка при поиске. Пожалуйста, попробуйте еще раз.");
+}
+
+function resetToOriginalContent(blogList, pagination, searchResults) {
+    if (isSearchActive) {
+        blogList.html(originalBlogListHtml);
+        pagination.html(originalPaginationHtml);
+        pagination.show();
+        searchResults.hide();
+        isSearchActive = false;
+    }
+}
+
 document.addEventListener("DOMContentLoaded", function () {
-    const searchForm = document.querySelector(".search-form form");
-    const searchInput = document.querySelector(
-        '.search-form input[type="search"]'
-    );
-    const blogList = document.querySelector(".blog-list");
-    let searchResults = document.querySelector(".search-results");
+    const searchForm = $(".search-form form");
+    const searchInput = $(".search-form input[type='search']");
+    const searchButton = $(".search-button");
+    // const closeSearchButton = $(
+    //     '<button type="button" class="close-search-button">×</button>'
+    // );
+    const blogList = $(".blog-list");
+    const pagination = $(".pagination-nav");
+    let searchResults = $(".search-results");
+
+    // // Если блока для результатов поиска нет, создаем его
+    // if (searchResults.length === 0) {
+    //     $(
+    //         '<div class="search-results" style="display:none;"><div class="search-info"></div></div>'
+    //     ).insertAfter(searchForm);
+    //     searchResults = $(".search-results");
+    // }
+
+    // Сохраняем исходную разметку при загрузке страницы
+    originalBlogListHtml = blogList.html();
+    originalPaginationHtml = pagination.html();
+
+    // Добавляем кнопку закрытия поиска
+    // searchInput.after(closeSearchButton);
+    // closeSearchButton.hide();
 
     if (searchForm && searchInput) {
-        searchInput.addEventListener(
-            "input",
-            debounce(function () {
-                const query = this.value.trim();
+        // Обработка ввода в поле поиска
+        searchInput.on("input", function (e) {
+            const query = searchInput.val().trim();
 
-                if (query.length >= 3) {
-                    performSearch(query);
-                } else if (searchResults) {
-                    searchResults.style.display = "none";
-                    blogList.style.display = "block";
-                }
-            }, 300)
-        );
-
-        searchForm.addEventListener("submit", function (e) {
-            e.preventDefault();
-            const query = searchInput.value.trim();
+            if (query.length > 0) {
+                // closeSearchButton.show();
+            } else {
+                // closeSearchButton.hide();
+                resetToOriginalContent(blogList, pagination, searchResults);
+            }
 
             if (query.length >= 3) {
-                window.location.href = `/blog/search?q=${encodeURIComponent(
-                    query
-                )}`;
+                performSearch(query, blogList, pagination, searchResults);
             }
         });
-    }
 
-    function performSearch(query) {
-        fetch(`/api/blog/search?q=${encodeURIComponent(query)}`)
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.text(); // Expect HTML response
-            })
-            .then((htmlResponse) => {
-                if (!searchResults) {
-                    // Create search results container if it doesn't exist
-                    searchResults = document.createElement("div");
-                    searchResults.classList.add("search-results");
-                    // Ensure blogList exists before trying to insertBefore
-                    if (blogList && blogList.parentNode) {
-                        blogList.parentNode.insertBefore(
-                            searchResults,
-                            blogList
-                        );
-                    } else {
-                        // Fallback if blogList is not found (e.g., on search results page)
-                        // Attempt to find a suitable parent or append to body
-                        const mainContent =
-                            document.querySelector("main") || document.body; // Adjust selector if needed
-                        mainContent.appendChild(searchResults);
-                    }
-                }
+        // Обработка клика по кнопке закрытия поиска
+        // closeSearchButton.on("click", function () {
+        //     searchInput.val("");
+        //     closeSearchButton.hide();
+        //     resetToOriginalContent(blogList, pagination, searchResults);
+        // });
 
-                // Display the search results container and hide the original blog list
-                if (blogList) {
-                    blogList.style.display = "none";
-                }
-                searchResults.style.display = "block";
+        // Обработка нажатия Escape
+        $(document).on("keydown", function (e) {
+            if (e.key === "Escape" && isSearchActive) {
+                searchInput.val("");
+                //  closeSearchButton.hide();
+                resetToOriginalContent(blogList, pagination, searchResults);
+            }
+        });
 
-                // Insert the HTML received from the server
-                searchResults.innerHTML = htmlResponse;
-            })
-            .catch((error) => {
-                console.error("Error fetching search results:", error);
-                // Optionally display an error message to the user in searchResults
-                if (searchResults) {
-                    searchResults.innerHTML =
-                        '<p class="text-center text-red-500">Sorry, an error occurred while searching. Please try again later.</p>';
-                    if (blogList) {
-                        blogList.style.display = "none";
-                    }
-                    searchResults.style.display = "block";
-                }
-            });
-    }
+        // Обработка отправки формы поиска
+        searchForm.on("submit", function (e) {
+            e.preventDefault();
+            const query = searchInput.val().trim();
 
-    // Debounce function to limit API calls
-    function debounce(func, wait) {
-        let timeout;
-        return function () {
-            const context = this,
-                args = arguments;
-            clearTimeout(timeout);
-            timeout = setTimeout(function () {
-                func.apply(context, args);
-            }, wait);
-        };
+            if (query.length >= 3) {
+                const url = new URL(window.location.href);
+                url.pathname = "/blog/search";
+                url.searchParams.set("q", query);
+                window.location.href = url.toString();
+            }
+        });
+
+        // Проверка URL на наличие параметра поиска при загрузке страницы
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchQuery = urlParams.get("q");
+        if (searchQuery && searchQuery.length >= 3) {
+            searchInput.val(searchQuery);
+            // closeSearchButton.show();
+            performSearch(searchQuery, blogList, pagination, searchResults);
+        }
     }
 });
