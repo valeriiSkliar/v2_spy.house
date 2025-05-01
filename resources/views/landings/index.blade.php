@@ -1,4 +1,4 @@
-@extends('layouts.authorized')
+@extends('layouts.main')
 
 @section('page-content')
 <div class="row align-items-center">
@@ -18,6 +18,7 @@
             icon="list" />
     </div>
 </div>
+
 
 <x-landings.form />
 
