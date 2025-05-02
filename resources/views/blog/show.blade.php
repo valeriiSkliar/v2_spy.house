@@ -6,27 +6,11 @@
 
 @section('page-content')
 <div class="article _big _single">
-    <div class="article__thumb thumb"><img src="{{ $article['featured_image'] }}" alt="{{ $article['title'] }}"></div>
-    <div class="article__row">
-        <div class="article__cat">
-            <div class="cat-links">
-                <a href="{{ route('blog.category', $currentCategory->slug) }}" data-color="{{ $currentCategory->color }}">{{ $currentCategory->name }}</a>
-            </div>
-        </div>
-        <div class="article__info">
-            <div class="article-info">
-                <div class="article-info__item icon-date">{{ $article->created_at->format('d.m.y') }}</div>
-                <a href="#comments" class="article-info__item icon-comment1">{{ $article->comments_count }}</a>
-                <div class="article-info__item icon-view">{{ $article->views_count }}</div>
-                <div class="article-info__item icon-rating">{{ $article->rating }}</div>
-            </div>
-        </div>
-    </div>
+    <x-blog.article-thumb :article="$article" />
+    <x-blog.article-meta-header :article="$article" :currentCategory="$currentCategory" />
     <h1 class="article__title">
-        @if($article['is_new'])
-        <span class="article-label">New</span>
-        @endif
-        {{ $article['title'] }}
+        <x-blog.new-article-label :article="$article" />
+        {{ $article->title }}
     </h1>
     <div class="entry-content pt-3">
         @if(isset($article['table_of_contents']))
@@ -45,47 +29,16 @@
         </div>
         @endif
 
-        {!! $article['content'] !!}
+        {!! $article->content !!}
     </div>
-    <div class="article-rate">
-        <div class="article-rate__txt">
-            <p class="mb-1 font-18 font-weight-600">Rate this article</p>
-            <p class="mb-0">Rate from 1 to 5</p>
-        </div>
-        <div class="article-rate__stars">
-            <div class="article-rate__rating"></div>
-            <div class="article-rate__value font-18"><span class="font-weight-600">{{ $article['user_rating'] ?? 0 }}</span> / 5</div>
-        </div>
-    </div>
+    <x-blog.article-rating :article="$article" />
 </div>
 
 <a href="#" target="_blank" class="banner-item mb-25">
     <img src="/img/665479769a2c02372b9aeb068bd2ba2a.gif" alt="">
 </a>
 
-<div class="pt-1">
-    <div class="d-flex align-items-center justify-content-between mb-20">
-        <h2 class="font-20 mb-0 mr-3">It will also be interesting</h2>
-        <div class="carousel-controls">
-            <button id="slick-demo-2-prev" class="carousel-prev"> <span class="icon-prev"></span> </button>
-            <button id="slick-demo-2-next" class="carousel-next"> <span class="icon-next"></span> </button>
-        </div>
-    </div>
-    <div class="article-similar">
-        <div class="carousel-container" id="slick-demo-2">
-            @foreach($relatedPosts as $relatedPost)
-            <div class="carousel-item">
-                <div class="article _similar">
-                    <a href="{{ route('blog.show', $relatedPost['slug']) }}" class="article__thumb thumb">
-                        <img src="{{ $relatedPost['image'] }}" alt="{{ $relatedPost['title'] }}">
-                    </a>
-                    <a href="{{ route('blog.show', $relatedPost['slug']) }}" class="article__title">{{ $relatedPost['title'] }}</a>
-                </div>
-            </div>
-            @endforeach
-        </div>
-    </div>
-</div>
+<x-blog.related-articles-carousel :relatedPosts="$relatedPosts" />
 
 <div class="sep"></div>
 

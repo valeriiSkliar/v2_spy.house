@@ -85,6 +85,6 @@ class BlogPost extends Model
     {
         return $this->belongsToMany(BlogPost::class, 'related_posts', 'post_id', 'related_post_id')
             ->withPivot('sort_order')
-            ->orderBy('pivot_sort_order');
+            ->orderBy('sort_order');
     }
 }

@@ -41,6 +41,7 @@ class BlogController extends FrontendController
 
     public function show(string $slug, Request $request)
     {
+        $locale = $request->get('locale', 'en') ?? app()->getLocale(); 
         $post = BlogPost::where('slug', $slug)
             ->where('is_published', true)
             ->with(['author', 'categories', 'relatedPosts' => function ($query) {
@@ -57,18 +58,19 @@ class BlogController extends FrontendController
             ->paginate(10)
             ->appends($request->all());
 
-            // dd($post->relatedPosts);
+        $relatedPosts = $post->relatedPosts()->get();
+
         return view($this->showView, [
             'breadcrumbs' => [
                 ['title' => 'Blog', 'url' => route('blog.index')],
-                ['title' => $post->categories->first()->name, 'url' => route('blog.category', $post->categories->first()->slug)],
+                ['title' => $post->categories->first()->getTranslation('name', $locale), 'url' => route('blog.category', $post->categories->first()->slug)],
                 ['title' => $post->title, 'url' => route('blog.show', $post->slug)],
             ],
             'article' => $post,
             'currentCategory' => $post->categories->first(),
             'comments' => $comments,
             'categories' => $this->getSidebarData(),
-            'relatedPosts' => $post->relatedPosts,
+            'relatedPosts' => $relatedPosts,
             'canModerate' => false
         ]);
     }
