@@ -3,19 +3,18 @@
 namespace App\Http\Controllers\Frontend\Blog;
 
 use App\Enums\Frontend\CommentStatus;
-use App\Http\Controllers\FrontendController;
 use App\Models\Frontend\Blog\BlogComment;
 use App\Models\Frontend\Blog\BlogPost;
 use App\Models\Frontend\Blog\PostCategory;
 use Illuminate\Http\Request;
 
 
-class BlogController extends FrontendController
+class BlogController extends BaseBlogController
 {
-    private $indexView = 'blog.index';
-    private $showView = 'blog.show';
+    
     public function index(Request $request)
     {
+        $this->authorize('viewAny', BlogPost::class);
 
         $query = BlogPost::query()
             ->with(['author', 'categories'])
@@ -44,9 +43,7 @@ class BlogController extends FrontendController
         $locale = $request->get('locale', 'en') ?? app()->getLocale(); 
         $post = BlogPost::where('slug', $slug)
             ->where('is_published', true)
-            ->with(['author', 'categories', 'relatedPosts' => function ($query) {
-                $query->where('is_published', true);
-            }, 'comments'])
+            ->with(['author', 'categories' ])
             ->firstOrFail();
 
         // Increment view count
@@ -54,9 +51,12 @@ class BlogController extends FrontendController
 
         $comments = BlogComment::where('post_id', $post->id)
             ->where('status', CommentStatus::APPROVED->value)
+            // ->with('replies')
+            // ->withCount('replies')
+            // ->orderBy('replies_count', 'desc')
             ->orderBy('created_at', 'desc')
-            ->paginate(10)
-            ->appends($request->all());
+            ->paginate(10);
+            // ->appends($request->all());
 
         $relatedPosts = $post->relatedPosts()->get();
 

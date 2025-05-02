@@ -2,16 +2,19 @@
 
 namespace App\Http\Controllers\Api\Blog;
 
-use App\Http\Controllers\FrontendController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Frontend\Blog\BlogController;
 use App\Enums\Frontend\CommentStatus;
+use App\Http\Controllers\Frontend\Blog\BaseBlogController;
 use App\Models\Frontend\Blog\BlogComment;
 use App\Models\Frontend\Blog\BlogPost;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Auth;
 
-
-class ApiBlogController extends FrontendController
+class ApiBlogController extends BaseBlogController
 {
+    use AuthorizesRequests;
+
     public function search(Request $request)
     {
         $query = $request->get('q', '');
@@ -65,8 +68,6 @@ class ApiBlogController extends FrontendController
     public function paginateComments(Request $request, $slug) {
         $page = $request->get('page', 1);
 
-        // dd($page, $slug);
-        
         $post = BlogPost::where('slug', $slug)
             ->where('is_published', true)
             ->firstOrFail();
@@ -78,12 +79,20 @@ class ApiBlogController extends FrontendController
             ->paginate(10)
             ->withQueryString();
 
-            // dd($comments);
         $commentsHtml = '';
         if ($comments->isEmpty()) {
             $commentsHtml = '<div class="message _bg _with-border">No comments found.</div>';
         } else {
+            // Получаем текущего пользователя
+            // $user = Auth::user();
+            // $commentsHtml .= view('components.blog.comment.comment-form', [
+            //     'article' => $post,
+            //     'isReply' => false,
+            //     'user' => $user,
+            //     // 'replyTo' => $comment
+            // ])->render();
             foreach ($comments as $comment) {
+
                 $commentsHtml .= view('components.blog.comment.comment', [
                     'comment' => $comment,
                     'slug' => $slug
@@ -102,8 +111,9 @@ class ApiBlogController extends FrontendController
             // Reset the paginator to the correct page
             $comments = BlogComment::where('post_id', $post->id)
                 ->where('status', CommentStatus::APPROVED->value)
-                ->whereNull('parent_id')
-                ->with('replies')
+                // ->with('replies')
+                // ->withCount('replies')
+                // ->orderBy('replies_count', 'desc')
                 ->orderBy('created_at', 'desc')
                 ->paginate(10, ['*'], 'page', $currentPage)
                 ->withQueryString();
