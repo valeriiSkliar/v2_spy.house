@@ -44,7 +44,7 @@
 
 <div class="article _big _single">
     <div class="comments" id="comments">
-        <h2>Comments <span class="comment-count">{{ count($article['comments']) }}</span></h2>
+        <h2>Comments <span class="comment-count">{{ $comments->total() }}</span></h2>
 
         @if(session('success'))
         <div class="message _bg _with-border _green mb-15">
@@ -68,6 +68,8 @@
                 </div>
                 <form action="{{ route('blog.comment.store', $article['slug']) }}" method="POST">
                     @csrf
+        {{  $article->id }}
+
                     <div class="mb-1">
                         <label class="d-block mb-10">Write the text of the comment</label>
                         <textarea name="content" required></textarea>
@@ -115,12 +117,11 @@
             </div>
             @endif
 
-            @foreach($article['comments'] as $comment)
+            @foreach($comments as $comment)
             <x-blog.comment :comment="$comment" :slug="$article['slug']" />
             @endforeach
         </div>
         @endguest
-
         {{ $comments->links('components.blog.comment.async-pagination', ['paginator' => $comments]) }}
     </div>
 </div>

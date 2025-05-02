@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Api\Blog;
 use App\Http\Controllers\FrontendController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Frontend\Blog\BlogController;
+use App\Enums\Frontend\CommentStatus;
+use App\Models\Frontend\Blog\BlogComment;
+use App\Models\Frontend\Blog\BlogPost;
 
 
 class ApiBlogController extends FrontendController
@@ -56,6 +59,80 @@ class ApiBlogController extends FrontendController
                 'total' => $totalResults,
                 'query' => $query
             ]
+        ]);
+    }
+
+    public function paginateComments(Request $request, $slug) {
+        $page = $request->get('page', 1);
+
+        // dd($page, $slug);
+        
+        $post = BlogPost::where('slug', $slug)
+            ->where('is_published', true)
+            ->firstOrFail();
+            
+            $comments = BlogComment::where('post_id', $post->id)
+            ->where('status', CommentStatus::APPROVED->value)
+        
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->withQueryString();
+
+            // dd($comments);
+        $commentsHtml = '';
+        if ($comments->isEmpty()) {
+            $commentsHtml = '<div class="message _bg _with-border">No comments found.</div>';
+        } else {
+            foreach ($comments as $comment) {
+                $commentsHtml .= view('components.blog.comment.comment', [
+                    'comment' => $comment,
+                    'slug' => $slug
+                ])->render();
+            }
+        }
+        
+        // Generate pagination elements manually for the API context
+        $elements = [];
+        $lastPage = $comments->lastPage();
+        $currentPage = $comments->currentPage();
+        
+        // Handle edge case where currentPage > lastPage
+        if ($currentPage > $lastPage && $lastPage > 0) {
+            $currentPage = $lastPage;
+            // Reset the paginator to the correct page
+            $comments = BlogComment::where('post_id', $post->id)
+                ->where('status', CommentStatus::APPROVED->value)
+                ->whereNull('parent_id')
+                ->with('replies')
+                ->orderBy('created_at', 'desc')
+                ->paginate(10, ['*'], 'page', $currentPage)
+                ->withQueryString();
+        }
+        
+        if ($lastPage > 0) {
+            // Build page array for pagination
+            $pages = [];
+            for ($i = 1; $i <= $lastPage; $i++) {
+                $pages[$i] = $i; // Use the page number itself as the value
+            }
+            $elements[0] = $pages;
+        } else {
+            // No pages, create empty array
+            $elements[0] = [];
+        }
+        
+        $paginationHtml = view('components.blog.comment.async-pagination', [
+            'paginator' => $comments,
+            'elements' => $elements
+        ])->render();
+        
+        return response()->json([
+            'success' => true,
+            'commentsHtml' => $commentsHtml,
+            'paginationHtml' => $paginationHtml,
+            'currentPage' => $comments->currentPage(),
+            'lastPage' => $comments->lastPage(),
+            'total' => $comments->total()
         ]);
     }
 }
