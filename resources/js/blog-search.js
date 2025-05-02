@@ -113,7 +113,7 @@ document.addEventListener("DOMContentLoaded", function () {
     //     '<button type="button" class="close-search-button">×</button>'
     // );
     const blogList = $(".blog-list");
-    const pagination = $(".pagination-nav");
+    const pagination = $(".pagination-list");
     let searchResults = $(".search-results");
 
     // // Если блока для результатов поиска нет, создаем его

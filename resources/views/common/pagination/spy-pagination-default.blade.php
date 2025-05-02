@@ -1,6 +1,6 @@
-@if ($paginator->hasPages())
 
-    <nav class="pagination-nav" role="navigation" aria-label="pagination">
+<nav class="pagination-nav" role="navigation" aria-label="pagination">
+        @if ($paginator->hasPages())
         <ul class="pagination-list">
             @if ($paginator->onFirstPage())
                 <li><a class="pagination-link prev disabled" aria-disabled="true" href=""><span class="icon-prev"></span> <span class="pagination-link__txt">Previous</span></a></li>
@@ -24,6 +24,6 @@
                 <li><a class="pagination-link next disabled" aria-disabled="true" href=""><span class="pagination-link__txt">Next</span> <span class="icon-next"></span></a></li>
             @endif
         </ul>
+        @endif
     </nav>
     
-@endif

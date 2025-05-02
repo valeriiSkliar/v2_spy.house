@@ -57,6 +57,7 @@ class BlogController extends FrontendController
             ->paginate(10)
             ->appends($request->all());
 
+            // dd($post->relatedPosts);
         return view($this->showView, [
             'breadcrumbs' => [
                 ['title' => 'Blog', 'url' => route('blog.index')],
@@ -131,14 +132,16 @@ class BlogController extends FrontendController
                 return $category;
             });
 
-        return [
-            'categories' => $categories,
-            'popularPosts' => BlogPost::query()
+            $popularPosts = BlogPost::query()
                 ->with(['author'])
                 ->where('is_published', true)
                 ->orderBy('views_count', 'desc')
                 ->take(5)
-                ->get()
+                ->get();
+
+        return [
+            'categories' => $categories,
+            'popularPosts' => $popularPosts
         ];
     }
 
