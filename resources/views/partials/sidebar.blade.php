@@ -14,6 +14,7 @@
         </div>
     </div>
     <div class="aside__content">
+        <x-auth.buttons-mobile />
         @include('partials.sidebar-menu')
         @include('components.promo-tariff')
         <div class="aside__copyright">{{ __('sidebar.copyright') }}</div>

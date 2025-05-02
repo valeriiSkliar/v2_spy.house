@@ -5,10 +5,7 @@
         </div>
     </div>
     <div class="aside__content">
-        <div class="mb-15">
-            <a href="#" class="btn _flex w-100 mb-10 _dark">Войти</a>
-            <a href="#" class="btn _flex w-100 mb-10 _green">Регистрация</a>
-        </div>
+        <x-auth.buttons-mobile />
         @include('partials.sidebar-menu')
     </div>
 </aside>

@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'creatives' => 'К',
+    'creatives' => 'Creatives',
     'landings' => 'Landings',
     'offers' => 'Offers',
     'creative_ai' => 'Creative AI',
