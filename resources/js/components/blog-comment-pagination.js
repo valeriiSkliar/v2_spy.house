@@ -42,6 +42,7 @@ function initCommentPagination() {
 }
 
 function loadComments(slug, page) {
+    const commentForm = $(".universal-comment-form");
     const commentsList = $(".comment-list");
     const paginationContainer = $(".pagination-nav");
 
@@ -64,7 +65,7 @@ function loadComments(slug, page) {
                 initCommentPagination();
 
                 // Reinitialize reply buttons
-                initReplyButtons();
+                initReplyButtons(commentForm);
 
                 // Scroll to comments section
                 document

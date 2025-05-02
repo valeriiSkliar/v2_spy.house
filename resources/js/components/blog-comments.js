@@ -49,7 +49,7 @@ const replyClickHandler = (e) => {
     const commentId = $(e.target).data("comment-id");
     const authorName = $(e.target).data("author-name");
     const regularCommentLabel = $(e.target)
-        .closest(".comment-form")
+        .closest(".universal-comment-form")
         .find(".regular-comment-label");
     if (regularCommentLabel.length) {
         regularCommentLabel.hide();
