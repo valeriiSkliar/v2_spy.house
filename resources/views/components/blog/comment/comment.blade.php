@@ -2,11 +2,11 @@
 
 <div class="comment">
     <div class="comment-main">
-        <img src="https://ui-avatars.com/api/?name={{ urlencode($comment['author']) }}&amp;background=F3FAF7&color=3DC98A&bold=true" alt="{{ $comment['author'] }}" class="avatar">
+        <img src="https://ui-avatars.com/api/?name={{ urlencode($comment['author_name']) }}&amp;background=F3FAF7&color=3DC98A&bold=true" alt="{{ $comment['author_name'] }}" class="avatar">
         <div class="comment-content">
             <header>
-                <h4>{{ $comment['author'] }}</h4>
-                <time>{{ $comment['date'] }}</time>
+                <h4>{{ $comment['author_name'] }}</h4>
+                <time>{{ \Carbon\Carbon::parse($comment['created_at'])->format('d.m.Y') }}</time>
                 @auth
                 <a href="{{ route('blog.reply', ['slug' => $slug, 'comment_id' => $comment['id']]) }}" class="reply-btn">Reply</a>
                 @endauth
@@ -19,11 +19,11 @@
     <div class="replies">
         @foreach($comment['replies'] as $reply)
         <div class="reply">
-            <img src="https://ui-avatars.com/api/?name={{ urlencode($reply['author']) }}&amp;background=F3FAF7&color=3DC98A&bold=true" alt="{{ $reply['author'] }}" class="avatar">
+            <img src="https://ui-avatars.com/api/?name={{ urlencode($reply['author_name']) }}&amp;background=F3FAF7&color=3DC98A&bold=true" alt="{{ $reply['author_name'] }}" class="avatar">
             <div class="reply-content">
                 <header>
-                    <h4>{{ $reply['author'] }}</h4>
-                    <time>{{ $reply['date'] }}</time>
+                    <h4>{{ $reply['author_name'] }}</h4>
+                    <time>{{ \Carbon\Carbon::parse($reply['created_at'])->format('d.m.Y') }}</time>
                 </header>
                 <p>{{ $reply['content'] }}</p>
             </div>

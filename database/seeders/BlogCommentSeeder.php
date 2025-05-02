@@ -17,17 +17,17 @@ class BlogCommentSeeder extends Seeder
         $posts = BlogPost::all();
 
         foreach ($posts as $post) {
-            // Create 3-7 parent comments for each post
+            // Create 7-15 parent comments for each post
             $parentComments = BlogComment::factory()
-                ->count(rand(3, 7))
+                ->count(rand(7, 15))
                 ->approved()
                 ->create([
                     'post_id' => $post->id,
                 ]);
 
-            // For each parent comment, create 0-4 replies
+            // For each parent comment, create 1-5 replies
             foreach ($parentComments as $parentComment) {
-                $replyCount = rand(0, 4);
+                $replyCount = rand(1, 5);
                 if ($replyCount > 0) {
                     BlogComment::factory()
                         ->count($replyCount)

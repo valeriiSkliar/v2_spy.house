@@ -163,14 +163,12 @@
             @endif
 
             @foreach($article['comments'] as $comment)
-            <x-comment :comment="$comment" :slug="$article['slug']" />
+            <x-blog.comment :comment="$comment" :slug="$article['slug']" />
             @endforeach
         </div>
         @endguest
 
-        @if($comments->lastPage() > 1)
-        <x-pagination :currentPage="$comments->currentPage()" :totalPages="$comments->lastPage()" />
-        @endif
+        {{ $comments->links('components.blog.comment.async-pagination', ['paginator' => $comments]) }}
     </div>
 </div>
 @endsection

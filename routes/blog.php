@@ -13,4 +13,5 @@ Route::prefix('blog')->name('blog.')->group(function () {
     Route::get('/{slug}/reply/{comment_id}', [TestBlogController::class, 'reply'])->name('reply');
     Route::post('/{slug}/reply', [TestBlogController::class, 'storeReply'])->name('reply.store');
     Route::post('/{slug}/rate', [TestBlogController::class, 'rateArticle'])->name('rate');
+    Route::get('/{slug}/comments', [BlogController::class, 'getComments'])->name('comments.get');
 });
