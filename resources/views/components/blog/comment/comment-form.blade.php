@@ -1,14 +1,12 @@
 @props(['article', 'isReply' => false, 'replyTo' => null])
 
-
-<div class="comment-form">
     <div class="comment-form__author">
         <img src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name) }}&amp;background=F3FAF7&color=3DC98A&bold=true" alt="{{ auth()->user()->name }}" class="avatar">
         <span class="font-16 font-weight-600">{{ auth()->user()->name }}</span>
     </div>
     
     @if(!$isReply)
-    <form action="{{ route('blog.comment.store', $article['slug']) }}" method="POST">
+    <form id="comment-form" action="{{ route('blog.comment.store', $article['slug']) }}" method="POST" class="comment-ajax-form">
         @csrf
 
         <div class="mb-1">
@@ -25,7 +23,7 @@
         </div>
     </form>
     @else
-    <form action="{{ route('blog.reply.store', $article['slug']) }}" method="POST">
+    <form action="{{ route('api.blog.reply.store', $article['slug']) }}" method="POST" class="reply-ajax-form">
         @csrf
         <input type="hidden" name="parent_id" value="{{ $replyTo['id'] }}">
         <div class="mb-1">
@@ -43,9 +41,8 @@
                 <button type="submit" class="btn _flex _green w-100">Send</button>
             </div>
             <div class="col-6 col-md-auto mt-3">
-                <a href="{{ route('blog.show', $article['slug']) }}" class="btn _flex _gray w-100">Cancel</a>
+                <a href="javascript:void(0)" class="btn _flex _gray w-100 cancel-reply">Cancel</a>
             </div>
         </div>
     </form>
     @endif
-</div>

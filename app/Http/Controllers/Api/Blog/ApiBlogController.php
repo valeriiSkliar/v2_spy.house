@@ -25,23 +25,6 @@ class ApiBlogController extends BaseBlogController
         $blogController = app(BlogController::class);
         $articles = $blogController->searchApiResults($query);
 
-
-
-        // Format results for the view, taking the limit for live search
-        // $results = $articles->take($limit)->map(function ($article) {
-        //     return [
-        //         'id' => $article->id,
-        //         'title' => $article->title,
-        //         'slug' => $article->slug,
-        //         'image' => $article->featured_image ?? asset('images/default-article.jpg'), // Add default image
-        //         'date' => $article->created_at->format('d.m.y'),
-        //         'views' => $article->views_count ?? 0,
-        //         'rating' => $article->rating ?? 0,
-        //         'category' => $article->category ?? ['name' => 'Uncategorized', 'slug' => 'uncategorized', 'color' => '#cccccc'], // Default category
-        //         'comments_count' => isset($article->comments) ? count($article->comments) : 0
-        //     ];
-        // })->values(); // Use values() to reset keys for the loop in the view
-
         $results = $articles->take($limit);
         $totalResults = $articles->count();
 
@@ -51,8 +34,6 @@ class ApiBlogController extends BaseBlogController
             'total' => $totalResults,
             'query' => $query
         ])->render();
-
-
 
         return response()->json([
             'success' => true,
@@ -65,62 +46,170 @@ class ApiBlogController extends BaseBlogController
         ]);
     }
 
-    public function paginateComments(Request $request, $slug) {
+    /**
+     * Store a new comment for a blog post
+     * 
+     * @param Request $request
+     * @param string $slug
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function storeComment(Request $request, $slug)
+    {
+        $request->validate([
+            'content' => 'required|min:2|max:1000',
+        ]);
+
+        $post = BlogPost::where('slug', $slug)
+            ->where('is_published', true)
+            ->firstOrFail();
+
+        $user = Auth::user();
+
+        $comment = new BlogComment([
+            'post_id' => $post->id,
+            'author_name' => $user->name,
+            'email' => $user->email,
+            'content' => $this->sanitizeInput($request->content),
+            'status' => CommentStatus::APPROVED, // Auto-approve for authenticated users
+            'is_spam' => false,
+        ]);
+
+        $comment->save();
+
+        // Fetch the latest comments including the new one
+        return $this->refreshComments($slug);
+    }
+
+    /**
+     * Get reply form for a specific comment
+     * 
+     * @param Request $request
+     * @param string $slug
+     * @param int $comment_id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getReplyForm(Request $request, $slug, $comment_id)
+    {
+        $post = BlogPost::where('slug', $slug)
+            ->where('is_published', true)
+            ->firstOrFail();
+
+        $comment = BlogComment::where('id', $comment_id)
+            ->where('post_id', $post->id)
+            ->firstOrFail();
+
+        $replyFormHtml = view('components.blog.comment.reply-form', [
+            'article' => [
+                'slug' => $slug,
+            ],
+            'isReply' => true,
+            'replyTo' => [
+                'id' => $comment->id,
+                'author' => $comment->author_name,
+            ],
+            'errors' => app('view')->shared('errors', new \Illuminate\Support\ViewErrorBag),
+        ])->render();
+
+        return response()->json([
+            'success' => true,
+            'html' => $replyFormHtml,
+        ]);
+    }
+
+    /**
+     * Store a reply to an existing comment
+     * 
+     * @param Request $request
+     * @param string $slug
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function storeReply(Request $request, $slug)
+    {
+        $request->validate([
+            'content' => 'required|min:2|max:1000',
+            'parent_id' => 'required|exists:blog_comments,id',
+        ]);
+
+        $post = BlogPost::where('slug', $slug)
+            ->where('is_published', true)
+            ->firstOrFail();
+
+        $parentComment = BlogComment::findOrFail($request->parent_id);
+
+        // Verify parent comment belongs to this post
+        if ($parentComment->post_id != $post->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid parent comment'
+            ], 422);
+        }
+
+        $user = Auth::user();
+
+        $reply = new BlogComment([
+            'post_id' => $post->id,
+            'parent_id' => $parentComment->id,
+            'author_name' => $user->name,
+            'email' => $user->email,
+            'content' => $this->sanitizeInput($request->content),
+            'status' => CommentStatus::APPROVED, // Auto-approve for authenticated users
+            'is_spam' => false,
+        ]);
+
+        $reply->save();
+
+        // Fetch the latest comments including the new reply
+        return $this->refreshComments($slug);
+    }
+
+    public function paginateComments(Request $request, $slug)
+    {
         $page = $request->get('page', 1);
 
         $post = BlogPost::where('slug', $slug)
             ->where('is_published', true)
             ->firstOrFail();
-            
-            $comments = BlogComment::where('post_id', $post->id)
+
+        $comments = BlogComment::where('post_id', $post->id)
             ->where('status', CommentStatus::APPROVED->value)
-        
             ->orderBy('created_at', 'desc')
             ->paginate(10)
             ->withQueryString();
 
-            $user = Auth::user();
-            // dd($user);
+        $user = Auth::user();
         $commentsHtml = '';
         if ($comments->isEmpty()) {
             $commentsHtml = '<div class="message _bg _with-border">No comments found.</div>';
         } else {
-            // Получаем текущего пользователя
-            $commentsHtml .= view('components.blog.comment.comment-form', [
+            $commentsHtml .= view('components.blog.comment.reply-form', [
                 'article' => $post,
                 'isReply' => false,
-                'user' => $user,
                 'errors' => app('view')->shared('errors', new \Illuminate\Support\ViewErrorBag),
-                // 'replyTo' => $comment
             ])->render();
             foreach ($comments as $comment) {
-
                 $commentsHtml .= view('components.blog.comment.comment', [
                     'comment' => $comment,
                     'slug' => $slug
                 ])->render();
             }
         }
-        
+
         // Generate pagination elements manually for the API context
         $elements = [];
         $lastPage = $comments->lastPage();
         $currentPage = $comments->currentPage();
-        
+
         // Handle edge case where currentPage > lastPage
         if ($currentPage > $lastPage && $lastPage > 0) {
             $currentPage = $lastPage;
             // Reset the paginator to the correct page
             $comments = BlogComment::where('post_id', $post->id)
                 ->where('status', CommentStatus::APPROVED->value)
-                // ->with('replies')
-                // ->withCount('replies')
-                // ->orderBy('replies_count', 'desc')
                 ->orderBy('created_at', 'desc')
                 ->paginate(10, ['*'], 'page', $currentPage)
                 ->withQueryString();
         }
-        
+
         if ($lastPage > 0) {
             // Build page array for pagination
             $pages = [];
@@ -132,12 +221,12 @@ class ApiBlogController extends BaseBlogController
             // No pages, create empty array
             $elements[0] = [];
         }
-        
+
         $paginationHtml = view('components.blog.comment.async-pagination', [
             'paginator' => $comments,
             'elements' => $elements
         ])->render();
-        
+
         return response()->json([
             'success' => true,
             'commentsHtml' => $commentsHtml,
@@ -146,5 +235,18 @@ class ApiBlogController extends BaseBlogController
             'lastPage' => $comments->lastPage(),
             'total' => $comments->total()
         ]);
+    }
+
+    /**
+     * Helper method to refresh comments after adding a new one
+     * 
+     * @param string $slug
+     * @return \Illuminate\Http\JsonResponse
+     */
+    private function refreshComments($slug)
+    {
+        $request = new Request();
+        $request->merge(['page' => 1]);
+        return $this->paginateComments($request, $slug);
     }
 }

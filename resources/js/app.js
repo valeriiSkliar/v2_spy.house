@@ -20,7 +20,7 @@ import "./helpers";
 // Additional imports
 import "./libs/main";
 import "./rating.js";
-import "./comments.js";
+// import "./comments.js";
 import "./blog-search.js";
 import "./base-select.js";
 // import "./search-suggestions.js";

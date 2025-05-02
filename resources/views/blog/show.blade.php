@@ -58,21 +58,26 @@
             <span class="icon-warning font-18"></span>
             <div class="message__txt">To leave comments, please <a href="{{ route('login') }}" class="link">Log in</a> to our Spy.house service</div>
         </div>
-        @else
+        @endguest
         <div class="comment-list">
             <div class="sep"></div>
-            <x-blog.comment.comment-form :article="$article" />
+            @auth
+            <div class="comment-form">
+                <x-blog.comment.reply-form :article="$article" />
+                {{-- <x-blog.comment.comment-form :article="$article" />
 
-            @if(session('reply_to'))
-            <x-blog.comment.comment-form :article="$article" :isReply="true" :replyTo="session('reply_to')" />
-            @endif
-
+                @if(session('reply_to'))
+                <x-blog.comment.comment-form :article="$article" :isReply="true" :replyTo="session('reply_to')" />
+                @endif --}}
+            </div>
+            @endauth
             @foreach($comments as $comment)
             <x-blog.comment :comment="$comment" :slug="$article['slug']" />
             @endforeach
         </div>
-        @endguest
+        @auth
         {{ $comments->links('components.blog.comment.async-pagination', ['paginator' => $comments]) }}
+        @endauth
     </div>
 </div>
 @endsection
@@ -117,18 +122,18 @@
     //     });
     // });
 
-    $(document).ready(function() {
-        $('.category-link').click(function() {
-            var color = $(this).data('color');
-            $(this).css('color', color);
-        });
-    });
-    $(document).ready(function() {
-        $('.cat-links').click(function() {
-            var color = $(this).data('color');
-            $(this).css('color', color);
-        });
-    });
+    // $(document).ready(function() {
+    //     $('.category-link').click(function() {
+    //         var color = $(this).data('color');
+    //         $(this).css('color', color);
+    //     });
+    // });
+    // $(document).ready(function() {
+    //     $('.cat-links').click(function() {
+    //         var color = $(this).data('color');
+    //         $(this).css('color', color);
+    //     });
+    // });
 </script>
 @endsection
 

@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\Redis;
 class AntiFloodService
 {
     // Значения по умолчанию для лимита запросов и окна в секундах (например, 3600 секунд = 1 час)
-    protected int $defaultLimit;
-    protected int $defaultWindow;
+    public int $defaultLimit;
+    public int $defaultWindow;
 
     public function __construct(int $defaultLimit = 10, int $defaultWindow = 3600)
     {
@@ -53,7 +53,7 @@ class AntiFloodService
      */
     protected function getKey($userId, string $action = 'default'): string
     {
-        $windowKey = date('YmdH'); // формирование ключа с учётом года, месяца, дня и часа
+        $windowKey = date('YmdHi'); // формирование ключа с учётом года, месяца, дня, часа и минуты
         return "antiflood:{$userId}:{$action}:{$windowKey}";
     }
 

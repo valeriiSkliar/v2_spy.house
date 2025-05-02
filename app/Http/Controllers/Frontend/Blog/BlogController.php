@@ -6,15 +6,18 @@ use App\Enums\Frontend\CommentStatus;
 use App\Models\Frontend\Blog\BlogComment;
 use App\Models\Frontend\Blog\BlogPost;
 use App\Models\Frontend\Blog\PostCategory;
+use App\Services\Frontend\Toast;
+use App\Traits\App\HasAntiFloodProtection;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Auth;
 
 class BlogController extends BaseBlogController
 {
-    
+    use HasAntiFloodProtection;
+
     public function index(Request $request)
     {
-        $this->authorize('viewAny', BlogPost::class);
+        // $this->authorize('viewAny', BlogPost::class);
 
         $query = BlogPost::query()
             ->with(['author', 'categories'])
@@ -40,10 +43,10 @@ class BlogController extends BaseBlogController
 
     public function show(string $slug, Request $request)
     {
-        $locale = $request->get('locale', 'en') ?? app()->getLocale(); 
+        $locale = $request->get('locale', 'en') ?? app()->getLocale();
         $post = BlogPost::where('slug', $slug)
             ->where('is_published', true)
-            ->with(['author', 'categories' ])
+            ->with(['author', 'categories'])
             ->firstOrFail();
 
         // Increment view count
@@ -51,12 +54,12 @@ class BlogController extends BaseBlogController
 
         $comments = BlogComment::where('post_id', $post->id)
             ->where('status', CommentStatus::APPROVED->value)
-            // ->with('replies')
-            // ->withCount('replies')
-            // ->orderBy('replies_count', 'desc')
+            ->whereNull('parent_id')
+            ->with(['replies' => function ($query) {
+                $query->where('status', CommentStatus::APPROVED->value)->orderBy('created_at', 'asc');
+            }])
             ->orderBy('created_at', 'desc')
             ->paginate(10);
-            // ->appends($request->all());
 
         $relatedPosts = $post->relatedPosts()->get();
 
@@ -134,12 +137,12 @@ class BlogController extends BaseBlogController
                 return $category;
             });
 
-            $popularPosts = BlogPost::query()
-                ->with(['author'])
-                ->where('is_published', true)
-                ->orderBy('views_count', 'desc')
-                ->take(5)
-                ->get();
+        $popularPosts = BlogPost::query()
+            ->with(['author'])
+            ->where('is_published', true)
+            ->orderBy('views_count', 'desc')
+            ->take(5)
+            ->get();
 
         return [
             'categories' => $categories,
@@ -194,6 +197,139 @@ class BlogController extends BaseBlogController
         return $results;
     }
 
+    public function storeComment(Request $request, string $slug)
+    {
+        // Get user ID or IP for guests
+        $userId = Auth::id() ?? $request->ip();
+
+        // --- Anti-Flood Check --- 
+        $action = 'store_comment';
+        $limit = 1; // 1 comment
+        $window = 60; // per 60 seconds (1 minute)
+
+        if (!$this->checkAntiFlood($userId, $action, $limit, $window)) {
+            $errorMessage = 'You can only post one comment per minute. Please wait.';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $errorMessage], 429); // 429 Too Many Requests
+            }
+            Toast::error($errorMessage);
+            return redirect()->back()->withInput();
+        }
+        // --- Anti-Flood Check End ---
+
+        $request->validate([
+            'content' => 'required|min:2|max:1000',
+            'parent_id' => 'nullable|exists:blog_comments,id',
+        ]);
+
+        $post = BlogPost::where('slug', $slug)
+            ->where('is_published', true)
+            ->firstOrFail();
+
+        $user = Auth::user(); // Get user details AFTER validation and anti-flood check
+
+        $comment = new BlogComment([
+            'post_id' => $post->id,
+            'author_name' => $user->name,
+            'email' => $user->email,
+            'content' => $this->sanitizeInput($request->content),
+            'status' => CommentStatus::APPROVED, // Auto-approve for authenticated users
+            'is_spam' => false,
+        ]);
+
+        if ($request->filled('parent_id')) {
+            $comment->parent_id = $request->parent_id;
+        }
+
+        $comment->save();
+
+        $successMessage = 'Comment added successfully';
+        Toast::success($successMessage);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $successMessage,
+                'comment' => $comment->load('author'), // Optionally return the new comment data
+            ]);
+        }
+
+        return redirect()->route('blog.show', $post->slug);
+    }
+    public function paginateComments(Request $request, $slug)
+    {
+        $page = $request->get('page', 1);
+
+        $post = BlogPost::where('slug', $slug)
+            ->where('is_published', true)
+            ->firstOrFail();
+
+        $comments = BlogComment::where('post_id', $post->id)
+            ->where('status', CommentStatus::APPROVED->value)
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->withQueryString();
+
+        $user = Auth::user();
+        $commentsHtml = '';
+        if ($comments->isEmpty()) {
+            $commentsHtml = '<div class="message _bg _with-border">No comments found.</div>';
+        } else {
+            $commentsHtml .= view('components.blog.comment.reply-form', [
+                'article' => $post,
+                'isReply' => false,
+                'errors' => app('view')->shared('errors', new \Illuminate\Support\ViewErrorBag),
+            ])->render();
+            foreach ($comments as $comment) {
+                $commentsHtml .= view('components.blog.comment.comment', [
+                    'comment' => $comment,
+                    'slug' => $slug
+                ])->render();
+            }
+        }
+
+        // Generate pagination elements manually for the API context
+        $elements = [];
+        $lastPage = $comments->lastPage();
+        $currentPage = $comments->currentPage();
+
+        // Handle edge case where currentPage > lastPage
+        if ($currentPage > $lastPage && $lastPage > 0) {
+            $currentPage = $lastPage;
+            // Reset the paginator to the correct page
+            $comments = BlogComment::where('post_id', $post->id)
+                ->where('status', CommentStatus::APPROVED->value)
+                ->orderBy('created_at', 'desc')
+                ->paginate(10, ['*'], 'page', $currentPage)
+                ->withQueryString();
+        }
+
+        if ($lastPage > 0) {
+            // Build page array for pagination
+            $pages = [];
+            for ($i = 1; $i <= $lastPage; $i++) {
+                $pages[$i] = $i; // Use the page number itself as the value
+            }
+            $elements[0] = $pages;
+        } else {
+            // No pages, create empty array
+            $elements[0] = [];
+        }
+
+        $paginationHtml = view('components.blog.comment.async-pagination', [
+            'paginator' => $comments,
+            'elements' => $elements
+        ])->render();
+
+        return response()->json([
+            'success' => true,
+            'commentsHtml' => $commentsHtml,
+            'paginationHtml' => $paginationHtml,
+            'currentPage' => $comments->currentPage(),
+            'lastPage' => $comments->lastPage(),
+            'total' => $comments->total()
+        ]);
+    }
 
     private function buildCategoryTree($categories, $parentId = null): array
     {

@@ -10,7 +10,4 @@ class BaseBlogController extends FrontendController
     use AuthorizesRequests;
     protected $indexView = 'blog.index';
     protected $showView = 'blog.show';
-
-    
-    
 }

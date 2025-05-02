@@ -8,7 +8,13 @@
                 <h4>{{ $comment['author_name'] }}</h4>
                 <time>{{ \Carbon\Carbon::parse($comment['created_at'])->format('d.m.Y') }}</time>
                 @auth
-                <a href="{{ route('blog.reply', ['slug' => $slug, 'comment_id' => $comment['id']]) }}" class="reply-btn">Reply</a>
+                <a 
+                    {{-- href="{{ route('api.blog.get-reply-form', ['slug' => $slug, 'comment_id' => $comment['id']]) }}"  --}}
+                    data-comment-id="{{ $comment['id'] }}" 
+                    data-author-name="{{ $comment['author_name'] }}" 
+                    class="reply-btn">
+                    Reply
+                </a>
                 @endauth
             </header>
             <p>{{ $comment['content'] }}</p>
