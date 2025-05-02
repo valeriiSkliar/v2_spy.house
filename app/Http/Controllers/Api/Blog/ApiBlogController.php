@@ -79,18 +79,19 @@ class ApiBlogController extends BaseBlogController
             ->paginate(10)
             ->withQueryString();
 
+            $user = Auth::user();
+            // dd($user);
         $commentsHtml = '';
         if ($comments->isEmpty()) {
             $commentsHtml = '<div class="message _bg _with-border">No comments found.</div>';
         } else {
             // Получаем текущего пользователя
-            // $user = Auth::user();
-            // $commentsHtml .= view('components.blog.comment.comment-form', [
-            //     'article' => $post,
-            //     'isReply' => false,
-            //     'user' => $user,
-            //     // 'replyTo' => $comment
-            // ])->render();
+            $commentsHtml .= view('components.blog.comment.comment-form', [
+                'article' => $post,
+                'isReply' => false,
+                'user' => $user,
+                // 'replyTo' => $comment
+            ])->render();
             foreach ($comments as $comment) {
 
                 $commentsHtml .= view('components.blog.comment.comment', [
