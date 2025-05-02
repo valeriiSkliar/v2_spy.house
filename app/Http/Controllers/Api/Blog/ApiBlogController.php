@@ -90,6 +90,7 @@ class ApiBlogController extends BaseBlogController
                 'article' => $post,
                 'isReply' => false,
                 'user' => $user,
+                'errors' => app('view')->shared('errors', new \Illuminate\Support\ViewErrorBag),
                 // 'replyTo' => $comment
             ])->render();
             foreach ($comments as $comment) {

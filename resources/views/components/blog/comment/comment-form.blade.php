@@ -1,5 +1,6 @@
 @props(['article', 'isReply' => false, 'replyTo' => null])
 
+
 <div class="comment-form">
     <div class="comment-form__author">
         <img src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name) }}&amp;background=F3FAF7&color=3DC98A&bold=true" alt="{{ auth()->user()->name }}" class="avatar">
