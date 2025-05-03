@@ -6,7 +6,7 @@
         <ul class="table-controls justify-content-end">
             @if($landing['status'] !== 'completed')
             <li class="landing-status-icon" data-status="{{ $landing['status'] }}">
-                <x-frontend.status-icon status="{{ $landing['status'] }}" />
+                <x-landings.status-icon status="{{ $landing['status'] }}" />
             </li>
             @endif
             @if($landing['status'] === 'completed')
