@@ -13,9 +13,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class LandingsPageController extends FrontendController
 {
+    use AuthorizesRequests;
+
     protected $indexView = 'pages.landings.index';
     private $statusIcons = [
         'pending' => 'pending',
@@ -49,16 +52,20 @@ class LandingsPageController extends FrontendController
         $sortField = in_array($sortField, $allowedSortFields) ? $sortField : 'created_at';
         $sortDirection = in_array($sortDirection, ['asc', 'desc']) ? $sortDirection : 'desc';
 
-        $userId = $request->user()->id ?? 1;
+        $userId = $request->user()->id;
 
-        $this->antiFloodService->check($userId);
+        if ($userId) {
+            $this->antiFloodService->check($userId);
+        }
 
         $landings = WebsiteDownloadMonitor::where('user_id', $userId)
             ->orderBy($sortField, $sortDirection)
+            ->with('user')
             ->whereNotIn('status', ['cancelled', 'in_progress'])
             ->paginate($perPage)
             ->withQueryString();
 
+        // dd($userId, $landings->first()->user_id);
         // Fetch options using the renamed method
         $filterOptions = $this->getFilterOptions();
         $sortOptions = $filterOptions['sortOptions'];
@@ -95,15 +102,13 @@ class LandingsPageController extends FrontendController
 
     public function destroy(WebsiteDownloadMonitor $landing, Request $request): RedirectResponse
     {
-        $userId = $request->user()->id ?? 1;
-
-        if ($landing->user_id !== $userId) {
-            abort(403);
-        }
+        // Authorize the action using the policy
+        $this->authorize('delete', $landing);
 
         // Get current page and count before deletion
         $currentPage = $request->input('page', 1);
         $perPage = $request->input('per_page', 12);
+        $userId = $request->user()->id; // Get user ID safely
         $totalBeforeDelete = WebsiteDownloadMonitor::where('user_id', $userId)->count();
 
         // Delete the downloaded files
@@ -154,14 +159,8 @@ class LandingsPageController extends FrontendController
      */
     public function download(WebsiteDownloadMonitor $landing, Request $request): StreamedResponse|JsonResponse|RedirectResponse
     {
-        $userId = $request->user()->id ?? 1;
-
-        // Проверка прав доступа
-        if ($landing->user_id !== $userId) {
-            // Не используем abort(403), чтобы гарантировать редирект
-            Toast::error('landings.downloadFailedAuthorization.description');
-            return redirect()->route('landings.index');
-        }
+        // Authorize the action using the policy (checks ownership and status)
+        $this->authorize('download', $landing);
 
         try {
             $response = $this->downloadService->download($landing);

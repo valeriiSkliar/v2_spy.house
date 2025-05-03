@@ -134,9 +134,13 @@ class WebsiteDownloadController extends Controller
     /**
      * Get the status of a specific download
      */
-    public function show(Request $request, WebsiteDownloadMonitor $monitor)
+    public function getStatus(Request $request, WebsiteDownloadMonitor $monitor)
     {
-        $this->authorize('view', $monitor);
+
+        dd($monitor->id);
+
+        // $this->authorize('checkStatus', $monitor);
+
 
         return response()->json([
             'status' => $monitor->status,

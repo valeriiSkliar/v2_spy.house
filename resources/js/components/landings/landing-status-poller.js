@@ -43,13 +43,22 @@ class LandingStatusPoller {
             url: `/landings/${landingId}/status`,
             method: "GET",
             dataType: "json",
+            headers: {
+                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+            },
+            statusCode: {
+                403: function () {
+                    console.error("Unauthorized access to landing status");
+                    this.stopPolling(landingId);
+                },
+            },
         });
     }
 
     updateUI(landingId, response, statusElement) {
         const $row = statusElement.closest("tr");
         const $controls = $row.find(".table-controls");
-
+        console.log(response);
         // Remove the status icon container
         statusElement.parent().remove();
 

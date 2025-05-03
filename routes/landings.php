@@ -11,7 +11,13 @@ Route::middleware(['web', 'auth'])
         Route::get('/', [LandingsPageController::class, 'index'])->name('index');
         Route::delete('/{landing}', [LandingsPageController::class, 'destroy'])->name('destroy');
         Route::get('/{landing}/download', [LandingsPageController::class, 'download'])->name('download');
-        Route::get('/{landing}/status', [WebsiteDownloadController::class, 'show'])->name('status');
+    });
+
+Route::middleware(['web'])
+    ->prefix('landings')
+    ->name('landings.')
+    ->group(function () {
+        Route::get('/{landing}/status', [WebsiteDownloadController::class, 'getStatus'])->name('status');
     });
 
 
