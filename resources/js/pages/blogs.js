@@ -3,6 +3,7 @@ import {
     initCommentPagination,
     initAlsowInterestingArticlesCarousel,
     initReadOftenArticlesCarousel,
+    initBlogSearch,
 } from "@/components/blogs";
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -13,4 +14,5 @@ document.addEventListener("DOMContentLoaded", function () {
     initCommentPagination();
     initAlsowInterestingArticlesCarousel();
     initReadOftenArticlesCarousel();
+    initBlogSearch();
 });

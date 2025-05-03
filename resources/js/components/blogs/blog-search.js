@@ -1,21 +1,8 @@
-const debounce = (func, wait) => {
-    let timeout;
-    return function () {
-        const context = this,
-            args = arguments;
-        clearTimeout(timeout);
-        timeout = setTimeout(function () {
-            func.apply(context, args);
-        }, wait);
-    };
-};
-
-// Сохраняем оригинальное содержимое
+import { debounce } from "@/helpers";
 let originalBlogListHtml = "";
 let originalPaginationHtml = "";
 let isSearchActive = false;
 let isLoading = false;
-
 const performSearch = debounce(function (
     query,
     blogList,
@@ -23,12 +10,10 @@ const performSearch = debounce(function (
     searchResults
 ) {
     if (query.length < 3) {
-        // Возвращаем оригинальное содержимое, если поиск очищен
         resetToOriginalContent(blogList, pagination, searchResults);
         return;
     }
 
-    // Показываем индикатор загрузки
     setLoadingState(true, searchResults);
     isSearchActive = true;
 
@@ -105,42 +90,22 @@ function resetToOriginalContent(blogList, pagination, searchResults) {
     }
 }
 
-document.addEventListener("DOMContentLoaded", function () {
+function initBlogSearch() {
     const searchForm = $(".search-form form");
     const searchInput = $(".search-form input[type='search']");
     const searchButton = $(".search-button");
-    // const closeSearchButton = $(
-    //     '<button type="button" class="close-search-button">×</button>'
-    // );
     const blogList = $(".blog-list");
     const pagination = $(".pagination-list");
     let searchResults = $(".search-results");
 
-    // // Если блока для результатов поиска нет, создаем его
-    // if (searchResults.length === 0) {
-    //     $(
-    //         '<div class="search-results" style="display:none;"><div class="search-info"></div></div>'
-    //     ).insertAfter(searchForm);
-    //     searchResults = $(".search-results");
-    // }
-
-    // Сохраняем исходную разметку при загрузке страницы
     originalBlogListHtml = blogList.html();
     originalPaginationHtml = pagination.html();
 
-    // Добавляем кнопку закрытия поиска
-    // searchInput.after(closeSearchButton);
-    // closeSearchButton.hide();
-
     if (searchForm && searchInput) {
-        // Обработка ввода в поле поиска
         searchInput.on("input", function (e) {
             const query = searchInput.val().trim();
 
             if (query.length > 0) {
-                // closeSearchButton.show();
-            } else {
-                // closeSearchButton.hide();
                 resetToOriginalContent(blogList, pagination, searchResults);
             }
 
@@ -149,23 +114,13 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
 
-        // Обработка клика по кнопке закрытия поиска
-        // closeSearchButton.on("click", function () {
-        //     searchInput.val("");
-        //     closeSearchButton.hide();
-        //     resetToOriginalContent(blogList, pagination, searchResults);
-        // });
-
-        // Обработка нажатия Escape
         $(document).on("keydown", function (e) {
             if (e.key === "Escape" && isSearchActive) {
                 searchInput.val("");
-                //  closeSearchButton.hide();
                 resetToOriginalContent(blogList, pagination, searchResults);
             }
         });
 
-        // Обработка отправки формы поиска
         searchForm.on("submit", function (e) {
             e.preventDefault();
             const query = searchInput.val().trim();
@@ -178,13 +133,19 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
 
-        // Проверка URL на наличие параметра поиска при загрузке страницы
         const urlParams = new URLSearchParams(window.location.search);
         const searchQuery = urlParams.get("q");
         if (searchQuery && searchQuery.length >= 3) {
             searchInput.val(searchQuery);
-            // closeSearchButton.show();
             performSearch(searchQuery, blogList, pagination, searchResults);
         }
     }
-});
+}
+export {
+    performSearch,
+    setLoadingState,
+    showNoResultsMessage,
+    showErrorMessage,
+    resetToOriginalContent,
+    initBlogSearch,
+};
