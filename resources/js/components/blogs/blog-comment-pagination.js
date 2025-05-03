@@ -1,4 +1,4 @@
-import { initReplyButtons } from "@/components/blog-comments";
+import { initReplyButtons } from "@/components/blogs";
 document.addEventListener("DOMContentLoaded", function () {
     initCommentPagination();
 });

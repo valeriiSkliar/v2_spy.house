@@ -1,15 +1,16 @@
 import {
-    initUniversalCommentForm,
     initReplyButtons,
-} from "@/components/blog-comments";
-import { initBlogRating } from "@/components/blog-rating";
-import { initCommentPagination } from "@/components/blog-comment-pagination";
+    initCommentPagination,
+    initAlsowInterestingArticlesCarousel,
+    initReadOftenArticlesCarousel,
+} from "@/components/blogs";
+
 document.addEventListener("DOMContentLoaded", function () {
     const commentForm = $("#universal-comment-form");
     if (commentForm.length) {
-        // initUniversalCommentForm(commentForm);
         initReplyButtons(commentForm);
-        initCommentPagination();
-        initBlogRating();
     }
+    initCommentPagination();
+    initAlsowInterestingArticlesCarousel();
+    initReadOftenArticlesCarousel();
 });

@@ -9,7 +9,6 @@ import "bootstrap-datepicker";
 import "bootstrap-select";
 import "select2";
 import "css-element-queries";
-import "slick-carousel";
 // import 'counterup';
 // import '../js/libs/jquery.star-rating-svg.js';
 // import '../js/libs/jquery.sticky-sidebar.min.js';

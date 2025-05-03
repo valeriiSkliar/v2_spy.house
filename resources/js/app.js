@@ -1,6 +1,7 @@
 import jQuery from "jquery";
 window.jQuery = jQuery;
 window.$ = jQuery;
+import "slick-carousel";
 
 import "./bootstrap";
 
@@ -22,7 +23,7 @@ import "@/utils";
 
 // Additional imports
 import "./libs/main";
-import "./rating.js";
+// import "./rating.js";
 // import "./comments.js";
 import "./blog-search.js";
 import "./base-select.js";

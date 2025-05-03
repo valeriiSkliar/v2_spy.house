@@ -1,4 +1,3 @@
-// Function to set form to comment mode
 function setCommentMode(e) {
     e.preventDefault();
     const form = $(e.target).closest(".comment-ajax-form");
@@ -18,7 +17,7 @@ function setCommentMode(e) {
     }
     form.find("#comment-parent-id").val("");
 }
-// Function to set form to reply mode
+
 function setReplyMode(parentId, authorName, commentForm) {
     const form = commentForm;
     const regularCommentLabel = form.find("#regular-comment-label");
