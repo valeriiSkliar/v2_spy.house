@@ -1,6 +1,7 @@
 @props(['article'])
 
 @auth
+<div class="comment-form">
 <div class="comment-form__author">
     <img src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name) }}&amp;background=F3FAF7&color=3DC98A&bold=true" alt="{{ auth()->user()->name }}" class="avatar">
     <span class="font-16 font-weight-600">{{ auth()->user()->name }}</span>
@@ -40,5 +41,6 @@
             <a href="javascript:void(0)" class="btn _flex _gray w-100 cancel-reply">Cancel</a>
         </div>
     </div>
-</form>
+    </form>
+</div>
 @endauth
