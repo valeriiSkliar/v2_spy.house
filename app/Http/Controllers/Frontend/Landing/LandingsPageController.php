@@ -17,7 +17,16 @@ use Illuminate\Http\JsonResponse;
 class LandingsPageController extends FrontendController
 {
     protected $indexView = 'pages.landings.index';
-
+    private $statusIcons = [
+        'pending' => 'pending',
+        'completed' => 'completed',
+        'failed' => 'failed',
+    ];
+    private $statusLabels = [
+        'pending' => 'landings.table.status.pending',
+        'completed' => 'landings.table.status.completed',
+        'failed' => 'landings.table.status.failed',
+    ];
     protected LandingDownloadService $downloadService;
     protected AntiFloodService $antiFloodService;
 
@@ -46,6 +55,7 @@ class LandingsPageController extends FrontendController
 
         $landings = WebsiteDownloadMonitor::where('user_id', $userId)
             ->orderBy($sortField, $sortDirection)
+            ->whereNotIn('status', ['cancelled', 'in_progress'])
             ->paginate($perPage)
             ->withQueryString();
 

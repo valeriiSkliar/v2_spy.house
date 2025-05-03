@@ -20,5 +20,3 @@
 
 
 @endsection
-
-{{-- @vite('resources/js/pages/landings.js') --}}

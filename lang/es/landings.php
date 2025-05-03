@@ -1,6 +1,52 @@
 <?php
 
 return [
+    'index' => [
+        'title' => 'Landings',
+        'sort' => [
+            'placeholder' => 'Ordenar por — :default',
+            'options' => [
+                'newest' => 'Más reciente primero',
+                'oldest' => 'Más antiguo primero',
+                'status_az' => 'Estado (A-Z)',
+                'status_za' => 'Estado (Z-A)',
+                'url_az' => 'URL (A-Z)',
+                'url_za' => 'URL (Z-A)',
+            ],
+        ],
+        'pagination' => [
+            'placeholder' => 'En la página — :default',
+            'options' => [
+                '12' => '12',
+                '24' => '24',
+                '48' => '48',
+                '96' => '96',
+            ],
+        ],
+    ],
+    'form' => [
+        'urlPlaceholder' => 'Introduce el enlace para descargar la Página de Aterrizaje',
+        'waitForDownloads' => 'Espera a que finalicen las descargas actuales',
+        'submitButton' => 'Descargar',
+    ],
+    'table' => [
+        'header' => [
+            'id' => 'ID',
+            'downloadLink' => 'Enlace de descarga',
+            'dateAdded' => 'Fecha de adición',
+        ],
+        'confirmDelete' => [
+            'message' => '¿Estás seguro de que quieres eliminar este landing? Esta acción no se puede deshacer.',
+            'title' => 'Confirmar eliminación',
+            'confirmButton' => 'Eliminar',
+            'cancelButton' => 'Cancelar',
+        ],
+        'status' => [
+            'pending' => 'Pendiente',
+            'completed' => 'Completado',
+            'failed' => 'Fallado',
+        ],
+    ],
     'downloadFailedAuthorization' => [
         'title' => 'Descarga fallida',
         'description' => 'No tienes autorización para descargar esta página de aterrizaje.',
@@ -57,45 +103,5 @@ return [
         'title' => 'Descarga no en progreso',
         'description' => 'Esta descarga no está actualmente pendiente o en progreso.',
     ],
-    'index' => [
-        'title' => 'Landings',
-        'sort' => [
-            'placeholder' => 'Ordenar por — :default',
-            'options' => [
-                'newest' => 'Más reciente primero',
-                'oldest' => 'Más antiguo primero',
-                'status_az' => 'Estado (A-Z)',
-                'status_za' => 'Estado (Z-A)',
-                'url_az' => 'URL (A-Z)',
-                'url_za' => 'URL (Z-A)',
-            ],
-        ],
-        'pagination' => [
-            'placeholder' => 'En la página — :default',
-            'options' => [
-                '12' => '12',
-                '24' => '24',
-                '48' => '48',
-                '96' => '96',
-            ],
-        ],
-    ],
-    'form' => [
-        'urlPlaceholder' => 'Introduce el enlace para descargar la Página de Aterrizaje',
-        'waitForDownloads' => 'Espera a que finalicen las descargas actuales',
-        'submitButton' => 'Descargar',
-    ],
-    'table' => [
-        'header' => [
-            'id' => 'ID',
-            'downloadLink' => 'Enlace de descarga',
-            'dateAdded' => 'Fecha de adición',
-        ],
-        'confirmDelete' => [
-            'message' => '¿Estás seguro de que quieres eliminar este landing? Esta acción no se puede deshacer.',
-            'title' => 'Confirmar eliminación',
-            'confirmButton' => 'Eliminar',
-            'cancelButton' => 'Cancelar',
-        ],
-    ],
+
 ];

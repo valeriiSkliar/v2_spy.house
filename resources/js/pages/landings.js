@@ -1,4 +1,5 @@
 import { initializeSelectComponent } from "@/helpers";
+import { initializeLandingStatus } from "../components/landings";
 
 document.addEventListener("DOMContentLoaded", function () {
     initializeSelectComponent("#sort-select", {
@@ -26,4 +27,6 @@ document.addEventListener("DOMContentLoaded", function () {
         },
         resetPage: true,
     });
+
+    initializeLandingStatus();
 });
