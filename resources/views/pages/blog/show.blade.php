@@ -64,13 +64,6 @@
     <div class="comments" id="comments">
         <h2>{{ __('blogs.comments.title') }} <span class="comment-count">{{ $commentsCount }}</span></h2>
 
-        @if(session('success'))
-        <div class="message _bg _with-border _green mb-15">
-            <span class="icon-check font-18"></span>
-            <div class="message__txt">{{ session('success') }}</div>
-        </div>
-        @endif
-
         @guest
         <div class="message _bg _with-border font-weight-500">
             <span class="icon-warning font-18"></span>
