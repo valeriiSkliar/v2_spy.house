@@ -15,7 +15,7 @@
             <div class="article-info__item icon-date">{{ $heroArticle->created_at->format('d.m.y') }}</div>
             <a href="{{ route('blog.show', $heroArticle->slug) }}#comments" class="article-info__item icon-comment1">{{ $heroArticle->comments_count ?? 0 }}</a>
             <div class="article-info__item icon-view">{{ $heroArticle->views_count ?? 0 }}</div>
-            <div class="article-info__item icon-rating">{{ $heroArticle->rating ?? 0 }}</div>
+            <div class="article-info__item icon-rating">{{ $heroArticle->average_rating ?? 0 }}</div>
         </div>
     </x-slot>
 

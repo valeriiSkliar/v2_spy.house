@@ -21,6 +21,7 @@
     },
     "dependencies": {
         "@types/jquery": "^3.5.32",
+        "@types/slick-carousel": "^1.6.40",
         "bootstrap-datepicker": "^1.10.0",
         "bootstrap-select": "^1.13.18",
         "counterup": "^1.0.2",

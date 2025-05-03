@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Translatable\HasTranslations;
+use App\Models\Frontend\Rating;
 
 class BlogPost extends Model
 {
@@ -23,13 +24,16 @@ class BlogPost extends Model
         'views_count',
         'author_id',
         'featured_image',
-        'is_published'
+        'is_published',
+        'average_rating'
     ];
 
     public $translatable = [
         'title',
         'content',
-        'summary'
+        'summary',
+        'is_published' => 'boolean',
+        'average_rating' => 'float'
     ];
 
     protected $casts = [
@@ -79,6 +83,24 @@ class BlogPost extends Model
     public function comments(): HasMany
     {
         return $this->hasMany(BlogComment::class, 'post_id');
+    }
+
+    /**
+     * Get the ratings for the blog post.
+     */
+    public function ratings(): HasMany
+    {
+        return $this->hasMany(Rating::class, 'blog_id');
+    }
+
+    /**
+     * Calculate the average rating for the blog post.
+     */
+    public function averageRating(): ?float
+    {
+        // Use the relationship to calculate the average
+        // Cast the result to float for consistency
+        return (float) $this->ratings()->avg('rating');
     }
 
     public function relatedPosts(): BelongsToMany

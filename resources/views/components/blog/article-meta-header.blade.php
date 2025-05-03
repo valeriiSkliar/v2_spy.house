@@ -9,9 +9,10 @@
     <div class="article__info">
         <div class="article-info">
             <div class="article-info__item icon-date">{{ $article->created_at->format('d.m.y') }}</div>
-            <a href="#comments" class="article-info__item icon-comment1">{{ $article->comments_count }}</a>
-            <div class="article-info__item icon-view">{{ $article->views_count }}</div>
-            <div class="article-info__item icon-rating">{{ $article->rating }}</div>
+
+            <a href="#comments" class="article-info__item icon-comment1">{{ $article->comments->count() ?? 0 }}</a>
+            <div class="article-info__item icon-view">{{ $article->views_count ?? 0 }}</div>
+            <div class="article-info__item icon-rating">{{ $article->average_rating ?? 0 }}</div>
         </div>
     </div>
 </div>

@@ -7,6 +7,6 @@
     </div>
     <div class="article-rate__stars">
         <div class="article-rate__rating"></div>
-        <div class="article-rate__value font-18"><span class="font-weight-600">{{ $article->user_rating ?? 0 }}</span> / 5</div>
+        <div class="article-rate__value font-18"><span class="font-weight-600">{{ $article->average_rating ?? 0 }}</span> / 5</div>
     </div>
 </div>

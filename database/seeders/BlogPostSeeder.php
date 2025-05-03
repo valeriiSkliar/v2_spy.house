@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use App\Models\Frontend\Blog\Author;
 use App\Models\Frontend\Blog\BlogPost;
 use App\Models\Frontend\Blog\PostCategory;
+use App\Models\Frontend\Rating;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -19,6 +21,7 @@ class BlogPostSeeder extends Seeder
         DB::table('blog_comments')->truncate();
         DB::table('related_posts')->truncate();
         DB::table('blog_post_categories')->truncate();
+        DB::table('ratings')->truncate();
         DB::table('blog_posts')->truncate();
         DB::table('post_categories')->truncate();
         DB::table('authors')->truncate();
@@ -97,8 +100,23 @@ class BlogPostSeeder extends Seeder
             });
         }
 
-        // Attach related posts
+        // Ensure at least one user exists for ratings
+        if (User::count() === 0) {
+            User::factory()->create();
+        }
+
+        // Create ratings and attach related posts
         BlogPost::all()->each(function ($post) {
+            // Create 5-15 random ratings for each post
+            $numberOfRatings = rand(5, 15);
+            Rating::factory($numberOfRatings)->forBlog($post->id)->create();
+
+            // Calculate and update the average rating for the post
+            // Use the averageRating() method from the model
+            $average = $post->averageRating();
+            $post->update(['average_rating' => $average]);
+
+            // Attach related posts
             $relatedPosts = BlogPost::where('id', '!=', $post->id)
                 ->whereDoesntHave('relatedPosts', function ($query) use ($post) {
                     $query->where('related_post_id', $post->id);
@@ -108,10 +126,11 @@ class BlogPostSeeder extends Seeder
                 ->get();
 
             if ($relatedPosts->count() > 0) {
-                $post->relatedPosts()->attach($relatedPosts);
+                $post->relatedPosts()->attach($relatedPosts->pluck('id')->all()); // Attach by IDs
             }
         });
 
+        // Update posts count in categories (moved after post processing)
         PostCategory::all()->each(function ($category) {
             $category->update([
                 'posts_count' => $category->posts()->count()

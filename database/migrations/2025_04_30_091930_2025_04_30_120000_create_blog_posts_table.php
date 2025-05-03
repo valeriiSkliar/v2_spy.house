@@ -57,12 +57,14 @@ return new class extends Migration
             $table->foreignId('author_id')->constrained()->cascadeOnDelete();
             $table->string('featured_image')->nullable();
             $table->boolean('is_published')->default(false);
+            $table->decimal('average_rating', 2, 1)->nullable()->default(null);
             $table->timestamps();
 
             // Add indexes for performance
             $table->index('views_count');
             $table->index('is_published');
             $table->index('created_at');
+            $table->index('average_rating');
         });
 
         // Add generated columns for JSON fields in blog_posts
