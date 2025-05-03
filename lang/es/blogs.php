@@ -5,6 +5,7 @@ return [
         'blog' => 'Blog',
         'search_results' => 'Resultados de búsqueda para ":query"',
     ],
+    'new_article_label' => 'Nuevo',
     'read_often' => 'Lee a menudo',
     'it_will_also_be_interesting' => 'También será interesante',
     'no_results' => [
@@ -27,5 +28,11 @@ return [
         'leave_rating' => 'Para dejar una calificación, por favor',
         'login' => 'Inicia sesión',
         'to_service' => 'a nuestro servicio de Spy.house',
+        'rate_this_article' => 'Califica este artículo',
+        'rate_from_1_to_5' => 'Califica de 1 a 5',
+        'thank_you_for_rating' => '¡Gracias por calificar!',
+        'you_rated_this_article' => 'Has calificado este artículo',
+        'stars' => 'estrellas',
+        'average_rating' => 'Calificación promedio',
     ]
 ];
