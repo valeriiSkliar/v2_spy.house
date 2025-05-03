@@ -16,8 +16,11 @@ Route::prefix('blog')->name('blog.')->group(function () {
     // Route::get('/{slug}/comments', [BlogController::class, 'getComments'])->name('comments.get');
 });
 
-Route::prefix('blog')->name('blog.')->middleware(['auth'])->group(function () {
+Route::prefix('blog')->name('blog.')->middleware(['auth', 'throttle:10,1'])->group(function () {
     Route::post('/{slug}/comment', [BlogController::class, 'storeComment'])->name('comment.store');
     Route::post('/{slug}/rate', [BlogController::class, 'rateArticle'])->name('rate');
 });
-Route::get('/blog/{slug}/comments', [BlogController::class, 'paginateComments'])->name('blog.comments.paginate');
+
+Route::prefix('blog')->name('blog.')->middleware(['throttle:20,1'])->group(function () {
+    Route::get('/{slug}/comments', [BlogController::class, 'paginateComments'])->name('comments.paginate');
+});
