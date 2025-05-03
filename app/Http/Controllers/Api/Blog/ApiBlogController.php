@@ -29,7 +29,7 @@ class ApiBlogController extends BaseBlogController
         $totalResults = $articles->count();
 
         // Render the Blade view with the results
-        $html = view('blog._partials.search-results', [
+        $html = view('partials.blog.search-results', [
             'articles' => $results,
             'total' => $totalResults,
             'query' => $query
