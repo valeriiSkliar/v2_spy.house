@@ -27,7 +27,6 @@
 
 
 </div>
-{{-- <x-pagination :currentPage="$articles->currentPage()" :totalPages="$articles->lastPage()" /> --}}
 {{ $articles->links() }}
 
 

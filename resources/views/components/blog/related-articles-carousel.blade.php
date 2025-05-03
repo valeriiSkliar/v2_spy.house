@@ -1,12 +1,20 @@
 @props(['relatedPosts' => [], 'heading' => 'It will also be interesting'])
 
-<div class="pt-1">
+<div id="alsow-interesting-articles-carousel" class="pt-1">
     <div class="d-flex align-items-center justify-content-between mb-20">
         <h2 class="font-20 mb-0 mr-3">{{ $heading }}</h2>
-        <x-common.carousel-controls prevId="slick-demo-2-prev" nextId="slick-demo-2-next" />
+        <x-common.carousel-controls prevId="alsow-interesting-articles-carousel-prev" nextId="alsow-interesting-articles-carousel-next" />
     </div>
+
+    @php
+        $slidesToShow = $relatedPosts->count() > 3 ? 3 : $relatedPosts->count();
+    @endphp
+
     <div class="article-similar">
-        <div class="carousel-container" id="slick-demo-2">
+        <div 
+                class="carousel-container" 
+                id="alsow-interesting-articles-carousel-container"
+            >
             @foreach($relatedPosts as $relatedPost)
             <div class="carousel-item">
                 <x-blog.related-article-card :article="$relatedPost" />
