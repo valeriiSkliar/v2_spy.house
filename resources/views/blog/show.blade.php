@@ -32,14 +32,17 @@
         {!! $article->content !!}
     </div>
     @auth
-    @if($isRated)
-    {{-- <x-blog.article-rating :rating="$article->average_rating ?? 0" :slug="$article->slug" /> --}}
-        {{-- <p>Вы уже оценили этот пост.</p> --}}
 
-    @else
-        <x-blog.article-rating :rating="$article->average_rating ?? 0" :slug="$article->slug" />
-    @endif
+    @php
+        $userRating = Auth::check() ? $article->ratings()->where('user_id', Auth::id())->first() : null;
+    @endphp
+        <x-blog.article-rating 
+        :rating="$article->average_rating ?? 0" 
+        :slug="$article->slug"
+        :isRated="$isRated"
+        :userRating="$userRating ? $userRating->rating : null" />
     @endauth
+    
     @guest
 
         <div class="message _bg _with-border font-weight-500 mt-4">

@@ -53,6 +53,11 @@ class BlogController extends BaseBlogController
         // Increment view count
         $post->increment('views_count');
 
+        $userRating = null;
+        if (Auth::check()) {
+            $userRating = $post->ratings()->where('user_id', Auth::id())->first();
+        }
+
         $comments = BlogComment::where('post_id', $post->id)
             ->where('status', CommentStatus::APPROVED->value)
             ->whereNull('parent_id')
@@ -77,6 +82,7 @@ class BlogController extends BaseBlogController
             'relatedPosts' => $relatedPosts,
             'canModerate' => false,
             'averageRating' => $post->averageRating(),
+            'userRating' => $userRating,
             'isRated' => Auth::check() && $post->ratings()->where('user_id', Auth::id())->exists(),
         ]);
     }
@@ -341,11 +347,31 @@ class BlogController extends BaseBlogController
         $request->validate([
             'rating' => 'required|integer|min:1|max:5',
         ]);
+
+        if (!Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You must be logged in to rate articles.',
+            ], 401);
+        }
+
         $user = Auth::user();
 
         $post = BlogPost::where('slug', $slug)
             ->where('is_published', true)
             ->firstOrFail();
+
+        // Check if user has already rated
+        $existingRating = Rating::where('user_id', $user->id)
+            ->where('blog_id', $post->id)
+            ->first();
+
+        if ($existingRating) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You have already rated this article.',
+            ], 422);
+        }
 
         $rating = new Rating([
             'user_id' => $user->id,
@@ -354,22 +380,23 @@ class BlogController extends BaseBlogController
         ]);
         $rating->save();
 
-        // Обновляем средний рейтинг статьи
+        // Update average rating
         $averageRating = $post->averageRating();
+        $averageRating = round($averageRating, 1);
 
-        // Округляем до одного десятичного знака (Optional: Eloquent cast might handle this)
-        // $averageRating = round($averageRating, 1); // Consider removing if cast handles it
-
-        // Обновляем рейтинг в модели статьи
+        // Update rating in post model
         $post->average_rating = $averageRating;
         $post->save();
 
-        // Return the *new* average rating, not the individual rating submitted
+        // Return both average rating and user's rating
         return response()->json([
             'success' => true,
-            'rating' => $averageRating, // Return the updated average rating
+            'average_rating' => $averageRating,
+            'user_rating' => $request->rating,
+            'is_rated' => true,
         ]);
     }
+
     private function buildCategoryTree($categories, $parentId = null): array
     {
         return $categories
