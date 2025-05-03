@@ -47,7 +47,7 @@
 
         <div class="message _bg _with-border font-weight-500 mt-4">
             <span class="icon-warning font-18"></span>
-            <div class="message__txt">To leave rating, please <a href="{{ route('login') }}" class="link">Log in</a> to our Spy.house service</div>
+            <div class="message__txt">{{ __('blogs.article_rating.leave_rating') }} <a href="{{ route('login') }}" class="link">{{__('blogs.article_rating.login')}}</a> {{__('blogs.article_rating.to_service')}}</div>
         </div>
     @endguest
 </div>
@@ -62,7 +62,7 @@
 
 <div class="article _big _single">
     <div class="comments" id="comments">
-        <h2>Comments <span class="comment-count">{{ $commentsCount }}</span></h2>
+        <h2>{{ __('blogs.comments.title') }} <span class="comment-count">{{ $commentsCount }}</span></h2>
 
         @if(session('success'))
         <div class="message _bg _with-border _green mb-15">
@@ -74,7 +74,7 @@
         @guest
         <div class="message _bg _with-border font-weight-500">
             <span class="icon-warning font-18"></span>
-            <div class="message__txt">To leave comments, please <a href="{{ route('login') }}" class="link">Log in</a> to our Spy.house service</div>
+            <div class="message__txt">{{ __('blogs.comments.leave_comment') }} <a href="{{ route('login') }}" class="link">{{__('blogs.comments.login')}}</a> {{__('blogs.comments.to_service')}}</div>
         </div>
         @endguest
 

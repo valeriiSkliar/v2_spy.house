@@ -1,4 +1,4 @@
-@props(['popularPosts' => [], 'heading' => 'Read often'])
+@props(['popularPosts' => [], 'heading' => __('blogs.read_often')])
 <div class="pt-2">
     <div class="d-flex align-items-center justify-content-between mb-20">
         <h2 class="font-20 mb-0">{{ $heading }}</h2>

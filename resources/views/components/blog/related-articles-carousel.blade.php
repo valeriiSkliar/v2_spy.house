@@ -1,4 +1,4 @@
-@props(['relatedPosts' => [], 'heading' => 'It will also be interesting'])
+@props(['relatedPosts' => [], 'heading' => __('blogs.it_will_also_be_interesting')])
 
 <div id="alsow-interesting-articles-carousel" class="pt-1">
     <div class="d-flex align-items-center justify-content-between mb-20">

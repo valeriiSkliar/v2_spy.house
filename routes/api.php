@@ -9,7 +9,9 @@ use Illuminate\Support\Facades\Route;
 // Route::post('/login', [AuthController::class, 'login'])->name('api.login');
 
 // Public routes
-Route::get('/blog/search', [ApiBlogController::class, 'search'])->name('api.blog.search');
+Route::get('/blog/search', [ApiBlogController::class, 'search'])
+    ->middleware('web')
+    ->name('api.blog.search');
 
 // Protected routes - works with both web session auth and API tokens
 Route::middleware(['auth:sanctum'])->group(function () {

@@ -16,14 +16,14 @@
     <!-- Reply info section (hidden by default) -->
     <div class="reply-info mb-10" style="display: none;">
         <div class="d-block">
-            Leave a comment in response to:
+            {{ __('blogs.comments.leave_reply_in_response_to') }}
             <span><span class="icon-reply"></span> <a class="link font-weight-600" id="reply-to-author"></a></span>
         </div>
     </div>
     
     <div class="mb-1">
         <!-- Only shown for regular comments -->
-        <label id="regular-comment-label" class="d-block mb-10 regular-comment-label">Write the text of the comment</label>
+        <label id="regular-comment-label" class="d-block mb-10 regular-comment-label">{{ __('blogs.comments.write_comment') }}</label>
         
         <textarea name="content" required></textarea>
         @error('content')
@@ -33,12 +33,12 @@
     
     <div class="row">
         <div class="col-6 col-md-auto mt-3">
-            <button type="submit" class="btn _flex _green w-100">Send</button>
+            <button type="submit" class="btn _flex _green w-100">{{ __('blogs.comments.send') }}</button>
         </div>
         
         <!-- Cancel button (hidden by default) -->
         <div class="col-6 col-md-auto mt-3 cancel-reply-container" style="display: none;">
-            <a href="javascript:void(0)" class="btn _flex _gray w-100 cancel-reply">Cancel</a>
+            <a href="javascript:void(0)" class="btn _flex _gray w-100 cancel-reply">{{ __('blogs.comments.cancel') }}</a>
         </div>
     </div>
     </form>

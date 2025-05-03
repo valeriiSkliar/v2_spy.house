@@ -14,4 +14,4 @@
     <img src="/img/17d29531d484dadde7c2a0c58893953d.gif" alt="">
 </a>
 
-<x-blog.read-often-carousel :popularPosts="$categories['popularPosts']" :heading="'Read often'" />
+<x-blog.read-often-carousel :popularPosts="$categories['popularPosts']" :heading="__('blogs.read_often')" />

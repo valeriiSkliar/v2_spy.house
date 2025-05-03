@@ -68,10 +68,8 @@ function setLoadingState(isLoading, searchResults) {
 }
 
 function showNoResultsMessage(blogList, searchResults, html) {
-    console.log(html);
     blogList.html(html);
     blogList.show();
-    // searchResults.find(".search-info").text("Результатов не найдено");
 }
 
 function showErrorMessage(searchResults) {

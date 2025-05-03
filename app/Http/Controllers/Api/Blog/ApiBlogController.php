@@ -10,6 +10,7 @@ use App\Models\Frontend\Blog\BlogComment;
 use App\Models\Frontend\Blog\BlogPost;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\App;
 
 class ApiBlogController extends BaseBlogController
 {
@@ -28,12 +29,22 @@ class ApiBlogController extends BaseBlogController
         $results = $articles->take($limit);
         $totalResults = $articles->count();
 
+        // Set the locale for rendering
+        $currentLocale = App::getLocale();
+        // No need to explicitly set locale if it's already the intended one,
+        // but let's assume the API context might differ. If middleware handles locale,
+        // this might be redundant, but it ensures correctness.
+        // App::setLocale($currentLocale); // Example if needed, often handled by middleware
+
         // Render the Blade view with the results
         $html = view('partials.blog.search-results', [
             'articles' => $results,
             'total' => $totalResults,
             'query' => $query
         ])->render();
+
+        // Restore locale if it was changed, though typically not needed if middleware handles it
+        // App::setLocale(config('app.locale')); // Example restore if needed
 
         return response()->json([
             'success' => true,

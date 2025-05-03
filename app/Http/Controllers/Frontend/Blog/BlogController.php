@@ -18,7 +18,6 @@ class BlogController extends BaseBlogController
 
     public function index(Request $request)
     {
-        // $this->authorize('viewAny', BlogPost::class);
 
         $query = BlogPost::query()
             ->with(['author', 'categories'])
@@ -75,7 +74,7 @@ class BlogController extends BaseBlogController
 
         return view($this->showView, [
             'breadcrumbs' => [
-                ['title' => 'Blog', 'url' => route('blog.index')],
+                ['title' => __('blogs.breadcrumbs.blog'), 'url' => route('blog.index')],
                 ['title' => $post->categories->first()->getTranslation('name', $locale), 'url' => route('blog.category', $post->categories->first()->slug)],
                 ['title' => $post->title, 'url' => route('blog.show', $post->slug)],
             ],
@@ -183,8 +182,8 @@ class BlogController extends BaseBlogController
             'currentPage' => $request->get('page', 1),
             'totalPages' => ceil($results->count() / 12),
             'breadcrumbs' => [
-                ['title' => 'Blog', 'url' => route('blog.index')],
-                ['title' => 'Search Results for "' . $query . '"', 'url' => route('blog.search', ['q' => $query])],
+                ['title' => __('blogs.breadcrumbs.blog'), 'url' => route('blog.index')],
+                ['title' => __('blogs.breadcrumbs.search_results', ['query' => $query]), 'url' => route('blog.search', ['q' => $query])],
             ],
         ]);
     }

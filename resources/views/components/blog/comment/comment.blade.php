@@ -13,7 +13,7 @@
                     data-comment-id="{{ $comment['id'] }}" 
                     data-author-name="{{ $comment['author_name'] }}" 
                     class="reply-btn">
-                    Reply
+                    {{ __('blogs.comments.reply') }}
                 </a>
                 @endauth
             </header>

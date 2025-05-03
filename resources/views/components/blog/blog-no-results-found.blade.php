@@ -1,4 +1,4 @@
 <div class="text-center mt-4 mb-4">
-    <h2>No results found for "{{ $query }}"</h2>
-    <p>Try different keywords or check out our categories below.</p>
+    <h2>{{ __('blogs.no_results.title', ['query' => $query]) }}</h2>
+    <p>{{ __('blogs.no_results.description') }}</p>
 </div>
