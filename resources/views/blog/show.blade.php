@@ -62,7 +62,7 @@
 
 <div class="article _big _single">
     <div class="comments" id="comments">
-        <h2>Comments <span class="comment-count">{{ $comments->total() }}</span></h2>
+        <h2>Comments <span class="comment-count">{{ $commentsCount }}</span></h2>
 
         @if(session('success'))
         <div class="message _bg _with-border _green mb-15">
@@ -80,9 +80,7 @@
 
         <x-blog.comment-list-with-reply-form :comments="$comments" :article="$article" />
 
-        @auth
         {{ $comments->links('components.blog.comment.async-pagination', ['paginator' => $comments]) }}
-        @endauth
     </div>
 </div>
 @endsection

@@ -67,6 +67,10 @@ class BlogController extends BaseBlogController
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
+        $commentsCount = BlogComment::where('post_id', $post->id)
+            ->where('status', CommentStatus::APPROVED->value)
+            ->count();
+
         $relatedPosts = $post->relatedPosts()->get();
 
         return view($this->showView, [
@@ -78,6 +82,7 @@ class BlogController extends BaseBlogController
             'article' => $post,
             'currentCategory' => $post->categories->first(),
             'comments' => $comments,
+            'commentsCount' => $commentsCount,
             'categories' => $this->getSidebarData(),
             'relatedPosts' => $relatedPosts,
             'canModerate' => false,
@@ -275,6 +280,10 @@ class BlogController extends BaseBlogController
 
         $comments = BlogComment::where('post_id', $post->id)
             ->where('status', CommentStatus::APPROVED->value)
+            ->whereNull('parent_id')
+            ->with(['replies' => function ($query) {
+                $query->where('status', CommentStatus::APPROVED->value)->orderBy('created_at', 'asc');
+            }])
             ->orderBy('created_at', 'desc')
             ->paginate(10)
             ->withQueryString();
