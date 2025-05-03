@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\App\WebsiteDownloadController;
-use App\Http\Controllers\Frontend\LandingsPageController;
+use App\Http\Controllers\Frontend\Landing\LandingsPageController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth'])
