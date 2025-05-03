@@ -100,7 +100,7 @@ class BlogPost extends Model
     {
         // Use the relationship to calculate the average
         // Cast the result to float for consistency
-        return (float) $this->ratings()->avg('rating');
+        return (float) $this->ratings()->avg('rating') ?? 0;
     }
 
     public function relatedPosts(): BelongsToMany

@@ -6,6 +6,7 @@ use App\Enums\Frontend\CommentStatus;
 use App\Models\Frontend\Blog\BlogComment;
 use App\Models\Frontend\Blog\BlogPost;
 use App\Models\Frontend\Blog\PostCategory;
+use App\Models\Frontend\Rating;
 use App\Services\Frontend\Toast;
 use App\Traits\App\HasAntiFloodProtection;
 use Illuminate\Http\Request;
@@ -46,7 +47,7 @@ class BlogController extends BaseBlogController
         $locale = $request->get('locale', 'en') ?? app()->getLocale();
         $post = BlogPost::where('slug', $slug)
             ->where('is_published', true)
-            ->with(['author', 'categories'])
+            ->with(['author', 'categories', 'ratings'])
             ->firstOrFail();
 
         // Increment view count
@@ -74,7 +75,9 @@ class BlogController extends BaseBlogController
             'comments' => $comments,
             'categories' => $this->getSidebarData(),
             'relatedPosts' => $relatedPosts,
-            'canModerate' => false
+            'canModerate' => false,
+            'averageRating' => $post->averageRating(),
+            'isRated' => Auth::check() && $post->ratings()->where('user_id', Auth::id())->exists(),
         ]);
     }
 
@@ -275,11 +278,13 @@ class BlogController extends BaseBlogController
         if ($comments->isEmpty()) {
             $commentsHtml = '<div class="message _bg _with-border">No comments found.</div>';
         } else {
-            $commentsHtml .= view('components.blog.comment.reply-form', [
-                'article' => $post,
-                'isReply' => false,
-                'errors' => app('view')->shared('errors', new \Illuminate\Support\ViewErrorBag),
-            ])->render();
+            if ($user) {
+                $commentsHtml .= view('components.blog.comment.reply-form', [
+                    'article' => $post,
+                    'isReply' => false,
+                    'errors' => app('view')->shared('errors', new \Illuminate\Support\ViewErrorBag),
+                ])->render();
+            }
             foreach ($comments as $comment) {
                 $commentsHtml .= view('components.blog.comment.comment', [
                     'comment' => $comment,
@@ -331,6 +336,40 @@ class BlogController extends BaseBlogController
         ]);
     }
 
+    public function rateArticle(Request $request, string $slug)
+    {
+        $request->validate([
+            'rating' => 'required|integer|min:1|max:5',
+        ]);
+        $user = Auth::user();
+
+        $post = BlogPost::where('slug', $slug)
+            ->where('is_published', true)
+            ->firstOrFail();
+
+        $rating = new Rating([
+            'user_id' => $user->id,
+            'blog_id' => $post->id,
+            'rating' => $request->rating,
+        ]);
+        $rating->save();
+
+        // Обновляем средний рейтинг статьи
+        $averageRating = $post->averageRating();
+
+        // Округляем до одного десятичного знака (Optional: Eloquent cast might handle this)
+        // $averageRating = round($averageRating, 1); // Consider removing if cast handles it
+
+        // Обновляем рейтинг в модели статьи
+        $post->average_rating = $averageRating;
+        $post->save();
+
+        // Return the *new* average rating, not the individual rating submitted
+        return response()->json([
+            'success' => true,
+            'rating' => $averageRating, // Return the updated average rating
+        ]);
+    }
     private function buildCategoryTree($categories, $parentId = null): array
     {
         return $categories

@@ -31,7 +31,22 @@
 
         {!! $article->content !!}
     </div>
-    <x-blog.article-rating :article="$article" />
+    @auth
+    @if($isRated)
+    {{-- <x-blog.article-rating :rating="$article->average_rating ?? 0" :slug="$article->slug" /> --}}
+        {{-- <p>Вы уже оценили этот пост.</p> --}}
+
+    @else
+        <x-blog.article-rating :rating="$article->average_rating ?? 0" :slug="$article->slug" />
+    @endif
+    @endauth
+    @guest
+
+        <div class="message _bg _with-border font-weight-500 mt-4">
+            <span class="icon-warning font-18"></span>
+            <div class="message__txt">To leave rating, please <a href="{{ route('login') }}" class="link">Log in</a> to our Spy.house service</div>
+        </div>
+    @endguest
 </div>
 
 <a href="#" target="_blank" class="banner-item mb-25">
@@ -59,22 +74,9 @@
             <div class="message__txt">To leave comments, please <a href="{{ route('login') }}" class="link">Log in</a> to our Spy.house service</div>
         </div>
         @endguest
-        <div class="comment-list">
-            <div class="sep"></div>
-            @auth
-            <div class="comment-form">
-                <x-blog.comment.reply-form :article="$article" />
-                {{-- <x-blog.comment.comment-form :article="$article" />
 
-                @if(session('reply_to'))
-                <x-blog.comment.comment-form :article="$article" :isReply="true" :replyTo="session('reply_to')" />
-                @endif --}}
-            </div>
-            @endauth
-            @foreach($comments as $comment)
-            <x-blog.comment :comment="$comment" :slug="$article['slug']" />
-            @endforeach
-        </div>
+        <x-blog.comment-list-with-reply-form :comments="$comments" :article="$article" />
+
         @auth
         {{ $comments->links('components.blog.comment.async-pagination', ['paginator' => $comments]) }}
         @endauth
@@ -82,60 +84,7 @@
 </div>
 @endsection
 
-@section('scripts')
-<script>
-    // $(document).ready(function() {
-    //     $(".article-rate__rating").starRating({
-    //         initialRating: {
-    //             {
-    //                 $article['user_rating'] ?? 0
-    //             }
-    //         },
-    //         strokeColor: '#894A00',
-    //         strokeWidth: 10,
-    //         starSize: 25,
-    //         disableAfterRate: false,
-    //         useFullStars: true,
-    //         hoverColor: '#ffb700',
-    //         activeColor: '#ffb700',
-    //         ratedColor: '#ffb700',
-    //         useGradient: false,
-    //         callback: function(currentRating, $el) {
-    //             // Отправка рейтинга на сервер через AJAX
-    //             $.ajax({
-    //                 url: "{{ route('blog.rate', $article['slug']) }}",
-    //                 type: "POST",
-    //                 data: {
-    //                     rating: currentRating,
-    //                     _token: "{{ csrf_token() }}"
-    //                 },
-    //                 success: function(response) {
-    //                     if (response.success) {
-    //                         $(".article-rate__value .font-weight-600").text(response.rating);
-    //                     }
-    //                 },
-    //                 error: function() {
-    //                     alert("Error saving rating. Please try again.");
-    //                 }
-    //             });
-    //         }
-    //     });
-    // });
 
-    // $(document).ready(function() {
-    //     $('.category-link').click(function() {
-    //         var color = $(this).data('color');
-    //         $(this).css('color', color);
-    //     });
-    // });
-    // $(document).ready(function() {
-    //     $('.cat-links').click(function() {
-    //         var color = $(this).data('color');
-    //         $(this).css('color', color);
-    //     });
-    // });
-</script>
-@endsection
 
 
 

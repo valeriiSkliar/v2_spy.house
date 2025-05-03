@@ -19,4 +19,5 @@ Route::prefix('blog')->name('blog.')->group(function () {
 Route::prefix('blog')->name('blog.')->middleware(['auth'])->group(function () {
     Route::post('/{slug}/comment', [BlogController::class, 'storeComment'])->name('comment.store');
     Route::get('/{slug}/comments', [BlogController::class, 'paginateComments'])->name('comments.paginate');
+    Route::post('/{slug}/rate', [BlogController::class, 'rateArticle'])->name('rate');
 });

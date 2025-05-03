@@ -17,6 +17,9 @@ import "./components/toasts";
 // Import helpers
 import "./helpers";
 
+// Import utils
+import "@/utils";
+
 // Additional imports
 import "./libs/main";
 import "./rating.js";
