@@ -9,6 +9,12 @@ import Alpine from "alpinejs";
 window.Alpine = Alpine;
 Alpine.start();
 
+// Import the pages
+import "@pages";
+
+// Import the components
+import "@/components";
+
 // Import the modal system
 import "./components/modal";
 
@@ -29,10 +35,8 @@ import "./base-select.js";
 // import "./search-suggestions.js";
 import "./carousel.js";
 import "./tariffs";
-import "@pages";
 
 // Import the API token system
-import "@/components/api-token";
 import { apiToken } from "@/components/api-token/api-token.js";
 
 document.addEventListener("DOMContentLoaded", () => {

@@ -32,6 +32,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/test-api-token2', [BaseTokenController::class, 'testBaseToken2'])->name('test-base-token2');
 });
 
+// Add 'auth:sanctum' before 'check.abilities'
 Route::middleware(['auth:sanctum', 'check.abilities:read:base-token'])->group(function () {
     Route::get('/test-api-token', [BaseTokenController::class, 'testBaseToken'])->name('test-base-token');
 });
