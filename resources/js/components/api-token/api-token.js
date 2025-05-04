@@ -1,4 +1,4 @@
-const apiToken = {
+const apiTokenHandler = {
     getToken: () => {
         return localStorage.getItem("bt");
     },
@@ -6,8 +6,8 @@ const apiToken = {
         localStorage.setItem("bt", token);
     },
     init: (initialToken) => {
-        apiToken.setToken(initialToken);
-        const token = apiToken.getToken();
+        apiTokenHandler.setToken(initialToken);
+        const token = apiTokenHandler.getToken();
         console.log(token);
 
         if (!token) {
@@ -16,4 +16,4 @@ const apiToken = {
     },
 };
 
-export { apiToken };
+export { apiTokenHandler };

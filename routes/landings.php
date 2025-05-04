@@ -4,6 +4,7 @@ use App\Http\Controllers\App\WebsiteDownloadController;
 use App\Http\Controllers\Frontend\Landing\LandingsPageController;
 use Illuminate\Support\Facades\Route;
 
+// Web Routes
 Route::middleware(['web', 'auth'])
     ->prefix('landings')
     ->name('landings.')
@@ -13,8 +14,10 @@ Route::middleware(['web', 'auth'])
         Route::get('/{landing}/download', [LandingsPageController::class, 'download'])->name('download');
     });
 
-Route::middleware(['web'])
-    ->prefix('landings')
+
+// API Routes
+Route::middleware(['auth:sanctum', 'check.abilities:read:base-token'])
+    ->prefix('api/landings')
     ->name('landings.')
     ->group(function () {
         Route::get('/{monitor}/status', [WebsiteDownloadController::class, 'getStatus'])->name('status');

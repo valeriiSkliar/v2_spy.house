@@ -37,12 +37,12 @@ import "./carousel.js";
 import "./tariffs";
 
 // Import the API token system
-import { apiToken } from "@/components/api-token/api-token.js";
+import { apiTokenHandler } from "@/components/api-token/api-token.js";
 
 document.addEventListener("DOMContentLoaded", () => {
     const apiTokenValue = $("#api_token").val();
 
     if (apiTokenValue) {
-        apiToken.init(apiTokenValue);
+        apiTokenHandler.init(apiTokenValue);
     }
 });

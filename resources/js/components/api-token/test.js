@@ -2,7 +2,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const testBaseToken = document.getElementById("test-base-token");
     const testBaseToken2 = document.getElementById("test-base-token2");
 
-    testBaseToken.addEventListener("click", () => {
+    if (testBaseToken) {
+        return;
+    }
+
+    testBaseToken?.addEventListener("click", () => {
         console.log("Test Base Token");
         const token = localStorage.getItem("bt");
         if (!token) {
@@ -35,7 +39,11 @@ document.addEventListener("DOMContentLoaded", () => {
             });
     });
 
-    testBaseToken2.addEventListener("click", () => {
+    if (testBaseToken2) {
+        return;
+    }
+
+    testBaseToken2?.addEventListener("click", () => {
         console.log("Test Base Token 2");
         const token = localStorage.getItem("bt");
         if (!token) {
