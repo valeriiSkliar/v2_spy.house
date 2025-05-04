@@ -11,6 +11,7 @@ use Illuminate\View\View;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Http\Controllers\Controller;
+use App\Services\Api\TokenService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 
@@ -102,10 +103,16 @@ class ProfileController extends Controller
             'Content marketing',
             'Other'
         ];
+        $user = $request->user();
+
+        // Get user's tokens
+        $tokens = app(TokenService::class)->getUserTokens($user);
 
         return view('profile.settings', [
             'user' => $user,
-            'scopes' => $scopes
+            'scopes' => $scopes,
+            'tokens' => $tokens,
+            'api_token' => session('api_token'),
         ]);
     }
 
@@ -178,5 +185,22 @@ class ProfileController extends Controller
         ]);
 
         return redirect()->route('profile.settings')->with('status', 'password-updated');
+    }
+
+    // Add method to handle notification settings update
+    public function updateNotifications(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'notifications' => ['nullable', 'array'],
+            'notifications.*' => ['string', 'in:system,bonus'], // Validate allowed values
+        ]);
+
+        $user = $request->user();
+
+        $user->update([
+            'notification_settings' => $request->input('notifications', []), // Save the array, default to empty
+        ]);
+
+        return redirect()->route('profile.settings', '#notifications')->with('status', 'notifications-updated');
     }
 }

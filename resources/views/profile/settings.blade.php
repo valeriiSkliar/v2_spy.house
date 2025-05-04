@@ -32,6 +32,15 @@
                     </div>
                 </div>
 
+                <div class="col-12 col-md-auto mb-10">
+                    <input id="api_token" name="api_token" type="hidden" value="{{ $api_token }}">
+                    Token: 
+                    <span class="text-danger">{{ $api_token }}</span>
+                    <button type="button" id="test-base-token" class="btn btn-black">Test Base Token</button>
+                    <button type="button" id="test-base-token2" class="btn btn-black">Test Base Token 2</button>
+
+                </div>
+
                 <div class="row _offset20 mb-20">
                     <div class="col-12 col-md-6 col-lg-4">
                         <div class="form-item mb-20">
@@ -212,10 +221,18 @@
                                         <form action="{{ route('profile.update-notifications') }}" method="POST">
                                             @csrf
                                             @method('PUT')
+
+                                            @if(session('status') === 'notifications-updated')
+                                            <div class="message _bg _with-border _green mb-15">
+                                                <span class="icon-check font-18"></span>
+                                                <div class="message__txt">{{ __('profile.notification_settings.update_success') }}</div>
+                                            </div>
+                                            @endif
+
                                             <div class="row _offset20 mt-3">
                                                 <div class="col-12 col-md-auto mb-10">
                                                     <label class="checkbox-btn">
-                                                        <input type="checkbox" name="notifications[]" value="system" {{ in_array('system', old('notifications', $user->notifications ?? ['system'])) ? 'checked' : '' }}>
+                                                        <input type="checkbox" name="notifications[]" value="system" {{ in_array('system', old('notifications', $user->notification_settings ?? ['system'])) ? 'checked' : '' }}>
                                                         <span class="checkbox-btn__content">
                                                             <span class="checkbox-btn__icon icon-check-circle"></span>
                                                             <span class="checkbox-btn__text">{{ __('profile.notification_settings.system_messages_label') }}</span>
@@ -224,7 +241,7 @@
                                                 </div>
                                                 <div class="col-12 col-md-auto mb-10">
                                                     <label class="checkbox-btn">
-                                                        <input type="checkbox" name="notifications[]" value="bonus" {{ in_array('bonus', old('notifications', $user->notifications ?? [])) ? 'checked' : '' }}>
+                                                        <input type="checkbox" name="notifications[]" value="bonus" {{ in_array('bonus', old('notifications', $user->notification_settings ?? [])) ? 'checked' : '' }}>
                                                         <span class="checkbox-btn__content">
                                                             <span class="checkbox-btn__icon icon-check-circle"></span>
                                                             <span class="checkbox-btn__text">{{ __('profile.notification_settings.bonus_offers_label') }}</span>
@@ -234,6 +251,7 @@
                                                 <div class="col-12 col-md-auto mb-10">
                                                     <button type="submit" class="btn _flex _green _medium">{{ __('profile.save_button') }}</button>
                                                 </div>
+
                                             </div>
                                         </form>
                                     </div>
@@ -270,3 +288,25 @@
     });
 </script>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        @if(session('api_token'))
+            const apiToken = @json(session('api_token'));
+            if (apiToken) {
+                localStorage.setItem('api_token', apiToken);
+                // Optional: Clear the flash message after storing it,
+                // although flash messages are typically cleared automatically after the next request.
+                // You might remove this token from session if needed immediately for some reason,
+                // but usually, it's not necessary.
+                // Consider security implications if the token remains accessible longer than needed.
+                // {{ session()->forget('api_token') }} // This Blade directive won't work directly here as expected within JS.
+                                                      // Server-side session management is needed if immediate removal is required.
+                                                      // For now, just storing in localStorage is the main goal.
+                console.log('API token stored in localStorage.');
+            }
+        @endif
+    });
+</script>
+@endpush

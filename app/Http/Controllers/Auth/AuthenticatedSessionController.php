@@ -27,6 +27,22 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+        $user = Auth::user();
+
+
+        // Check if user has a basic access token
+        $basicToken = $user->tokens()
+            ->where('name', 'basic-access')
+            ->whereJsonContains('abilities', 'read:profile')
+            ->whereJsonContains('abilities', 'read:public')
+            ->first();
+
+        if (!$basicToken) {
+            // Create a basic API token if it doesn't exist
+            $token = $user->createToken('basic-access', ['read:profile', 'read:public'])->plainTextToken;
+
+            session()->flash('api_token', $token);
+        }
 
         return redirect()->intended(route('profile.settings', absolute: false));
     }

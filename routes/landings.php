@@ -17,7 +17,7 @@ Route::middleware(['web'])
     ->prefix('landings')
     ->name('landings.')
     ->group(function () {
-        Route::get('/{landing}/status', [WebsiteDownloadController::class, 'getStatus'])->name('status');
+        Route::get('/{monitor}/status', [WebsiteDownloadController::class, 'getStatus'])->name('status');
     });
 
 

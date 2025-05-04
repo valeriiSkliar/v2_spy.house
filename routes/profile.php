@@ -3,7 +3,7 @@
 use App\Http\Controllers\Test\ProfileController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['web', 'auth'])->group(function () {
+Route::middleware(['web', 'auth', 'auth:sanctum'])->group(function () {
     Route::get('/profile/settings', [ProfileController::class, 'settings'])->name('profile.settings');
     Route::put('/profile/settings', [ProfileController::class, 'updateSettings'])->name('profile.update-settings');
     Route::get('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.change-password');

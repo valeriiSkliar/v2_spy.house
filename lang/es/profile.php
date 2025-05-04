@@ -51,5 +51,6 @@ return [
         'email_description' => 'El correo electrónico especificado en tu perfil se utilizará para las notifications. (:email)',
         'system_messages_label' => 'Mensajes del sistema',
         'bonus_offers_label' => 'Ofertas de bonificación',
+        'update_success' => 'Configuración de notificaciones actualizada correctamente.',
     ],
 ];

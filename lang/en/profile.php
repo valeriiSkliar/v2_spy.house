@@ -51,5 +51,6 @@ return [
         'email_description' => 'The e-mail specified in your profile will be used for notifications. (:email)',
         'system_messages_label' => 'System messages',
         'bonus_offers_label' => 'Bonus offers',
+        'update_success' => 'Notification settings updated successfully.',
     ],
 ];
