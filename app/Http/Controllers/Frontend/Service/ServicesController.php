@@ -10,11 +10,13 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class ServicesController extends FrontendController
 {
-    private $indexView = 'frontend.views.services.index';
-    private $showView = 'frontend.views.services.show';
+    private $indexView = 'pages.services.index';
+    private $showView = 'pages.services.show';
     public function index(Request $request)
     {
         $locale = app()->getLocale();
+        $sortField = $request->input('sortBy', 'transitions');
+        $sortOrder = $request->input('sortOrder', 'desc');
 
         // Получаем запрос для закреплённых сервисов
         $pinnedQuery = Service::with('category')
@@ -51,8 +53,6 @@ class ServicesController extends FrontendController
 
         // Сортировка для не закреплённых сервисов
         if ($request->filled('sortBy')) {
-            $sortField = $request->input('sortBy');
-            $sortOrder = $request->input('sortOrder', 'desc');
 
             if (in_array($sortField, ['transitions', 'rating', 'views'])) {
                 $unpinnedQuery->orderBy($sortField, $sortOrder);
@@ -145,6 +145,8 @@ class ServicesController extends FrontendController
             ['value' => 96, 'label' => '96', 'order' => ''],
         ];
 
+
+
         $bonusesOptions = [
             ['value' => 'all', 'label' => 'All Bonuses', 'order' => ''],
             ['value' => 'with_discount', 'label' => 'With Discount', 'order' => ''],
@@ -160,6 +162,17 @@ class ServicesController extends FrontendController
                 ];
             });
 
+        $sortOptionsPlaceholder = 'Sort by — ';
+        $perPageOptionsPlaceholder = 'On Page — ';
+
+        $selectedSort = collect($sortOptions)->first(function ($option) use ($sortField, $sortOrder) {
+            return $option['value'] === $sortField && $option['order'] === $sortOrder;
+        }); // Default to the first option if not found
+
+        // dd($selectedSort);
+
+        $selectedPerPage = collect($perPageOptions)->firstWhere('value', $perPage) ?? $perPageOptions[0];
+        // dd($selectedSort, $selectedPerPage);
         return view($this->indexView, [
             'services'   => $paginator,
             'categories' => $categories,
@@ -168,8 +181,12 @@ class ServicesController extends FrontendController
             'totalPages' => ceil($totalServices / $perPage),
             'sortOptions' => $sortOptions,
             'perPageOptions' => $perPageOptions,
+            'selectedSort' => $selectedSort,
+            'selectedPerPage' => $selectedPerPage,
             'categoriesOptions' => $categoriesOptions,
-            'bonusesOptions' => $bonusesOptions
+            'bonusesOptions' => $bonusesOptions,
+            'sortOptionsPlaceholder' => $sortOptionsPlaceholder,
+            'perPageOptionsPlaceholder' => $perPageOptionsPlaceholder,
         ]);
     }
 

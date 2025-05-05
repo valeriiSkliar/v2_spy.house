@@ -65,7 +65,6 @@ class LandingsPageController extends FrontendController
             ->paginate($perPage)
             ->withQueryString();
 
-        // dd($userId, $landings->first()->user_id);
         // Fetch options using the renamed method
         $filterOptions = $this->getFilterOptions();
         $sortOptions = $filterOptions['sortOptions'];
