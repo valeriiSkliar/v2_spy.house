@@ -1,61 +1,129 @@
 import { createAndShowToast } from "@/utils";
+import { debounce } from "@/helpers/custom-debounce";
+import { apiTokenHandler } from "../api-token";
 
+/**
+ * Updates the service rating UI elements
+ * @param {string|number} rating - The average rating to display
+ * @param {string|number|null} userRating - The user's submitted rating (if any)
+ */
 const updateServiceRating = (rating, userRating = null) => {
-    const ratingValue = document.querySelector(
-        ".rate-service__value .font-weight-600"
-    );
-    ratingValue.textContent = rating;
+    // Format rating to one decimal place for display
+    const formattedRating =
+        typeof rating === "number"
+            ? rating.toFixed(1)
+            : parseFloat(rating).toFixed(1);
 
-    const metaRating = document.querySelector(".icon-rating");
-    if (metaRating) {
-        metaRating.textContent = rating;
-    }
-
-    // Update all rating elements on the page
-    const ratingElements = document.querySelectorAll(
-        ".rate-service__item.icon-rating"
-    );
+    // Update all rating values on the page
+    const ratingElements = document.querySelectorAll(".icon-rating");
     ratingElements.forEach((element) => {
-        element.textContent = rating;
+        element.textContent = formattedRating;
     });
 
-    // Show message about user's rating if provided
+    // Update all rating values with icon-star class
+    const starElements = document.querySelectorAll(".icon-star");
+    starElements.forEach((element) => {
+        element.textContent = formattedRating;
+    });
+
+    // Update the main rating value display
+    const ratingValueElement = document.querySelector(".rate-service__value");
+    if (ratingValueElement) {
+        ratingValueElement.innerHTML = `<span class="font-weight-600">${formattedRating}</span>/5`;
+    }
+
+    // If user has rated, replace the rating form with a thank you message
     if (userRating) {
         const ratingContainer = document.querySelector(".rate-service");
         if (ratingContainer) {
-            // Hide the rating form
             ratingContainer.innerHTML = `
                 <div class="rate-service__success">
-                    <p class="mb-0 font-18 font-weight-600">Thank you for rating!</p>
-                    <p class="mb-0">You rated this service: ${userRating} stars</p>
-                    <p class="mb-0">Average rating: ${rating}</p>
+                    <div class="row align-items-center ">
+                        <div class="col-12 col-md-5">
+                            <h4>Thank you for rating!</h4>
+                            <p class="mb-0">Your rating: <strong>${userRating}</strong> stars</p>
+                        </div>
+                        <div class="col-12 col-md-7 d-flex align-items-center justify-content-center">
+                            <div class="rate-service__value"><span class="font-weight-600">${formattedRating}</span>/5</div>
+                        </div>
+                    </div>
                 </div>
             `;
         }
     }
 };
 
-export function submitServiceRating(serviceId, rating) {
-    fetch(`/api/services/${serviceId}/rate`, {
-        method: "POST",
+/**
+ * Submits a service rating to the API
+ * @param {number|string} serviceId - The ID of the service being rated
+ * @param {number|string} rating - The rating value (1-5)
+ */
+const submitServiceRating = (serviceId, rating) => {
+    // Show loading indicator
+    const ratingContainer = document.querySelector(".rate-service");
+    if (ratingContainer) {
+        const ratingStars = ratingContainer.querySelector(
+            ".rate-service__rating"
+        );
+        if (ratingStars) {
+            ratingStars.classList.add("loading");
+        }
+    }
+
+    // Check for CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]');
+    if (!csrfToken) {
+        console.error("CSRF token not found");
+        createAndShowToast("Error: CSRF token missing", "error");
+        return;
+    }
+
+    fetch(`/api/services/${serviceId}/rate/${rating}`, {
+        method: "GET",
+        credentials: "omit",
         headers: {
             "Content-Type": "application/json",
-            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
-                .content,
+            // "X-CSRF-TOKEN": csrfToken?.content,
+            Authorization: `Bearer ${apiTokenHandler.getToken()}`,
         },
-        body: JSON.stringify({ rating: rating }),
+        // body: JSON.stringify({ rating: rating }),
     })
         .then((response) => {
+            // Handle redirects (like to login page)
             if (response.redirected && response.url.includes("login")) {
                 window.location.href = response.url;
-                return;
+                throw new Error("Authentication required");
             }
+
+            // Handle error responses
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
             return response.json();
         })
         .then((data) => {
-            if (data.success) {
+            // Remove loading indicator if it exists
+
+            console.log(data);
+            if (ratingContainer) {
+                const ratingStars = ratingContainer.querySelector(
+                    ".rate-service__rating"
+                );
+                if (ratingStars) {
+                    ratingStars.classList.remove("loading");
+                }
+            }
+
+            if (data.success || data.average_rating || data.averageRating) {
+                // Use the average_rating from the response or fall back to original rating
+                const averageRating =
+                    data.average_rating || data.averageRating || rating;
+                const userRating =
+                    data.user_rating || data.rating?.rating || rating;
+
                 // Update UI with average rating and user rating
-                updateServiceRating(data.average_rating, data.user_rating);
+                updateServiceRating(averageRating, userRating);
 
                 // Show success message
                 createAndShowToast("Thank you for rating!", "success");
@@ -68,67 +136,126 @@ export function submitServiceRating(serviceId, rating) {
         })
         .catch((error) => {
             console.error("Error:", error);
-            createAndShowToast(
-                "Error saving rating. Please try again.",
-                "error"
-            );
-        });
-}
 
+            // Remove loading indicator if it exists
+            if (ratingContainer) {
+                const ratingStars = ratingContainer.querySelector(
+                    ".rate-service__rating"
+                );
+                if (ratingStars) {
+                    ratingStars.classList.remove("loading");
+                }
+            }
+
+            // Only show error if not a redirect
+            if (!error.message.includes("Authentication required")) {
+                createAndShowToast(
+                    "Error saving rating. Please try again.",
+                    "error"
+                );
+            }
+        });
+};
+
+// Create a debounced version of the submit function to prevent multiple rapid submissions
+const debouncedSubmitServiceRating = debounce(submitServiceRating, 300);
+
+/**
+ * Initializes the service rating component
+ * @param {HTMLElement|null} ratingContainersElement - Optional container element
+ */
 const initSingleServiceRating = (ratingContainersElement = null) => {
-    const isSingleMarket = $(".single-market").length > 0;
-    if (!isSingleMarket) {
+    // Check if we're on a single service page
+    const singleMarketElement = document.querySelector(".single-market");
+    if (!singleMarketElement) {
         return;
     }
 
-    const serviceId = $(".single-market").data("service-id");
-    console.log(serviceId);
+    // Get the service ID from the data attribute
+    const serviceId = singleMarketElement.dataset.serviceId;
+    if (!serviceId) {
+        console.error("Service ID not found");
+        return;
+    }
+
+    // Get all rating containers or use the provided one
     const ratingContainers =
         ratingContainersElement ||
         document.querySelectorAll(".rate-service__rating");
 
-    if (ratingContainers.length > 0) {
-        ratingContainers.forEach((container) => {
-            const currentRating = parseInt(container.dataset.rating) || 0;
-            const isRated = container.dataset.isRated === "true";
+    if (ratingContainers.length === 0) {
+        return;
+    }
 
-            if (isRated) {
-                return;
+    // Initialize each rating container
+    ratingContainers.forEach((container) => {
+        const currentRating = parseInt(container.dataset.rating) || 0;
+        const isRated = container.dataset.isRated === "true";
+
+        // Clear existing stars first (important for re-initialization)
+        container.innerHTML = "";
+
+        // If already rated, don't initialize the interactive stars
+        if (isRated) {
+            return;
+        }
+
+        // Create stars
+        for (let i = 1; i <= 5; i++) {
+            const star = document.createElement("span");
+            star.classList.add("rating-star");
+            star.dataset.value = i;
+
+            // Pre-activate stars based on current rating
+            if (i <= currentRating) {
+                star.classList.add("active");
             }
-            // Create stars
-            for (let i = 1; i <= 5; i++) {
-                const star = document.createElement("span");
-                star.classList.add("rating-star");
-                star.dataset.value = i;
-                if (i <= currentRating) {
-                    star.classList.add("active");
-                }
-                star.innerHTML = "★";
 
-                star.addEventListener("click", function () {
-                    const value = this.dataset.value;
-                    submitServiceRating(serviceId, value);
+            star.innerHTML = "★";
+
+            // Add hover effects
+            star.addEventListener("mouseover", function () {
+                // Highlight this star and all stars before it
+                const value = parseInt(this.dataset.value);
+                const stars = container.querySelectorAll(".rating-star");
+                stars.forEach((s, index) => {
+                    if (index + 1 <= value) {
+                        s.classList.add("hover");
+                    } else {
+                        s.classList.remove("hover");
+                    }
+                });
+            });
+
+            star.addEventListener("mouseout", function () {
+                // Remove hover class from all stars
+                const stars = container.querySelectorAll(".rating-star");
+                stars.forEach((s) => {
+                    s.classList.remove("hover");
+                });
+            });
+
+            // Handle click to submit rating
+            star.addEventListener("click", function () {
+                const value = parseInt(this.dataset.value);
+
+                // Add visual feedback immediately
+                const stars = container.querySelectorAll(".rating-star");
+                stars.forEach((s, index) => {
+                    if (index + 1 <= value) {
+                        s.classList.add("active");
+                    } else {
+                        s.classList.remove("active");
+                    }
                 });
 
-                container.appendChild(star);
-            }
-        });
-    }
-    //--------Market single------------------------------------
-    // if ($(".rate-service__rating").length > 0) {
-    //     $(".rate-service__rating").starRating({
-    //         emptyColor: "#DCEAE4",
-    //         strokeColor: "#DCEAE4",
-    //         hoverColor: "#3DC98A",
-    //         useFullStars: true,
-    //         ratedColor: "#3DC98A",
-    //         strokeWidth: 0,
-    //         starSize: 25,
-    //         disableAfterRate: true,
-    //         starShape: "rounded",
-    //         callback: function (currentRating, $el) {},
-    //     });
-    // }
+                // Submit the rating with debounce to prevent multiple submissions
+                debouncedSubmitServiceRating(serviceId, value);
+            });
+
+            container.appendChild(star);
+        }
+    });
 };
 
-export { initSingleServiceRating };
+export { initSingleServiceRating, submitServiceRating, updateServiceRating };

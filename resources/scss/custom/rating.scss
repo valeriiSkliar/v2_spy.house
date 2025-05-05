@@ -1,0 +1,32 @@
+/* Rating component styles */
+.rate-service__rating {
+    display: flex;
+    align-items: center;
+}
+
+.rating-star {
+    font-size: 24px;
+    color: #dceae4;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    margin: 0 2px;
+}
+
+.rating-star.active {
+    color: #3dc98a;
+}
+
+.rating-star.hover {
+    color: #3dc98a;
+}
+
+.rate-service__rating.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.rate-service__success {
+    width: 100%;
+    padding: 15px;
+    border-radius: 8px;
+}

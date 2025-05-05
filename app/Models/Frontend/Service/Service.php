@@ -86,4 +86,14 @@ class Service extends Model
     {
         return $this->hasMany(Rating::class);
     }
+
+    /**
+     * Calculate the average rating for the service.
+     */
+    public function averageRating(): ?float
+    {
+        // Use the relationship to calculate the average
+        // Cast the result to float for consistency
+        return (float) $this->ratings()->avg('rating') ?? 0;
+    }
 }

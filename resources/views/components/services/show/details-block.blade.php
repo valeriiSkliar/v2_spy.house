@@ -51,13 +51,18 @@
                 />
             @endif
         </div>
-        <x-services.show.raiting 
-            :serviceId="$service['id']" 
-            :rating="$service['rating']" 
-            :isRated="$userRating ? true : false" 
-            :userRating="$userRating" 
-            :header="'Rate this service'" 
-            :description="'Rate from 1 to 5'" />
+        @php
+            $isRated = $userRating ? true : false;
+        @endphp
+            <x-services.show.rating 
+                :serviceId="$service['id']" 
+                :rating="$service['rating']" 
+                :isRated="$isRated" 
+                :userRating="$userRating" 
+                :header="'Rate this service'" 
+                :description="'Rate from 1 to 5'" 
+            />
+
     </div>
 </div>
 

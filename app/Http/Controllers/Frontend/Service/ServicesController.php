@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Frontend\Service;
 use App\Http\Controllers\FrontendController;
 use App\Models\Frontend\Service\Service;
 use App\Models\Frontend\Service\ServiceCategory;
+use App\Models\Frontend\Rating;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
@@ -288,39 +289,67 @@ class ServicesController extends FrontendController
         ]);
     }
 
-    public function rate(Request $request, string $id)
+    /**
+     * Rate a service
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function rate(Request $request, $id, $rating)
     {
-        $request->validate([
-            'rating' => 'required|integer|min:1|max:5',
-            'review' => 'nullable|string|max:1000'
-        ]);
-
-        $service = Service::findOrFail($id);
-
-        // Check if user has already rated this service
-        $existingRating = $service->ratings()->where('user_id', Auth::id())->first();
-
-        if ($existingRating) {
-            return response()->json([
-                'message' => 'You have already rated this service'
-            ], 422);
+        // Validate the rating value
+        if (!in_array($rating, [1, 2, 3, 4, 5])) {
+            return response()->json(['error' => 'Invalid rating value.'], 400);
         }
 
-        // Create new rating
-        $rating = $service->ratings()->create([
-            'user_id' => Auth::id(),
-            'rating' => $request->rating,
-            'review' => $request->review
+        $service = Service::findOrFail($id);
+        $userId = Auth::id(); // Get authenticated user ID
+
+        // Check if the user has already rated this service
+        $existingRating = Rating::where('service_id', $service->id)
+            ->where('user_id', $userId)
+            ->first();
+
+        if ($existingRating) {
+            // User has already rated, return an error or appropriate response
+            return response()->json(['error' => 'You have already rated this service.'], 409); // 409 Conflict
+        }
+
+
+        // Create a new rating
+        $newRating = new Rating([
+            'service_id' => $service->id,
+            'user_id' => $userId, // Use the authenticated user's ID
+            'rating' => $rating,
+            'comment' => $request->input('comment', '') // Optionally get comment from request
         ]);
 
-        // Update average rating
-        $averageRating = $service->ratings()->avg('rating');
-        $service->update(['rating' => $averageRating]);
+        $newRating->save();
+
+        // Recalculate average rating and update service
+        $reviewsCount = $service->ratings()->count();
+
+        $averageRating = $service->averageRating();
+        $service->update([
+            'rating' => $averageRating,
+            'reviews_count' => $reviewsCount
+        ]);
+
+        $formattedRating = number_format($averageRating, 1);
+        $ratedHtml = view('components.services.show.rated-rating', [
+            'userRating' => $newRating->rating ?? 0,
+            'formattedRating' => $formattedRating
+        ])->render();
 
         return response()->json([
+            'success' => true,
             'message' => 'Rating submitted successfully',
-            'rating' => $rating,
-            'averageRating' => $averageRating
+            'rating' => $newRating,
+            'user_rating' => $rating,
+            'average_rating' => number_format($averageRating, 1),
+            'reviews_count' => $reviewsCount,
+            'ratedHtml' => $ratedHtml
         ]);
     }
 
@@ -328,6 +357,7 @@ class ServicesController extends FrontendController
     {
         $service = Service::findOrFail($id);
         $rating = $service->ratings()->where('user_id', Auth::id())->first();
+
 
         return response()->json([
             'rating' => $rating->rating ?? 0,

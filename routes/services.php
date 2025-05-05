@@ -15,8 +15,8 @@ Route::middleware('web')
     });
 
 // API routes
-Route::middleware('api')
+Route::middleware('auth:sanctum', 'check.abilities:read:base-token')
     ->prefix('api')
     ->group(function () {
-        Route::post('/services/{id}/rate', [ServicesController::class, 'rate'])->name('services.rate');
+        Route::get('/services/{id}/rate/{rating}', [ServicesController::class, 'rate'])->name('services.rate');
     });
