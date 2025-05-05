@@ -239,7 +239,7 @@ class ServicesController extends FrontendController
 
         // Increment views
         $service->increment('views');
-        $userRating = Auth::user()->getRatingForService($service->id);
+        $userRating = Auth::check() ? Auth::user()->getRatingForService($service->id) : null;
 
         // Get translations for the current locale
         $translatedService = [
@@ -288,51 +288,51 @@ class ServicesController extends FrontendController
         ]);
     }
 
-    // public function rate(Request $request, string $id)
-    // {
-    //     $request->validate([
-    //         'rating' => 'required|integer|min:1|max:5',
-    //         'review' => 'nullable|string|max:1000'
-    //     ]);
+    public function rate(Request $request, string $id)
+    {
+        $request->validate([
+            'rating' => 'required|integer|min:1|max:5',
+            'review' => 'nullable|string|max:1000'
+        ]);
 
-    //     $service = Service::findOrFail($id);
+        $service = Service::findOrFail($id);
 
-    //     // Check if user has already rated this service
-    //     $existingRating = $service->ratings()->where('user_id', Auth::id())->first();
+        // Check if user has already rated this service
+        $existingRating = $service->ratings()->where('user_id', Auth::id())->first();
 
-    //     if ($existingRating) {
-    //         return response()->json([
-    //             'message' => 'You have already rated this service'
-    //         ], 422);
-    //     }
+        if ($existingRating) {
+            return response()->json([
+                'message' => 'You have already rated this service'
+            ], 422);
+        }
 
-    //     // Create new rating
-    //     $rating = $service->ratings()->create([
-    //         'user_id' => Auth::id(),
-    //         'rating' => $request->rating,
-    //         'review' => $request->review
-    //     ]);
+        // Create new rating
+        $rating = $service->ratings()->create([
+            'user_id' => Auth::id(),
+            'rating' => $request->rating,
+            'review' => $request->review
+        ]);
 
-    //     // Update average rating
-    //     $averageRating = $service->ratings()->avg('rating');
-    //     $service->update(['rating' => $averageRating]);
+        // Update average rating
+        $averageRating = $service->ratings()->avg('rating');
+        $service->update(['rating' => $averageRating]);
 
-    //     return response()->json([
-    //         'message' => 'Rating submitted successfully',
-    //         'rating' => $rating,
-    //         'averageRating' => $averageRating
-    //     ]);
-    // }
+        return response()->json([
+            'message' => 'Rating submitted successfully',
+            'rating' => $rating,
+            'averageRating' => $averageRating
+        ]);
+    }
 
-    // public function getUserRating(string $id)
-    // {
-    //     $service = Service::findOrFail($id);
-    //     $rating = $service->ratings()->where('user_id', Auth::id())->first();
+    public function getUserRating(string $id)
+    {
+        $service = Service::findOrFail($id);
+        $rating = $service->ratings()->where('user_id', Auth::id())->first();
 
-    //     return response()->json([
-    //         'rating' => $rating->rating ?? 0,
-    //         'averageRating' => $service?->rating ?? 0,
-    //         'hasRated' => $rating ? true : false
-    //     ]);
-    // }
+        return response()->json([
+            'rating' => $rating->rating ?? 0,
+            'averageRating' => $service?->rating ?? 0,
+            'hasRated' => $rating ? true : false
+        ]);
+    }
 }

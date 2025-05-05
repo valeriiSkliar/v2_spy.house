@@ -1,5 +1,5 @@
 @props(['service', 'isPromo' => false, 'userRating' => null])
-<div class="single-market">
+<div data-service-id="{{ $service['id'] }}" class="single-market">
     <div class="row _offset30">
         <div class="col-12 col-md-auto">
             <div class="single-market__thumb">
@@ -60,3 +60,17 @@
             :description="'Rate from 1 to 5'" />
     </div>
 </div>
+
+
+{{-- {
+    "message": "Rating submitted successfully",
+    "rating": {
+        "user_id": 1,
+        "rating": "4",
+        "service_id": 3,
+        "updated_at": "2025-05-05T11:33:58.000000Z",
+        "created_at": "2025-05-05T11:33:58.000000Z",
+        "id": 342
+    },
+    "averageRating": "4.0000"
+} --}}

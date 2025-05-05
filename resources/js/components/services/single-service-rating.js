@@ -36,7 +36,7 @@ const updateServiceRating = (rating, userRating = null) => {
 };
 
 export function submitServiceRating(serviceId, rating) {
-    fetch(`/services/${serviceId}/rate`, {
+    fetch(`/api/services/${serviceId}/rate`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
