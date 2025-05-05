@@ -2,7 +2,7 @@ import { initializeSelectComponent } from "@/helpers";
 import {
     initializeLandingStatus,
     initializeDynamicLandingStatus,
-} from "../components/landings";
+} from "@/components";
 
 document.addEventListener("DOMContentLoaded", function () {
     initializeSelectComponent("#sort-select", {
