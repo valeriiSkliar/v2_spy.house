@@ -4,6 +4,8 @@
     'selectedSort' => [],
     'selectedPerPage' => [],
     'filters' => [],
+    'sortOptionsPlaceholder' => '',
+    'perPageOptionsPlaceholder' => '',
 ])
 
 <div class="row align-items-center">
@@ -16,17 +18,21 @@
                 id="sort-select"
                 :selected="$selectedSort" 
                 :options="$sortOptions"
-                 />
+                :placeholder="$sortOptionsPlaceholder"
+                :icon="'sort'"
+             />
              <span class="icon-sort"></span>
         </div>
     </div>
     <div class="col-12 col-md-6 col-lg-auto mb-15">
         <div class="base-select-icon">
             <x-common.base-select
-                id="per-page-select"
                 :selected="$selectedPerPage"
                 :options="$perPageOptions"
-                 />
+                :placeholder="$perPageOptionsPlaceholder"
+                id="per-page-select"
+                :icon="'list'"
+             />
              <span class="icon-list"></span>
         </div>
     </div>

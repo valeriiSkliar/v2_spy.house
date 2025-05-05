@@ -8,6 +8,8 @@
     :selectedSort="$selectedSort" 
     :selectedPerPage="$selectedPerPage" 
     :filters="$filters" 
+    :sortOptionsPlaceholder="$sortOptionsPlaceholder"
+    :perPageOptionsPlaceholder="$perPageOptionsPlaceholder"
 />
 
 

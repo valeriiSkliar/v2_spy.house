@@ -27,9 +27,7 @@ class LandingStatusPoller {
                         return;
                     }
                     const data = await response.json();
-                    console.log("Response:", data);
                     if (data.status !== "pending") {
-                        console.log("Stopping polling for landing", landingId);
                         this.stopPolling(landingId);
                         this.updateUI(landingId, data, statusElement);
                     }

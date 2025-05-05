@@ -1,4 +1,11 @@
-@props(['selected' => ['value' => '', 'order' => '', 'label' => ''], 'options' => [], 'id' => '', 'withFlag' => false, 'icon' => null])
+@props([
+    'selected' => ['value' => '', 'order' => '', 'label' => ''], 
+    'options' => [], 
+    'id' => '', 
+    'withFlag' => false, 
+    'icon' => null,
+    'placeholder' => '',
+])
 
 <div class="base-select {{ $icon ? 'base-select-icon' : '' }}" id="{{ $id }}">
     <div class="base-select__trigger">
@@ -6,7 +13,11 @@
             @if($withFlag)
             <img src="/img/flags/{{ $selected['code'] ?? 'US' }}.svg" alt="">
             @endif
-            {{ $selected['label'] }}
+            {{-- Combine placeholder with selected value --}}
+            @if($placeholder)
+                <span class="base-select__placeholder">{{ $placeholder }}</span>
+            @endif
+            <span class="base-select__selected-label">{{ $selected['label'] }}</span>
         </span>
         <span class="base-select__arrow"></span>
     </div>
@@ -15,6 +26,8 @@
         <li
             data-value="{{ $option['value'] }}"
             data-order="{{ $option['order'] }}"
+            data-label="{{ $option['label'] }}"
+            data-placeholder="{{ $placeholder }}"
             class="base-select__option {{ $option['value'] == $selected['value'] && $option['order'] == $selected['order'] ? 'is-selected' : '' }}">
             @if($withFlag)
             <img src="/img/flags/{{ $option['code'] ?? 'US' }}.svg" alt="">

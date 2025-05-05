@@ -1,21 +1,28 @@
 import { setupOutsideClickListener } from "./outside-click";
-// Generalized function to initialize select components
+
 export function initializeSelectComponent(containerId, config) {
     const container = $(containerId);
     if (!container.length) {
-        return; // Exit if the container doesn't exist
+        return;
     }
 
     const select = $(config.selectors.select, container);
     const options = $(config.selectors.options, container);
     const trigger = $(config.selectors.trigger, container);
     const valueElement = $(config.selectors.valueElement, container);
+    const selectedLabelElement = $(".base-select__selected-label", container);
+    const selectedPleaceHolderElement = $(
+        ".base-select__placeholder",
+        container
+    );
+
     const orderElement = config.selectors.orderElement
         ? $(config.selectors.orderElement, container)
         : null;
 
     // Show dropdown on trigger click
     trigger.on("click", function (e) {
+        console.log("click");
         e.stopPropagation();
         select.show();
     });
@@ -23,11 +30,23 @@ export function initializeSelectComponent(containerId, config) {
     // Handle option selection
     options.each(function () {
         $(this).on("click", function (e) {
+            console.log("click ON OPTIONS");
             e.stopPropagation();
             options.removeClass("is-selected");
             $(this).addClass("is-selected");
 
             const selectedValue = $(this).data("value");
+            console.log(selectedValue);
+            const selectedLabel = $(this).data("label");
+            console.log(selectedLabel);
+            const placeholder = $(this).data("placeholder");
+            // Update the displayed selected value
+            if (selectedLabelElement.length) {
+                console.log(placeholder.concat(selectedLabel));
+                trigger.text(placeholder.concat(selectedLabel));
+                selectedLabelElement.text(selectedLabel + "fff");
+            }
+
             valueElement.data("value", selectedValue);
 
             let selectedOrder = null;

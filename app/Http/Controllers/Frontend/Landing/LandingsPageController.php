@@ -70,6 +70,8 @@ class LandingsPageController extends FrontendController
         $filterOptions = $this->getFilterOptions();
         $sortOptions = $filterOptions['sortOptions'];
         $perPageOptions = $filterOptions['perPageOptions'];
+        $sortOptionsPlaceholder = $filterOptions['sortOptionsPlaceholder'];
+        $perPageOptionsPlaceholder = $filterOptions['perPageOptionsPlaceholder'];
 
         // Find the selected sort option based on current filters
         $selectedSort = collect($sortOptions)->first(function ($option) use ($sortField, $sortDirection) {
@@ -97,6 +99,8 @@ class LandingsPageController extends FrontendController
             // Pass selected options to the view
             'selectedSort' => $selectedSort,
             'selectedPerPage' => $selectedPerPage,
+            'sortOptionsPlaceholder' => $sortOptionsPlaceholder,
+            'perPageOptionsPlaceholder' => $perPageOptionsPlaceholder,
         ]);
     }
 
@@ -193,12 +197,12 @@ class LandingsPageController extends FrontendController
     {
         // Correct sort options for landings
         $sortOptions = [
-            ['value' => 'created_at', 'label' => 'Sort by Date (Newest First)', 'order' => 'desc'],
-            ['value' => 'created_at', 'label' => 'Sort by Date (Oldest First)', 'order' => 'asc'],
-            ['value' => 'status', 'label' => 'Sort by Status (Asc)', 'order' => 'asc'],
-            ['value' => 'status', 'label' => 'Sort by Status (Desc)', 'order' => 'desc'],
-            ['value' => 'url', 'label' => 'Sort by URL (Asc)', 'order' => 'asc'],
-            ['value' => 'url', 'label' => 'Sort by URL (Desc)', 'order' => 'desc'],
+            ['value' => 'created_at', 'label' => 'Date (Newest First)', 'order' => 'desc'],
+            ['value' => 'created_at', 'label' => 'Date (Oldest First)', 'order' => 'asc'],
+            ['value' => 'status', 'label' => 'Status (Asc)', 'order' => 'asc'],
+            ['value' => 'status', 'label' => 'Status (Desc)', 'order' => 'desc'],
+            ['value' => 'url', 'label' => 'URL (Asc)', 'order' => 'asc'],
+            ['value' => 'url', 'label' => 'URL (Desc)', 'order' => 'desc'],
         ];
 
         $perPageOptions = [
@@ -208,9 +212,14 @@ class LandingsPageController extends FrontendController
             ['value' => 96, 'label' => '96', 'order' => ''],
         ];
 
+        $sortOptionsPlaceholder = 'Sort by — ';
+        $perPageOptionsPlaceholder = 'On page — ';
+
         return [
             'sortOptions' => $sortOptions,
-            'perPageOptions' => $perPageOptions
+            'sortOptionsPlaceholder' => $sortOptionsPlaceholder,
+            'perPageOptions' => $perPageOptions,
+            'perPageOptionsPlaceholder' => $perPageOptionsPlaceholder,
         ];
     }
 }

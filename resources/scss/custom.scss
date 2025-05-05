@@ -162,3 +162,13 @@ html {
 .mx-auto {
     margin-right: auto !important;
 }
+
+// Base select
+.base-select__placeholder {
+    color: #666;
+    margin-right: 4px;
+}
+
+.base-select__selected-label {
+    font-weight: 500;
+}
