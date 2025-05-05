@@ -7,6 +7,7 @@ use App\Models\Frontend\Service\Service;
 use App\Models\Frontend\Service\ServiceCategory;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
 
 class ServicesController extends FrontendController
 {
@@ -17,6 +18,8 @@ class ServicesController extends FrontendController
         $locale = app()->getLocale();
         $sortField = $request->input('sortBy', 'transitions');
         $sortOrder = $request->input('sortOrder', 'desc');
+        $selectedCategory = $request->input('category', 'all');
+        $selectedBonuses = $request->input('bonuses', 'all');
 
         // Получаем запрос для закреплённых сервисов
         $pinnedQuery = Service::with('category')
@@ -46,9 +49,25 @@ class ServicesController extends FrontendController
 
         // Фильтр по категории для обоих запросов
         if ($request->filled('category')) {
-            $categoryId = $request->input('category');
-            $pinnedQuery->where('category_id', $categoryId);
-            $unpinnedQuery->where('category_id', $categoryId);
+            $pinnedQuery->where('category_id', $selectedCategory);
+            $unpinnedQuery->where('category_id', $selectedCategory);
+        }
+
+        // Фильтр по бонусам для обоих запросов
+        if ($request->filled('bonuses')) {
+            if ($selectedBonuses === 'with_discount') {
+                $pinnedQuery->where('code', '!=', '');
+                $unpinnedQuery->where('code', '!=', '');
+            } else if ($selectedBonuses === 'without_discount') {
+                $pinnedQuery->where(function ($query) {
+                    $query->where('code', '')
+                        ->orWhereNull('code');
+                });
+                $unpinnedQuery->where(function ($query) {
+                    $query->where('code', '')
+                        ->orWhereNull('code');
+                });
+            }
         }
 
         // Сортировка для не закреплённых сервисов
@@ -161,18 +180,33 @@ class ServicesController extends FrontendController
                     'order' => ''
                 ];
             });
+        $categoriesOptions = $categoriesOptions->merge([
+            ['value' => 'all', 'label' => 'All Categories', 'order' => '']
+        ]);
+
+        // Ensure 'All Categories' is always first
+        $allCategoriesOption = $categoriesOptions->firstWhere('value', 'all');
+        $categoriesOptions = $categoriesOptions->reject(function ($option) {
+            return $option['value'] === 'all';
+        });
+        if ($allCategoriesOption) {
+            $categoriesOptions->prepend($allCategoriesOption);
+        }
 
         $sortOptionsPlaceholder = 'Sort by — ';
         $perPageOptionsPlaceholder = 'On Page — ';
+        $bonusesOptionsPlaceholder = 'Bonuses — ';
+        $categoriesOptionsPlaceholder = 'Category — ';
 
         $selectedSort = collect($sortOptions)->first(function ($option) use ($sortField, $sortOrder) {
             return $option['value'] === $sortField && $option['order'] === $sortOrder;
-        }); // Default to the first option if not found
+        });
 
-        // dd($selectedSort);
+        $selectedBonuses = collect($bonusesOptions)->firstWhere('value', $selectedBonuses) ?? $bonusesOptions[0];
+        $selectedCategory = collect($categoriesOptions)->firstWhere('value', $selectedCategory) ?? $categoriesOptions[0];
 
         $selectedPerPage = collect($perPageOptions)->firstWhere('value', $perPage) ?? $perPageOptions[0];
-        // dd($selectedSort, $selectedPerPage);
+
         return view($this->indexView, [
             'services'   => $paginator,
             'categories' => $categories,
@@ -184,9 +218,13 @@ class ServicesController extends FrontendController
             'selectedSort' => $selectedSort,
             'selectedPerPage' => $selectedPerPage,
             'categoriesOptions' => $categoriesOptions,
+            'selectedCategory' => $selectedCategory,
             'bonusesOptions' => $bonusesOptions,
+            'selectedBonuses' => $selectedBonuses,
             'sortOptionsPlaceholder' => $sortOptionsPlaceholder,
             'perPageOptionsPlaceholder' => $perPageOptionsPlaceholder,
+            'bonusesOptionsPlaceholder' => $bonusesOptionsPlaceholder,
+            'categoriesOptionsPlaceholder' => $categoriesOptionsPlaceholder,
         ]);
     }
 
@@ -201,6 +239,7 @@ class ServicesController extends FrontendController
 
         // Increment views
         $service->increment('views');
+        $userRating = Auth::user()->getRatingForService($service->id);
 
         // Get translations for the current locale
         $translatedService = [
@@ -217,6 +256,7 @@ class ServicesController extends FrontendController
             'redirect_url' => $service->redirect_url,
             'logo' => $service->logo,
             'is_active_code' => $service->is_active_code,
+            'userRating' => $userRating,
         ];
 
 

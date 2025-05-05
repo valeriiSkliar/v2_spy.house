@@ -22,7 +22,7 @@ return new class extends Migration
             $table->integer('transitions')->default(0);
             $table->integer('reviews_count')->default(0);
             $table->float('rating', 2, 1)->default(0);
-            $table->string('code')->unique();
+            $table->string('code')->nullable()->default('');
             $table->json('code_description')->nullable();
             $table->timestamp('code_valid_from')->nullable();
             $table->timestamp('code_valid_until')->nullable();

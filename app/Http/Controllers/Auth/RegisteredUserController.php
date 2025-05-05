@@ -46,7 +46,7 @@ class RegisteredUserController extends Controller
         Auth::login($user);
 
         // Create a basic API token for the user with minimal abilities
-        $token = $user->createToken('basic-access', ['read:profile', 'read:public'])->plainTextToken;
+        $token = $user->createToken('basic-access', ['read:profile', 'read:public', 'read:base-token'])->plainTextToken;
         // Optionally store this token for the user's reference
         session()->flash('api_token', $token);
 

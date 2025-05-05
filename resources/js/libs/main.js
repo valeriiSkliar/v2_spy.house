@@ -158,20 +158,20 @@ document.addEventListener(
             });
 
             //--------Market single------------------------------------
-            if ($(".rate-service__rating").length > 0) {
-                $(".rate-service__rating").starRating({
-                    emptyColor: "#DCEAE4",
-                    strokeColor: "#DCEAE4",
-                    hoverColor: "#3DC98A",
-                    useFullStars: true,
-                    ratedColor: "#3DC98A",
-                    strokeWidth: 0,
-                    starSize: 25,
-                    disableAfterRate: true,
-                    starShape: "rounded",
-                    callback: function (currentRating, $el) {},
-                });
-            }
+            // if ($(".rate-service__rating").length > 0) {
+            //     $(".rate-service__rating").starRating({
+            //         emptyColor: "#DCEAE4",
+            //         strokeColor: "#DCEAE4",
+            //         hoverColor: "#3DC98A",
+            //         useFullStars: true,
+            //         ratedColor: "#3DC98A",
+            //         strokeWidth: 0,
+            //         starSize: 25,
+            //         disableAfterRate: true,
+            //         starShape: "rounded",
+            //         callback: function (currentRating, $el) {},
+            //     });
+            // }
             $("body").on("click", ".js-toggle-txt", function () {
                 $(this).toggleClass("active");
                 $(this)

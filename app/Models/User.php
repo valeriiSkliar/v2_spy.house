@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\Frontend\Rating;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -80,5 +82,17 @@ class User extends Authenticatable
     public function tariffExpiresAt()
     {
         return $this->tariff_expires_at ? $this->tariff_expires_at->format('d.m.Y') : null;
+    }
+
+    public function ratings(): HasMany
+    {
+        return $this->hasMany(Rating::class);
+    }
+
+    public function getRatingForService(int $serviceId): ?int
+    {
+        $rating = $this->ratings()->where('service_id', $serviceId)->first();
+
+        return $rating?->rating;
     }
 }

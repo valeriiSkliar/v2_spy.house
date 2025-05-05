@@ -21,31 +21,20 @@
                     <div class="col-12 col-md-6 col-lg-4 mb-10">
                         <x-common.base-select
                             id="category-filter"
-                            :selected="[
-                                'value' => request('category') ?? '',
-                                'order' => '',
-                                'label' => request('category') ? 'Category — ' . request('category') : 'All Categories'
-                            ]"
-                            :options="$categoriesOptions" />
+                            :selected="$selectedCategory"
+                            :options="$categoriesOptions" 
+                            :placeholder="$categoriesOptionsPlaceholder"
+                        />
 
                     </div>
                     <div class="col-12 col-md-6 col-lg-4 mb-10">
-                        {{-- <div class="base-select">
-                            <div class="base-select__trigger"><span class="base-select__value">All bonuses</span><span class="base-select__arrow"></span></div>
-                            <ul class="base-select__dropdown" style="display: none;">
-                                <li class="base-select__option is-selected">All bonuses</li>
-                                <li class="base-select__option">With discount</li>
-                                <li class="base-select__option">Without discount</li>
-                            </ul>
-                        </div> --}}
+
                         <x-common.base-select
                             id="bonuses-filter"
-                            :selected="[
-                                'value' => request('bonuses') ?? '',
-                                'order' => '',
-                                'label' => request('bonuses') ? 'Bonuses — ' . request('bonuses') : 'All Bonuses'
-                            ]"
-                            :options="$bonusesOptions" />
+                            :selected="$selectedBonuses"
+                            :options="$bonusesOptions"
+                            :placeholder="$bonusesOptionsPlaceholder"
+                        />
                     </div>
                 </div>
             </div>

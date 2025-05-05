@@ -1,8 +1,11 @@
 import { initializeSelectComponent } from "@/helpers";
+import { initializeServiceComponents } from "../components";
 
 document.addEventListener("DOMContentLoaded", function () {
     // --- Initialize Components ---
 
+    // Service Components
+    initializeServiceComponents();
     // Sort By
     initializeSelectComponent("#sort-by", {
         selectors: {

@@ -32,8 +32,8 @@ class ServiceFactory extends Factory
                 'ru' => $this->faker->company(),
             ],
             'description' => [
-                'en' => $this->faker->paragraph(),
-                'ru' => $this->faker->paragraph(),
+                'en' => $this->faker->paragraph(10),
+                'ru' => $this->faker->paragraph(10),
             ],
             'logo' => '/storage/assets/images/services/' . $this->faker->numberBetween(1, 73) . '.jpeg',
             'url' => 'https://example.com/' . Str::slug($this->faker->unique()->words(3, true)),

@@ -22,7 +22,6 @@ export function initializeSelectComponent(containerId, config) {
 
     // Show dropdown on trigger click
     trigger.on("click", function (e) {
-        console.log("click");
         e.stopPropagation();
         select.show();
     });
@@ -30,21 +29,17 @@ export function initializeSelectComponent(containerId, config) {
     // Handle option selection
     options.each(function () {
         $(this).on("click", function (e) {
-            console.log("click ON OPTIONS");
             e.stopPropagation();
             options.removeClass("is-selected");
             $(this).addClass("is-selected");
 
             const selectedValue = $(this).data("value");
-            console.log(selectedValue);
             const selectedLabel = $(this).data("label");
-            console.log(selectedLabel);
             const placeholder = $(this).data("placeholder");
             // Update the displayed selected value
             if (selectedLabelElement.length) {
-                console.log(placeholder.concat(selectedLabel));
                 trigger.text(placeholder.concat(selectedLabel));
-                selectedLabelElement.text(selectedLabel + "fff");
+                selectedLabelElement.text(selectedLabel);
             }
 
             valueElement.data("value", selectedValue);

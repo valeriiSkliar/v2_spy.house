@@ -39,7 +39,7 @@ class AuthenticatedSessionController extends Controller
 
         if (!$basicToken) {
             // Create a basic API token if it doesn't exist
-            $token = $user->createToken('basic-access', ['read:profile', 'read:public'])->plainTextToken;
+            $token = $user->createToken('basic-access', ['read:profile', 'read:public', 'read:base-token'])->plainTextToken;
 
             session()->flash('api_token', $token);
         }
