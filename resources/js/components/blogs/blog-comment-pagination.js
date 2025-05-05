@@ -4,6 +4,10 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function initCommentPagination() {
+    const blogLayout = $(".blog-layout");
+    console.log(blogLayout);
+    if (blogLayout.length < 1) return;
+
     const commentsList = $(".comment-list");
     const paginationLinks = $(".pagination-link");
     const commentsContainer = $("#comments");
