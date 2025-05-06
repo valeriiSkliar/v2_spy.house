@@ -1,6 +1,25 @@
 <?php
 
 return [
+    '2fa' => [
+        'setup_title' => 'Настройка двухфакторной аутентификации',
+        'status_enabled' => 'Двухфакторная аутентификация успешно включена.',
+        'status_disabled' => 'Двухфакторная аутентификация отключена.',
+        'current_status_enabled' => 'У вас включена двухфакторная аутентификация.',
+        'disable_button' => 'Отключить двухфакторную аутентификацию',
+        'setup_instructions_1' => 'Отсканируйте QR-код ниже с помощью приложения Google Authenticator или введите код вручную.',
+        'setup_instructions_2' => 'Если вы не можете отсканировать QR-код, введите этот код вручную:',
+        'otp_label' => 'Введите одноразовый пароль из вашего приложения аутентификации',
+        'enable_button' => 'Включить двухфакторную аутентификацию',
+
+        // Additional keys that might be needed
+        'verification_title' => 'Проверка двухфакторной аутентификации',
+        'verification_instructions' => 'Введите код аутентификации из вашего приложения аутентификации',
+        'verification_button' => 'Проверить',
+        'recovery_codes_title' => 'Коды восстановления двухфакторной аутентификации',
+        'recovery_codes_instructions' => 'Сохраните эти коды восстановления в надежном менеджере паролей. Они могут быть использованы для восстановления доступа к вашей учетной записи, если вы потеряете устройство двухфакторной аутентификации.',
+        'recovery_codes_button' => 'Сгенерировать новые коды восстановления',
+    ],
     'title' => 'Profile Information',
     'description' => 'Update your account\'s profile information and email address.',
     'name_label' => 'Name',
@@ -41,8 +60,9 @@ return [
         'ip_description' => 'Restrict access by IP address or range of IP addresses.',
         'confirmation_methods_title' => 'Confirmation methods',
         'google_2fa_title' => 'Google 2FA',
-        'google_2fa_description' => 'Google two-factor authentication for signing in and confirming payments.',
+        'google_2fa_description' => 'Google two-factor authentication for signing in and confirming actions.',
         'connect_button' => 'Connect',
+        'disconnect_button' => 'Disconnect',
         'pin_code_title' => 'PIN code',
         'pin_code_description' => 'Create your PIN code and use it to confirm transactions or other operations',
     ],

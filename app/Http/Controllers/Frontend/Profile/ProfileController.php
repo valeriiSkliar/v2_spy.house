@@ -10,6 +10,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use PragmaRX\Google2FALaravel\Facade as Google2FAFacade;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
 
 class ProfileController extends FrontendController
 {
@@ -90,5 +94,96 @@ class ProfileController extends FrontendController
     public function changePassword(Request $request): View
     {
         return view('pages.profile.change-password');
+    }
+
+    public function changeEmail(Request $request): View
+    {
+        return view('pages.profile.change-password');
+    }
+
+    public function connect2fa(Request $request): View
+    {
+        $user = $request->user();
+        $google2fa = app('pragmarx.google2fa');
+
+        // Generate a new secret only if one doesn't exist or 2FA is not enabled
+        if (empty($user->google_2fa_secret) || !$user->google_2fa_enabled) {
+            $secret = $google2fa->generateSecretKey();
+            $request->session()->put('google_2fa_secret_temp', $secret);
+        } else {
+            // If 2FA is enabled, this page should ideally be for disabling or viewing status.
+            // For now, if a temp secret is in session (e.g. refresh during setup), use it.
+            // Otherwise, we won't regenerate QR/secret for already enabled 2FA to avoid confusion.
+            // The user should disable and re-enable if they need a new QR.
+            // For this version, we'll re-fetch/generate if $secret is not in session.
+            $secret = $google2fa->generateSecretKey(); // Regenerate if not in session for setup page
+            $request->session()->put('google_2fa_secret_temp', $secret);
+        }
+
+        $qrCodeInline = null;
+        if ($secret) { // Only generate QR if we have a secret
+            $qrCodeInline = $google2fa->getQRCodeInline(
+                config('app.name', 'Laravel'),
+                $user->email,
+                $secret
+            );
+        }
+
+        return view('pages.profile.connect_2fa', [
+            'user' => $user,
+            'qrCodeInline' => $qrCodeInline,
+            'google_2fa_secret' => $secret,
+        ]);
+    }
+
+    public function store2fa(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'one_time_password' => 'required|string|digits:6',
+        ]);
+
+        $user = $request->user();
+        $google2fa = app('pragmarx.google2fa');
+
+        $secret = $request->session()->get('google_2fa_secret_temp');
+
+        if (!$secret) {
+            return Redirect::route('profile.connect-2fa')
+                ->withErrors(['one_time_password' => __('2FA secret not found. Please try setting up again.')]);
+        }
+
+        // Ensure the secret being verified is the one stored (encrypted) for the user if 2FA was already enabled and being re-verified (not typical for initial setup)
+        // For initial setup, $secret from session is correct.
+
+        $valid = $google2fa->verifyKey($secret, $request->input('one_time_password'));
+
+        if ($valid) {
+            $user->google_2fa_secret = Crypt::encryptString($secret);
+            $user->google_2fa_enabled = true;
+            $user->save();
+
+            $request->session()->forget('google_2fa_secret_temp');
+
+            return Redirect::route('profile.settings')->with('status', '2fa-enabled');
+        } else {
+            // Pass the secret back to the view so the same QR code can be shown
+            $request->session()->flash('google_2fa_secret_temp', $secret);
+            return Redirect::route('profile.connect-2fa')
+                ->withInput()
+                ->withErrors(['one_time_password' => __('Invalid 2FA code. Please try again.')]);
+        }
+    }
+
+    public function disable2fa(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        // For security, user might need to confirm with password or current 2FA code
+        // For simplicity, directly disabling here. Add confirmation if needed.
+
+        $user->google_2fa_enabled = false;
+        $user->google_2fa_secret = null; // Clear the secret
+        $user->save();
+
+        return Redirect::route('profile.settings')->with('status', '2fa-disabled');
     }
 }

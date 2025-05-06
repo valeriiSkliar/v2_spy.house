@@ -19,4 +19,5 @@ Route::middleware(['web', 'auth', 'auth:sanctum'])->group(function () {
     Route::get('/profile/connect-pin', [ProfileController::class, 'connectPin'])->name('profile.connect-pin');
     Route::post('/profile/connect-pin', [ProfileController::class, 'storePin'])->name('profile.store-pin');
     Route::put('/profile/update-notifications', [ProfileController::class, 'updateNotifications'])->name('profile.update-notifications');
+    Route::post('/profile/2fa/disable', [ProfileController::class, 'disable2fa'])->name('profile.disable-2fa');
 });

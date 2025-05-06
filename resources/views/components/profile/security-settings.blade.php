@@ -8,6 +8,15 @@
     </div>
     <h2 class="mb-30">{{ __('profile.security_settings.confirmation_methods_title') }}</h2>
     <div class="row _offset30">
-        <x-profile.confirmation-method route="{{ route('profile.connect-2fa') }}" icon="/img/google-authenticator.svg" width="42" height="42" :title="__('profile.security_settings.google_2fa_title')" :description="__('profile.security_settings.google_2fa_description')" />
+        <x-profile.confirmation-method 
+                :isEnabled="auth()->user()->google_2fa_enabled"
+                routeEnable="{{ route('profile.connect-2fa') }}" 
+                routeDisable="{{ route('profile.disable-2fa') }}"
+                icon="/img/google-authenticator.svg" 
+                width="42" 
+                height="42" 
+                :title="__('profile.security_settings.google_2fa_title')" 
+                :description="__('profile.security_settings.google_2fa_description')"
+            />
     </div>
 </div>

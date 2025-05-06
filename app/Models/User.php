@@ -25,6 +25,15 @@ class User extends Authenticatable
         'email',
         'password',
         'notification_settings',
+        'preferred_locale',
+        'phone_country_code',
+        'phone',
+        'telegram',
+        'scope_of_activity',
+        'personal_greeting',
+        'ip_restrictions',
+        'google_2fa_enabled',
+        'google_2fa_secret',
     ];
 
     /**
@@ -49,6 +58,8 @@ class User extends Authenticatable
             'tariff_expires_at' => 'datetime',
             'password' => 'hashed',
             'notification_settings' => 'array',
+            'ip_restrictions' => 'array',
+            'google_2fa_enabled' => 'boolean',
         ];
     }
 
@@ -94,5 +105,37 @@ class User extends Authenticatable
         $rating = $this->ratings()->where('service_id', $serviceId)->first();
 
         return $rating?->rating;
+    }
+
+    public function getFullPhoneNumber(): ?string
+    {
+        if ($this->phone_country_code && $this->phone) {
+            return '+' . $this->phone_country_code . $this->phone;
+        }
+        return null;
+    }
+
+    public function isTwoFactorEnabled(): bool
+    {
+        return (bool) $this->google_2fa_enabled;
+    }
+
+    public function validateIpRestriction(string $ip): bool
+    {
+        if (empty($this->ip_restrictions)) {
+            return true; // No restrictions means IP is allowed
+        }
+        return in_array($ip, $this->ip_restrictions);
+    }
+
+    public function setPersonalGreeting(string $greeting): void
+    {
+        $this->personal_greeting = $greeting;
+        $this->save();
+    }
+
+    public function getPersonalGreeting(): ?string
+    {
+        return $this->personal_greeting;
     }
 }

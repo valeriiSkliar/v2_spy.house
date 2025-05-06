@@ -10,11 +10,13 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "chillerlan/php-qrcode": "*",
         "kalnoy/nestedset": "^6.0",
         "laravel/framework": "^12.0",
         "laravel/horizon": "^5.31",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
+        "pragmarx/google2fa-laravel": "^2.3",
         "predis/predis": "^2.3",
         "spatie/laravel-translatable": "^6.11",
         "vladimir-yuldashev/laravel-queue-rabbitmq": "^14.2",
