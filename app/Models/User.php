@@ -22,6 +22,11 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'login',
+        'surname',
+        'date_of_birth',
+        'experience',
+        'scope',
         'email',
         'password',
         'notification_settings',
@@ -29,6 +34,8 @@ class User extends Authenticatable
         'phone_country_code',
         'phone',
         'telegram',
+        'viber_phone',
+        'whatsapp_phone',
         'scope_of_activity',
         'personal_greeting',
         'ip_restrictions',

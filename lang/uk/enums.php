@@ -9,7 +9,7 @@ return [
         'PROFESSIONAL' => 'Професіонал',
     ],
     'UserScopeOfActivity' => [
-        'GAMBLING' => 'Грін',
+        'GAMBLING' => 'Гамблінг',
         'BETTING' => 'Беттинг',
         'CRYPTO' => 'Крипто',
         'NUTRA' => 'Нутра',
@@ -20,7 +20,7 @@ return [
         'ADULT' => 'Доросла',
         'MOBILE_SUBSCRIPTIONS' => 'Мобільні підписки',
         'APPS_UTILITIES' => 'Додатки / Утиліти',
-        'GAMING' => 'Грін',
+        'GAMING' => 'Ігри',
         'LOANS_MICROFINANCE' => 'Кредити / Мікрофінансування',
         'INSURANCE' => 'Страхування',
         'ANTIVIRUSES_CLEANERS' => 'Антивіруси / Очисники',
