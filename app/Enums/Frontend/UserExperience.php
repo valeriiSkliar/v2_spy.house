@@ -45,4 +45,16 @@ enum UserExperience: string
     {
         return __('enums.UserExperience.' . $this->name);
     }
+
+    /**
+     * Get all enum cases with their translated labels for a select list.
+     *
+     * @return array<string, string>
+     */
+    public static function getTranslatedList(): array
+    {
+        return collect(self::cases())
+            ->mapWithKeys(fn(self $case) => [$case->value => $case->translatedLabel()])
+            ->all();
+    }
 }

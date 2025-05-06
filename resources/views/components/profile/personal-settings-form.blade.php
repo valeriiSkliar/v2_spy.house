@@ -1,4 +1,4 @@
-@props(['user', 'api_token', 'scopes'])
+@props(['user', 'api_token', 'scopes', 'experiences'])
 <form action="{{ route('profile.update-settings') }}" method="POST" enctype="multipart/form-data" class="pt-3">
     @csrf
     @method('PUT')
@@ -9,7 +9,13 @@
             <x-profile.form-field name="login" type="text" :label="__('profile.personal_info.login_label')" :value="$user->login ?? ''" />
         </div>
         <div class="col-12 col-md-6 col-lg-4">
-            <x-profile.form-field name="email" type="email" :label="__('profile.personal_info.email_label')" :value="$user->email" />
+            <x-profile.form-field name="name" type="text" :label="__('profile.personal_info.first_name_label')" :value="$user->name" />
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+            <x-profile.form-field name="surname" type="text" :label="__('profile.personal_info.last_name_label')" :value="$user->surname" />
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+            <x-profile.form-field name="date_of_birth" type="date" :label="__('profile.personal_info.birth_date_label')" :value="$user->date_of_birth" />
         </div>
         <div class="col-12 col-md-6 col-lg-4">
             <x-profile.password-field />
@@ -21,7 +27,10 @@
             <x-profile.form-field name="telegram" type="text" :label="__('profile.personal_info.telegram_label')" :value="$user->telegram ?? ''" />
         </div>
         <div class="col-12 col-md-6 col-lg-4">
-            <x-profile.select-field name="scope" :label="__('profile.personal_info.scope_label')" :value="$user->scope ?? 'Arbitrage (solo)'" :options="$scopes" />
+            <x-profile.select-field name="experience" :label="__('profile.personal_info.experience_label')" :value="$user->experience ?? \App\Enums\Frontend\UserExperience::BEGINNER->translatedLabel()" :options="$experiences" />
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+            <x-profile.select-field name="scope" :label="__('profile.personal_info.scope_label')" :value="$user->scope ?? \App\Enums\Frontend\UserScopeOfActivity::GAMBLING->translatedLabel()" :options="$scopes" />
         </div>
     </div>
     <x-profile.success-message status="profile-updated" :message="__('profile.personal_info.update_success')" />

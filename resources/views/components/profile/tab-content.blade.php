@@ -1,7 +1,7 @@
-@props(['user', 'api_token', 'scopes'])
+@props(['user', 'api_token', 'scopes', 'experiences'])
 <div class="tubs-content">
     <div class="tubs-content__item active" data-tub="personal" data-group="profile">
-        <x-profile.personal-settings-form :user="$user" :api_token="$api_token" :scopes="$scopes" />
+        <x-profile.personal-settings-form :user="$user" :api_token="$api_token" :scopes="$scopes" :experiences="$experiences" />
     </div>
     <div class="tubs-content__item" data-tub="security" data-group="profile">
         <x-profile.security-settings />

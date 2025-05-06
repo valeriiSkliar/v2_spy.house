@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Frontend\Profile;
 
+use App\Enums\Frontend\UserExperience;
+use App\Enums\Frontend\UserScopeOfActivity;
 use App\Http\Controllers\FrontendController;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Services\Api\TokenService;
@@ -67,18 +69,9 @@ class ProfileController extends FrontendController
 
     public function settings(Request $request): View
     {
-
-        // Get user scopes of activity (for dropdown)
-        $scopes = [
-            'Arbitrage (solo)',
-            'Arbitrage (team)',
-            'Affiliate marketing',
-            'Media buying',
-            'SEO',
-            'Content marketing',
-            'Other'
-        ];
         $user = $request->user();
+        $experiences = UserExperience::getTranslatedList();
+        $scopes = UserScopeOfActivity::getTranslatedList();
 
         // Get user's tokens
         $tokens = app(TokenService::class)->getUserTokens($user);
@@ -87,7 +80,7 @@ class ProfileController extends FrontendController
             'scopes' => $scopes,
             'tokens' => $tokens,
             'api_token' => session('api_token'),
-
+            'experiences' => $experiences,
         ]);
     }
 
