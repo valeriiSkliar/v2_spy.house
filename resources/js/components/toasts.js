@@ -1,8 +1,6 @@
 import { Toast } from "bootstrap";
 
 document.addEventListener("DOMContentLoaded", function () {
-    console.log("Initializing toasts..."); // Log for debugging
-
     document.querySelectorAll(".toast").forEach((toastEl) => {
         try {
             console.log("Initializing toast:", toastEl);

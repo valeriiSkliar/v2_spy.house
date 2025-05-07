@@ -41,6 +41,8 @@ class User extends Authenticatable
         'ip_restrictions',
         'google_2fa_enabled',
         'google_2fa_secret',
+        'user_avatar',
+        'user_avatar_metadata',
     ];
 
     /**
@@ -67,6 +69,7 @@ class User extends Authenticatable
             'notification_settings' => 'array',
             'ip_restrictions' => 'array',
             'google_2fa_enabled' => 'boolean',
+            'user_avatar_metadata' => 'array',
         ];
     }
 

@@ -33,6 +33,7 @@ return new class extends Migration
             $table->text('google_2fa_secret')->nullable()->comment('2FA secret key');
             $table->date('date_of_birth')->nullable()->comment('User\'s date of birth');
             $table->string('user_avatar', 255)->nullable()->comment('User\'s avatar');
+            $table->json('user_avatar_metadata')->nullable()->comment('User avatar metadata (size, file_type, proportions)');
             $table->rememberToken();
             $table->timestamps();
         });

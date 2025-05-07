@@ -5,7 +5,8 @@ namespace App\Http\Controllers\Frontend\Profile;
 use App\Enums\Frontend\UserExperience;
 use App\Enums\Frontend\UserScopeOfActivity;
 use App\Http\Controllers\FrontendController;
-use App\Http\Requests\ProfileUpdateRequest;
+use App\Http\Requests\Profile\ProfileUpdateRequest;
+use App\Http\Requests\Profile\ProfileSettingsUpdateRequest;
 use App\Services\Api\TokenService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,6 +17,7 @@ use PragmaRX\Google2FALaravel\Facade as Google2FAFacade;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Log;
+use App\Services\App\ImageService;
 
 class ProfileController extends FrontendController
 {
@@ -44,6 +46,70 @@ class ProfileController extends FrontendController
         $request->user()->save();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
+    }
+
+    /**
+     * Update the user's profile settings information.
+     */
+    public function updateSettings(ProfileSettingsUpdateRequest $request): RedirectResponse
+    {
+        $user = $request->user();
+        $validatedData = $request->validated();
+
+        $settingsData = [];
+        if (isset($validatedData['login'])) {
+            $settingsData['login'] = $validatedData['login'];
+        }
+        if (isset($validatedData['name'])) {
+            $settingsData['name'] = $validatedData['name'];
+        }
+        if (isset($validatedData['surname'])) {
+            $settingsData['surname'] = $validatedData['surname'];
+        }
+        if (isset($validatedData['date_of_birth'])) {
+            $settingsData['date_of_birth'] = $validatedData['date_of_birth'];
+        }
+        if (isset($validatedData['experience'])) {
+            $settingsData['experience'] = $validatedData['experience'];
+        }
+        if (isset($validatedData['scope_of_activity'])) {
+            $settingsData['scope_of_activity'] = $validatedData['scope_of_activity'];
+        }
+        if (isset($validatedData['user_avatar'])) {
+            $imageService = app(ImageService::class);
+            $avatarPath = $imageService->replace(
+                $validatedData['user_avatar'],
+                $user->user_avatar,
+                'avatars'
+            );
+
+            $image = getimagesize($validatedData['user_avatar']);
+            $settingsData['user_avatar_metadata'] = [
+                'size' => round($validatedData['user_avatar']->getSize() / 1024),
+                'name' => $validatedData['user_avatar']->getClientOriginalName(),
+                'file_type' => $validatedData['user_avatar']->getClientMimeType(),
+                'dimensions' => [
+                    'width' => $image[0] ?? 0,
+                    'height' => $image[1] ?? 0
+                ],
+                'proportions' => $image[0] && $image[1] ? round($image[0] / $image[1], 2) : 0
+            ];
+
+            Log::info('Avatar upload', [
+                'old_path' => $user->user_avatar,
+                'new_path' => $avatarPath,
+                'metadata' => $settingsData['user_avatar_metadata']
+            ]);
+
+            $settingsData['user_avatar'] = $avatarPath;
+        }
+
+        Log::info('Settings data before save', $settingsData);
+        $user->fill($settingsData);
+        $user->save();
+        Log::info('User after save', ['user_avatar' => $user->user_avatar]);
+
+        return Redirect::route('profile.settings')->with('status', 'settings-updated');
     }
 
     /**
