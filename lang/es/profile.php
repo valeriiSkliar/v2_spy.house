@@ -53,4 +53,7 @@ return [
         'bonus_offers_label' => 'Ofertas de bonificación',
         'update_success' => 'Configuración de notificaciones actualizada correctamente.',
     ],
+    'personal_greeting_page_title' => 'Agregar saludo personal',
+    'personal_greeting_label' => 'Texto del saludo',
+    'personal_greeting_update_success' => '¡El saludo personal se ha guardado correctamente!',
 ];

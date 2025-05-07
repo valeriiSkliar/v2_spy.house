@@ -53,4 +53,7 @@ return [
         'bonus_offers_label' => 'Бонусні пропозиції',
         'update_success' => 'Налаштування сповіщень успішно оновлено.',
     ],
+    'personal_greeting_page_title' => 'Додати особисте привітання',
+    'personal_greeting_label' => 'Текст привітання',
+    'personal_greeting_update_success' => 'Особисте привітання успішно збережено!',
 ];

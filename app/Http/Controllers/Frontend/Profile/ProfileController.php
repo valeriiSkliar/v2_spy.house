@@ -249,4 +249,23 @@ class ProfileController extends FrontendController
 
         return Redirect::route('profile.settings')->with('status', '2fa-disabled');
     }
+
+    public function personalGreeting(Request $request): View
+    {
+        $user = $request->user();
+        return view('pages.profile.personal-greeting', [
+            'user' => $user,
+        ]);
+    }
+
+    public function updatePersonalGreeting(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'personal_greeting' => 'nullable|string|max:255',
+        ]);
+        $user = $request->user();
+        $user->personal_greeting = $request->input('personal_greeting');
+        $user->save();
+        return Redirect::route('profile.personal-greeting')->with('status', 'personal-greeting-updated');
+    }
 }
