@@ -268,4 +268,27 @@ class ProfileController extends FrontendController
         $user->save();
         return Redirect::route('profile.personal-greeting')->with('status', 'personal-greeting-updated');
     }
+
+    public function ipRestriction(Request $request): View
+    {
+        $user = $request->user();
+        return view('pages.profile.ip-restriction', [
+            'user' => $user,
+            'ip_restrictions' => $user->ip_restrictions ?? [],
+        ]);
+    }
+
+    public function updateIpRestriction(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'ip_restrictions' => ['nullable', 'string'],
+            'password' => ['required', 'current_password'],
+        ]);
+        $user = $request->user();
+        $ipList = array_filter(array_map('trim', explode("\n", $request->input('ip_restrictions', ''))));
+        // Можно добавить дополнительную валидацию IP-адресов/диапазонов при необходимости
+        $user->ip_restrictions = $ipList;
+        $user->save();
+        return Redirect::route('profile.ip-restriction')->with('status', 'ip-restriction-updated');
+    }
 }

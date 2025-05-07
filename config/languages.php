@@ -13,8 +13,4 @@ return [
         'display' => 'Esp',
         'flag' => 'ES',
     ],
-    'ru' => [
-        'display' => 'Ru',
-        'flag' => 'RU',
-    ],
 ];

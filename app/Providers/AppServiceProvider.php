@@ -20,6 +20,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Переопределяем путь к языковым файлам
+        // $this->loadTranslationsFrom(base_path('lang'), app()->getLocale());
+
         Paginator::defaultView('common.pagination.spy-pagination-default');
 
         Paginator::defaultSimpleView('common.pagination.spy-pagination-default');

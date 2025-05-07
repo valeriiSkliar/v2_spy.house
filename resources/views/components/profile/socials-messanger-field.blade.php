@@ -87,6 +87,8 @@
     @enderror
 </div>
 
+{{-- TODO: move js to js file according to the best practices and project structure --}}
+
 <script type="module">
 // Определение констант для элементов
 const $telegramInput = $('input[name="telegram"]');
