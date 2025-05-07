@@ -39,7 +39,7 @@
             />
         </div>
         <div class="col-12 col-md-6 col-lg-4">
-            <x-profile.form-field 
+            <x-profile.date-picker-form-field 
                 name="date_of_birth" 
                 type="date" 
                 :label="__('profile.personal_info.birth_date_label')" 
