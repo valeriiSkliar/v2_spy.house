@@ -226,42 +226,42 @@ document.addEventListener(
             });
 
             //--------Select from DEV------------------------------------
-            $(".base-select, .date-picker-container, .multi-select").click(
-                function () {
-                    let current = $(this);
-                    if (
-                        !current
-                            .find(
-                                ".base-select__trigger, .date-select-field, .multi-select__tags"
-                            )
-                            .hasClass("is-open")
-                    ) {
-                        $(
-                            ".base-select__trigger, .base-select__arrow, .date-select-field, .multi-select__tags, .multi-select__arrow"
-                        ).removeClass("is-open");
-                        $(
-                            ".base-select__dropdown, .date-options-dropdown, .multi-select__dropdown"
-                        ).slideUp(200);
-                        current
-                            .find(
-                                ".base-select__trigger, .base-select__arrow, .date-select-field, .multi-select__tags, .multi-select__arrow"
-                            )
-                            .addClass("is-open");
-                        current
-                            .find(
-                                ".base-select__dropdown, .date-options-dropdown, .multi-select__dropdown"
-                            )
-                            .slideDown(200);
-                    } else {
-                        $(
-                            ".base-select__trigger, .base-select__arrow, .date-select-field, .multi-select__tags, .multi-select__arrow"
-                        ).removeClass("is-open");
-                        $(
-                            ".base-select__dropdown, .date-options-dropdown, .multi-select__dropdown"
-                        ).slideUp(200);
-                    }
-                }
-            );
+            // $(".base-select, .date-picker-container, .multi-select").click(
+            //     function () {
+            //         let current = $(this);
+            //         if (
+            //             !current
+            //                 .find(
+            //                     ".base-select__trigger, .date-select-field, .multi-select__tags"
+            //                 )
+            //                 .hasClass("is-open")
+            //         ) {
+            //             $(
+            //                 ".base-select__trigger, .base-select__arrow, .date-select-field, .multi-select__tags, .multi-select__arrow"
+            //             ).removeClass("is-open");
+            //             $(
+            //                 ".base-select__dropdown, .date-options-dropdown, .multi-select__dropdown"
+            //             ).slideUp(200);
+            //             current
+            //                 .find(
+            //                     ".base-select__trigger, .base-select__arrow, .date-select-field, .multi-select__tags, .multi-select__arrow"
+            //                 )
+            //                 .addClass("is-open");
+            //             current
+            //                 .find(
+            //                     ".base-select__dropdown, .date-options-dropdown, .multi-select__dropdown"
+            //                 )
+            //                 .slideDown(200);
+            //         } else {
+            //             $(
+            //                 ".base-select__trigger, .base-select__arrow, .date-select-field, .multi-select__tags, .multi-select__arrow"
+            //             ).removeClass("is-open");
+            //             $(
+            //                 ".base-select__dropdown, .date-options-dropdown, .multi-select__dropdown"
+            //             ).slideUp(200);
+            //         }
+            //     }
+            // );
             $(document).on("click", function (e) {
                 let el = ".base-select, .date-picker-container, .multi-select";
                 if ($(e.target).closest(el).length) return;

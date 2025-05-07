@@ -55,7 +55,6 @@ class ProfileController extends FrontendController
     {
         $user = $request->user();
         $validatedData = $request->validated();
-
         $settingsData = [];
         if (isset($validatedData['login'])) {
             $settingsData['login'] = $validatedData['login'];
@@ -75,6 +74,19 @@ class ProfileController extends FrontendController
         if (isset($validatedData['scope_of_activity'])) {
             $settingsData['scope_of_activity'] = $validatedData['scope_of_activity'];
         }
+        if (isset($validatedData['messengers'])) {
+            $settingsData['messengers'] = $validatedData['messengers'];
+        }
+        if (isset($validatedData['whatsapp_phone'])) {
+            $settingsData['whatsapp_phone'] = $validatedData['whatsapp_phone'] ?? null;
+        }
+        if (isset($validatedData['viber_phone'])) {
+            $settingsData['viber_phone'] = $validatedData['viber_phone'] ?? null;
+        }
+        if (isset($validatedData['telegram'])) {
+            $settingsData['telegram'] = $validatedData['telegram'] ?? null;
+        }
+
         if (isset($validatedData['user_avatar'])) {
             $imageService = app(ImageService::class);
             $avatarPath = $imageService->replace(
@@ -95,19 +107,11 @@ class ProfileController extends FrontendController
                 'proportions' => $image[0] && $image[1] ? round($image[0] / $image[1], 2) : 0
             ];
 
-            Log::info('Avatar upload', [
-                'old_path' => $user->user_avatar,
-                'new_path' => $avatarPath,
-                'metadata' => $settingsData['user_avatar_metadata']
-            ]);
-
             $settingsData['user_avatar'] = $avatarPath;
         }
 
-        Log::info('Settings data before save', $settingsData);
         $user->fill($settingsData);
         $user->save();
-        Log::info('User after save', ['user_avatar' => $user->user_avatar]);
 
         return Redirect::route('profile.settings')->with('status', 'settings-updated');
     }
