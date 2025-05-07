@@ -56,4 +56,12 @@ return [
     'personal_greeting_page_title' => 'Додати особисте привітання',
     'personal_greeting_label' => 'Текст привітання',
     'personal_greeting_update_success' => 'Особисте привітання успішно збережено!',
+    'ip_restriction' => [
+        'page_title' => 'Налаштування IP-обмежень',
+        'info' => 'Введіть IP-адреси або діапазони, яким дозволено доступ до вашого облікового запису. Кожна IP-адреса повинна бути на новому рядку.',
+        'allowed_ip_addresses_label' => 'Дозволені IP-адреси',
+        'allowed_ip_addresses_placeholder' => 'Введіть IP-адреси (по одній на рядок)',
+        'your_password_label' => 'Ваш пароль',
+        'update_success' => 'Налаштування IP-обмежень успішно оновлено.',
+    ],
 ];

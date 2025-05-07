@@ -56,4 +56,12 @@ return [
     'personal_greeting_page_title' => 'Agregar saludo personal',
     'personal_greeting_label' => 'Texto del saludo',
     'personal_greeting_update_success' => '¡El saludo personal se ha guardado correctamente!',
+    'ip_restriction' => [
+        'page_title' => 'Configuración de restricción IP',
+        'info' => 'Ingrese las direcciones IP o rangos que tienen permitido acceder a su cuenta. Cada dirección IP debe estar en una nueva línea.',
+        'allowed_ip_addresses_label' => 'Direcciones IP permitidas',
+        'allowed_ip_addresses_placeholder' => 'Ingrese direcciones IP (una por línea)',
+        'your_password_label' => 'Su contraseña',
+        'update_success' => 'La configuración de restricción IP se ha actualizado correctamente.',
+    ],
 ];

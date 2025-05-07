@@ -11,7 +11,7 @@
             </x-profile.info-message>
             <div class="mb-20">
                 <label class="d-block mb-10">{{ __('profile.ip_restriction.allowed_ip_addresses_label') }}</label>
-                <textarea name="ip_restrictions" class="input-h-57" rows="5" placeholder="{{ __('profile.ip_restriction.allowed_ip_addresses_placeholder') }}">{{ old('ip_restrictions', is_array($ip_restrictions) ? implode("\n", $ip_restrictions) : '') }}</textarea>
+                <textarea name="ip_restrictions" class="input-h-57" rows="5" placeholder="{{ __('profile.ip_restriction.allowed_ip_addresses_placeholder') }}"></textarea>
                 @error('ip_restrictions')
                     <span class="text-danger">{{ $message }}</span>
                 @enderror

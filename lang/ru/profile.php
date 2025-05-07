@@ -79,4 +79,12 @@ return [
     'personal_greeting_page_title' => 'Добавить персональное приветствие',
     'personal_greeting_label' => 'Текст приветствия',
     'personal_greeting_update_success' => 'Персональное приветствие успешно сохранено!',
+    'ip_restriction' => [
+        'page_title' => 'Настройки IP-ограничений',
+        'info' => 'Введите IP-адреса или диапазоны, которым разрешен доступ к вашему аккаунту. Каждый IP-адрес должен быть на новой строке.',
+        'allowed_ip_addresses_label' => 'Разрешенные IP-адреса',
+        'allowed_ip_addresses_placeholder' => 'Введите IP-адреса (по одному на строку)',
+        'your_password_label' => 'Ваш пароль',
+        'update_success' => 'Настройки IP-ограничений успешно обновлены.',
+    ],
 ];

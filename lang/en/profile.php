@@ -82,4 +82,12 @@ return [
     'personal_greeting_page_title' => 'Add Personal Greeting',
     'personal_greeting_label' => 'Greeting Text',
     'personal_greeting_update_success' => 'Personal greeting saved successfully!',
+    'ip_restriction' => [
+        'page_title' => 'IP Restriction Settings',
+        'info' => 'Enter the IP addresses or ranges that are allowed to access your account. Each IP address should be on a new line.',
+        'allowed_ip_addresses_label' => 'Allowed IP Addresses',
+        'allowed_ip_addresses_placeholder' => 'Enter IP addresses (one per line)',
+        'your_password_label' => 'Your Password',
+        'update_success' => 'IP restriction settings have been updated successfully.',
+    ],
 ];

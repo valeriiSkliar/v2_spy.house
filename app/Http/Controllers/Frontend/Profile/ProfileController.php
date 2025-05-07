@@ -284,11 +284,43 @@ class ProfileController extends FrontendController
             'ip_restrictions' => ['nullable', 'string'],
             'password' => ['required', 'current_password'],
         ]);
+
         $user = $request->user();
-        $ipList = array_filter(array_map('trim', explode("\n", $request->input('ip_restrictions', ''))));
-        // Можно добавить дополнительную валидацию IP-адресов/диапазонов при необходимости
-        $user->ip_restrictions = $ipList;
+
+        // Получаем текущий список IP
+        $currentIps = $user->ip_restrictions ?? [];
+
+        // Получаем новые IP из формы
+        $newIps = array_filter(array_map('trim', explode("\n", $request->input('ip_restrictions', ''))));
+
+        // Валидация каждого IP
+        foreach ($newIps as $ip) {
+            if (!filter_var($ip, FILTER_VALIDATE_IP) && !$this->isValidIpRange($ip)) {
+                return back()->withErrors(['ip_restrictions' => __('validation.ip', ['attribute' => 'IP address'])]);
+            }
+        }
+
+        // Объединяем и удаляем дубликаты
+        $user->ip_restrictions = array_unique(array_merge($currentIps, $newIps));
         $user->save();
+
         return Redirect::route('profile.ip-restriction')->with('status', 'ip-restriction-updated');
+    }
+
+    private function isValidIpRange(string $ip): bool
+    {
+        // Проверка на CIDR формат (например, 192.168.1.0/24)
+        if (preg_match('/^(\d{1,3}\.){3}\d{1,3}\/\d{1,2}$/', $ip)) {
+            list($ip, $mask) = explode('/', $ip);
+            return filter_var($ip, FILTER_VALIDATE_IP) && $mask >= 0 && $mask <= 32;
+        }
+
+        // Проверка на диапазон (например, 192.168.1.1-192.168.1.255)
+        if (preg_match('/^(\d{1,3}\.){3}\d{1,3}-(\d{1,3}\.){3}\d{1,3}$/', $ip)) {
+            list($start, $end) = explode('-', $ip);
+            return filter_var($start, FILTER_VALIDATE_IP) && filter_var($end, FILTER_VALIDATE_IP);
+        }
+
+        return false;
     }
 }
