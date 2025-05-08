@@ -7,6 +7,7 @@ use App\Enums\Frontend\UserScopeOfActivity;
 use App\Http\Controllers\FrontendController;
 use App\Http\Requests\Profile\ProfileUpdateRequest;
 use App\Http\Requests\Profile\ProfileSettingsUpdateRequest;
+use App\Http\Requests\Profile\UpdateEmailRequest;
 use App\Services\Api\TokenService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,6 +19,10 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Log;
 use App\Services\App\ImageService;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Mail;
+use App\Notifications\Profile\EmailUpdateConfirmationNotification;
+use App\Notifications\Profile\EmailUpdatedNotification;
 
 class ProfileController extends FrontendController
 {
@@ -165,9 +170,94 @@ class ProfileController extends FrontendController
     public function changeEmail(Request $request): View
     {
         $user = $request->user();
+        $pendingUpdate = Cache::get('email_update_code:' . $user->id);
+
         return view('pages.profile.change-email', [
             'user' => $user,
+            'emailUpdatePending' => $pendingUpdate ? true : false,
+            'confirmationMethod' => $pendingUpdate['method'] ?? null
         ]);
+    }
+
+    public function initiateEmailUpdate(UpdateEmailRequest $request): RedirectResponse
+    {
+        // $request->validate([
+        //     'new_email' => 'required|email|unique:users,email',
+        //     'password' => 'required|current_password',
+        //     'confirmation_method' => 'required|in:2fa,email'
+        // ]);
+        $request->validated();
+
+        $user = $request->user();
+        $newEmail = $request->input('new_email');
+        $method = $request->input('confirmation_method');
+
+        if ($method === '2fa' && !$user->google_2fa_enabled) {
+            return back()->withErrors(['confirmation_method' => __('profile.2fa.not_enabled')]);
+        }
+
+        if ($method === '2fa') {
+            Cache::put('email_update_code:' . $user->id, [
+                'new_email' => $newEmail,
+                'method' => '2fa',
+                'expires_at' => now()->addMinutes(15)
+            ], now()->addMinutes(15));
+
+            return redirect()->route('profile.change-email')
+                ->with('status', '2fa-required');
+        }
+
+        $verificationCode = random_int(100000, 999999);
+        Cache::put('email_update_code:' . $user->id, [
+            'new_email' => $newEmail,
+            'code' => $verificationCode,
+            'method' => 'email',
+            'expires_at' => now()->addMinutes(15)
+        ], now()->addMinutes(15));
+
+        Mail::to($newEmail)->send(new EmailUpdateConfirmationNotification($verificationCode));
+
+        return redirect()->route('profile.change-email')
+            ->with('status', 'email-code-sent');
+    }
+
+    public function confirmEmailUpdate(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'verification_code' => 'required|string'
+        ]);
+
+        $user = $request->user();
+        $pendingUpdate = Cache::get('email_update_code:' . $user->id);
+
+        if (!$pendingUpdate) {
+            return back()->withErrors(['verification_code' => __('profile.update_request_expired')]);
+        }
+
+        $isValid = false;
+        if ($pendingUpdate['method'] === '2fa') {
+            $secret = Crypt::decryptString($user->google_2fa_secret);
+            $isValid = Google2FAFacade::verifyKey($secret, $request->input('verification_code'));
+        } else {
+            $isValid = $request->input('verification_code') === $pendingUpdate['code'];
+        }
+
+        if (!$isValid) {
+            return back()->withErrors(['verification_code' => __('profile.invalid_verification_code')]);
+        }
+
+        $oldEmail = $user->email;
+        $user->email = $pendingUpdate['new_email'];
+        $user->email_verified_at = null;
+        $user->save();
+
+        Cache::forget('email_update_code:' . $user->id);
+
+        Mail::to($oldEmail)->send(new EmailUpdatedNotification($oldEmail, $pendingUpdate['new_email']));
+        Mail::to($pendingUpdate['new_email'])->send(new EmailUpdatedNotification($oldEmail, $pendingUpdate['new_email']));
+
+        return redirect()->route('profile.settings')
+            ->with('status', 'email-updated');
     }
 
     public function connect2fa(Request $request): View

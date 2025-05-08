@@ -31,6 +31,9 @@ return [
         'update_success' => 'La información de tu perfil ha sido actualizada.',
     ],
     'security_settings' => [
+        'email_taken' => 'El correo electrónico ya está en uso.',
+        'invalid_password' => 'La contraseña actual es incorrecta.',
+        'verification_code_required' => 'Se requiere el código de verificación.',
         'access_settings_title' => 'Configuración de acceso a la cuenta',
         'change_password_title' => 'Cambiar contraseña',
         'current_password_label' => 'Contraseña actual',

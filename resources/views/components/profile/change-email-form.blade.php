@@ -1,11 +1,12 @@
-<form method="POST" action="{{ route('profile.update-email') }}" class="profile-form">
+@props(['user', 'confirmationMethod'])
+<form method="POST" action="{{ route('profile.initiate-email-update') }}" class="profile-form">
     @csrf
-    @method('PUT')
     <div class="row _offset20 mb-10">
         <div class="col-12 col-md-6 col-lg-4">
+            <input type="hidden" name="current_email" value="{{ $user->email }}">
             <x-profile.form-field 
                 name="current_email" 
-                :type="'email'" 
+                type="email" 
                 :value="$user->email" 
                 :disabled="true" 
                 :label="__('profile.security_settings.current_email_label')" 
@@ -19,8 +20,9 @@
         </div>
         
         <div data-confirmation-method="{{ $confirmationMethod }}" class="col-12 col-md-6 col-lg-4">
+            <input type="hidden" name="confirmation_method" value="{{ $confirmationMethod }}">
             <x-profile.select-field 
-                name="confirmation_method" 
+                name="confirmation" 
                 :label="__('profile.security_settings.confirmation_method_label')"
                 value="{{ __('profile.security_settings.confirmation_methods.' . $confirmationMethod) }}" 
                 :options="[

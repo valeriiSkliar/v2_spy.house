@@ -60,6 +60,9 @@ return [
         'first_name_label' => 'First name',
     ],
     'security_settings' => [
+        'email_taken' => 'The email address is already taken.',
+        'invalid_password' => 'The current password is incorrect.',
+        'verification_code_required' => 'The verification code is required.',
         'access_settings_title' => 'Account access settings',
         'change_password_title' => 'Change password',
         'current_password_label' => 'Current Password',

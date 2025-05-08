@@ -55,6 +55,9 @@ return [
         'first_name_label' => 'Имя',
     ],
     'security_settings' => [
+        'email_taken' => 'Электронная почта уже используется.',
+        'invalid_password' => 'Текущий пароль неверный.',
+        'verification_code_required' => 'Требуется ввести код подтверждения.',
         'access_settings_title' => 'Настройки доступа к аккаунту',
         'change_password_title' => 'Сменить пароль',
         'current_password_label' => 'Текущий пароль',

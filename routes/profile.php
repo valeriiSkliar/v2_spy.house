@@ -9,6 +9,8 @@ Route::middleware(['web', 'auth', 'auth:sanctum'])->group(function () {
     Route::get('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.change-password');
     Route::put('/profile/change-password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
     Route::get('/profile/change-email', [ProfileController::class, 'changeEmail'])->name('profile.change-email');
+    Route::post('/profile/initiate-email-update', [ProfileController::class, 'initiateEmailUpdate'])->name('profile.initiate-email-update');
+    Route::post('/profile/confirm-email-update', [ProfileController::class, 'confirmEmailUpdate'])->name('profile.confirm-email-update');
     Route::put('/profile/change-email', [ProfileController::class, 'updateEmail'])->name('profile.update-email');
     Route::get('/profile/personal-greeting', [ProfileController::class, 'personalGreeting'])->name('profile.personal-greeting');
     Route::put('/profile/personal-greeting', [ProfileController::class, 'updatePersonalGreeting'])->name('profile.update-personal-greeting');

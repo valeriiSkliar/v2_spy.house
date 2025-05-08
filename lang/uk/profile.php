@@ -31,6 +31,9 @@ return [
         'update_success' => 'Інформацію вашого профілю оновлено.',
     ],
     'security_settings' => [
+        'email_taken' => 'Електронна пошта вже використовується.',
+        'invalid_password' => 'Поточний пароль невірний.',
+        'verification_code_required' => 'Необхідно ввести код підтвердження.',
         'access_settings_title' => 'Налаштування доступу до облікового запису',
         'change_password_title' => 'Змінити пароль',
         'current_password_label' => 'Поточний пароль',
