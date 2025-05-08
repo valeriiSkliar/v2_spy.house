@@ -24,6 +24,8 @@ use Illuminate\Support\Facades\Mail;
 use App\Notifications\Profile\EmailUpdateConfirmationNotification;
 use App\Notifications\Profile\EmailUpdatedNotification;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Hash;
+use App\Notifications\Profile\PasswordUpdateConfirmationNotification;
 
 class ProfileController extends FrontendController
 {
@@ -163,8 +165,12 @@ class ProfileController extends FrontendController
     public function changePassword(Request $request): View
     {
         $user = $request->user();
+        $pendingUpdate = Cache::get('password_update_code:' . $user->id);
+
         return view('pages.profile.change-password', [
             'user' => $user,
+            'passwordUpdatePending' => $pendingUpdate ? true : false,
+            'confirmationMethod' => $pendingUpdate['method'] ?? null
         ]);
     }
 
@@ -467,5 +473,117 @@ class ProfileController extends FrontendController
         }
 
         return false;
+    }
+
+    public function initiatePasswordUpdate(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'current_password' => 'required|current_password',
+            'password' => 'required|string|min:8|confirmed',
+            'confirmation_method' => 'required|in:authenticator,email'
+        ]);
+
+        $user = $request->user();
+        $method = $request->input('confirmation_method');
+
+        if ($method === 'authenticator' && !$user->google_2fa_enabled) {
+            return back()->withErrors(['confirmation_method' => __('profile.security_settings.2fa_not_enabled')]);
+        }
+
+        if ($method === 'authenticator') {
+            Cache::put('password_update_code:' . $user->id, [
+                'password' => $request->input('password'),
+                'method' => 'authenticator',
+                'expires_at' => now()->addMinutes(15)
+            ], now()->addMinutes(15));
+
+            return redirect()->route('profile.change-password')
+                ->with('status', 'authenticator-required');
+        }
+
+        $verificationCode = random_int(100000, 999999);
+        Cache::put('password_update_code:' . $user->id, [
+            'password' => $request->input('password'),
+            'code' => $verificationCode,
+            'method' => 'email',
+            'expires_at' => now()->addMinutes(15)
+        ], now()->addMinutes(15));
+
+        Notification::route('mail', $user->email)
+            ->notify(new PasswordUpdateConfirmationNotification($verificationCode));
+
+        return redirect()->route('profile.change-password')
+            ->with('status', 'password-code-sent');
+    }
+
+    public function confirmPasswordUpdate(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'verification_code' => 'required|string|digits:6'
+        ]);
+
+        $user = $request->user();
+        $pendingUpdate = Cache::get('password_update_code:' . $user->id);
+
+        if (!$pendingUpdate) {
+            Log::warning('Password update confirmation failed: no pending update found', [
+                'user_id' => $user->id
+            ]);
+            return back()->withErrors(['verification_code' => __('profile.security_settings.update_request_expired')]);
+        }
+
+        if (now()->isAfter($pendingUpdate['expires_at'])) {
+            Log::warning('Password update confirmation failed: request expired', [
+                'user_id' => $user->id,
+                'expires_at' => $pendingUpdate['expires_at']
+            ]);
+            Cache::forget('password_update_code:' . $user->id);
+            return back()->withErrors(['verification_code' => __('profile.security_settings.update_request_expired')]);
+        }
+
+        $isValid = false;
+        if ($pendingUpdate['method'] === 'authenticator') {
+            $secret = Crypt::decryptString($user->google_2fa_secret);
+            $isValid = Google2FAFacade::verifyKey($secret, $request->input('verification_code'));
+        } else {
+            $isValid = $request->input('verification_code') === (string)$pendingUpdate['code'];
+        }
+
+        if (!$isValid) {
+            Log::warning('Password update confirmation failed: invalid code', [
+                'user_id' => $user->id,
+                'method' => $pendingUpdate['method'],
+                'provided_code' => $request->input('verification_code')
+            ]);
+            return back()->withErrors(['verification_code' => __('profile.security_settings.invalid_verification_code')]);
+        }
+
+        $user->password = Hash::make($pendingUpdate['password']);
+        $user->save();
+
+        Cache::forget('password_update_code:' . $user->id);
+
+        Log::info('Password updated successfully', [
+            'user_id' => $user->id
+        ]);
+
+        return redirect()->route('profile.settings')
+            ->with('status', 'password-updated');
+    }
+
+    public function cancelPasswordUpdate(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        $pendingUpdate = Cache::get('password_update_code:' . $user->id);
+
+        if ($pendingUpdate) {
+            Log::info('Password update cancelled by user', [
+                'user_id' => $user->id
+            ]);
+            Cache::forget('password_update_code:' . $user->id);
+        }
+
+        return redirect()->route('profile.settings')
+            ->with('status', 'password-update-cancelled');
     }
 }
