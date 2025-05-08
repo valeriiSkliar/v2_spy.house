@@ -292,6 +292,23 @@ class ProfileController extends FrontendController
             ->with('status', 'email-updated');
     }
 
+    public function cancelEmailUpdate(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        $pendingUpdate = Cache::get('email_update_code:' . $user->id);
+
+        if ($pendingUpdate) {
+            Log::info('Email update cancelled by user', [
+                'user_id' => $user->id,
+                'new_email' => $pendingUpdate['new_email']
+            ]);
+            Cache::forget('email_update_code:' . $user->id);
+        }
+
+        return redirect()->route('profile.settings')
+            ->with('status', 'email-update-cancelled');
+    }
+
     public function connect2fa(Request $request): View
     {
         $user = $request->user();

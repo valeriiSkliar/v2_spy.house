@@ -31,6 +31,7 @@ return [
         'update_success' => 'La información de tu perfil ha sido actualizada.',
     ],
     'security_settings' => [
+        'cancel_button' => 'Cancelar',
         'email_updated' => 'El correo electrónico se ha actualizado correctamente.',
         'authenticator_required' => 'Se requiere la autenticación de dos factores.',
         'email_code_sent' => 'Se ha enviado un correo electrónico con un código de verificación a tu dirección de correo electrónico.',

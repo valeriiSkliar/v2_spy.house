@@ -55,6 +55,7 @@ return [
         'first_name_label' => 'Имя',
     ],
     'security_settings' => [
+        'cancel_button' => 'Отменить',
         'email_updated' => 'Электронная почта успешно обновлена.',
         'authenticator_required' => 'Требуется двухфакторная аутентификация.',
         'email_code_sent' => 'На ваш адрес электронной почты отправлен код подтверждения.',

@@ -41,8 +41,11 @@
                     @case('email-updated')
                         {{ __('profile.security_settings.email_updated') }}
                         @break
+                    @case('email-update-cancelled')
+                        {{ __('profile.security_settings.email_update_cancelled') }}
+                        @break
                     @default
-                            {{ session('status') }}
+                        {{ session('status') }}
                     @endswitch
                 </div>
             </div>

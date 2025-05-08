@@ -53,6 +53,11 @@
                 />
             </div>
         </div>
-        <x-profile.submit-button :label="__('profile.security_settings.confirm_button')" />
+        <div class="d-flex gap-3">
+            <x-profile.submit-button :label="__('profile.security_settings.confirm_button')" />
+            <a href="{{ route('profile.cancel-email-update') }}" class="btn btn-outline-danger">
+                {{ __('profile.security_settings.cancel_button') }}
+            </a>
+        </div>
     @endif
 </form>

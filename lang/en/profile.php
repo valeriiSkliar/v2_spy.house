@@ -60,6 +60,7 @@ return [
         'first_name_label' => 'First name',
     ],
     'security_settings' => [
+        'cancel_button' => 'Cancel',
         'email_updated' => 'Email updated successfully.',
         'authenticator_required' => 'Authenticator is required.',
         'email_code_sent' => 'An email with a verification code has been sent to your email address.',
