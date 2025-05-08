@@ -55,6 +55,9 @@ return [
         'first_name_label' => 'Имя',
     ],
     'security_settings' => [
+        'email_updated' => 'Электронная почта успешно обновлена.',
+        'authenticator_required' => 'Требуется двухфакторная аутентификация.',
+        'email_code_sent' => 'На ваш адрес электронной почты отправлен код подтверждения.',
         '2fa_not_enabled' => 'Двухфакторная аутентификация не включена.',
         'invalid_verification_code' => 'Неверный код подтверждения.',
         'update_request_expired' => 'Запрос на обновление истек.',

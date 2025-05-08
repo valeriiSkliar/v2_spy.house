@@ -31,6 +31,9 @@ return [
         'update_success' => 'La información de tu perfil ha sido actualizada.',
     ],
     'security_settings' => [
+        'email_updated' => 'El correo electrónico se ha actualizado correctamente.',
+        'authenticator_required' => 'Se requiere la autenticación de dos factores.',
+        'email_code_sent' => 'Se ha enviado un correo electrónico con un código de verificación a tu dirección de correo electrónico.',
         '2fa_not_enabled' => 'La autenticación de dos factores no está habilitada.',
         'invalid_verification_code' => 'Código de verificación inválido.',
         'update_request_expired' => 'La solicitud de actualización ha expirado.',

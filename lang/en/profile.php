@@ -60,6 +60,9 @@ return [
         'first_name_label' => 'First name',
     ],
     'security_settings' => [
+        'email_updated' => 'Email updated successfully.',
+        'authenticator_required' => 'Authenticator is required.',
+        'email_code_sent' => 'An email with a verification code has been sent to your email address.',
         '2fa_not_enabled' => 'Two-factor authentication is not enabled.',
         'invalid_verification_code' => 'Invalid verification code.',
         'update_request_expired' => 'Update request expired.',

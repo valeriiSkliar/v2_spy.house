@@ -231,13 +231,25 @@ class ProfileController extends FrontendController
     public function confirmEmailUpdate(Request $request): RedirectResponse
     {
         $request->validate([
-            'verification_code' => 'required|string'
+            'verification_code' => 'required|string|digits:6'
         ]);
 
         $user = $request->user();
         $pendingUpdate = Cache::get('email_update_code:' . $user->id);
 
         if (!$pendingUpdate) {
+            Log::warning('Email update confirmation failed: no pending update found', [
+                'user_id' => $user->id
+            ]);
+            return back()->withErrors(['verification_code' => __('profile.security_settings.update_request_expired')]);
+        }
+
+        if (now()->isAfter($pendingUpdate['expires_at'])) {
+            Log::warning('Email update confirmation failed: request expired', [
+                'user_id' => $user->id,
+                'expires_at' => $pendingUpdate['expires_at']
+            ]);
+            Cache::forget('email_update_code:' . $user->id);
             return back()->withErrors(['verification_code' => __('profile.security_settings.update_request_expired')]);
         }
 
@@ -246,10 +258,15 @@ class ProfileController extends FrontendController
             $secret = Crypt::decryptString($user->google_2fa_secret);
             $isValid = Google2FAFacade::verifyKey($secret, $request->input('verification_code'));
         } else {
-            $isValid = $request->input('verification_code') === $pendingUpdate['code'];
+            $isValid = $request->input('verification_code') === (string)$pendingUpdate['code'];
         }
 
         if (!$isValid) {
+            Log::warning('Email update confirmation failed: invalid code', [
+                'user_id' => $user->id,
+                'method' => $pendingUpdate['method'],
+                'provided_code' => $request->input('verification_code')
+            ]);
             return back()->withErrors(['verification_code' => __('profile.security_settings.invalid_verification_code')]);
         }
 
@@ -259,6 +276,12 @@ class ProfileController extends FrontendController
         $user->save();
 
         Cache::forget('email_update_code:' . $user->id);
+
+        Log::info('Email updated successfully', [
+            'user_id' => $user->id,
+            'old_email' => $oldEmail,
+            'new_email' => $pendingUpdate['new_email']
+        ]);
 
         Notification::route('mail', $oldEmail)
             ->notify(new EmailUpdatedNotification($oldEmail, $pendingUpdate['new_email']));
