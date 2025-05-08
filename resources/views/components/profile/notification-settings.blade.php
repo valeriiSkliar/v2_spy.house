@@ -21,18 +21,6 @@
                                 </span>
                             </label>
                         </div>
-                        <div class="col-12 col-md-auto mb-10">
-                            <label class="checkbox-btn">
-                                <input type="checkbox" name="notifications[]" value="bonus" {{ in_array('bonus', old('notifications', $user->notification_settings ?? [])) ? 'checked' : '' }}>
-                                <span class="checkbox-btn__content">
-                                    <span class="checkbox-btn__icon icon-check-circle"></span>
-                                    <span class="checkbox-btn__text">{{ __('profile.notification_settings.bonus_offers_label') }}</span>
-                                </span>
-                            </label>
-                        </div>
-                        <div class="col-12 col-md-auto mb-10">
-                            <x-profile.submit-button :label="__('profile.save_button')" />
-                        </div>
                     </div>
                 </form>
             </div>
