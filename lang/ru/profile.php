@@ -59,6 +59,9 @@ return [
         'change_password_title' => 'Сменить пароль',
         'current_password_label' => 'Текущий пароль',
         'new_password_label' => 'Новый пароль',
+        'current_email_label' => 'Текущий E-mail',
+        'new_email_label' => 'Новый E-mail',
+        'password_label' => 'Пароль',
         'new_password_confirmation_label' => 'Новый пароль еще раз',
         'confirmation_method_label' => 'Метод подтверждения',
         'confirmation_methods' => [

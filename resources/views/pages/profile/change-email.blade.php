@@ -1,16 +1,15 @@
 @extends('layouts.main')
 
 @section('page-content')
-    <h1 class="mb-25">{{ __('profile.security_settings.change_password_title') }}</h1>
+    <h1 class="mb-25">Change Email</h1>
     <div class="section">
-        <x-profile.change-password-form
+        <x-profile.change-email-form 
             :confirmation-method="$user->authenticator_enabled ? 'authenticator' : 'email'"
             :user="$user"
         />
-        
     </div>
 @endsection
 
 @section('scripts')
     <x-profile.scripts />
-@endsection
+@endsection 

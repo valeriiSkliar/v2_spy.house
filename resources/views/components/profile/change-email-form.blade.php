@@ -1,29 +1,23 @@
-@props(['confirmationMethod' => 'email'])
-<form action="{{ route('profile.update-password') }}" method="POST">
+<form method="POST" action="{{ route('profile.update-email') }}" class="profile-form">
     @csrf
     @method('PUT')
     <div class="row _offset20 mb-10">
         <div class="col-12 col-md-6 col-lg-4">
-            <div class="form-item mb-20">
-                <label class="d-block mb-10">{{ __('profile.security_settings.current_password_label') }}</label>
-                <div class="form-password">
-                    <input type="password" name="current_password" class="input-h-57" data-pass="pass-1" value="">
-                    <button type="button" class="btn-icon switch-password" data-pass-switch="pass-1">
-                        <span class="icon-view-off"></span>
-                        <span class="icon-view-on"></span>
-                    </button>
-                </div>
-                @error('current_password')
-                    <span class="text-danger">{{ $message }}</span>
-                @enderror
-            </div>
+            <x-profile.form-field 
+                name="current_email" 
+                :type="'email'" 
+                :value="$user->email" 
+                :disabled="true" 
+                :label="__('profile.security_settings.current_email_label')" 
+            />
         </div>
         <div class="col-12 col-md-6 col-lg-4">
-            <x-profile.form-field name="password" type="password" :label="__('profile.security_settings.new_password_label')" />
+            <x-profile.form-field name="new_email" type="email" :label="__('profile.security_settings.new_email_label')" />
         </div>
         <div class="col-12 col-md-6 col-lg-4">
-            <x-profile.form-field name="password_confirmation" type="password" :label="__('profile.security_settings.new_password_confirmation_label')" />
+            <x-profile.form-field name="password" type="password" :label="__('profile.security_settings.password_label')" />
         </div>
+        
         <div data-confirmation-method="{{ $confirmationMethod }}" class="col-12 col-md-6 col-lg-4">
             <x-profile.select-field 
                 name="confirmation_method" 
@@ -49,11 +43,12 @@
             </div>
         @endif
         <div class="col-12 col-md-6 col-lg-4">
-            <x-profile.info-message 
+            <x-profile.info-message
                 :title="__('profile.2fa.info_message_title_authenticator')"
                 :description="__('profile.2fa.info_message_description_authenticator')"
             />
         </div>
     </div>
     <x-profile.submit-button :label="__('profile.security_settings.confirm_button')" />
+
 </form>

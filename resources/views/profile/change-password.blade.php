@@ -1,4 +1,4 @@
-@extends('layouts.authorized')
+@extends('layouts.main')
 
 @section('page-content')
 <h1 class="mb-25">Change password</h1>
