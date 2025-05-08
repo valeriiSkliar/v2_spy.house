@@ -55,6 +55,9 @@ return [
         'first_name_label' => 'Имя',
     ],
     'security_settings' => [
+        '2fa_not_enabled' => 'Двухфакторная аутентификация не включена.',
+        'invalid_verification_code' => 'Неверный код подтверждения.',
+        'update_request_expired' => 'Запрос на обновление истек.',
         'email_taken' => 'Электронная почта уже используется.',
         'invalid_password' => 'Текущий пароль неверный.',
         'verification_code_required' => 'Требуется ввести код подтверждения.',
@@ -103,5 +106,11 @@ return [
         'allowed_ip_addresses_placeholder' => 'Введите IP-адреса (по одному на строку)',
         'your_password_label' => 'Ваш пароль',
         'update_success' => 'Настройки IP-ограничений успешно обновлены.',
+    ],
+    'email_update' => [
+        'confirmation_title' => 'Подтверждение обновления электронной почты',
+        'confirmation_message' => 'Пожалуйста, введите код подтверждения, отправленный на ваш адрес электронной почты, чтобы подтвердить обновление электронной почты.',
+        'verification_code_label' => 'Код подтверждения',
+        'verification_expires' => 'Этот код подтверждения будет действителен в течение 15 минут.',
     ],
 ];

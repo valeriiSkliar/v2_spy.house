@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 use App\Notifications\Profile\EmailUpdateConfirmationNotification;
 use App\Notifications\Profile\EmailUpdatedNotification;
+use Illuminate\Support\Facades\Notification;
 
 class ProfileController extends FrontendController
 {
@@ -192,19 +193,23 @@ class ProfileController extends FrontendController
         $newEmail = $request->input('new_email');
         $method = $request->input('confirmation_method');
 
-        if ($method === '2fa' && !$user->google_2fa_enabled) {
-            return back()->withErrors(['confirmation_method' => __('profile.2fa.not_enabled')]);
+        if ($method === 'authenticator' && !$user->google_2fa_enabled) {
+            return back()->withErrors(['confirmation_method' => __('profile.security_settings.2fa_not_enabled')]);
         }
 
-        if ($method === '2fa') {
+        if ($method === 'authenticator') {
+            // $secret = Google2FAFacade::generateSecretKey();
+            // $user->google_2fa_secret = Crypt::encryptString($secret);
+            // $user->save();
+
             Cache::put('email_update_code:' . $user->id, [
                 'new_email' => $newEmail,
-                'method' => '2fa',
+                'method' => 'authenticator',
                 'expires_at' => now()->addMinutes(15)
             ], now()->addMinutes(15));
 
             return redirect()->route('profile.change-email')
-                ->with('status', '2fa-required');
+                ->with('status', 'authenticator-required');
         }
 
         $verificationCode = random_int(100000, 999999);
@@ -215,7 +220,9 @@ class ProfileController extends FrontendController
             'expires_at' => now()->addMinutes(15)
         ], now()->addMinutes(15));
 
-        Mail::to($newEmail)->send(new EmailUpdateConfirmationNotification($verificationCode));
+        Notification::route('mail', $newEmail)
+            ->notify(new EmailUpdateConfirmationNotification($verificationCode));
+        // dd('after notification');
 
         return redirect()->route('profile.change-email')
             ->with('status', 'email-code-sent');
@@ -231,11 +238,11 @@ class ProfileController extends FrontendController
         $pendingUpdate = Cache::get('email_update_code:' . $user->id);
 
         if (!$pendingUpdate) {
-            return back()->withErrors(['verification_code' => __('profile.update_request_expired')]);
+            return back()->withErrors(['verification_code' => __('profile.security_settings.update_request_expired')]);
         }
 
         $isValid = false;
-        if ($pendingUpdate['method'] === '2fa') {
+        if ($pendingUpdate['method'] === 'authenticator') {
             $secret = Crypt::decryptString($user->google_2fa_secret);
             $isValid = Google2FAFacade::verifyKey($secret, $request->input('verification_code'));
         } else {
@@ -243,7 +250,7 @@ class ProfileController extends FrontendController
         }
 
         if (!$isValid) {
-            return back()->withErrors(['verification_code' => __('profile.invalid_verification_code')]);
+            return back()->withErrors(['verification_code' => __('profile.security_settings.invalid_verification_code')]);
         }
 
         $oldEmail = $user->email;
@@ -253,8 +260,10 @@ class ProfileController extends FrontendController
 
         Cache::forget('email_update_code:' . $user->id);
 
-        Mail::to($oldEmail)->send(new EmailUpdatedNotification($oldEmail, $pendingUpdate['new_email']));
-        Mail::to($pendingUpdate['new_email'])->send(new EmailUpdatedNotification($oldEmail, $pendingUpdate['new_email']));
+        Notification::route('mail', $oldEmail)
+            ->notify(new EmailUpdatedNotification($oldEmail, $pendingUpdate['new_email']));
+        Notification::route('mail', $pendingUpdate['new_email'])
+            ->notify(new EmailUpdatedNotification($oldEmail, $pendingUpdate['new_email']));
 
         return redirect()->route('profile.settings')
             ->with('status', 'email-updated');
@@ -343,7 +352,7 @@ class ProfileController extends FrontendController
         $user->google_2fa_secret = null; // Clear the secret
         $user->save();
 
-        return Redirect::route('profile.settings')->with('status', '2fa-disabled');
+        return Redirect::route('profile.settings')->with('status', 'authenticator-disabled');
     }
 
     public function personalGreeting(Request $request): View

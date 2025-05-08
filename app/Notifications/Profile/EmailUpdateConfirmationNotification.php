@@ -6,6 +6,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
 
 class EmailUpdateConfirmationNotification extends Notification implements ShouldQueue
 {
@@ -25,10 +26,21 @@ class EmailUpdateConfirmationNotification extends Notification implements Should
 
     public function toMail($notifiable): MailMessage
     {
-        return (new MailMessage)
-            ->subject(__('profile.email_update_confirmation'))
-            ->line(__('profile.email_update_confirmation_message'))
-            ->line($this->code)
-            ->line(__('profile.email_update_confirmation_expires'));
+        Log::info('toMail', ['code' => $this->code]);
+
+        $mailMessage = (new MailMessage)
+            ->subject(__('profile.email_update.confirmation_title'))
+            ->line(__('profile.email_update.confirmation_message'))
+            ->line(__('profile.email_update.verification_code_label') . ': ' . $this->code)
+            ->line(__('profile.email_update.verification_expires'));
+
+        Log::info('Mail content', [
+            'subject' => __('profile.email_update.confirmation_title'),
+            'message' => __('profile.email_update.confirmation_message'),
+            'code' => $this->code,
+            'expires' => __('profile.email_update.verification_expires')
+        ]);
+
+        return $mailMessage;
     }
 }

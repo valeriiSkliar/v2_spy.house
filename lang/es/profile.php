@@ -31,6 +31,9 @@ return [
         'update_success' => 'La información de tu perfil ha sido actualizada.',
     ],
     'security_settings' => [
+        '2fa_not_enabled' => 'La autenticación de dos factores no está habilitada.',
+        'invalid_verification_code' => 'Código de verificación inválido.',
+        'update_request_expired' => 'La solicitud de actualización ha expirado.',
         'email_taken' => 'El correo electrónico ya está en uso.',
         'invalid_password' => 'La contraseña actual es incorrecta.',
         'verification_code_required' => 'Se requiere el código de verificación.',
@@ -93,5 +96,11 @@ return [
         'enable_button' => 'Включить двухфакторную аутентификацию',
         'secret_not_found' => 'No se encontró el secreto 2FA. Por favor, intente configurarlo de nuevo.',
         'invalid_code' => 'Código 2FA inválido. Por favor, inténtelo de nuevo.',
+    ],
+    'email_update' => [
+        'confirmation_title' => 'Confirmación de actualización de correo electrónico',
+        'confirmation_message' => 'Por favor, ingrese el código de verificación enviado a su dirección de correo electrónico para confirmar la actualización de correo electrónico.',
+        'verification_code_label' => 'Código de verificación',
+        'verification_expires' => 'Este código de verificación expirará en 15 minutos.',
     ],
 ];

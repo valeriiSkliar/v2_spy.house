@@ -60,6 +60,9 @@ return [
         'first_name_label' => 'First name',
     ],
     'security_settings' => [
+        '2fa_not_enabled' => 'Two-factor authentication is not enabled.',
+        'invalid_verification_code' => 'Invalid verification code.',
+        'update_request_expired' => 'Update request expired.',
         'email_taken' => 'The email address is already taken.',
         'invalid_password' => 'The current password is incorrect.',
         'verification_code_required' => 'The verification code is required.',
@@ -110,5 +113,11 @@ return [
         'allowed_ip_addresses_placeholder' => 'Enter IP addresses (one per line)',
         'your_password_label' => 'Your Password',
         'update_success' => 'IP restriction settings have been updated successfully.',
+    ],
+    'email_update' => [
+        'confirmation_title' => 'Email Update Confirmation',
+        'confirmation_message' => 'Please enter the verification code sent to your email address to confirm the email update.',
+        'verification_code_label' => 'Verification Code',
+        'verification_expires' => 'This verification code will expire in 15 minutes.',
     ],
 ];
