@@ -55,13 +55,22 @@ return [
     'security_settings' => [
         'access_settings_title' => 'Настройки доступа к аккаунту',
         'change_password_title' => 'Сменить пароль',
+        'current_password_label' => 'Текущий пароль',
+        'new_password_label' => 'Новый пароль',
+        'new_password_confirmation_label' => 'Новый пароль еще раз',
+        'confirmation_method_label' => 'Метод подтверждения',
+        'confirmation_methods' => [
+            'authenticator' => 'Приложение аутентификации',
+            'sms' => 'SMS код'
+        ],
+        'next_button' => 'Далее',
+        'confirm_button' => 'Подтвердить',
         'login_description' => 'Вход в систему осуществляется с помощью логина и пароля',
         'change_email_title' => 'Сменить E-mail',
         'personal_greeting_title' => 'Персональное приветствие',
         'phishing_description' => 'Установите приветствие для защиты от фишинга.',
         'ip_restriction_title' => 'Ограничение по IP',
         'ip_description' => 'Ограничить доступ по IP-адресу или диапазону IP-адресов.',
-        'confirmation_methods_title' => 'Методы подтверждения',
         'google_2fa_title' => 'Google 2FA',
         'google_2fa_description' => 'Google двухфакторная аутентификация для входа и подтверждения действий.',
         'connect_button' => 'Подключить',

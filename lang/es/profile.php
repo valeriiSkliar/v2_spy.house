@@ -33,6 +33,16 @@ return [
     'security_settings' => [
         'access_settings_title' => 'Configuración de acceso a la cuenta',
         'change_password_title' => 'Cambiar contraseña',
+        'current_password_label' => 'Contraseña actual',
+        'new_password_label' => 'Nueva contraseña',
+        'new_password_confirmation_label' => 'Nueva contraseña de nuevo',
+        'confirmation_method_label' => 'Método de confirmación',
+        'confirmation_methods' => [
+            'authenticator' => 'Aplicación autenticadora',
+            'sms' => 'Código SMS'
+        ],
+        'next_button' => 'Siguiente',
+        'confirm_button' => 'Confirmar',
         'login_description' => 'El inicio de sesión en el sistema se realiza mediante usuario y contraseña',
         'change_email_title' => 'Cambiar correo electrónico',
         'personal_greeting_title' => 'Saludo personal',

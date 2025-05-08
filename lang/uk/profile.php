@@ -33,13 +33,22 @@ return [
     'security_settings' => [
         'access_settings_title' => 'Налаштування доступу до облікового запису',
         'change_password_title' => 'Змінити пароль',
+        'current_password_label' => 'Поточний пароль',
+        'new_password_label' => 'Новий пароль',
+        'new_password_confirmation_label' => 'Новий пароль ще раз',
+        'confirmation_method_label' => 'Метод підтвердження',
+        'confirmation_methods' => [
+            'authenticator' => 'Додаток автентифікації',
+            'sms' => 'SMS код'
+        ],
+        'next_button' => 'Далі',
+        'confirm_button' => 'Підтвердити',
         'login_description' => 'Вхід до системи здійснюється за допомогою логіна та пароля',
         'change_email_title' => 'Змінити E-mail',
         'personal_greeting_title' => 'Особисте привітання',
         'phishing_description' => 'Встановіть привітання для захисту від фішингу.',
         'ip_restriction_title' => 'Обмеження за IP',
         'ip_description' => 'Обмежити доступ за IP-адресою або діапазоном IP-адрес.',
-        'confirmation_methods_title' => 'Методи підтвердження',
         'google_2fa_title' => 'Google 2FA',
         'google_2fa_description' => 'Двофакторна автентифікація Google для входу та підтвердження платежів.',
         'connect_button' => 'Підключити',

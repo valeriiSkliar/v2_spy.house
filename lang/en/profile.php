@@ -58,6 +58,16 @@ return [
     'security_settings' => [
         'access_settings_title' => 'Account access settings',
         'change_password_title' => 'Change password',
+        'current_password_label' => 'Current Password',
+        'new_password_label' => 'New Password',
+        'new_password_confirmation_label' => 'New password again',
+        'confirmation_method_label' => 'Confirmation method',
+        'confirmation_methods' => [
+            'authenticator' => 'Authenticator app',
+            'sms' => 'SMS code'
+        ],
+        'next_button' => 'Next',
+        'confirm_button' => 'Confirm',
         'login_description' => 'Login to the system is done using login and password',
         'change_email_title' => 'Change E-mail',
         'personal_greeting_title' => 'Personal greeting',
