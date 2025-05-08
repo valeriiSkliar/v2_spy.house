@@ -1,5 +1,5 @@
 @props(['user', 'confirmationMethod', 'passwordUpdatePending' => false])
-<form method="POST" action="{{ $passwordUpdatePending ? route('profile.confirm-password-update') : route('profile.initiate-password-update') }}" class="profile-form">
+<form id="change-password-form" method="POST" action="{{ $passwordUpdatePending ? route('profile.confirm-password-update') : route('profile.initiate-password-update') }}" class="profile-form">
     @csrf
     @if(!$passwordUpdatePending)
         <div class="row _offset20 mb-10">
@@ -38,7 +38,7 @@
                 />
             </div>
         </div>
-        <x-profile.submit-button :label="__('profile.security_settings.next_button')" />
+        <x-profile.submit-button formId="change-password-form" :label="__('profile.security_settings.next_button')" />
     @else
         <div class="row _offset20 mb-20 pt-4">
             @if ($confirmationMethod === 'authenticator')
@@ -58,10 +58,11 @@
             </div>
         </div>
         <div class="d-flex gap-3">
-            <x-profile.submit-button :label="__('profile.security_settings.confirm_button')" />
+            <x-profile.submit-button formId="change-password-form" :label="__('profile.security_settings.confirm_button')" />
             <a href="{{ route('profile.cancel-password-update') }}" class="btn btn-outline-danger">
                 {{ __('profile.security_settings.cancel_button') }}
             </a>
         </div>
     @endif
+    <x-profile.success-message status="password-updated" :message="__('profile.security_settings.password_updated')" />
 </form>

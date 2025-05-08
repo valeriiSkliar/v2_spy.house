@@ -1,5 +1,6 @@
 @props(['user', 'api_token', 'scopes', 'experiences'])
 <form 
+    id="personal-settings-form"
     action="{{ route('profile.update-settings') }}"
      method="POST" 
      enctype="multipart/form-data" 
@@ -77,6 +78,7 @@
         :message="__('profile.personal_info.update_success')" 
     />
     <x-profile.submit-button 
+        formId="personal-settings-form"
         :label="__('profile.save_button')" 
     />
 </form>

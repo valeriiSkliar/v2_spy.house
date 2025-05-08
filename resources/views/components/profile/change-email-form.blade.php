@@ -1,5 +1,5 @@
 @props(['user', 'confirmationMethod', 'emailUpdatePending'])
-<form method="POST" action="{{ $emailUpdatePending ? route('profile.confirm-email-update') : route('profile.initiate-email-update') }}" class="profile-form">
+<form id="change-email-form" method="POST" action="{{ $emailUpdatePending ? route('profile.confirm-email-update') : route('profile.initiate-email-update') }}" class="profile-form">
     @csrf
     @if(!$emailUpdatePending)
         <div class="row _offset20 mb-10">
@@ -34,7 +34,7 @@
                 />
             </div>
         </div>
-        <x-profile.submit-button :label="__('profile.security_settings.next_button')" />
+        <x-profile.submit-button formId="change-email-form" :label="__('profile.security_settings.next_button')" />
     @else
         <div class="row _offset20 mb-20 pt-4">
             @if ($confirmationMethod === 'authenticator')
@@ -54,10 +54,11 @@
             </div>
         </div>
         <div class="d-flex gap-3">
-            <x-profile.submit-button :label="__('profile.security_settings.confirm_button')" />
+            <x-profile.submit-button formId="change-email-form" :label="__('profile.security_settings.confirm_button')" />
             <a href="{{ route('profile.cancel-email-update') }}" class="btn btn-outline-danger">
                 {{ __('profile.security_settings.cancel_button') }}
             </a>
         </div>
     @endif
+    <x-profile.success-message status="email-updated" :message="__('profile.security_settings.email_updated')" />
 </form>

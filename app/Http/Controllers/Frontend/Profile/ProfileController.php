@@ -8,6 +8,7 @@ use App\Http\Controllers\FrontendController;
 use App\Http\Requests\Profile\ProfileUpdateRequest;
 use App\Http\Requests\Profile\ProfileSettingsUpdateRequest;
 use App\Http\Requests\Profile\UpdateEmailRequest;
+use App\Http\Requests\Profile\UpdateNotificationSettingsRequest;
 use App\Services\Api\TokenService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -315,6 +316,24 @@ class ProfileController extends FrontendController
             ->with('status', 'email-update-cancelled');
     }
 
+    /**
+     * Update the user's notification settings.
+     * @param UpdateNotificationSettingsRequest $request
+     * @return RedirectResponse
+     */
+    public function updateNotifications(UpdateNotificationSettingsRequest $request): RedirectResponse
+    {
+        $user = $request->user();
+        $validatedSettings = $request->validated('notification_settings');
+        $user->notification_settings = $validatedSettings ?: []; // Сохраняем пустой массив, если ничего не пришло
+
+        $user->save();
+
+        // Возвращаемся на страницу настроек с сообщением об успехе
+        // Убедитесь, что view 'pages.profile.settings' может отображать статус 'notifications-updated'
+        return Redirect::route('profile.settings')->with('status', 'notifications-updated');
+    }
+
     public function connect2fa(Request $request): View
     {
         $user = $request->user();
@@ -412,7 +431,7 @@ class ProfileController extends FrontendController
     public function updatePersonalGreeting(Request $request): RedirectResponse
     {
         $request->validate([
-            'personal_greeting' => 'nullable|string|max:255',
+            'personal_greeting' => 'nullable|string|max:255|min:3',
         ]);
         $user = $request->user();
         $user->personal_greeting = $request->input('personal_greeting');
