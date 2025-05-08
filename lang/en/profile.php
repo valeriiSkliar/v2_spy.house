@@ -11,6 +11,8 @@ return [
         'setup_instructions_2' => 'Если вы не можете отсканировать QR-код, введите этот код вручную:',
         'otp_label' => 'Введите одноразовый пароль из вашего приложения аутентификации',
         'enable_button' => 'Включить двухфакторную аутентификацию',
+        'secret_not_found' => '2FA secret not found. Please try setting up again.',
+        'invalid_code' => 'Invalid 2FA code. Please try again.',
 
         // Additional keys that might be needed
         'verification_title' => 'Проверка двухфакторной аутентификации',

@@ -1,3 +1,4 @@
+@props(['confirmationMethod' => 'email'])
 <form action="{{ route('profile.update-password') }}" method="POST">
     @csrf
     @method('PUT')
@@ -30,7 +31,6 @@
                 value="authenticator" 
                 :options="[
                     __('profile.security_settings.confirmation_methods.authenticator'),
-                    __('profile.security_settings.confirmation_methods.sms')
                 ]" 
                 data-confirmation="true"
             />
@@ -38,9 +38,15 @@
     </div>
     <x-profile.submit-button :label="__('profile.security_settings.next_button')" />
     <div class="row _offset20 mb-20 pt-4">
-        <div class="col-12 col-md-6 col-lg-4">
-            <x-profile.authenticator-code />
-        </div>
+        @if ($confirmationMethod === 'authenticator')
+            <div class="col-12 col-md-6 col-lg-4">
+                <x-profile.authenticator-code />
+            </div>
+        @else
+            <div class="col-12 col-md-6 col-lg-4">
+                <x-profile.email-code />
+            </div>
+        @endif
         <div class="col-12 col-md-6 col-lg-4">
             <x-profile.info-message />
         </div>

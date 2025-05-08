@@ -74,4 +74,17 @@ return [
         'your_password_label' => 'Su contraseña',
         'update_success' => 'La configuración de restricción IP se ha actualizado correctamente.',
     ],
+    '2fa' => [
+        'setup_title' => 'Настройка двухфакторной аутентификации',
+        'status_enabled' => 'Двухфакторная аутентификация успешно включена.',
+        'status_disabled' => 'Двухфакторная аутентификация отключена.',
+        'current_status_enabled' => 'У вас включена двухфакторная аутентификация.',
+        'disable_button' => 'Отключить двухфакторную аутентификацию',
+        'setup_instructions_1' => 'Отсканируйте QR-код ниже с помощью приложения Google Authenticator или введите код вручную.',
+        'setup_instructions_2' => 'Если вы не можете отсканировать QR-код, введите этот код вручную:',
+        'otp_label' => 'Введите одноразовый пароль из вашего приложения аутентификации',
+        'enable_button' => 'Включить двухфакторную аутентификацию',
+        'secret_not_found' => 'No se encontró el secreto 2FA. Por favor, intente configurarlo de nuevo.',
+        'invalid_code' => 'Código 2FA inválido. Por favor, inténtelo de nuevo.',
+    ],
 ];

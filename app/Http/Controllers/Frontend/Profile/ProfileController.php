@@ -156,12 +156,18 @@ class ProfileController extends FrontendController
 
     public function changePassword(Request $request): View
     {
-        return view('pages.profile.change-password');
+        $user = $request->user();
+        return view('pages.profile.change-password', [
+            'user' => $user,
+        ]);
     }
 
     public function changeEmail(Request $request): View
     {
-        return view('pages.profile.change-password');
+        $user = $request->user();
+        return view('pages.profile.change-email', [
+            'user' => $user,
+        ]);
     }
 
     public function connect2fa(Request $request): View
@@ -212,7 +218,7 @@ class ProfileController extends FrontendController
 
         if (!$secret) {
             return Redirect::route('profile.connect-2fa')
-                ->withErrors(['one_time_password' => __('2FA secret not found. Please try setting up again.')]);
+                ->withErrors(['one_time_password' => __('profile.2fa.secret_not_found')]);
         }
 
         // Ensure the secret being verified is the one stored (encrypted) for the user if 2FA was already enabled and being re-verified (not typical for initial setup)
@@ -233,7 +239,7 @@ class ProfileController extends FrontendController
             $request->session()->flash('google_2fa_secret_temp', $secret);
             return Redirect::route('profile.connect-2fa')
                 ->withInput()
-                ->withErrors(['one_time_password' => __('Invalid 2FA code. Please try again.')]);
+                ->withErrors(['one_time_password' => __('profile.2fa.invalid_code')]);
         }
     }
 
