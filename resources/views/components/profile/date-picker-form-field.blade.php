@@ -8,7 +8,7 @@
             <span class="text-danger">{{ $message }}</span>
         @enderror
     </div>
-    <script>
+    <script type="module">
         $(document).ready(function() {
             $('.datepicker').datepicker({
                 format: 'dd.mm.yyyy',

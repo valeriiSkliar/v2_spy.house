@@ -24,13 +24,14 @@
         <div class="col-12 col-md-6 col-lg-4">
             <x-profile.form-field name="password_confirmation" type="password" :label="__('profile.security_settings.new_password_confirmation_label')" />
         </div>
-        <div class="col-12 col-md-6 col-lg-4">
+        <div data-confirmation-method="{{ $confirmationMethod }}" class="col-12 col-md-6 col-lg-4">
             <x-profile.select-field 
                 name="confirmation_method" 
                 :label="__('profile.security_settings.confirmation_method_label')"
-                value="authenticator" 
+                value="{{ __('profile.security_settings.confirmation_methods.' . $confirmationMethod) }}" 
                 :options="[
                     __('profile.security_settings.confirmation_methods.authenticator'),
+                    __('profile.security_settings.confirmation_methods.email'),
                 ]" 
                 data-confirmation="true"
             />

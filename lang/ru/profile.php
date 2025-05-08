@@ -63,7 +63,7 @@ return [
         'confirmation_method_label' => 'Метод подтверждения',
         'confirmation_methods' => [
             'authenticator' => 'Приложение аутентификации',
-            'sms' => 'SMS код'
+            'email' => 'E-mail',
         ],
         'next_button' => 'Далее',
         'confirm_button' => 'Подтвердить',

@@ -39,7 +39,7 @@ return [
         'confirmation_method_label' => 'Метод підтвердження',
         'confirmation_methods' => [
             'authenticator' => 'Додаток автентифікації',
-            'sms' => 'SMS код'
+            'email' => 'E-mail',
         ],
         'next_button' => 'Далі',
         'confirm_button' => 'Підтвердити',

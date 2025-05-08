@@ -39,7 +39,7 @@ return [
         'confirmation_method_label' => 'Método de confirmación',
         'confirmation_methods' => [
             'authenticator' => 'Aplicación autenticadora',
-            'sms' => 'Código SMS'
+            'email' => 'Correo electrónico',
         ],
         'next_button' => 'Siguiente',
         'confirm_button' => 'Confirmar',

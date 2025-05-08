@@ -66,7 +66,7 @@ return [
         'confirmation_method_label' => 'Confirmation method',
         'confirmation_methods' => [
             'authenticator' => 'Authenticator app',
-            'sms' => 'SMS code'
+            'email' => 'E-mail',
         ],
         'next_button' => 'Next',
         'confirm_button' => 'Confirm',
