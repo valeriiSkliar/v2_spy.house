@@ -6,12 +6,13 @@ use App\Enums\Frontend\UserExperience;
 use App\Enums\Frontend\UserScopeOfActivity;
 use App\Http\Requests\BaseRequest;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class ProfileSettingsUpdateRequest extends BaseRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return Auth::check();
     }
 
     public function rules(): array

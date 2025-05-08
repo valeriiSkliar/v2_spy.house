@@ -27,6 +27,7 @@ use App\Notifications\Profile\EmailUpdatedNotification;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Hash;
 use App\Notifications\Profile\PasswordUpdateConfirmationNotification;
+use App\Http\Requests\Profile\UpdatePersonalGreetingSettingsRequest;
 
 class ProfileController extends FrontendController
 {
@@ -189,11 +190,7 @@ class ProfileController extends FrontendController
 
     public function initiateEmailUpdate(UpdateEmailRequest $request): RedirectResponse
     {
-        // $request->validate([
-        //     'new_email' => 'required|email|unique:users,email',
-        //     'password' => 'required|current_password',
-        //     'confirmation_method' => 'required|in:2fa,email'
-        // ]);
+
         $request->validated();
 
         $user = $request->user();
@@ -229,7 +226,6 @@ class ProfileController extends FrontendController
 
         Notification::route('mail', $newEmail)
             ->notify(new EmailUpdateConfirmationNotification($verificationCode));
-        // dd('after notification');
 
         return redirect()->route('profile.change-email')
             ->with('status', 'email-code-sent');
@@ -325,12 +321,10 @@ class ProfileController extends FrontendController
     {
         $user = $request->user();
         $validatedSettings = $request->validated('notification_settings');
-        $user->notification_settings = $validatedSettings ?: []; // Сохраняем пустой массив, если ничего не пришло
+        $user->notification_settings = $validatedSettings ?: [];
 
         $user->save();
 
-        // Возвращаемся на страницу настроек с сообщением об успехе
-        // Убедитесь, что view 'pages.profile.settings' может отображать статус 'notifications-updated'
         return Redirect::route('profile.settings')->with('status', 'notifications-updated');
     }
 
@@ -428,11 +422,8 @@ class ProfileController extends FrontendController
         ]);
     }
 
-    public function updatePersonalGreeting(Request $request): RedirectResponse
+    public function updatePersonalGreeting(UpdatePersonalGreetingSettingsRequest $request): RedirectResponse
     {
-        $request->validate([
-            'personal_greeting' => 'nullable|string|max:255|min:3',
-        ]);
         $user = $request->user();
         $user->personal_greeting = $request->input('personal_greeting');
         $user->save();
