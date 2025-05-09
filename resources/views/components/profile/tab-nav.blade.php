@@ -1,17 +1,20 @@
+@php
+    $activeTab = request()->query('tab', 'personal');
+@endphp
 <ul class="tubs _mob100">
     <li class="flex-grow-1">
-        <button data-tub="personal" data-group="profile" class="active">
+        <a href="{{ route('profile.settings', ['tab' => 'personal']) }}" data-tub="personal" data-group="profile" class="{{ $activeTab === 'personal' ? 'active' : '' }}">
             <span class="icon-personal"></span> {{ __('profile.tabs.personal') }}
-        </button>
+        </a>
     </li>
     <li class="flex-grow-1">
-        <button data-tub="security" data-group="profile" class="">
+        <a href="{{ route('profile.settings', ['tab' => 'security']) }}" data-tub="security" data-group="profile" class="{{ $activeTab === 'security' ? 'active' : '' }}">
             <span class="icon-security"></span> {{ __('profile.tabs.security') }}
-        </button>
+        </a>
     </li>
     <li class="flex-grow-1">
-        <button data-tub="notifications" data-group="profile" class="">
+        <a href="{{ route('profile.settings', ['tab' => 'notifications']) }}" data-tub="notifications" data-group="profile" class="{{ $activeTab === 'notifications' ? 'active' : '' }}">
             <span class="icon-email"></span> {{ __('profile.tabs.notifications') }}
-        </button>
+        </a>
     </li>
 </ul>

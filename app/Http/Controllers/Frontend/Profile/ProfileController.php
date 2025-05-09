@@ -123,7 +123,10 @@ class ProfileController extends FrontendController
         $user->fill($settingsData);
         $user->save();
 
-        return Redirect::route('profile.settings')->with('status', 'settings-updated');
+        // Get the tab query parameter if it exists
+        $tab = $request->query('tab', 'personal');
+
+        return Redirect::route('profile.settings', ['tab' => $tab])->with('status', 'settings-updated');
     }
 
     /**
@@ -152,6 +155,7 @@ class ProfileController extends FrontendController
         $user = $request->user();
         $experiences = UserExperience::getTranslatedList();
         $scopes = UserScopeOfActivity::getTranslatedList();
+        $activeTab = $request->query('tab', 'personal');
 
         // Get user's tokens
         $tokens = app(TokenService::class)->getUserTokens($user);
@@ -161,8 +165,11 @@ class ProfileController extends FrontendController
             'tokens' => $tokens,
             'api_token' => session('api_token'),
             'experiences' => $experiences,
+            'activeTab' => $activeTab,
+            'tab' => $activeTab,
         ]);
     }
+
 
     public function changePassword(Request $request): View
     {
@@ -295,8 +302,10 @@ class ProfileController extends FrontendController
             ->notify(new EmailUpdatedNotification($oldEmail, $pendingUpdate['new_email']));
         Notification::route('mail', $pendingUpdate['new_email'])
             ->notify(new EmailUpdatedNotification($oldEmail, $pendingUpdate['new_email']));
+        $activeTab = $request->query('tab', 'security');
 
-        return redirect()->route('profile.settings')
+
+        return redirect()->route('profile.settings', ['tab' => $activeTab])
             ->with('status', 'email-updated');
     }
 
@@ -313,7 +322,9 @@ class ProfileController extends FrontendController
             Cache::forget('email_update_code:' . $user->id);
         }
 
-        return redirect()->route('profile.settings')
+        $activeTab = $request->query('tab', 'security');
+
+        return redirect()->route('profile.settings', ['tab' => $activeTab])
             ->with('status', 'email-update-cancelled');
     }
 
@@ -330,7 +341,9 @@ class ProfileController extends FrontendController
 
         $user->save();
 
-        return Redirect::route('profile.settings')->with('status', 'notifications-updated');
+        $activeTab = $request->query('tab', 'notifications');
+
+        return Redirect::route('profile.settings', ['tab' => $activeTab])->with('status', 'notifications-updated');
     }
 
     public function connect2fa(Request $request): View
@@ -396,7 +409,7 @@ class ProfileController extends FrontendController
 
             $request->session()->forget('google_2fa_secret_temp');
 
-            return Redirect::route('profile.settings')->with('status', '2fa-enabled');
+            return Redirect::route('profile.settings', ['tab' => 'security'])->with('status', '2fa-enabled');
         } else {
             // Pass the secret back to the view so the same QR code can be shown
             $request->session()->flash('google_2fa_secret_temp', $secret);
@@ -415,8 +428,9 @@ class ProfileController extends FrontendController
         $user->google_2fa_enabled = false;
         $user->google_2fa_secret = null; // Clear the secret
         $user->save();
+        $activeTab = $request->query('tab', 'security');
 
-        return Redirect::route('profile.settings')->with('status', 'authenticator-disabled');
+        return Redirect::route('profile.settings', ['tab' => $activeTab])->with('status', 'authenticator-disabled');
     }
 
     public function personalGreeting(Request $request): View
@@ -432,7 +446,9 @@ class ProfileController extends FrontendController
         $user = $request->user();
         $user->personal_greeting = $request->input('personal_greeting');
         $user->save();
-        return Redirect::route('profile.personal-greeting')->with('status', 'personal-greeting-updated');
+        $activeTab = $request->query('tab', 'security');
+
+        return Redirect::route('profile.settings', ['tab' => $activeTab])->with('status', 'personal-greeting-updated');
     }
 
     public function ipRestriction(Request $request): View
@@ -582,7 +598,9 @@ class ProfileController extends FrontendController
             'user_id' => $user->id
         ]);
 
-        return redirect()->route('profile.settings')
+        $activeTab = $request->query('tab', 'security');
+
+        return redirect()->route('profile.settings', ['tab' => $activeTab])
             ->with('status', 'password-updated');
     }
 
@@ -598,7 +616,9 @@ class ProfileController extends FrontendController
             Cache::forget('password_update_code:' . $user->id);
         }
 
-        return redirect()->route('profile.settings')
+        $activeTab = $request->query('tab', 'security');
+
+        return redirect()->route('profile.settings', ['tab' => $activeTab])
             ->with('status', 'password-update-cancelled');
     }
 }
