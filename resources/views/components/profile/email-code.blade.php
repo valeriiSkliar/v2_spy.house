@@ -4,7 +4,7 @@
         <img src="/img/email-code.svg" alt="">
         <input type="text" name="verification_code" class="input-h-57" placeholder="xxx  xxx">
     </div>
-    @error('code')
+    @error('verification_code')
         <span class="text-danger">{{ $message }}</span>
     @enderror
 </div>

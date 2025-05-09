@@ -37,7 +37,7 @@
         <x-profile.submit-button formId="change-email-form" :label="__('profile.security_settings.next_button')" />
     @else
         <div class="row _offset20 mb-20 pt-4">
-            @if ($confirmationMethod === 'authenticator')
+            @if ( $user->google_2fa_enabled || $confirmationMethod === 'authenticator' )
                 <div class="col-12 col-md-6 col-lg-4">
                     <x-profile.authenticator-code />
                 </div>

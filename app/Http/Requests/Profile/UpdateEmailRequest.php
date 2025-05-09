@@ -4,6 +4,7 @@ namespace App\Http\Requests\Profile;
 
 use App\Http\Requests\BaseRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class UpdateEmailRequest extends BaseRequest
@@ -37,7 +38,7 @@ class UpdateEmailRequest extends BaseRequest
             ],
             'password' => ['required', 'string', 'current_password'],
             'confirmation_method' => ['required', 'string', Rule::in(['email', 'authenticator'])],
-            'verification_code' => ['nullable', 'string', 'required_if:confirmation_method,email|required_if:confirmation_method,authenticator', 'max:6'],
+            // 'verification_code' => ['nullable', 'string', 'required_if:confirmation_method,email|required_if:confirmation_method,authenticator', 'max:6'],
         ];
     }
 
@@ -52,6 +53,8 @@ class UpdateEmailRequest extends BaseRequest
 
     protected function prepareForValidation(): void
     {
+        // dd($this->all());
+        Log::info('Update email request', $this->all());
         $currentEmail = $this->input('current_email');
         $newEmail = $this->input('new_email');
         $password = $this->input('password');

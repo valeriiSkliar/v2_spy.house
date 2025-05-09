@@ -192,7 +192,12 @@ class ProfileController extends FrontendController
     {
 
         $request->validated();
-
+        Log::info('Initiate email update', [
+            'request' => $request->all(),
+            'user_id' => $request->user()->id,
+            'new_email' => $request->input('new_email'),
+            'confirmation_method' => $request->input('confirmation_method')
+        ]);
         $user = $request->user();
         $newEmail = $request->input('new_email');
         $method = $request->input('confirmation_method');
