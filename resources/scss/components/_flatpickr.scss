@@ -116,3 +116,36 @@
         color: #bfc5c9;
     }
 }
+
+.flatpickr-monthDropdown-months {
+    background: #fff;
+    border: 1px solid $main;
+    border-radius: 4px;
+    box-shadow: 0 3px 13px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    z-index: 10;
+
+    .flatpickr-monthDropdown-month {
+        color: $main;
+        background: transparent;
+        transition: background 0.2s, color 0.2s;
+        cursor: pointer;
+        padding: 6px 16px;
+        font-size: 16px;
+        font-weight: 400;
+        border: none;
+        outline: none;
+
+        &.selected,
+        &:hover {
+            background: $main;
+            color: #fff;
+        }
+
+        &:disabled {
+            color: lighten($main, 40%);
+            background: #f5f5f5;
+            cursor: not-allowed;
+        }
+    }
+}
