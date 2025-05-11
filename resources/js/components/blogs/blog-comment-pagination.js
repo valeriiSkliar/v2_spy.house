@@ -6,6 +6,8 @@ document.addEventListener("DOMContentLoaded", function () {
 function initCommentPagination() {
     const blogLayout = $(".blog-layout");
     if (blogLayout.length < 1) return;
+    const article = $(".article._big._single");
+    if (article.length < 1) return;
 
     const commentsList = $(".comment-list");
     const paginationLinks = $(".pagination-link");
