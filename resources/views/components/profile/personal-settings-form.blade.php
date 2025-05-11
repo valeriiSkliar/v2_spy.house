@@ -40,11 +40,12 @@
             />
         </div>
         <div class="col-12 col-md-6 col-lg-4">
-            <x-profile.date-picker-form-field 
+            <x-profile.date-flatpicker-form-field 
                 name="date_of_birth" 
                 type="date" 
                 :label="__('profile.personal_info.birth_date_label')" 
                 :value="$user->date_of_birth" 
+                :placeholder="__('profile.personal_info.birth_date_label')"
             />
         </div>
 
