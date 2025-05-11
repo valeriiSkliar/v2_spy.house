@@ -1,16 +1,16 @@
 @props([
-    'icon',
+    'icon' => '',
     'width' => '42',
     'height' => '42',
-    'title',
-    'description',
+    'title' => '',
+    'description' => '',
     'isEnabled' => false,
-    'routeEnable',
-    'routeDisable',
+    'routeEnable' => '',
+    'routeDisable' => '',
     'buttonTextEnableKey' => 'profile.security_settings.connect_button',
     'buttonTextDisableKey' => 'profile.security_settings.disconnect_button',
     'buttonClassEnable' => 'btn _flex _border-green _medium',
-    'buttonClassDisable' => 'btn _flex _border-red _medium', // Assuming red for disconnect
+    'buttonClassDisable' => 'btn _flex _border-red _medium',
 ])
 
 <div class="col-12 col-md-6 d-flex">

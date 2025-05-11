@@ -2,10 +2,12 @@
 
 @section('page-content')
     <h1 class="mb-25">{{ __('profile.settings_page_title') }}</h1>
+
     @if ($user->personal_greeting && $user->personal_greeting !== '')
-        <p>
+        <div class="welcome-txt">
+            <span class="has-indicator"></span>
             {{ $user->personal_greeting }}
-        </p>
+        </div>
     @endif
     <div class="section profile-settings">
         <x-profile.tab-nav :user="$user" :active-tab="$activeTab" />

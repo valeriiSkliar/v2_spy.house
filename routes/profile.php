@@ -14,8 +14,6 @@ Route::middleware(['web', 'auth', 'auth:sanctum'])->group(function () {
     Route::post('/profile/initiate-email-update', [ProfileController::class, 'initiateEmailUpdate'])->name('profile.initiate-email-update');
     Route::post('/profile/confirm-email-update', [ProfileController::class, 'confirmEmailUpdate'])->name('profile.confirm-email-update');
     Route::get('/profile/cancel-email-update', [ProfileController::class, 'cancelEmailUpdate'])->name('profile.cancel-email-update');
-    Route::get('/profile/personal-greeting', [ProfileController::class, 'personalGreeting'])->name('profile.personal-greeting');
-    Route::put('/profile/personal-greeting', [ProfileController::class, 'updatePersonalGreeting'])->name('profile.update-personal-greeting');
     Route::get('/profile/ip-restriction', [ProfileController::class, 'ipRestriction'])->name('profile.ip-restriction');
     Route::put('/profile/ip-restriction', [ProfileController::class, 'updateIpRestriction'])->name('profile.update-ip-restriction');
     Route::get('/profile/connect-2fa', [ProfileController::class, 'connect2fa'])->name('profile.connect-2fa');
@@ -24,4 +22,9 @@ Route::middleware(['web', 'auth', 'auth:sanctum'])->group(function () {
     Route::post('/profile/connect-pin', [ProfileController::class, 'storePin'])->name('profile.store-pin');
     Route::put('/profile/update-notifications', [ProfileController::class, 'updateNotifications'])->name('profile.update-notifications');
     Route::post('/profile/2fa/disable', [ProfileController::class, 'disable2fa'])->name('profile.disable-2fa');
+
+    Route::get('/profile/personal-greeting', [ProfileController::class, 'personalGreeting'])->name('profile.personal-greeting');
+    Route::post('/profile/initiate-personal-greeting-update', [ProfileController::class, 'initiatePersonalGreetingUpdate'])->name('profile.initiate-personal-greeting-update');
+    Route::post('/profile/confirm-personal-greeting-update', [ProfileController::class, 'confirmPersonalGreetingUpdate'])->name('profile.confirm-personal-greeting-update');
+    Route::get('/profile/cancel-personal-greeting-update', [ProfileController::class, 'cancelPersonalGreetingUpdate'])->name('profile.cancel-personal-greeting-update');
 });

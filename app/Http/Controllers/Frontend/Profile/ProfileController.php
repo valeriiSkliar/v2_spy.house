@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Hash;
 use App\Notifications\Profile\PasswordUpdateConfirmationNotification;
 use App\Http\Requests\Profile\UpdatePersonalGreetingSettingsRequest;
+use App\Notifications\Profile\PersonalGreetingUpdateConfirmationNotification;
 
 class ProfileController extends FrontendController
 {
@@ -437,23 +438,179 @@ class ProfileController extends FrontendController
         return Redirect::route('profile.settings', ['tab' => $activeTab])->with('status', 'authenticator-disabled');
     }
 
+    // public function personalGreeting(Request $request): View
+    // {
+    //     $user = $request->user();
+    //     return view('pages.profile.personal-greeting', [
+    //         'user' => $user,
+    //     ]);
+    // }
+
+    // public function updatePersonalGreeting(UpdatePersonalGreetingSettingsRequest $request): RedirectResponse
+    // {
+    //     $user = $request->user();
+    //     $user->personal_greeting = $request->input('personal_greeting');
+    //     $user->save();
+    //     $activeTab = $request->query('tab', 'security');
+
+    //     return Redirect::route('profile.settings', ['tab' => $activeTab])->with('status', 'personal-greeting-updated');
+    // }
+
+    /**
+     * Display the personal greeting form, potentially with a pending confirmation.
+     */
     public function personalGreeting(Request $request): View
     {
         $user = $request->user();
+        $pendingUpdate = Cache::get('personal_greeting_update_code:' . $user->id);
+
         return view('pages.profile.personal-greeting', [
             'user' => $user,
+            'personalGreetingUpdatePending' => $pendingUpdate ? true : false,
+            'confirmationMethod' => $pendingUpdate['method'] ?? null,
+            'isExpired' => $pendingUpdate && isset($pendingUpdate['expires_at']) && now()->isAfter($pendingUpdate['expires_at']),
         ]);
     }
 
-    public function updatePersonalGreeting(UpdatePersonalGreetingSettingsRequest $request): RedirectResponse
+    /**
+     * Initiate the personal greeting update process.
+     * This replaces the old updatePersonalGreeting method's direct save.
+     */
+    public function initiatePersonalGreetingUpdate(UpdatePersonalGreetingSettingsRequest $request): RedirectResponse
+    {
+        // Validate personal_greeting (already done by UpdatePersonalGreetingSettingsRequest)
+        // Add validation for confirmation_method if not in the request class
+        $request->validate([
+            'confirmation_method' => ['required', 'string', \Illuminate\Validation\Rule::in(['email', 'authenticator'])],
+            // Add password confirmation if required for initiating changes, similar to UpdateEmailRequest
+            // 'password' => ['required', 'string', 'current_password'], 
+        ]);
+
+        $user = $request->user();
+        $newPersonalGreeting = $request->input('personal_greeting');
+        $method = $request->input('confirmation_method');
+
+        if ($method === 'authenticator' && !$user->google_2fa_enabled) {
+            return back()->withErrors(['confirmation_method' => __('profile.security_settings.2fa_not_enabled')])->withInput();
+        }
+
+        // Clear any previous expired attempts
+        if (Cache::has('personal_greeting_update_code:' . $user->id)) {
+            Cache::forget('personal_greeting_update_code:' . $user->id);
+        }
+
+        if ($method === 'authenticator') {
+            Cache::put('personal_greeting_update_code:' . $user->id, [
+                'personal_greeting' => $newPersonalGreeting,
+                'method' => 'authenticator',
+                'expires_at' => now()->addMinutes(15)
+            ], now()->addMinutes(15));
+
+            Log::info('Personal greeting update initiated via authenticator.', ['user_id' => $user->id]);
+            return redirect()->route('profile.personal-greeting')
+                ->with('status', 'authenticator-required-for-greeting');
+        }
+
+        // Email confirmation
+        $verificationCode = random_int(100000, 999999);
+        Cache::put('personal_greeting_update_code:' . $user->id, [
+            'personal_greeting' => $newPersonalGreeting,
+            'code' => $verificationCode,
+            'method' => 'email',
+            'expires_at' => now()->addMinutes(15)
+        ], now()->addMinutes(15));
+
+        // Send notification
+        Notification::route('mail', $user->email) // Send to current user's email
+            ->notify(new PersonalGreetingUpdateConfirmationNotification($verificationCode));
+
+        Log::info('Personal greeting update initiated via email.', ['user_id' => $user->id, 'email' => $user->email]);
+        return redirect()->route('profile.personal-greeting')
+            ->with('status', 'greeting-code-sent');
+    }
+
+    /**
+     * Confirm and apply the personal greeting update.
+     */
+    public function confirmPersonalGreetingUpdate(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'verification_code' => 'required|string|digits:6'
+        ]);
+
+        $user = $request->user();
+        $pendingUpdate = Cache::get('personal_greeting_update_code:' . $user->id);
+
+        if (!$pendingUpdate) {
+            Log::warning('Personal greeting update confirmation failed: no pending update found', ['user_id' => $user->id]);
+            return redirect()->route('profile.personal-greeting')->withErrors(['verification_code' => __('profile.security_settings.update_request_expired')]);
+        }
+
+        if (now()->isAfter($pendingUpdate['expires_at'])) {
+            Log::warning('Personal greeting update confirmation failed: request expired', [
+                'user_id' => $user->id,
+                'expires_at' => $pendingUpdate['expires_at']
+            ]);
+            Cache::forget('personal_greeting_update_code:' . $user->id);
+            return redirect()->route('profile.personal-greeting')->withErrors(['verification_code' => __('profile.security_settings.update_request_expired')]);
+        }
+
+        $isValid = false;
+        if ($pendingUpdate['method'] === 'authenticator') {
+            if (!$user->google_2fa_secret) {
+                Log::error('Personal greeting 2FA confirmation failed: 2FA secret not found for user.', ['user_id' => $user->id]);
+                return redirect()->route('profile.personal-greeting')->withErrors(['verification_code' => __('profile.2fa.error_verifying')]); // Generic error
+            }
+            $secret = Crypt::decryptString($user->google_2fa_secret);
+            $isValid = Google2FAFacade::verifyKey($secret, $request->input('verification_code'));
+        } else { // Email
+            $isValid = $request->input('verification_code') === (string)$pendingUpdate['code'];
+        }
+
+        if (!$isValid) {
+            Log::warning('Personal greeting update confirmation failed: invalid code', [
+                'user_id' => $user->id,
+                'method' => $pendingUpdate['method'],
+                'provided_code' => $request->input('verification_code')
+            ]);
+            return back()->withErrors(['verification_code' => __('profile.security_settings.invalid_verification_code')]);
+        }
+
+        $user->personal_greeting = $pendingUpdate['personal_greeting'];
+        $user->save();
+
+        Cache::forget('personal_greeting_update_code:' . $user->id);
+
+        Log::info('Personal greeting updated successfully.', ['user_id' => $user->id]);
+
+        // Determine active tab for redirect, assuming personal greeting is on the 'security' or a new 'general' tab.
+        // For this example, let's assume it's part of general settings, redirecting to profile.settings with 'personal' tab
+        $activeTab = $request->query('tab', 'personal'); // Or a specific tab if personal greeting moves
+
+        return redirect()->route('profile.settings', ['tab' => $activeTab]) // Or profile.personal-greeting if it's a standalone page
+            ->with('status', 'personal-greeting-updated');
+    }
+
+    /**
+     * Cancel a pending personal greeting update.
+     */
+    public function cancelPersonalGreetingUpdate(Request $request): RedirectResponse
     {
         $user = $request->user();
-        $user->personal_greeting = $request->input('personal_greeting');
-        $user->save();
-        $activeTab = $request->query('tab', 'security');
+        $pendingUpdate = Cache::get('personal_greeting_update_code:' . $user->id);
 
-        return Redirect::route('profile.settings', ['tab' => $activeTab])->with('status', 'personal-greeting-updated');
+        if ($pendingUpdate) {
+            Log::info('Personal greeting update cancelled by user', ['user_id' => $user->id]);
+            Cache::forget('personal_greeting_update_code:' . $user->id);
+        }
+
+        $activeTab = $request->query('tab', 'personal');
+
+        return redirect()->route('profile.personal-greeting') // Or profile.settings if preferred
+            ->with('status', 'personal-greeting-update-cancelled');
     }
+
+
 
     public function ipRestriction(Request $request): View
     {
