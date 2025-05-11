@@ -167,6 +167,10 @@ class ProfileController extends FrontendController
             'experiences' => $experiences,
             'activeTab' => $activeTab,
             'tab' => $activeTab,
+            'displayDefaultValues' => [
+                'experience' => __('profile.select_default_value'),
+                'scope_of_activity' => __('profile.select_default_value'),
+            ],
         ]);
     }
 

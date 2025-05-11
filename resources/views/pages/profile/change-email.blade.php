@@ -26,6 +26,7 @@
             :confirmation-method="$updateMethod"
             :user="$user"
             :email-update-pending="$updateStep === 'confirmation'"
+            :authenticator-enabled="$user->google_2fa_enabled"
         />
         @if (session('status'))
             <div class="message _bg _with-border font-weight-500">

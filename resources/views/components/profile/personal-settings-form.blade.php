@@ -60,16 +60,18 @@
             <x-profile.select-field 
                 name="experience" 
                 :label="__('profile.personal_info.experience_label')" 
-                :value="$user->experience ?? \App\Enums\Frontend\UserExperience::BEGINNER->translatedLabel()" 
+                :value="$user->experience ?? \App\Enums\Frontend\UserExperience::BEGINNER" 
                 :options="$experiences" 
+                :display-default-value="$displayDefaultValues['experience']"
             />
         </div>
         <div class="col-12 col-md-6 col-lg-4">
             <x-profile.select-field 
                 name="scope_of_activity" 
                 :label="__('profile.personal_info.scope_label')" 
-                :value="$user->scope_of_activity ?? \App\Enums\Frontend\UserScopeOfActivity::GAMBLING->translatedLabel()" 
+                :value="$user->scope_of_activity ?? \App\Enums\Frontend\UserScopeOfActivity::GAMBLING" 
                 :options="$scopes" 
+                :display-default-value="$displayDefaultValues['scope_of_activity']"
             />
         </div>
     </div>

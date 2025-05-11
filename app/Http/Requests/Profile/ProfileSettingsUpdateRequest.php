@@ -22,8 +22,8 @@ class ProfileSettingsUpdateRequest extends BaseRequest
             'name' => ['nullable', 'string', 'max:255'],
             'surname' => ['nullable', 'string', 'max:255'],
             'date_of_birth' => ['nullable', 'date'],
-            'experience' => ['nullable', 'string', 'in:' . implode(',', UserExperience::values())],
-            'scope_of_activity' => ['nullable', 'string', 'in:' . implode(',', UserScopeOfActivity::values())],
+            'experience' => ['nullable', 'string', 'in:' . implode(',', UserExperience::names())],
+            'scope_of_activity' => ['nullable', 'string', 'in:' . implode(',', UserScopeOfActivity::names())],
             'user_avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'],
             'telegram' => ['nullable', 'string', 'max:255'],
             'viber_phone' => ['nullable', 'string', 'max:255'],
@@ -87,6 +87,8 @@ class ProfileSettingsUpdateRequest extends BaseRequest
 
     protected function prepareForValidation(): void
     {
+        // dd($this->all());
+
         $data = $this->all();
 
         // Санитизация простых строковых полей

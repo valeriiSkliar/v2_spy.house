@@ -28,7 +28,8 @@ return [
     'verification_link_sent' => 'Новая ссылка для подтверждения отправлена на ваш адрес электронной почты.',
     'save_button' => 'Сохранить',
     'saved_status' => 'Сохранено.',
-
+    'select_authenticator_method' => 'Выберите метод аутентификации',
+    'select_default_value' => 'Выберите значение',
     // Settings Page
     'settings_page_title' => 'Настройки профиля',
     'tabs' => [

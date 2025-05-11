@@ -10,7 +10,8 @@ return [
     'verification_link_sent' => 'Нове посилання для підтвердження надіслано на вашу адресу електронної пошти.',
     'save_button' => 'Зберегти',
     'saved_status' => 'Збережено.',
-
+    'select_authenticator_method' => 'Виберіть метод автентифікації',
+    'select_default_value' => 'Виберіть значення',
     // Settings Page
     'settings_page_title' => 'Налаштування профілю',
     'tabs' => [

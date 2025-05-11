@@ -10,7 +10,8 @@ return [
     'verification_link_sent' => 'Se ha enviado un nuevo enlace de verificación a tu dirección de correo electrónico.',
     'save_button' => 'Guardar',
     'saved_status' => 'Guardado.',
-
+    'select_authenticator_method' => 'Seleccionar método de autenticación',
+    'select_default_value' => 'Seleccionar valor',
     // Settings Page
     'settings_page_title' => 'Configuración del perfil',
     'tabs' => [

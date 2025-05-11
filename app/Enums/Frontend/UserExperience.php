@@ -54,7 +54,7 @@ enum UserExperience: string
     public static function getTranslatedList(): array
     {
         return collect(self::cases())
-            ->mapWithKeys(fn(self $case) => [$case->value => $case->translatedLabel()])
+            ->mapWithKeys(fn(self $case) => [$case->name => $case->translatedLabel()])
             ->all();
     }
 }

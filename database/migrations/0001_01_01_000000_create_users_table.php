@@ -25,8 +25,8 @@ return new class extends Migration
             $table->string('whatsapp_phone', 20)->nullable()->comment('WhatsApp phone number');
             $table->string('viber_phone', 20)->nullable()->comment('Viber phone number');
             $table->string('telegram', 255)->nullable()->comment('Telegram username');
-            $table->enum('scope_of_activity', UserScopeOfActivity::values())->nullable()->comment('User\'s business activity');
-            $table->enum('experience', UserExperience::values())->nullable()->comment('User\'s experience level');
+            $table->enum('scope_of_activity', UserScopeOfActivity::names())->nullable()->comment('User\'s business activity');
+            $table->enum('experience', UserExperience::names())->nullable()->comment('User\'s experience level');
             $table->text('personal_greeting')->nullable()->comment('For anti-phishing protection');
             $table->json('ip_restrictions')->nullable()->comment('Allowed IP addresses');
             $table->boolean('google_2fa_enabled')->default(false)->comment('2FA status');

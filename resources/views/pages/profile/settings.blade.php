@@ -16,6 +16,7 @@
             :experiences="$experiences" 
             :google_2fa_enabled="$user->google_2fa_enabled"
             :active-tab="$activeTab"
+            :display-default-values="$displayDefaultValues"
         />
     </div>
 @endsection

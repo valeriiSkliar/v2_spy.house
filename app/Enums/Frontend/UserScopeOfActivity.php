@@ -2,8 +2,12 @@
 
 namespace App\Enums\Frontend;
 
+use App\Traits\Enum\EnumTrait;
+
 enum UserScopeOfActivity: string
 {
+    use EnumTrait;
+
     case GAMBLING = 'Gambling';
     case BETTING = 'Betting';
     case CRYPTO = 'Crypto';
@@ -61,7 +65,7 @@ enum UserScopeOfActivity: string
     public static function getTranslatedList(): array
     {
         return collect(self::cases())
-            ->mapWithKeys(fn(self $case) => [$case->value => $case->translatedLabel()])
+            ->mapWithKeys(fn(self $case) => [$case->name => $case->translatedLabel()])
             ->all();
     }
 }

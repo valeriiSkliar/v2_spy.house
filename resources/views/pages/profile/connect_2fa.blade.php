@@ -1,4 +1,4 @@
-@extends('layouts.main') {{-- Или ваш основной layout --}}
+@extends('layouts.main')
 
 @section('page-content')
     <div class="container">

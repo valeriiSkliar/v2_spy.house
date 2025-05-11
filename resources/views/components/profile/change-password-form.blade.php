@@ -26,16 +26,18 @@
             </div>
             <div data-confirmation-method="{{ $confirmationMethod }}" class="col-12 col-md-6 col-lg-4">
                 <input type="hidden" name="confirmation_method" value="{{ $confirmationMethod }}">
-                <x-profile.select-field 
-                    name="confirmation" 
-                    :label="__('profile.security_settings.confirmation_method_label')"
-                    value="{{ __('profile.security_settings.confirmation_methods.' . $confirmationMethod) }}" 
+                {{-- @if ( !$authenticatorEnabled )
+                    <x-profile.select-field 
+                        name="confirmation" 
+                        :label="__('profile.security_settings.confirmation_method_label')"
+                        value="{{ __('profile.security_settings.confirmation_methods.' . $confirmationMethod) }}" 
                     :options="[
                         __('profile.security_settings.confirmation_methods.authenticator'),
                         __('profile.security_settings.confirmation_methods.email'),
                     ]" 
-                    data-confirmation="true"
-                />
+                        data-confirmation="true"
+                    />
+                @endif --}}
             </div>
         </div>
         <x-profile.submit-button formId="change-password-form" :label="__('profile.security_settings.next_button')" />

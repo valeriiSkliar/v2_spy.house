@@ -6,9 +6,16 @@
         <h1>Notifications</h1>
     </div>
     <div class="col-12 col-md-6 col-lg-auto mb-15">
-        <x-common.base-select-icon
-            :selected="'On page — 12'"
-            :options="['12', '24', '48', '96']"
+        <x-common.base-select
+            id="per-page-select"
+            :selected="['label' => 'On page — 12', 'value' => '12', 'order' => 1]"
+            :options="[
+                ['label' => '12', 'value' => '12', 'order' => 1],
+                ['label' => '24', 'value' => '24', 'order' => 2],
+                ['label' => '48', 'value' => '48', 'order' => 3],
+                ['label' => '96', 'value' => '96', 'order' => 4]
+            ]"
+            :placeholder="'On page — 12'"
             icon="list" />
     </div>
     <div class="col-12 col-md-6 col-lg-auto mb-15">
@@ -31,5 +38,5 @@
     @endforeach
 </div>
 
-<x-pagination :currentPage="1" :totalPages="3" />
+{{-- <x-pagination :currentPage="1" :totalPages="3" /> --}}
 @endsection

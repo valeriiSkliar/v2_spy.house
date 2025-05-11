@@ -33,7 +33,8 @@ return [
     'verification_link_sent' => 'A new verification link has been sent to your email address.',
     'save_button' => 'Save',
     'saved_status' => 'Saved.',
-
+    'select_authenticator_method' => 'Select authenticator method',
+    'select_default_value' => 'Select value',
     // Settings Page
     'settings_page_title' => 'Profile Settings',
     'tabs' => [

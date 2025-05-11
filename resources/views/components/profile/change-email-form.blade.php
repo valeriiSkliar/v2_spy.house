@@ -1,4 +1,4 @@
-@props(['user', 'confirmationMethod', 'emailUpdatePending'])
+@props(['user', 'confirmationMethod', 'emailUpdatePending', 'authenticatorEnabled'])
 <form id="change-email-form" method="POST" action="{{ $emailUpdatePending ? route('profile.confirm-email-update') : route('profile.initiate-email-update') }}" class="profile-form">
     @csrf
     @if(!$emailUpdatePending)
@@ -19,10 +19,10 @@
             <div class="col-12 col-md-6 col-lg-4">
                 <x-profile.form-field name="password" type="password" :label="__('profile.security_settings.password_label')" />
             </div>
-            
             <div data-confirmation-method="{{ $confirmationMethod }}" class="col-12 col-md-6 col-lg-4">
                 <input type="hidden" name="confirmation_method" value="{{ $confirmationMethod }}">
-                <x-profile.select-field 
+                {{-- @if ( !$authenticatorEnabled )
+                    <x-profile.select-field 
                     name="confirmation" 
                     :label="__('profile.security_settings.confirmation_method_label')"
                     value="{{ __('profile.security_settings.confirmation_methods.' . $confirmationMethod) }}" 
@@ -31,13 +31,14 @@
                         __('profile.security_settings.confirmation_methods.email'),
                     ]" 
                     data-confirmation="true"
-                />
+                    />
+                @endif --}}
             </div>
         </div>
         <x-profile.submit-button formId="change-email-form" :label="__('profile.security_settings.next_button')" />
     @else
         <div class="row _offset20 mb-20 pt-4">
-            @if ( $user->google_2fa_enabled || $confirmationMethod === 'authenticator' )
+            @if ( $authenticatorEnabled || $confirmationMethod === 'authenticator' )
                 <div class="col-12 col-md-6 col-lg-4">
                     <x-profile.authenticator-code />
                 </div>
