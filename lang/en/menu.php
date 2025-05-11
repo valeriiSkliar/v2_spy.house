@@ -11,4 +11,10 @@ return [
     'referrals' => 'Referrals',
     'blog' => 'Blog',
     'faq' => 'FAQ',
+    'user_profile' => [
+        'notifications' => 'Notifications',
+        'profile_settings' => 'Profile Settings',
+        'logout' => 'Log out',
+        'login' => 'Login',
+    ],
 ];

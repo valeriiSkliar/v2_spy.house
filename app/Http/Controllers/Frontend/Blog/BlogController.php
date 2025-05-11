@@ -43,7 +43,7 @@ class BlogController extends BaseBlogController
 
     public function show(string $slug, Request $request)
     {
-        $locale = $request->get('locale', 'en') ?? app()->getLocale();
+        $locale = $request->get('locale') ?? app()->getLocale();
         $post = BlogPost::where('slug', $slug)
             ->where('is_published', true)
             ->with(['author', 'categories', 'ratings'])
@@ -116,7 +116,7 @@ class BlogController extends BaseBlogController
 
         return view($this->indexView, [
             'breadcrumbs' => [
-                ['title' => 'Blog', 'url' => route('blog.index')],
+                ['title' => __('blogs.header.title'), 'url' => route('blog.index')],
                 ['title' => $category->name, 'url' => route('blog.category', $category->slug)],
             ],
             'heroArticle' => $posts->first(),
@@ -133,9 +133,9 @@ class BlogController extends BaseBlogController
     }
 
 
-    private function getSidebarData(string $locale = 'en'): array
+    private function getSidebarData(): array
     {
-
+        $locale = app()->getLocale();
 
         $categories = PostCategory::query()
             ->withCount(['posts' => function ($query) {

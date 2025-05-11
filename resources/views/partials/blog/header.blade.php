@@ -6,9 +6,9 @@
     </div>
     <div class="header__left">
         <a href="/" class="header__logo"><img src="/img/logo.svg" alt="" width="142" height="36"></a>
-        <div class="header-blog font-roboto">BLOG</div>
+        <div class="header-blog font-roboto">{{ __('blogs.header.title') }}</div>
         <div class="header__btn">
-            <a href="{{ route('creatives.index') }}" class="btn _flex _small _green2 ml-2">Go to ads <span class="icon-next font-16 ml-2"></span></a>
+            <a href="{{ route('creatives.index') }}" class="btn _flex _small _green2 ml-2">{{ __('blogs.header.back_to_ads') }} <span class="icon-next font-16 ml-2"></span></a>
         </div>
     </div>
     <div class="header__right">

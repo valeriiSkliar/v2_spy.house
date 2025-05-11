@@ -5,6 +5,11 @@ return [
         'blog' => 'Blog',
         'search_results' => 'Search results for ":query"',
     ],
+    'header' => [
+        'title' => 'BLOG',
+        'back_to_ads' => 'Back to ads',
+        'back_to_blogs' => 'Back to blogs',
+    ],
     'new_article_label' => 'New',
     'read_often' => 'Read often',
     'it_will_also_be_interesting' => 'It will also be interesting',
