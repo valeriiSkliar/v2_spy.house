@@ -1,7 +1,7 @@
 @import "custom/rating";
 @import "custom/profile";
 @import "custom/welcome-txt";
-
+@import "components/flatpickr";
 html {
     scroll-behavior: smooth;
 }
@@ -175,4 +175,14 @@ html {
 
 .base-select__selected-label {
     font-weight: 500;
+}
+
+.btn._border-red {
+    color: #c93d3d;
+    background: transparent;
+    border: 1px solid #c93d3d;
+}
+.btn._border-red:hover {
+    background: #c93d3d;
+    color: #fff;
 }

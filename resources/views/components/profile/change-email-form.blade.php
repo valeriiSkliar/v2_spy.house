@@ -21,18 +21,7 @@
             </div>
             <div data-confirmation-method="{{ $confirmationMethod }}" class="col-12 col-md-6 col-lg-4">
                 <input type="hidden" name="confirmation_method" value="{{ $confirmationMethod }}">
-                {{-- @if ( !$authenticatorEnabled )
-                    <x-profile.select-field 
-                    name="confirmation" 
-                    :label="__('profile.security_settings.confirmation_method_label')"
-                    value="{{ __('profile.security_settings.confirmation_methods.' . $confirmationMethod) }}" 
-                    :options="[
-                        __('profile.security_settings.confirmation_methods.authenticator'),
-                        __('profile.security_settings.confirmation_methods.email'),
-                    ]" 
-                    data-confirmation="true"
-                    />
-                @endif --}}
+
             </div>
         </div>
         <x-profile.submit-button formId="change-email-form" :label="__('profile.security_settings.next_button')" />
@@ -56,10 +45,24 @@
         </div>
         <div class="d-flex gap-3">
             <x-profile.submit-button formId="change-email-form" :label="__('profile.security_settings.confirm_button')" />
-            <a href="{{ route('profile.cancel-email-update') }}" class="btn btn-outline-danger">
-                {{ __('profile.security_settings.cancel_button') }}
-            </a>
+            <div class="mb-20">
+                <a href="{{ route('profile.cancel-email-update') }}" class="btn _flex _border-red _big">
+                    {{ __('profile.security_settings.cancel_button') }}
+                </a>
+            </div>
         </div>
     @endif
     <x-profile.success-message status="email-updated" :message="__('profile.security_settings.email_updated')" />
 </form>
+
+<style>
+.btn._border-red {
+  color: #C93D3D;
+  background: transparent;
+  border: 1px solid #C93D3D;
+}
+.btn._border-red:hover {
+  background: #C93D3D;
+  color: #fff;
+}
+</style>
