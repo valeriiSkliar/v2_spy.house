@@ -50,8 +50,13 @@ class ServicesController extends FrontendController
 
         // Фильтр по категории для обоих запросов
         if ($request->filled('category')) {
-            $pinnedQuery->where('category_id', $selectedCategory);
-            $unpinnedQuery->where('category_id', $selectedCategory);
+            if ($selectedCategory === 'all') {
+                $pinnedQuery->where('category_id', '!=', null);
+                $unpinnedQuery->where('category_id', '!=', null);
+            } else {
+                $pinnedQuery->where('category_id', $selectedCategory);
+                $unpinnedQuery->where('category_id', $selectedCategory);
+            }
         }
 
         // Фильтр по бонусам для обоих запросов
