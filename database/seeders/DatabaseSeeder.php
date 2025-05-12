@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             BlogCommentSeeder::class,
             WebsiteDownloadSeeder::class,
             ServiceSeeder::class,
+            NotificationTypesSeeder::class,
             // Add other seeders here if needed
         ]);
     }

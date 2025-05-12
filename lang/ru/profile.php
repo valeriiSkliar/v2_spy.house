@@ -2,6 +2,7 @@
 
 return [
     '2fa' => [
+        'error_verifying_code' => 'Ошибка при проверке кода. Пожалуйста, попробуйте еще раз.',
         'info_message_title_authenticator' => 'Аутентификатор',
         'info_message_description_authenticator' => 'это 6-значный одноразовый пароль, который пользователь должен ввести в поле для входа в систему.',
         'setup_title' => 'Настройка двухфакторной аутентификации',
@@ -64,6 +65,8 @@ return [
     'personal_greeting_verification_code_label' => 'Ваш код проверки',
     'personal_greeting_verification_expires' => 'Срок действия этого кода истечет через :minutes минут. Если вы не запрашивали это изменение, пожалуйста, проигнорируйте это письмо.',
     'security_settings' => [
+        'password_updated_success_title' => 'Пароль успешно обновлен',
+        'password_updated_success_message' => 'Ваш пароль был успешно обновлен.',
         'personal_greeting_update_cancelled' => 'Изменение личного приветствия отменено',
         'email_update_cancelled' => 'Изменение E-mail отменено',
         'greeting_code_sent' => 'Код проверки был отправлен на ваш адрес электронной почты для подтверждения нового личного приветствия.',
@@ -144,6 +147,8 @@ return [
         'confirmation_message' => 'Вы собираетесь обновить свое личное приветствие. Пожалуйста, используйте код проверки ниже, чтобы подтвердить это изменение.',
         'verification_code_label' => 'Ваш код проверки',
         'verification_expires' => 'Срок действия этого кода истечет через :minutes минут. Если вы не запрашивали это изменение, пожалуйста, проигнорируйте это письмо.',
+        'success_title' => 'Личное приветствие обновлено',
+        'success_message' => 'Ваше личное приветствие было успешно обновлено.'
     ],
     'confirm_button' => 'Подтвердить',
     'cancel_button' => 'Отмена',
@@ -161,4 +166,6 @@ return [
         'verification_code_label' => 'Код проверки',
         'verification_expires' => 'Срок действия этого кода проверки истечет через 15 минут.',
     ],
+    'email_updated' => 'E-mail успешно обновлен',
+    'email_updated_message' => 'Ваш адрес электронной почты был успешно изменен с :old_email на :new_email.',
 ];

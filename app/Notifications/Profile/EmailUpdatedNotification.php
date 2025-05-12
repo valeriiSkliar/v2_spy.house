@@ -2,36 +2,52 @@
 
 namespace App\Notifications\Profile;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use App\Enums\Frontend\NotificationType;
+use App\Notifications\BaseNotification;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
 
-class EmailUpdatedNotification extends Notification implements ShouldQueue
+class EmailUpdatedNotification extends BaseNotification
 {
-    use Queueable;
-
-    private $oldEmail;
-    private $newEmail;
+    private string $oldEmail;
+    private string $newEmail;
 
     public function __construct(string $oldEmail, string $newEmail)
     {
+        parent::__construct(NotificationType::EMAIL_VERIFIED);
         $this->oldEmail = $oldEmail;
         $this->newEmail = $newEmail;
-    }
-
-    public function via($notifiable): array
-    {
-        return ['mail'];
     }
 
     public function toMail($notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject(__('profile.email_updated'))
-            ->line(__('profile.email_updated_message', [
-                'old_email' => $this->oldEmail,
-                'new_email' => $this->newEmail
-            ]));
+            ->subject($this->getTitle($notifiable))
+            ->line($this->getMessage($notifiable));
+    }
+
+    protected function getTitle(object $notifiable): string
+    {
+        return __('profile.email_updated');
+    }
+
+    protected function getMessage(object $notifiable): string
+    {
+        return __('profile.email_updated_message', [
+            'old_email' => $this->oldEmail,
+            'new_email' => $this->newEmail
+        ]);
+    }
+
+    protected function getIcon(): string
+    {
+        return 'mail';
+    }
+
+    protected function getAdditionalData(object $notifiable): array
+    {
+        return [
+            'old_email' => $this->oldEmail,
+            'new_email' => $this->newEmail,
+        ];
     }
 }

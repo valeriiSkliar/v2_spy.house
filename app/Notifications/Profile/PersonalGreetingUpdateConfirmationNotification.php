@@ -2,16 +2,13 @@
 
 namespace App\Notifications\Profile;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use App\Enums\Frontend\NotificationType;
+use App\Notifications\BaseNotification;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Lang;
 
-class PersonalGreetingUpdateConfirmationNotification extends Notification implements ShouldQueue
+class PersonalGreetingUpdateConfirmationNotification extends BaseNotification
 {
-    use Queueable;
-
     private string $code;
 
     /**
@@ -19,17 +16,8 @@ class PersonalGreetingUpdateConfirmationNotification extends Notification implem
      */
     public function __construct(string $code)
     {
+        parent::__construct(NotificationType::PROFILE_UPDATED);
         $this->code = $code;
-    }
-
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @return array<int, string>
-     */
-    public function via(object $notifiable): array
-    {
-        return ['mail'];
     }
 
     /**
@@ -38,10 +26,32 @@ class PersonalGreetingUpdateConfirmationNotification extends Notification implem
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject(Lang::get('profile.personal_greeting_update.confirmation_title'))
-            ->line(Lang::get('profile.personal_greeting_update.confirmation_message'))
+            ->subject($this->getTitle($notifiable))
+            ->line($this->getMessage($notifiable))
             ->line(Lang::get('profile.personal_greeting_update.verification_code_label') . ': ' . $this->code)
             ->line(Lang::get('profile.personal_greeting_update.verification_expires', ['minutes' => 15]));
-        // Optionally, add a line about "if you didn't request this"
+    }
+
+    protected function getTitle(object $notifiable): string
+    {
+        return Lang::get('profile.personal_greeting_update.confirmation_title');
+    }
+
+    protected function getMessage(object $notifiable): string
+    {
+        return Lang::get('profile.personal_greeting_update.confirmation_message');
+    }
+
+    protected function getIcon(): string
+    {
+        return 'user';
+    }
+
+    protected function getAdditionalData(object $notifiable): array
+    {
+        return [
+            'verification_code' => $this->code,
+            'expires_in' => 15,
+        ];
     }
 }

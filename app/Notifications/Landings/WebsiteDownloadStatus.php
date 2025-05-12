@@ -2,16 +2,13 @@
 
 namespace App\Notifications\Landings;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use App\Enums\Frontend\NotificationType;
+use App\Notifications\BaseNotification;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Lang;
 
-class WebsiteDownloadStatus extends Notification
+class WebsiteDownloadStatus extends BaseNotification
 {
-    use Queueable;
-
-
     /**
      * Create a new notification instance.
      */
@@ -19,29 +16,65 @@ class WebsiteDownloadStatus extends Notification
         private readonly string $url,
         private readonly string $status,
         private readonly ?string $error = null
-    ) {}
-
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @return array<int, string>
-     */
-    public function via(object $notifiable): array
-    {
-        return ['database'];
+    ) {
+        // Выбираем подходящий тип уведомления на основе статуса
+        $type = match ($status) {
+            'started' => NotificationType::WEBSITE_DOWNLOAD_STARTED,
+            'completed' => NotificationType::WEBSITE_DOWNLOAD_COMPLETED,
+            'failed' => NotificationType::WEBSITE_DOWNLOAD_FAILED,
+            default => NotificationType::WEBSITE_DOWNLOAD_STARTED,
+        };
+        
+        parent::__construct($type);
     }
 
-
-
     /**
-     * Get the array representation of the notification.
-     *
-     * @return array<string, mixed>
+     * Get the mail representation of the notification.
      */
-    public function toArray(object $notifiable): array
+    public function toMail(object $notifiable): MailMessage
     {
-        return [
-            //
+        $mailMessage = (new MailMessage)
+            ->subject($this->getTitle($notifiable))
+            ->line($this->getMessage($notifiable));
+        
+        if ($this->error && $this->status === 'failed') {
+            $mailMessage->line(Lang::get('landings.download.error_details') . ': ' . $this->error);
+        }
+        
+        return $mailMessage;
+    }
+
+    protected function getTitle(object $notifiable): string
+    {
+        return Lang::get('landings.download.status.' . $this->status . '.title', ['url' => $this->url]);
+    }
+
+    protected function getMessage(object $notifiable): string
+    {
+        return Lang::get('landings.download.status.' . $this->status . '.message', ['url' => $this->url]);
+    }
+
+    protected function getIcon(): string
+    {
+        return match ($this->status) {
+            'started' => 'download',
+            'completed' => 'check',
+            'failed' => 'alert-triangle',
+            default => 'download',
+        };
+    }
+
+    protected function getAdditionalData(object $notifiable): array
+    {
+        $data = [
+            'url' => $this->url,
+            'status' => $this->status,
         ];
+        
+        if ($this->error) {
+            $data['error'] = $this->error;
+        }
+        
+        return $data;
     }
 }

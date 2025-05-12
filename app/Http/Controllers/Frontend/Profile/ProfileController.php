@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Frontend\Profile;
 
+use App\Enums\Frontend\NotificationType;
 use App\Enums\Frontend\UserExperience;
 use App\Enums\Frontend\UserScopeOfActivity;
 use App\Http\Controllers\FrontendController;
@@ -9,26 +10,24 @@ use App\Http\Requests\Profile\ProfileUpdateRequest;
 use App\Http\Requests\Profile\ProfileSettingsUpdateRequest;
 use App\Http\Requests\Profile\UpdateEmailRequest;
 use App\Http\Requests\Profile\UpdateNotificationSettingsRequest;
+use App\Http\Requests\Profile\UpdatePersonalGreetingSettingsRequest;
+use App\Notifications\Profile\EmailUpdateConfirmationNotification;
+use App\Notifications\Profile\EmailUpdatedNotification;
+use App\Notifications\Profile\PasswordUpdateConfirmationNotification;
+use App\Notifications\Profile\PersonalGreetingUpdateConfirmationNotification;
 use App\Services\Api\TokenService;
+use App\Services\App\ImageService;
+use App\Services\Notification\NotificationDispatcher;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 use PragmaRX\Google2FALaravel\Facade as Google2FAFacade;
-use Illuminate\Support\Facades\Crypt;
-use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Log;
-use App\Services\App\ImageService;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Mail;
-use App\Notifications\Profile\EmailUpdateConfirmationNotification;
-use App\Notifications\Profile\EmailUpdatedNotification;
-use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Hash;
-use App\Notifications\Profile\PasswordUpdateConfirmationNotification;
-use App\Http\Requests\Profile\UpdatePersonalGreetingSettingsRequest;
-use App\Notifications\Profile\PersonalGreetingUpdateConfirmationNotification;
 
 class ProfileController extends FrontendController
 {
@@ -241,8 +240,12 @@ class ProfileController extends FrontendController
             'expires_at' => now()->addMinutes(15)
         ], now()->addMinutes(15));
 
-        Notification::route('mail', $newEmail)
-            ->notify(new EmailUpdateConfirmationNotification($verificationCode));
+        // Отправляем уведомление о коде подтверждения через диспетчер
+        NotificationDispatcher::sendNotification(
+            $user,
+            EmailUpdateConfirmationNotification::class,
+            [$verificationCode]
+        );
 
         return redirect()->route('profile.change-email')
             ->with('status', 'email-code-sent');
@@ -303,12 +306,29 @@ class ProfileController extends FrontendController
             'new_email' => $pendingUpdate['new_email']
         ]);
 
-        Notification::route('mail', $oldEmail)
-            ->notify(new EmailUpdatedNotification($oldEmail, $pendingUpdate['new_email']));
-        Notification::route('mail', $pendingUpdate['new_email'])
-            ->notify(new EmailUpdatedNotification($oldEmail, $pendingUpdate['new_email']));
-        $activeTab = $request->query('tab', 'security');
+        // Используем метод quickSend для отправки уведомления на старый email
+        NotificationDispatcher::quickSend(
+            $user,
+            NotificationType::EMAIL_VERIFIED,
+            [
+                'old_email' => $oldEmail,
+                'new_email' => $pendingUpdate['new_email'],
+            ],
+            __('profile.email_updated'),
+            __('profile.email_updated_message', [
+                'old_email' => $oldEmail,
+                'new_email' => $pendingUpdate['new_email']
+            ])
+        );
 
+        // Также отправляем уведомление на старый email через sendTo
+        NotificationDispatcher::sendTo(
+            'mail',
+            $oldEmail,
+            new EmailUpdatedNotification($oldEmail, $pendingUpdate['new_email'])
+        );
+
+        $activeTab = $request->query('tab', 'security');
 
         return redirect()->route('profile.settings', ['tab' => $activeTab])
             ->with('status', 'email-updated');
@@ -438,24 +458,6 @@ class ProfileController extends FrontendController
         return Redirect::route('profile.settings', ['tab' => $activeTab])->with('status', 'authenticator-disabled');
     }
 
-    // public function personalGreeting(Request $request): View
-    // {
-    //     $user = $request->user();
-    //     return view('pages.profile.personal-greeting', [
-    //         'user' => $user,
-    //     ]);
-    // }
-
-    // public function updatePersonalGreeting(UpdatePersonalGreetingSettingsRequest $request): RedirectResponse
-    // {
-    //     $user = $request->user();
-    //     $user->personal_greeting = $request->input('personal_greeting');
-    //     $user->save();
-    //     $activeTab = $request->query('tab', 'security');
-
-    //     return Redirect::route('profile.settings', ['tab' => $activeTab])->with('status', 'personal-greeting-updated');
-    // }
-
     /**
      * Display the personal greeting form, potentially with a pending confirmation.
      */
@@ -520,9 +522,12 @@ class ProfileController extends FrontendController
             'expires_at' => now()->addMinutes(15)
         ], now()->addMinutes(15));
 
-        // Send notification
-        Notification::route('mail', $user->email) // Send to current user's email
-            ->notify(new PersonalGreetingUpdateConfirmationNotification($verificationCode));
+        // Используем метод sendNotification
+        NotificationDispatcher::sendNotification(
+            $user,
+            PersonalGreetingUpdateConfirmationNotification::class,
+            [$verificationCode]
+        );
 
         Log::info('Personal greeting update initiated via email.', ['user_id' => $user->id, 'email' => $user->email]);
         return redirect()->route('profile.personal-greeting')
@@ -559,7 +564,7 @@ class ProfileController extends FrontendController
         if ($pendingUpdate['method'] === 'authenticator') {
             if (!$user->google_2fa_secret) {
                 Log::error('Personal greeting 2FA confirmation failed: 2FA secret not found for user.', ['user_id' => $user->id]);
-                return redirect()->route('profile.personal-greeting')->withErrors(['verification_code' => __('profile.2fa.error_verifying')]); // Generic error
+                return redirect()->route('profile.personal-greeting')->withErrors(['verification_code' => __('profile.2fa.error_verifying_code')]); // Generic error
             }
             $secret = Crypt::decryptString($user->google_2fa_secret);
             $isValid = Google2FAFacade::verifyKey($secret, $request->input('verification_code'));
@@ -582,6 +587,15 @@ class ProfileController extends FrontendController
         Cache::forget('personal_greeting_update_code:' . $user->id);
 
         Log::info('Personal greeting updated successfully.', ['user_id' => $user->id]);
+
+        // Отправляем уведомление об успешном обновлении через quickSend
+        NotificationDispatcher::quickSend(
+            $user,
+            NotificationType::PROFILE_UPDATED,
+            ['greeting_updated' => true],
+            __('profile.personal_greeting_update.success_title'),
+            __('profile.personal_greeting_update.success_message')
+        );
 
         // Determine active tab for redirect, assuming personal greeting is on the 'security' or a new 'general' tab.
         // For this example, let's assume it's part of general settings, redirecting to profile.settings with 'personal' tab
@@ -701,8 +715,12 @@ class ProfileController extends FrontendController
             'expires_at' => now()->addMinutes(15)
         ], now()->addMinutes(15));
 
-        Notification::route('mail', $user->email)
-            ->notify(new PasswordUpdateConfirmationNotification($verificationCode));
+        // Используем метод sendNotification для отправки уведомления о смене пароля
+        NotificationDispatcher::sendNotification(
+            $user,
+            PasswordUpdateConfirmationNotification::class,
+            [$verificationCode]
+        );
 
         return redirect()->route('profile.change-password')
             ->with('status', 'password-code-sent');
@@ -758,6 +776,15 @@ class ProfileController extends FrontendController
         Log::info('Password updated successfully', [
             'user_id' => $user->id
         ]);
+
+        // Отправляем уведомление об успешном обновлении пароля
+        NotificationDispatcher::quickSend(
+            $user,
+            NotificationType::PASSWORD_CHANGED,
+            [],
+            __('profile.security_settings.password_updated_success_title'),
+            __('profile.security_settings.password_updated_success_message')
+        );
 
         $activeTab = $request->query('tab', 'security');
 

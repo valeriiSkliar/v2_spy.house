@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use App\Models\Frontend\Rating;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Enums\Frontend\NotificationType;
 
 class User extends Authenticatable
 {
@@ -147,5 +148,122 @@ class User extends Authenticatable
     public function getPersonalGreeting(): ?string
     {
         return $this->personal_greeting;
+    }
+
+    /**
+     * Проверяет, включены ли уведомления определенного типа
+     *
+     * @param NotificationType|string $type
+     * @return bool
+     */
+    public function hasNotificationEnabled($type): bool
+    {
+        if ($type instanceof NotificationType) {
+            $type = $type->value;
+        }
+
+        $settings = $this->notification_settings ?? [];
+
+        // Если настроек для этого типа нет, считаем, что уведомления включены
+        if (!isset($settings[$type])) {
+            return true;
+        }
+
+        // Если настройка установлена в false, уведомления отключены
+        if ($settings[$type] === false) {
+            return false;
+        }
+
+        // Если настройка - массив каналов, проверяем, не пустой ли он
+        if (is_array($settings[$type])) {
+            return !empty($settings[$type]);
+        }
+
+        // По умолчанию считаем, что уведомления включены
+        return true;
+    }
+
+    /**
+     * Проверяет, включен ли указанный канал для определенного типа уведомлений
+     *
+     * @param NotificationType|string $type
+     * @param string $channel
+     * @return bool
+     */
+    public function hasNotificationChannelEnabled($type, string $channel): bool
+    {
+        if ($type instanceof NotificationType) {
+            $type = $type->value;
+        }
+
+        $settings = $this->notification_settings ?? [];
+
+        // Получаем настройки типа уведомления
+        $notificationType = app(\App\Models\NotificationType::class)->where('key', $type)->first();
+        $defaultChannels = $notificationType ? $notificationType->default_channels : ['mail'];
+
+        // Если настроек для этого типа нет, проверяем каналы по умолчанию
+        if (!isset($settings[$type])) {
+            return in_array($channel, $defaultChannels);
+        }
+
+        // Если настройка установлена в false, канал отключен
+        if ($settings[$type] === false) {
+            return false;
+        }
+
+        // Если настройка - массив каналов, проверяем наличие указанного канала
+        if (is_array($settings[$type])) {
+            return in_array($channel, $settings[$type]);
+        }
+
+        // Проверяем каналы по умолчанию
+        return in_array($channel, $defaultChannels);
+    }
+
+    /**
+     * Включает или отключает уведомления определенного типа
+     *
+     * @param NotificationType|string $type
+     * @param bool $enabled
+     * @return void
+     */
+    public function setNotificationEnabled($type, bool $enabled): void
+    {
+        if ($type instanceof NotificationType) {
+            $type = $type->value;
+        }
+
+        $settings = $this->notification_settings ?? [];
+
+        if ($enabled) {
+            $notificationType = app(\App\Models\NotificationType::class)->where('key', $type)->first();
+            $settings[$type] = $notificationType ? $notificationType->default_channels : ['mail'];
+        } else {
+            $settings[$type] = false;
+        }
+
+        $this->notification_settings = $settings;
+        $this->save();
+    }
+
+    /**
+     * Устанавливает каналы для определенного типа уведомлений
+     *
+     * @param NotificationType|string $type
+     * @param array $channels
+     * @return void
+     */
+    public function setNotificationChannels($type, array $channels): void
+    {
+        if ($type instanceof NotificationType) {
+            $type = $type->value;
+        }
+
+        $settings = $this->notification_settings ?? [];
+        $settings[$type] = $channels;
+
+        $this->notification_settings = $settings;
+        $this->save();
     }
 }

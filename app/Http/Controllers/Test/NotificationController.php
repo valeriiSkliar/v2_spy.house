@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 
 class NotificationController extends Controller
 {
+    public $indexView = 'pages.notifications.index';
     /**
      * Display a listing of the notifications.
      */
@@ -15,11 +16,11 @@ class NotificationController extends Controller
         // Здесь будет логика получения уведомлений из базы данных
         $notifications = $this->getNotifications();
 
-        if (count($notifications) === 0) {
-            return view('notifications.empty');
-        }
+        // if (count($notifications) === 0) {
+        //     return view('notifications.empty');
+        // }
 
-        return view('notifications.index', compact('notifications'));
+        return view($this->indexView, compact('notifications'));
     }
 
     /**

@@ -2,6 +2,7 @@
 
 return [
     '2fa' => [
+        'error_verifying_code' => 'Error verifying code. Please try again.',
         'info_message_title_authenticator' => 'Authenticator',
         'info_message_description_authenticator' => 'is a 6-digit one-time password that the user must enter into the field to log in.',
         'setup_title' => 'Two-factor authentication setup',
@@ -65,6 +66,8 @@ return [
     'personal_greeting_verification_code_label' => 'Your verification code is',
     'personal_greeting_verification_expires' => 'This code will expire in :minutes minutes. If you did not request this change, please ignore this email.',
     'security_settings' => [
+        'password_updated_success_title' => 'Password updated successfully',
+        'password_updated_success_message' => 'Your password has been successfully updated.',
         'personal_greeting_update_cancelled' => 'Personal greeting update cancelled',
         'email_update_cancelled' => 'Email update cancelled',
         'greeting_code_sent' => 'A verification code has been sent to your email address to confirm your new personal greeting.',
@@ -146,6 +149,8 @@ return [
         'confirmation_message' => 'You are about to update your personal greeting. Please use the verification code below to confirm this change.',
         'verification_code_label' => 'Your verification code is',
         'verification_expires' => 'This code will expire in :minutes minutes. If you did not request this change, please ignore this email.',
+        'success_title' => 'Personal Greeting Updated',
+        'success_message' => 'Your personal greeting has been successfully updated.'
     ],
     'confirm_button' => 'Confirm',
     'cancel_button' => 'Cancel',
@@ -163,4 +168,7 @@ return [
         'verification_code_label' => 'Verification Code',
         'verification_expires' => 'This verification code will expire in 15 minutes.',
     ],
+    'email_updated' => 'Email successfully updated',
+    'email_updated_message' => 'Your email address has been successfully changed from :old_email to :new_email.',
+
 ];

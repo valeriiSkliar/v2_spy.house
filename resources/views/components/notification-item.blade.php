@@ -13,7 +13,7 @@
             <div class="notification-item__btn">
                 <form action="{{ route('notifications.markAsRead', $id) }}" method="POST">
                     @csrf
-                    <button type="submit" class="btn _flex _border-green _medium">Acquainted</button>
+                    <button type="submit" class="btn _flex _border-green _medium">{{ __('notifications.acquainted') }}</button>
                 </form>
             </div>
         </div>

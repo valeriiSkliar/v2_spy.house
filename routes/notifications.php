@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Test\NotificationController;
+use App\Http\Controllers\Frontend\Notification\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth'])
