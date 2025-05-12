@@ -18,16 +18,25 @@
 
         $visibleValue = '';
         $visibleType = 'telegram';
+        $placeholders = [
+            'telegram' => '@username',
+            'viber_phone' => '+1 (999) 999-99-99',
+            'whatsapp_phone' => '+1 (999) 999-99-99'
+        ];
+        $currentPlaceholder = $placeholders['telegram'];
         
         if ($telegram) {
             $visibleValue = $telegram;
             $visibleType = 'telegram';
+            $currentPlaceholder = $placeholders['telegram'];
         } elseif ($viber_phone) {
             $visibleValue = $viber_phone;
             $visibleType = 'viber_phone';
+            $currentPlaceholder = $placeholders['viber_phone'];
         } elseif ($whatsapp_phone) {
             $visibleValue = $whatsapp_phone;
             $visibleType = 'whatsapp_phone';
+            $currentPlaceholder = $placeholders['whatsapp_phone'];
         }
     @endphp
     <div class="form-phone">
@@ -37,6 +46,7 @@
             class="input-h-57" 
             value="{{ old('visible_value', $visibleValue) }}"
             data-type="{{ $visibleType }}"
+            placeholder="{{ $currentPlaceholder }}"
         >
         <div id="profile-messanger-select" class="base-select">
             <div class="base-select__trigger">
@@ -100,6 +110,13 @@ const $profileMessangerSelectDropdown = $('#profile-messanger-select .base-selec
 const $profileMessangerSelectOptions = $('#profile-messanger-select .base-select__option');
 const $visibleValueInput = $('input[name="visible_value"]');
 
+// Объект с плейсхолдерами для каждого типа мессенджера
+const placeholders = {
+    'telegram': '@username',
+    'viber_phone': '+1 (999) 999-99-99',
+    'whatsapp_phone': '+1 (999) 999-99-99'
+};
+
 // Обработка выбора мессенджера в выпадающем списке
 $profileMessangerSelectOptions.on('click', function() {
     const selectedValue = $(this).data('value');
@@ -111,6 +128,9 @@ $profileMessangerSelectOptions.on('click', function() {
     // Обновляем data-type у видимого поля ввода
     $visibleValueInput.data('type', selectedValue);
     $visibleValueInput.attr('data-type', selectedValue);
+    
+    // Обновляем placeholder в зависимости от выбранного мессенджера
+    $visibleValueInput.attr('placeholder', placeholders[selectedValue]);
     
     // Обновляем выбранный класс в выпадающем списке
     $profileMessangerSelectOptions.removeClass('is-selected');
