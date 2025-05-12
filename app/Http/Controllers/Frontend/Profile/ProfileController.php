@@ -716,10 +716,10 @@ class ProfileController extends FrontendController
         ], now()->addMinutes(15));
 
         // Используем метод sendNotification для отправки уведомления о смене пароля
-        NotificationDispatcher::sendNotification(
-            $user,
-            PasswordUpdateConfirmationNotification::class,
-            [$verificationCode]
+        NotificationDispatcher::sendTo(
+            'mail',
+            $user->email,
+            new PasswordUpdateConfirmationNotification($verificationCode)
         );
 
         return redirect()->route('profile.change-password')

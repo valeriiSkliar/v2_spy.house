@@ -43,7 +43,7 @@ class PasswordUpdateConfirmationNotification extends BaseNotification
     {
         return [
             'verification_code' => $this->verificationCode,
-            'expires_in' => 15, // минут
+            'expires_in' => 15,
         ];
     }
 }
