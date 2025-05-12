@@ -7,7 +7,6 @@
     </div>
     <div class="col-12 col-md-6 col-lg-auto mb-15">
         <div class="base-select-icon">
-
         <x-common.base-select
             id="per-page"
             :selected="$selectedPerPage"
@@ -42,5 +41,19 @@
         {{ $notifications['pagination']->links() }}
     </div>
 @endif
+@endsection
+
+@section('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const perPageSelect = document.getElementById('per-page');
+        if (perPageSelect) {
+            perPageSelect.addEventListener('baseSelect:change', function(e) {
+                const perPage = e.detail.value;
+                window.location.href = `{{ route('notifications.index') }}?per_page=${perPage}`;
+            });
+        }
+    });
+</script>
 @endsection
 

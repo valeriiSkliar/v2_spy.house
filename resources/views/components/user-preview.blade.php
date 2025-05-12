@@ -5,13 +5,25 @@
         <div class="user-preview__name">{{ auth()->user()?->name }}</div>
         <div class="btn-icon _dark">
             <span class="icon-settings"></span>
-            <span class="has-notification"></span>
+            @if(auth()->user()->unreadNotifications->count() > 0)
+                <span class="has-notification"></span>
+            @endif
         </div>
     </div>
     <div class="user-preview__dropdown" style="display: none">
         <nav class="user-menu">
             <ul>
-                <li><a href="{{ route('notifications.index') }}"><span class="icon-notification"><span class="has-notification"></span></span> <span>{{ __('menu.user_profile.notifications') }}</span></a></li>
+                <li><a href="{{ route('notifications.index') }}">
+                        <span class="icon-notification">
+                            @if(auth()->user()->unreadNotifications->count() > 0)
+                                <span class="has-notification"></span>
+                            @endif
+                        </span> 
+                        <span>
+                            {{ __('menu.user_profile.notifications') }}
+                        </span>
+                    </a>
+                </li>
                 <li><a href="{{ route('profile.settings') }}"><span class="icon-settings"></span> <span>{{ __('menu.user_profile.profile_settings') }}</span></a></li>
                 <li><a href="{{ route('tariffs.index') }}"><span class="icon-tariffs"></span> <span>{{ __('menu.tariffs') }}</span></a></li>
             </ul>

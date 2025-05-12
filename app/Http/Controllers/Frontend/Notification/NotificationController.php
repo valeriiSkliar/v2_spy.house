@@ -18,7 +18,8 @@ class NotificationController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $notificationsData = $this->getNotifications($user);
+        $perPage = request('per_page', 12);
+        $notificationsData = $this->getNotifications($user, $perPage);
         $unreadCount = $user->unreadNotifications->count();
 
         if (count($notificationsData['items']) === 0) {
@@ -37,9 +38,8 @@ class NotificationController extends Controller
     /**
      * Get notifications from database.
      */
-    private function getNotifications($user)
+    private function getNotifications($user, $perPage): array
     {
-        $perPage = request('per_page', 12);
         $notifications = [];
         $dbNotifications = $user->notifications()->paginate($perPage);
 
@@ -82,7 +82,7 @@ class NotificationController extends Controller
             'perPage' => $perPage,
             'selectedPerPage' => $selectedPerPage,
             'perPageOptions' => $perPageOptions,
-            'pagination' => $dbNotifications,
+            'pagination' => $dbNotifications->appends(['per_page' => $perPage]),
         ];
     }
 
