@@ -2,7 +2,7 @@
 
 return [
     'title' => 'Уведомления',
-    'per_page' => 'На странице — :count',
+    'per_page' => 'На странице — ',
     'mark_all_read' => 'Прочитать все',
     'acquainted' => 'Ознакомлен',
     'notification_item' => [

@@ -18,14 +18,20 @@ class NotificationController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $notifications = $this->getNotifications($user);
+        $notificationsData = $this->getNotifications($user);
         $unreadCount = $user->unreadNotifications->count();
 
-        if (count($notifications) === 0) {
+        if (count($notificationsData['items']) === 0) {
             return view($this->emptyView);
         }
 
-        return view($this->indexView, compact('notifications', 'unreadCount'));
+        return view($this->indexView, [
+            'notifications' => $notificationsData,
+            'unreadCount' => $unreadCount,
+            'selectedPerPage' => $notificationsData['selectedPerPage'],
+            'perPageOptions' => $notificationsData['perPageOptions'],
+            'perPageOptionsPlaceholder' => __('notifications.per_page', ['count' => $notificationsData['perPage']])
+        ]);
     }
 
     /**
@@ -53,8 +59,29 @@ class NotificationController extends Controller
             ];
         }
 
+        $perPageOptions = [
+            ['label' => '12', 'value' => '12', 'order' => 1],
+            ['label' => '24', 'value' => '24', 'order' => 2],
+            ['label' => '48', 'value' => '48', 'order' => 3],
+            ['label' => '96', 'value' => '96', 'order' => 4]
+        ];
+
+        $selectedPerPage = null;
+        foreach ($perPageOptions as $option) {
+            if ($option['value'] == $perPage) {
+                $selectedPerPage = $option;
+                break;
+            }
+        }
+        if (!$selectedPerPage && count($perPageOptions) > 0) {
+            $selectedPerPage = $perPageOptions[0];
+        }
+
         return [
             'items' => $notifications,
+            'perPage' => $perPage,
+            'selectedPerPage' => $selectedPerPage,
+            'perPageOptions' => $perPageOptions,
             'pagination' => $dbNotifications,
         ];
     }

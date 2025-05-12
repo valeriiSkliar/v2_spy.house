@@ -2,7 +2,7 @@
 
 return [
     'title' => 'Notifications',
-    'per_page' => 'On page — :count',
+    'per_page' => 'On page — ',
     'mark_all_read' => 'Read all',
     'acquainted' => 'Acquainted',
     'notification_item' => [
