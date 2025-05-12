@@ -65,6 +65,8 @@ return [
     'personal_greeting_verification_code_label' => 'Your verification code is',
     'personal_greeting_verification_expires' => 'This code will expire in :minutes minutes. If you did not request this change, please ignore this email.',
     'security_settings' => [
+        'personal_greeting_update_cancelled' => 'Personal greeting update cancelled',
+        'email_update_cancelled' => 'Email update cancelled',
         'greeting_code_sent' => 'A verification code has been sent to your email address to confirm your new personal greeting.',
         'authenticator_required_for_greeting' => 'Enter the code from your authenticator app to confirm your new personal greeting.',
         'enter_email_code_greeting' => 'Please check your email for a verification code to confirm your new personal greeting.',

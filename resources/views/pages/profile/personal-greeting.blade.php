@@ -25,6 +25,7 @@
         @if($updateStep != 'confirmation')
             <form id="personal-greeting-form" action="{{ route('profile.initiate-personal-greeting-update') }}" method="POST" class="pt-3">
                 @csrf
+                <input type="hidden" name="confirmation_method" value="{{ old('confirmation_method', $updateMethod) }}">
                 <div class="row _offset20 mb-10">
                     <div class="col-12 col-md-6">
                         <x-profile.form-field 
@@ -34,7 +35,7 @@
                             :value="old('personal_greeting', $user->personal_greeting)" 
                         />
                     </div>
-                    <div class="col-12 col-md-6">
+                    {{-- <div class="col-12 col-md-6">
                         <div class="form-item mb-20">
                             <label for="confirmation_method" class="d-block mb-15">{{ __('profile.security_settings.confirmation_method_label') }}</label>
                             <select name="confirmation_method" id="confirmation_method" class="form-control input-h-57">
@@ -47,7 +48,7 @@
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
-                    </div>
+                    </div> --}}
                 </div>
                 <x-profile.submit-button formId="personal-greeting-form" :label="__('profile.security_settings.next_button')" />
             </form>
@@ -97,7 +98,7 @@
                             {{ __('profile.personal_greeting_update_success') }}
                         @break
                         @case('personal-greeting-update-cancelled')
-                            {{ __('profile.security_settings.email_update_cancelled') }}
+                            {{ __('profile.security_settings.personal_greeting_update_cancelled') }}
                         @break
                         @default
                             {{ session('status') }}
