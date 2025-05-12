@@ -2,7 +2,7 @@
 <form id="change-password-form" method="POST" action="{{ $passwordUpdatePending ? route('profile.confirm-password-update') : route('profile.initiate-password-update') }}" class="profile-form">
     @csrf
     @if(!$passwordUpdatePending)
-        <div class="row _offset20 mb-10">
+        <div class="col _offset20 mb-10">
             <div class="col-12 col-md-6 col-lg-4">
                 <div class="form-item mb-20">
                     <label class="d-block mb-10">{{ __('profile.security_settings.current_password_label') }}</label>

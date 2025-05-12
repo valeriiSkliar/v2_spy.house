@@ -1,12 +1,13 @@
 @props(['user', 'confirmationMethod', 'emailUpdatePending', 'authenticatorEnabled'])
-<form id="change-email-form" method="POST" action="{{ $emailUpdatePending ? route('profile.confirm-email-update') : route('profile.initiate-email-update') }}" class="profile-form">
+<form autocomplete="off" id="change-email-form" method="POST" action="{{ $emailUpdatePending ? route('profile.confirm-email-update') : route('profile.initiate-email-update') }}" class="profile-form">
     @csrf
     @if(!$emailUpdatePending)
-        <div class="row _offset20 mb-10">
+        <div class="col _offset20 mb-10">
             <div class="col-12 col-md-6 col-lg-4">
                 <input type="hidden" name="current_email" value="{{ $user->email }}">
                 <x-profile.form-field 
                     name="current_email" 
+                    autocomplete="off"
                     type="email" 
                     :value="$user->email" 
                     :disabled="true" 
@@ -14,10 +15,10 @@
                 />
             </div>
             <div class="col-12 col-md-6 col-lg-4">
-                <x-profile.form-field name="new_email" type="email" :label="__('profile.security_settings.new_email_label')" />
+                <x-profile.form-field autocomplete="new-email" name="new_email" type="email" :label="__('profile.security_settings.new_email_label')" />
             </div>
             <div class="col-12 col-md-6 col-lg-4">
-                <x-profile.form-field name="password" type="password" :label="__('profile.security_settings.password_label')" />
+                <x-profile.form-field autocomplete="pass-word" name="password" type="password" :label="__('profile.security_settings.password_label')" />
             </div>
             <div data-confirmation-method="{{ $confirmationMethod }}" class="col-12 col-md-6 col-lg-4">
                 <input type="hidden" name="confirmation_method" value="{{ $confirmationMethod }}">

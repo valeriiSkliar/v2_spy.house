@@ -14,7 +14,7 @@
     <x-profile.api-token 
         :api_token="$api_token" 
     />
-    <div class="row _offset20 mb-20">
+    <div class="col _offset20 mb-20">
         <div class="col-12 col-md-6 col-lg-4">
             <x-profile.form-field 
                 name="login" 
@@ -23,7 +23,7 @@
                 :value="$user->login ?? ''" 
             />
         </div>
-        <div class="col-12 col-md-6 col-lg-4">
+        {{-- <div class="col-12 col-md-6 col-lg-4">
             <x-profile.form-field 
                 name="name" 
                 type="text" 
@@ -38,8 +38,8 @@
                 :label="__('profile.personal_info.last_name_label')" 
                 :value="$user->surname" 
             />
-        </div>
-        <div class="col-12 col-md-6 col-lg-4">
+        </div> --}}
+        {{-- <div class="col-12 col-md-6 col-lg-4">
             <x-profile.date-flatpicker-form-field 
                 name="date_of_birth" 
                 type="date" 
@@ -47,7 +47,7 @@
                 :value="$user->date_of_birth" 
                 :placeholder="__('profile.personal_info.birth_date_label')"
             />
-        </div>
+        </div> --}}
 
         <div class="col-12 col-md-6 col-lg-4">
             <x-profile.socials-messanger-field 
