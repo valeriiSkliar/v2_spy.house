@@ -22,7 +22,9 @@ class ProfileSettingsUpdateRequest extends BaseRequest
             'name' => ['nullable', 'string', 'max:255'],
             'surname' => ['nullable', 'string', 'max:255'],
             'date_of_birth' => ['nullable', 'date'],
+            // Use values instead of names for validation - the dropdown sends value not enum name
             'experience' => ['nullable', 'string', 'in:' . implode(',', UserExperience::names())],
+            // Use values instead of names for validation
             'scope_of_activity' => ['nullable', 'string', 'in:' . implode(',', UserScopeOfActivity::names())],
             // Avatar is now handled by the API endpoint
             'telegram' => ['nullable', 'string', 'max:255'],

@@ -1,8 +1,15 @@
 import flatpickr from "flatpickr";
 
 import "flatpickr/dist/flatpickr.css";
-// import "../../scss/components/_flatpickr.scss";
-
+import { profileSettingsHandler } from "../components";
+import { config } from "../config";
+document.addEventListener("DOMContentLoaded", function () {
+    // Initialize profile settings handler with API endpoint
+    profileSettingsHandler.init({
+        formId: "personal-settings-form",
+        apiEndpoint: config.apiProfileSettingsEndpoint,
+    });
+});
 flatpickr("#dateRangePicker", {
     // mode: "range",
     dateFormat: "Y-m-d",

@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Auth;
 
 <body class="">
     <div class="navigation-bg"></div>
+    
 
     <!-- Page Content -->
     @yield('content')

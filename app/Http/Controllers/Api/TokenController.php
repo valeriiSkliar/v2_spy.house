@@ -88,12 +88,28 @@ class TokenController extends Controller
         if (!$refreshToken) {
             \Illuminate\Support\Facades\Log::info('No refresh token in cookie, checking request body');
             
+            // Validate request when token is supplied via body
+            $request->validate([
+                'refresh_token' => 'sometimes|string'
+            ]);
+            
             // Check if request has token in body
             if ($request->has('refresh_token')) {
                 $refreshToken = $request->input('refresh_token');
-                \Illuminate\Support\Facades\Log::info('Found refresh token in request body');
+                \Illuminate\Support\Facades\Log::info('Found refresh token in request body', [
+                    'token_length' => strlen($refreshToken)
+                ]);
             } else {
-                \Illuminate\Support\Facades\Log::warning('No refresh token in request body either');
+                // Check if token is in JSON request body
+                $jsonData = $request->json()->all();
+                if (isset($jsonData['refresh_token'])) {
+                    $refreshToken = $jsonData['refresh_token'];
+                    \Illuminate\Support\Facades\Log::info('Found refresh token in JSON request body', [
+                        'token_length' => strlen($refreshToken)
+                    ]);
+                } else {
+                    \Illuminate\Support\Facades\Log::warning('No refresh token in request body either');
+                }
             }
         }
 
@@ -141,7 +157,10 @@ class TokenController extends Controller
             // Try to find user by refresh token
             // This allows token refresh even if session authentication expired
             \Illuminate\Support\Facades\Log::info('Looking up user by refresh token hash');
-            $refreshTokenRecord = \App\Models\RefreshToken::where('token', $refreshToken)
+            
+            // Directly hash the token for comparison
+            $hashedToken = hash('sha256', $refreshToken);
+            $refreshTokenRecord = \App\Models\RefreshToken::where('token', $hashedToken)
                 ->where('expires_at', '>', now())
                 ->first();
                 
@@ -153,6 +172,10 @@ class TokenController extends Controller
                 ]);
             } else {
                 \Illuminate\Support\Facades\Log::warning('No valid refresh token record found');
+                \Illuminate\Support\Facades\Log::debug('Tried to find token with hash', [
+                    'token_length' => strlen($refreshToken),
+                    'token_prefix' => substr($refreshToken, 0, 10) . '...'
+                ]);
             }
         }
         
@@ -173,12 +196,26 @@ class TokenController extends Controller
             ]);
         }
 
+        // Check if client wants the refresh token in the response body
+        // This is less secure but necessary for environments that don't support cookies properly
+        $includeRefreshToken = $request->input('include_refresh_token') === 'true' || 
+                               $request->header('X-Include-Refresh-Token') === 'true';
+
         // Return new access token and set new refresh token in cookie
-        $response = response()->json([
+        $responseData = [
             'access_token' => $tokenData['access_token'],
             'expires_at' => $tokenData['expires_at'],
             'token_type' => 'Bearer',
-        ]);
+        ];
+        
+        // Include refresh token in response body if requested
+        // This allows clients that can't use cookies to still refresh tokens
+        if ($includeRefreshToken) {
+            $responseData['refresh_token'] = $tokenData['refresh_token'];
+            \Illuminate\Support\Facades\Log::info('Including refresh token in response body for client fallback');
+        }
+        
+        $response = response()->json($responseData);
 
         // Set new refresh token in a HttpOnly cookie
         return $this->setRefreshTokenCookie($response, $tokenData['refresh_token']);
@@ -251,17 +288,18 @@ class TokenController extends Controller
         // Calculate minutes from now to the TokenService::REFRESH_TOKEN_EXPIRATION
         $minutes = TokenService::REFRESH_TOKEN_EXPIRATION;
         
-        // Set cookie options
+        // Set cookie options - Note: Using Lax for SameSite to enable cross-origin requests
+        // while still providing some CSRF protection
         $cookie = cookie(
             'refresh_token',       // name
             $refreshToken,         // value
             $minutes,              // minutes
             '/',                   // path
             null,                  // domain (null = current domain)
-            true,                  // secure (HTTPS only)
+            request()->secure(),   // secure (based on current request protocol)
             true,                  // httpOnly (not accessible via JavaScript)
             false,                 // raw
-            'Strict'               // sameSite
+            'Lax'                  // sameSite - Changed to 'Lax' to allow cross-site requests in certain contexts
         );
 
         return $response->withCookie($cookie);

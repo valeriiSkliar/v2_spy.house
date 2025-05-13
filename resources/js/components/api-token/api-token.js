@@ -98,7 +98,7 @@ const apiTokenHandler = {
     },
 
     /**
-     * Try to refresh the token using the HttpOnly refresh token cookie
+     * Try to refresh the token using the HttpOnly refresh token cookie or fallback to localStorage
      * @returns {Promise<string>} A promise that resolves with the new token
      */
     refreshToken: async () => {
@@ -120,15 +120,44 @@ const apiTokenHandler = {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             console.log("Using CSRF token:", csrfToken ? "Available" : "Not found");
             
-            console.log("Calling refresh token endpoint with cookies...");
+            // Check for manually stored refresh token as fallback
+            // Note: This is less secure but provides a fallback for environments where cookies don't work
+            const storedRefreshToken = localStorage.getItem("bt_refresh");
+            const useTokenFallback = storedRefreshToken || !navigator.cookieEnabled;
+            
+            // Create request body with refresh token if available
+            const requestBody = useTokenFallback ? 
+                JSON.stringify({
+                    refresh_token: storedRefreshToken || "",
+                    include_refresh_token: "true" // Request refresh token in response
+                }) : 
+                null;
+            
+            console.log("Calling refresh token endpoint...");
+            console.log("Using stored refresh token as fallback:", !!storedRefreshToken);
+            console.log("Cookies enabled in browser:", navigator.cookieEnabled);
+            
             // Call the token refresh endpoint, which will use the HttpOnly cookie
+            // or the stored refresh token as fallback
+            // Prepare headers
+            const headers = {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken || '',
+                'Accept': 'application/json',
+            };
+            
+            // If cookies are disabled or we're using token fallback, request token in response
+            if (useTokenFallback) {
+                headers['X-Include-Refresh-Token'] = 'true';
+            }
+            
             const response = await fetch('/api/auth/refresh-token', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken || '',
-                },
-                credentials: 'same-origin' // Important: include cookies
+                headers: headers,
+                body: requestBody, // Include refresh token in body if available
+                credentials: 'include', // Include cookies in cross-origin requests
+                mode: 'cors', // Explicitly enable CORS requests
+                cache: 'no-cache' // Prevent caching of token requests
             });
 
             console.log("Refresh response status:", response.status);
@@ -138,6 +167,21 @@ const apiTokenHandler = {
                 try {
                     const errorData = await response.json();
                     console.error("Error details:", errorData);
+                    
+                    // Handle specific error cases
+                    if (response.status === 400 && errorData.message) {
+                        console.warn("Token refresh failed:", errorData.message);
+                        
+                        // If refresh token not provided, try to recover by clearing and requesting login
+                        if (errorData.message.includes('not provided')) {
+                            apiTokenHandler.removeToken();
+                            console.warn("Token refresh failed due to missing token. Clearing storage.");
+                        }
+                    } else if (response.status === 401) {
+                        // Authentication error, clear tokens
+                        apiTokenHandler.removeToken();
+                        console.warn("Authentication failed during token refresh. Clearing token.");
+                    }
                 } catch (e) {
                     // If we can't parse the error response, just log the status
                     console.error("Couldn't parse error response");
@@ -150,11 +194,19 @@ const apiTokenHandler = {
             const data = await response.json();
             console.log("Response contains access_token:", !!data.access_token);
             console.log("Response contains expires_at:", !!data.expires_at);
+            console.log("Response contains refresh_token in body:", !!data.refresh_token);
             
             if (data.access_token) {
                 // Store the new token with its expiration
                 console.log("Storing new token in localStorage");
                 apiTokenHandler.setToken(data.access_token, data.expires_at);
+                
+                // Store refresh token as fallback if provided in response body
+                // This is less secure but provides a fallback for environments where cookies don't work
+                if (data.refresh_token) {
+                    console.log("Storing refresh token as fallback");
+                    localStorage.setItem("bt_refresh", data.refresh_token);
+                }
                 
                 // Process waiting functions
                 if (apiTokenHandler._refreshQueue.length > 0) {
@@ -260,9 +312,24 @@ const apiTokenHandler = {
                     apiTokenHandler.refreshToken()
                         .then(newToken => {
                             console.log("Successfully obtained new token:", newToken.substring(0, 10) + "...");
+                            
+                            // Force reload if we're on a page that requires authentication
+                            const requiresAuth = document.querySelector('meta[name="requires-auth"]');
+                            if (requiresAuth && requiresAuth.getAttribute('content') === 'true') {
+                                console.log("Page requires authentication and token refreshed. Reloading...");
+                                window.location.reload();
+                            }
                         })
                         .catch(error => {
                             console.warn("Could not get a new token:", error);
+                            
+                            // If we're on a page that requires authentication and can't refresh token,
+                            // redirect to login
+                            const requiresAuth = document.querySelector('meta[name="requires-auth"]');
+                            if (requiresAuth && requiresAuth.getAttribute('content') === 'true') {
+                                console.warn("Page requires authentication but cannot refresh token. Redirecting to login...");
+                                window.location.href = '/login';
+                            }
                         });
                 }, 100); // Short delay to ensure page is loaded
             }

@@ -1,9 +1,8 @@
 @props(['user', 'api_token', 'scopes', 'experiences'])
 <form 
     id="personal-settings-form"
-    action="{{ route('profile.update-settings') }}"
+    action="{{ route('api.profile.settings.update') }}"
      method="POST" 
-     enctype="multipart/form-data" 
      class="pt-3"
     >
         @csrf

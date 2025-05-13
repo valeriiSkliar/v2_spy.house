@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\Blog\ApiBlogController;
 use App\Http\Controllers\Api\Profile\ProfileAvatarController;
+use App\Http\Controllers\Api\Profile\ProfileSettingsController;
 use App\Http\Controllers\Api\TokenController;
 use App\Http\Controllers\Test\API\BaseTokenController;
 use App\Services\Api\TokenService;
@@ -31,6 +32,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/tokens/create', [TokenController::class, 'createToken'])->name('api.tokens.create');
     Route::get('/tokens', [TokenController::class, 'listTokens'])->name('api.tokens.list');
     Route::post('/tokens/revoke', [TokenController::class, 'revokeToken'])->name('api.tokens.revoke');
+
+    // Profile
+    // MOVE TO PROFILE ROUTES Route::post('/profile/avatar', [ProfileAvatarController::class, 'upload'])->name('api.profile.avatar.upload');
+    Route::put('/profile/settings', [ProfileSettingsController::class, 'update'])->name('api.profile.settings.update');
 
     // Blog
     Route::post('/blog/{slug}/comment', [ApiBlogController::class, 'storeComment'])->name('api.blog.comment.store');

@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth', 'auth:sanctum'])->group(function () {
     Route::get('/profile/settings', [ProfileController::class, 'settings'])->name('profile.settings');
-    Route::put('/profile/settings', [ProfileController::class, 'updateSettings'])->name('profile.update-settings');
+    // Route::put('/profile/settings', [ProfileController::class, 'updateSettings'])->name('profile.update-settings');
     Route::get('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.change-password');
     Route::post('/profile/initiate-password-update', [ProfileController::class, 'initiatePasswordUpdate'])->name('profile.initiate-password-update');
     Route::post('/profile/confirm-password-update', [ProfileController::class, 'confirmPasswordUpdate'])->name('profile.confirm-password-update');
@@ -30,6 +30,8 @@ Route::middleware(['web', 'auth', 'auth:sanctum'])->group(function () {
     Route::get('/profile/cancel-personal-greeting-update', [ProfileController::class, 'cancelPersonalGreetingUpdate'])->name('profile.cancel-personal-greeting-update');
 });
 
-Route::middleware(['web', 'auth', 'auth:sanctum'])->group(function () {
-    Route::post('/profile/avatar', [ProfileAvatarController::class, 'upload'])->name('api.profile.avatar.upload');
-});
+Route::middleware(['web', 'auth', 'auth:sanctum'])
+    ->prefix('api')
+    ->group(function () {
+        Route::post('/profile/avatar', [ProfileAvatarController::class, 'upload'])->name('api.profile.avatar.upload');
+    });

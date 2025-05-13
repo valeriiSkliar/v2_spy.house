@@ -117,13 +117,20 @@ class TokenService
      */
     public function refreshToken(User $user, string $refreshToken): ?array
     {
+        // Hash the token for database comparison
+        $hashedToken = hash('sha256', $refreshToken);
+        
         // Find the refresh token in the database
         $tokenRecord = $user->refreshTokens()
-            ->where('token', $refreshToken)
+            ->where('token', $hashedToken)
             ->where('expires_at', '>', now())
             ->first();
             
         if (!$tokenRecord) {
+            \Illuminate\Support\Facades\Log::warning('Token service: No matching refresh token found', [
+                'user_id' => $user->id,
+                'token_hash_prefix' => substr($hashedToken, 0, 10)
+            ]);
             return null;
         }
         
