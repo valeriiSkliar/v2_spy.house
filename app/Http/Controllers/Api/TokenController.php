@@ -70,21 +70,62 @@ class TokenController extends Controller
      */
     public function refreshToken(Request $request): JsonResponse
     {
+        \Illuminate\Support\Facades\Log::info('Token refresh attempt', [
+            'has_cookies' => $request->hasCookie('refresh_token'),
+            'cookie_names' => array_keys($request->cookies->all()),
+            'has_auth' => Auth::check(),
+            'content_type' => $request->header('Content-Type'),
+            'user_id' => Auth::id()
+        ]);
+
         // Get refresh token from cookie
         $refreshToken = $request->cookie('refresh_token');
+        \Illuminate\Support\Facades\Log::info('Refresh token from cookie', [
+            'has_token' => !empty($refreshToken)
+        ]);
 
         // If no refresh token in cookie, check the request body (for clients that don't support cookies)
         if (!$refreshToken) {
-            $request->validate([
-                'refresh_token' => 'required|string',
-            ]);
-            $refreshToken = $request->input('refresh_token');
+            \Illuminate\Support\Facades\Log::info('No refresh token in cookie, checking request body');
+            
+            // Check if request has token in body
+            if ($request->has('refresh_token')) {
+                $refreshToken = $request->input('refresh_token');
+                \Illuminate\Support\Facades\Log::info('Found refresh token in request body');
+            } else {
+                \Illuminate\Support\Facades\Log::warning('No refresh token in request body either');
+            }
         }
 
-        // If no refresh token in cookie or request, return error
-        if (!$refreshToken) {
+        // If no refresh token in cookie or request, generate a new one if user is authenticated
+        if (!$refreshToken && Auth::check()) {
+            \Illuminate\Support\Facades\Log::info('No refresh token, but user is authenticated. Creating new tokens.');
+            $user = Auth::user();
+            $tokenData = $this->tokenService->createBasicToken($user);
+            
             return response()->json([
-                'message' => 'Refresh token not provided',
+                'access_token' => $tokenData['access_token'],
+                'expires_at' => $tokenData['expires_at'],
+                'token_type' => 'Bearer',
+                'message' => 'New token created'
+            ])->cookie(
+                'refresh_token',
+                $tokenData['refresh_token'],
+                TokenService::REFRESH_TOKEN_EXPIRATION,
+                '/',
+                null,
+                request()->secure(),
+                true,
+                false,
+                'Strict'
+            );
+        }
+
+        // If still no refresh token and not authenticated, return error
+        if (!$refreshToken) {
+            \Illuminate\Support\Facades\Log::warning('No refresh token provided and user not authenticated');
+            return response()->json([
+                'message' => 'Refresh token not provided and user not authenticated',
             ], 400);
         }
 
@@ -93,20 +134,31 @@ class TokenController extends Controller
         // First check if user is authenticated
         if (Auth::check()) {
             $user = $request->user();
+            \Illuminate\Support\Facades\Log::info('User authenticated via session', [
+                'user_id' => $user->id
+            ]);
         } else {
             // Try to find user by refresh token
             // This allows token refresh even if session authentication expired
+            \Illuminate\Support\Facades\Log::info('Looking up user by refresh token hash');
             $refreshTokenRecord = \App\Models\RefreshToken::where('token', $refreshToken)
                 ->where('expires_at', '>', now())
                 ->first();
                 
             if ($refreshTokenRecord) {
                 $user = \App\Models\User::find($refreshTokenRecord->user_id);
+                \Illuminate\Support\Facades\Log::info('Found user by refresh token', [
+                    'user_id' => $user->id,
+                    'token_id' => $refreshTokenRecord->id
+                ]);
+            } else {
+                \Illuminate\Support\Facades\Log::warning('No valid refresh token record found');
             }
         }
         
         // If still no user found, return authentication error
         if (!$user) {
+            \Illuminate\Support\Facades\Log::warning('No user found for this refresh token');
             return response()->json([
                 'message' => 'User not found for this refresh token',
             ], 401);

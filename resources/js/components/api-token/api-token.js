@@ -250,6 +250,22 @@ const apiTokenHandler = {
         const token = apiTokenHandler.getToken();
         if (!token) {
             console.warn("No API token found. Some features may not work properly.");
+            
+            // If we don't have a token but the user is logged in (has a session)
+            // we can attempt to get a new token via the refresh endpoint
+            // This helps in cases where localStorage was cleared but session is still valid
+            if (document.cookie.includes('laravel_session')) {
+                console.log("User appears to be logged in. Attempting to get a new token...");
+                setTimeout(() => {
+                    apiTokenHandler.refreshToken()
+                        .then(newToken => {
+                            console.log("Successfully obtained new token:", newToken.substring(0, 10) + "...");
+                        })
+                        .catch(error => {
+                            console.warn("Could not get a new token:", error);
+                        });
+                }, 100); // Short delay to ensure page is loaded
+            }
         } else {
             console.log("API token loaded. Monitoring expiration.");
         }
