@@ -17,7 +17,7 @@
             /> --}}
             <div class="col-lg-4 col-md-6 col-12 mb-20">
                 <label class="d-block mb-10">{{ __('profile.ip_restriction.allowed_ip_addresses_label') }}</label>
-                <textarea name="ip_restrictions" class="input-h-57" rows="5" placeholder="{{ __('profile.ip_restriction.allowed_ip_addresses_placeholder') }}"></textarea>
+                <textarea name="ip_restrictions" class="auto-resize" rows="5" placeholder="{{ __('profile.ip_restriction.allowed_ip_addresses_placeholder') }}">{{ is_array(auth()->user()->ip_restrictions) ? implode("\n", auth()->user()->ip_restrictions) : auth()->user()->ip_restrictions }}</textarea>
                 @error('ip_restrictions')
                     <span class="text-danger">{{ $message }}</span>
                 @enderror
@@ -34,3 +34,28 @@
         </form>
     </div>
 @endsection 
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const textareas = document.querySelectorAll('.auto-resize');
+        
+        textareas.forEach(textarea => {
+            // Установка начальной высоты при загрузке страницы
+            adjustHeight(textarea);
+            
+            // Добавление слушателя события ввода
+            textarea.addEventListener('input', function() {
+                adjustHeight(this);
+            });
+        });
+        
+        function adjustHeight(element) {
+            // Сброс высоты для корректного расчета
+            element.style.height = 'auto';
+            // Установка новой высоты на основе содержимого
+            element.style.height = element.scrollHeight + 'px';
+        }
+    });
+</script>
+@endpush 
