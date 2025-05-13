@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Enums\Frontend\NotificationType;
+use Illuminate\Notifications\Messages\MailMessage;
 
 class CustomNotification extends BaseNotification
 {
@@ -16,6 +17,16 @@ class CustomNotification extends BaseNotification
         $this->data = $data;
         $this->customTitle = $title;
         $this->customMessage = $message;
+    }
+
+    /**
+     * Get the mail representation of the notification.
+     */
+    public function toMail(object $notifiable): MailMessage
+    {
+        return (new MailMessage)
+            ->subject($this->getTitle($notifiable))
+            ->line($this->getMessage($notifiable));
     }
 
     protected function getTitle(object $notifiable): string
