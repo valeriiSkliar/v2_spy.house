@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Profile\ProfileAvatarController;
 use App\Http\Controllers\Frontend\Profile\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -27,4 +28,8 @@ Route::middleware(['web', 'auth', 'auth:sanctum'])->group(function () {
     Route::post('/profile/initiate-personal-greeting-update', [ProfileController::class, 'initiatePersonalGreetingUpdate'])->name('profile.initiate-personal-greeting-update');
     Route::post('/profile/confirm-personal-greeting-update', [ProfileController::class, 'confirmPersonalGreetingUpdate'])->name('profile.confirm-personal-greeting-update');
     Route::get('/profile/cancel-personal-greeting-update', [ProfileController::class, 'cancelPersonalGreetingUpdate'])->name('profile.cancel-personal-greeting-update');
+});
+
+Route::middleware(['web', 'auth', 'auth:sanctum'])->group(function () {
+    Route::post('/profile/avatar', [ProfileAvatarController::class, 'upload'])->name('api.profile.avatar.upload');
 });

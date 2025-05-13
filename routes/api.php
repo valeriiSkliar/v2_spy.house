@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\Blog\ApiBlogController;
+use App\Http\Controllers\Api\Profile\ProfileAvatarController;
 use App\Http\Controllers\Api\TokenController;
 use App\Http\Controllers\Test\API\BaseTokenController;
 use App\Services\Api\TokenService;
@@ -25,7 +26,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Auth
     // Route::post('/logout', [AuthController::class, 'logout'])->name('api.logout');
     Route::get('/user', [AuthController::class, 'user'])->name('api.user');
-    
+
     // Token management
     Route::post('/tokens/create', [TokenController::class, 'createToken'])->name('api.tokens.create');
     Route::get('/tokens', [TokenController::class, 'listTokens'])->name('api.tokens.list');

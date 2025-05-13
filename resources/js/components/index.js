@@ -4,3 +4,4 @@ export * from "./landings";
 export * from "./blogs";
 export * from "./services";
 export { default as loader } from "./loader";
+export * from "./profile";

@@ -97,29 +97,8 @@ class ProfileController extends FrontendController
             $settingsData['telegram'] = $validatedData['telegram'] ?? null;
         }
 
-        if (isset($validatedData['user_avatar'])) {
-            $imageService = app(ImageService::class);
-            $avatarPath = $imageService->replace(
-                $validatedData['user_avatar'],
-                $user->user_avatar,
-                'avatars'
-            );
-
-            $image = getimagesize($validatedData['user_avatar']);
-            $settingsData['user_avatar_metadata'] = [
-                'size' => round($validatedData['user_avatar']->getSize() / 1024),
-                'name' => $validatedData['user_avatar']->getClientOriginalName(),
-                'file_type' => $validatedData['user_avatar']->getClientMimeType(),
-                'dimensions' => [
-                    'width' => $image[0] ?? 0,
-                    'height' => $image[1] ?? 0
-                ],
-                'proportions' => $image[0] && $image[1] ? round($image[0] / $image[1], 2) : 0
-            ];
-
-            $settingsData['user_avatar'] = $avatarPath;
-        }
-
+        // Avatar uploads are now handled by the API endpoint and not through the form
+        
         $user->fill($settingsData);
         $user->save();
 

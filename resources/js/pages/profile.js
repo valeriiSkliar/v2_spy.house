@@ -1,4 +1,5 @@
 import flatpickr from "flatpickr";
+
 import "flatpickr/dist/flatpickr.css";
 // import "../../scss/components/_flatpickr.scss";
 

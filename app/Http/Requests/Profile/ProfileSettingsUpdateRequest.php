@@ -24,7 +24,7 @@ class ProfileSettingsUpdateRequest extends BaseRequest
             'date_of_birth' => ['nullable', 'date'],
             'experience' => ['nullable', 'string', 'in:' . implode(',', UserExperience::names())],
             'scope_of_activity' => ['nullable', 'string', 'in:' . implode(',', UserScopeOfActivity::names())],
-            'user_avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'],
+            // Avatar is now handled by the API endpoint
             'telegram' => ['nullable', 'string', 'max:255'],
             'viber_phone' => ['nullable', 'string', 'max:255'],
             'whatsapp_phone' => ['nullable', 'string', 'max:255'],
