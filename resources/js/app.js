@@ -37,12 +37,5 @@ import "./carousel.js";
 import "./tariffs";
 
 // Import the API token system
+// API token is now initialized automatically in the module
 import { apiTokenHandler } from "@/components/api-token/api-token.js";
-
-document.addEventListener("DOMContentLoaded", () => {
-    const apiTokenValue = $("#api_token").val();
-
-    if (apiTokenValue) {
-        apiTokenHandler.init(apiTokenValue);
-    }
-});

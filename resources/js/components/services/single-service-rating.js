@@ -70,7 +70,7 @@ const submitServiceRating = (serviceId, rating) => {
         }
     }
 
-    // Check for CSRF token
+    // Check for CSRF token for the request
     const csrfToken = document.querySelector('meta[name="csrf-token"]');
     if (!csrfToken) {
         console.error("CSRF token not found");
@@ -78,16 +78,66 @@ const submitServiceRating = (serviceId, rating) => {
         return;
     }
 
-    fetch(`/api/services/${serviceId}/rate/${rating}`, {
-        method: "GET",
-        credentials: "omit",
-        headers: {
-            "Content-Type": "application/json",
-            // "X-CSRF-TOKEN": csrfToken?.content,
-            Authorization: `Bearer ${apiTokenHandler.getToken()}`,
-        },
-        // body: JSON.stringify({ rating: rating }),
-    })
+    // Check if token needs refresh before making the request
+    const performRequest = async () => {
+        // Check if we have a token at all
+        if (!apiTokenHandler.hasToken()) {
+            console.warn("No API token found, attempting to refresh...");
+            
+            try {
+                // Try to get a new token via refresh token
+                await apiTokenHandler.refreshToken();
+                
+                // If we got here, refresh was successful
+                console.log("Successfully obtained new token via refresh");
+            } catch (error) {
+                console.error("Failed to get token via refresh:", error);
+                createAndShowToast("Authentication error. Please log in again.", "error");
+                // Optionally redirect to login
+                // window.location.href = '/login';
+                return Promise.reject(new Error("No API token available"));
+            }
+        }
+
+        // If token is expiring soon, refresh it first
+        if (apiTokenHandler.isTokenExpiredOrExpiring()) {
+            try {
+                console.log("Access token expiring soon, refreshing before rating submission");
+                await apiTokenHandler.refreshToken();
+                console.log("Token refreshed successfully");
+            } catch (error) {
+                console.error("Failed to refresh token:", error);
+                createAndShowToast("Error with authentication. Please try again.", "error");
+                return Promise.reject(error);
+            }
+        }
+
+        // Get the current token (after potential refresh)
+        const token = apiTokenHandler.getToken();
+        
+        // Double check we have a valid token
+        if (!token) {
+            console.error("Still no valid API token after refresh attempt");
+            createAndShowToast("Authentication error. Please log in again.", "error");
+            return Promise.reject(new Error("No valid API token after refresh"));
+        }
+
+        console.log("Using token for request:", token.substring(0, 10) + "...");
+
+        // Make the API request with the current (or refreshed) token
+        return fetch(`/api/services/${serviceId}/rate/${rating}`, {
+            method: "GET",
+            credentials: "same-origin", // Include cookies for refresh token
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": csrfToken?.getAttribute('content'),
+                "Authorization": `Bearer ${token}`,
+            },
+        });
+    };
+
+    // Execute the request with token handling
+    performRequest()
         .then((response) => {
             // Handle redirects (like to login page)
             if (response.redirected && response.url.includes("login")) {
@@ -147,8 +197,27 @@ const submitServiceRating = (serviceId, rating) => {
                 }
             }
 
-            // Only show error if not a redirect
-            if (!error.message.includes("Authentication required")) {
+            // Handle specific error cases
+            if (error.message.includes("401") || error.message.includes("403")) {
+                // Authentication or authorization error
+                console.log("Authentication error, attempting token refresh");
+                // Try to refresh the token and retry the operation
+                apiTokenHandler.refreshToken()
+                    .then(() => {
+                        console.log("Token refreshed, retrying rating submission");
+                        // Retry the rating submission after successful token refresh
+                        submitServiceRating(serviceId, rating);
+                    })
+                    .catch((refreshError) => {
+                        console.error("Failed to refresh token:", refreshError);
+                        createAndShowToast(
+                            "Authentication error. Please log in again.",
+                            "error"
+                        );
+                    });
+            } 
+            // Only show generic error if not a redirect
+            else if (!error.message.includes("Authentication required")) {
                 createAndShowToast(
                     "Error saving rating. Please try again.",
                     "error"

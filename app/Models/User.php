@@ -10,6 +10,7 @@ use Laravel\Sanctum\HasApiTokens;
 use App\Models\Frontend\Rating;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Enums\Frontend\NotificationType;
+use App\Models\RefreshToken;
 
 class User extends Authenticatable
 {
@@ -109,6 +110,16 @@ class User extends Authenticatable
     public function ratings(): HasMany
     {
         return $this->hasMany(Rating::class);
+    }
+    
+    /**
+     * Get the refresh tokens for the user.
+     *
+     * @return HasMany
+     */
+    public function refreshTokens(): HasMany
+    {
+        return $this->hasMany(RefreshToken::class);
     }
 
     public function getRatingForService(int $serviceId): ?int

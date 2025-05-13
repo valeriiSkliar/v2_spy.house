@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\View\Composers\ApiTokenComposer;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
 
@@ -26,5 +28,9 @@ class AppServiceProvider extends ServiceProvider
         Paginator::defaultView('common.pagination.spy-pagination-default');
 
         Paginator::defaultSimpleView('common.pagination.spy-pagination-default');
+
+        // Register view composers
+        View::composer('layouts.app', ApiTokenComposer::class);
+        View::composer('layouts.authorized', ApiTokenComposer::class);
     }
 }

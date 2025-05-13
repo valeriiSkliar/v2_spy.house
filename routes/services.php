@@ -15,8 +15,8 @@ Route::middleware('web')
     });
 
 // API routes
-Route::middleware('auth:sanctum', 'check.abilities:read:base-token')
-    ->prefix('api')
+Route::prefix('api')
+    ->middleware('auth:sanctum', 'check.abilities:read:public') // Using read:public which is available in both basic and advanced tokens
     ->group(function () {
         Route::get('/services/{id}/rate/{rating}', [ServicesController::class, 'rate'])->name('services.rate');
     });
