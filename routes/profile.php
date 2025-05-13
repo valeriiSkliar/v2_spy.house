@@ -34,4 +34,6 @@ Route::middleware(['web', 'auth', 'auth:sanctum'])
     ->prefix('api')
     ->group(function () {
         Route::post('/profile/avatar', [ProfileAvatarController::class, 'upload'])->name('api.profile.avatar.upload');
+        Route::post('/profile/change-password', [App\Http\Controllers\Api\Profile\ProfileSettingsController::class, 'updatePasswordApi'])
+            ->name('api.profile.password.update');
     });

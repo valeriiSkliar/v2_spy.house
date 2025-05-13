@@ -9,6 +9,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use App\Http\Requests\Api\Profile\ChangePasswordApiRequest;
+use Illuminate\Support\Facades\Hash;
 
 class ProfileSettingsController extends Controller
 {
@@ -24,24 +26,31 @@ class ProfileSettingsController extends Controller
             $user = $request->user();
             $validatedData = $request->validated();
             $settingsData = [];
-            
+
             // Process validated data fields
             $fields = [
-                'login', 'name', 'surname', 'date_of_birth', 
-                'experience', 'scope_of_activity', 'messengers',
-                'whatsapp_phone', 'viber_phone', 'telegram'
+                'login',
+                'name',
+                'surname',
+                'date_of_birth',
+                'experience',
+                'scope_of_activity',
+                'messengers',
+                'whatsapp_phone',
+                'viber_phone',
+                'telegram'
             ];
-            
+
             foreach ($fields as $field) {
                 if (isset($validatedData[$field])) {
                     $settingsData[$field] = $validatedData[$field];
                 }
             }
-            
+
             // Update user record
             $user->fill($settingsData);
             $user->save();
-            
+
             // Return success response with updated user data
             return response()->json([
                 'success' => true,
@@ -62,11 +71,27 @@ class ProfileSettingsController extends Controller
                 'user_id' => $request->user()->id ?? null,
                 'exception' => $e
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => __('profile.personal_info.update_error'),
             ], 500);
         }
+    }
+
+
+
+    public function updatePasswordApi(ChangePasswordApiRequest $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $user->forceFill([
+            'password' => Hash::make($request->password),
+        ])->save();
+
+        // Опционально: отозвать все другие токены пользователя для повышения безопасности
+        // $user->tokens()->where('id', '!=', $request->user()->currentAccessToken()->id)->delete();
+
+        return response()->json(['message' => __('profile.messages.password_updated_successfully')]);
     }
 }
