@@ -1,19 +1,19 @@
 // src/js/uiHelpers.js
-import { Modal, Toast } from 'bootstrap';
-import $ from 'jquery';
+import { Modal, Toast } from "bootstrap";
+import $ from "jquery";
 
 /**
  * Показывает модальное окно Bootstrap по его ID.
  * @param {string} modalId - ID HTML-элемента модального окна (без #).
  */
 export function showModal(modalId) {
-  const modalElement = document.getElementById(modalId);
-  if (modalElement) {
-    const modalInstance = Modal.getOrCreateInstance(modalElement);
-    modalInstance.show();
-  } else {
-    console.error(`Modal with id "${modalId}" not found.`);
-  }
+    const modalElement = document.getElementById(modalId);
+    if (modalElement) {
+        const modalInstance = Modal.getOrCreateInstance(modalElement);
+        modalInstance.show();
+    } else {
+        console.error(`Modal with id "${modalId}" not found.`);
+    }
 }
 
 /**
@@ -23,15 +23,14 @@ export function showModal(modalId) {
 export function hideModal(modalId) {
     const modalElement = document.getElementById(modalId);
     if (modalElement) {
-      const modalInstance = Modal.getInstance(modalElement);
-      if (modalInstance) {
-          modalInstance.hide();
-      }
+        const modalInstance = Modal.getInstance(modalElement);
+        if (modalInstance) {
+            modalInstance.hide();
+        }
     } else {
-      console.error(`Modal with id "${modalId}" not found.`);
+        console.error(`Modal with id "${modalId}" not found.`);
     }
 }
-
 
 /**
  * Показывает тост Bootstrap.
@@ -39,13 +38,13 @@ export function hideModal(modalId) {
  * @param {object} [options] - Опции для конструктора Toast (необязательно).
  */
 export function showToast(toastId, options = {}) {
-  const toastElement = document.getElementById(toastId);
-  if (toastElement) {
-    const toastInstance = Toast.getOrCreateInstance(toastElement, options);
-    toastInstance.show();
-  } else {
-    console.error(`Toast with id "${toastId}" not found.`);
-  }
+    const toastElement = document.getElementById(toastId);
+    if (toastElement) {
+        const toastInstance = Toast.getOrCreateInstance(toastElement, options);
+        toastInstance.show();
+    } else {
+        console.error(`Toast with id "${toastId}" not found.`);
+    }
 }
 
 /**
@@ -56,13 +55,14 @@ export function showToast(toastId, options = {}) {
  * @param {'success'|'error'|'warning'|'info'} type - Тип тоста для стилизации (добавьте соответствующие CSS классы).
  * @param {number} [delay=5000] - Задержка перед автоматическим скрытием.
  */
-export function createAndShowToast(message, type = 'info', delay = 5000) {
-    const toastContainer = document.querySelector('.toast-container');
+export function createAndShowToast(message, type = "info", delay = 5000) {
+    const toastContainer = document.querySelector(".toast-container");
     if (!toastContainer) {
-        console.error('Toast container ".toast-container" not found in the DOM.');
+        console.error(
+            'Toast container ".toast-container" not found in the DOM.'
+        );
         return;
     }
-    console.log('Toast container found in the DOM.');
 
     const toastId = `toast-${Date.now()}`;
     const toastHTML = `
@@ -75,16 +75,13 @@ export function createAndShowToast(message, type = 'info', delay = 5000) {
             </div>
         </div>
     `;
-    console.log('Toast HTML created.');
-    toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+    toastContainer.insertAdjacentHTML("beforeend", toastHTML);
     const toastElement = document.getElementById(toastId);
     const toastInstance = Toast.getOrCreateInstance(toastElement);
-    console.log('Toast instance created.');
     toastInstance.show();
-    console.log('Toast shown.', toastInstance);
 
     // Удаляем элемент тоста из DOM после его скрытия
-    toastElement.addEventListener('hidden.bs.toast', () => {
+    toastElement.addEventListener("hidden.bs.toast", () => {
         toastElement.remove();
     });
 }

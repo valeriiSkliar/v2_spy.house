@@ -3,12 +3,17 @@ import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.css";
 import { profileSettingsHandler } from "../components";
 import { config } from "../config";
+import { initChangePassword } from "../components/profile/change-password";
 document.addEventListener("DOMContentLoaded", function () {
     // Initialize profile settings handler with API endpoint
-    profileSettingsHandler.init({
-        formId: "personal-settings-form",
-        apiEndpoint: config.apiProfileSettingsEndpoint,
-    });
+
+    if (document.getElementById("personal-settings-form")) {
+        profileSettingsHandler.init({
+            formId: "personal-settings-form",
+            apiEndpoint: config.apiProfileSettingsEndpoint,
+        });
+    }
+    initChangePassword();
 });
 flatpickr("#dateRangePicker", {
     // mode: "range",

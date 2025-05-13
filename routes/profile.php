@@ -34,6 +34,11 @@ Route::middleware(['web', 'auth', 'auth:sanctum'])
     ->prefix('api')
     ->group(function () {
         Route::post('/profile/avatar', [ProfileAvatarController::class, 'upload'])->name('api.profile.avatar.upload');
-        Route::post('/profile/change-password', [App\Http\Controllers\Api\Profile\ProfileSettingsController::class, 'updatePasswordApi'])
-            ->name('api.profile.password.update');
+
+        Route::post('/profile/initiate-password-update', [App\Http\Controllers\Api\Profile\ProfileSettingsController::class, 'initiatePasswordUpdateApi'])
+            ->name('api.profile.initiate-password-update');
+        Route::post('/profile/confirm-password-update', [App\Http\Controllers\Api\Profile\ProfileSettingsController::class, 'confirmPasswordUpdateApi'])
+            ->name('api.profile.confirm-password-update');
+        Route::get('/profile/cancel-password-update', [App\Http\Controllers\Api\Profile\ProfileSettingsController::class, 'cancelPasswordUpdateApi'])
+            ->name('api.profile.cancel-password-update');
     });

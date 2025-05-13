@@ -16,17 +16,20 @@ class ChangePasswordApiRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'current_password' => [
+            'current_password' => ['required', 'string', 'current_password'],
+            'password' => [
                 'required',
                 'string',
+                'min:8',
+                'confirmed',
                 function ($attribute, $value, $fail) {
-                    if (!Hash::check($value, $this->user()->password)) {
-                        // Используйте ваши ключи локализации
-                        $fail(__('profile.messages.current_password_incorrect'));
+                    if (Hash::check($value, $this->user()->password)) {
+                        $fail(__('profile.validation.new_password_same_as_current'));
                     }
                 },
             ],
-            'password' => ['required', 'string', Password::defaults(), 'confirmed'],
+            'password_confirmation' => ['required', 'string'],
+            'confirmation_method' => ['required', 'string', 'in:email,authenticator'],
         ];
     }
 

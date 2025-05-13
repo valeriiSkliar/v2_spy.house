@@ -98,7 +98,7 @@ class ProfileController extends FrontendController
         }
 
         // Avatar uploads are now handled by the API endpoint and not through the form
-        
+
         $user->fill($settingsData);
         $user->save();
 
