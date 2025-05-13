@@ -3,6 +3,8 @@
 @section('content')
 
 <div class="wrapper">
+    <x-common.fullscreen-loader :active="false" />
+
     @include('partials.header')
     <main class="main">
         <div class="content">
