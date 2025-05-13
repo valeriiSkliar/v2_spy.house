@@ -46,7 +46,8 @@ Route::get('/creatives', [CreativesController::class, 'index'])->name('creatives
 Route::get('/language/{locale}', [LanguageController::class, 'switch'])->name('language.switch');
 
 require __DIR__ . '/auth.php';
-require __DIR__ . '/api.php';
+// API routes are included directly in api.php with proper prefixing
+include __DIR__ . '/api.php';
 require __DIR__ . '/blog.php';
 require __DIR__ . '/profile.php';
 require __DIR__ . '/tariffs.php';

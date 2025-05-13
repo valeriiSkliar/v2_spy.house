@@ -96,17 +96,13 @@ class TokenController extends Controller
             // Check if request has token in body
             if ($request->has('refresh_token')) {
                 $refreshToken = $request->input('refresh_token');
-                \Illuminate\Support\Facades\Log::info('Found refresh token in request body', [
-                    'token_length' => strlen($refreshToken)
-                ]);
+                \Illuminate\Support\Facades\Log::info('Found refresh token in request body');
             } else {
                 // Check if token is in JSON request body
                 $jsonData = $request->json()->all();
                 if (isset($jsonData['refresh_token'])) {
                     $refreshToken = $jsonData['refresh_token'];
-                    \Illuminate\Support\Facades\Log::info('Found refresh token in JSON request body', [
-                        'token_length' => strlen($refreshToken)
-                    ]);
+                    \Illuminate\Support\Facades\Log::info('Found refresh token in JSON request body');
                 } else {
                     \Illuminate\Support\Facades\Log::warning('No refresh token in request body either');
                 }
@@ -171,11 +167,8 @@ class TokenController extends Controller
                     'token_id' => $refreshTokenRecord->id
                 ]);
             } else {
-                \Illuminate\Support\Facades\Log::warning('No valid refresh token record found');
-                \Illuminate\Support\Facades\Log::debug('Tried to find token with hash', [
-                    'token_length' => strlen($refreshToken),
-                    'token_prefix' => substr($refreshToken, 0, 10) . '...'
-                ]);
+                // Only log that a refresh token was not found, without any token details
+                \Illuminate\Support\Facades\Log::warning('No valid refresh token record found for the provided token');
             }
         }
         

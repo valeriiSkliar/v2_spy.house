@@ -127,9 +127,9 @@ class TokenService
             ->first();
             
         if (!$tokenRecord) {
-            \Illuminate\Support\Facades\Log::warning('Token service: No matching refresh token found', [
-                'user_id' => $user->id,
-                'token_hash_prefix' => substr($hashedToken, 0, 10)
+            // Only log user ID without any token information
+            \Illuminate\Support\Facades\Log::warning('Token service: No matching refresh token found for user', [
+                'user_id' => $user->id
             ]);
             return null;
         }
