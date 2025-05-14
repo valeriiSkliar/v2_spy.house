@@ -109,4 +109,19 @@ class NotificationController extends Controller
 
         return redirect()->back();
     }
+
+    /**
+     * Get the count of unread notifications.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function unreadCount(Request $request)
+    {
+        $unreadCount = $request->user()->unreadNotifications->count();
+
+        return response()->json([
+            'count' => $unreadCount
+        ]);
+    }
 }

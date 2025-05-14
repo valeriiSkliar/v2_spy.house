@@ -2,6 +2,7 @@ import { config } from "../../config";
 import { createAndShowToast } from "@/utils";
 import { ajaxFetcher } from "../fetcher/ajax-fetcher";
 import loader from "../loader";
+import { checkNotifications } from "../../helpers/notification-checker";
 
 const cancelEmailUpdate = async () => {
     try {
@@ -13,13 +14,12 @@ const cancelEmailUpdate = async () => {
         if (response.success) {
             // Use the server-provided HTML form
             if (response.initialFormHtml) {
-                $("#change-email-form").replaceWith(
-                    response.initialFormHtml
-                );
+                $("#change-email-form").replaceWith(response.initialFormHtml);
 
                 // Reinitialize form handlers
                 changeEmail();
                 createAndShowToast(response.message, "success");
+                checkNotifications();
             } else {
                 // Fallback to reloading the page if we don't get the form HTML
                 window.location.reload();
@@ -29,6 +29,7 @@ const cancelEmailUpdate = async () => {
                 response.message || "Error cancelling email update",
                 "error"
             );
+            checkNotifications();
         }
     } catch (error) {
         console.error("Error cancelling email update:", error);
@@ -36,6 +37,7 @@ const cancelEmailUpdate = async () => {
             "Error cancelling email update. Please try again.",
             "error"
         );
+        checkNotifications();
     } finally {
         loader.hide();
     }
@@ -55,19 +57,17 @@ const confirmEmailUpdate = async (formData) => {
 
             // Replace form with success message or original form
             if (response.successFormHtml) {
-                $("#change-email-form").replaceWith(
-                    response.successFormHtml
-                );
-
+                $("#change-email-form").replaceWith(response.successFormHtml);
+                checkNotifications();
                 // Add success message if available
                 if (response.successMessage) {
                     $("#change-email-form").prepend(response.successMessage);
                 }
             } else if (response.initialFormHtml) {
-                $("#change-email-form").replaceWith(
-                    response.initialFormHtml
-                );
+                $("#change-email-form").replaceWith(response.initialFormHtml);
+                checkNotifications();
             }
+            checkNotifications();
             changeEmail();
         } else {
             // Show error message for invalid code
@@ -134,12 +134,14 @@ const changeEmail = () => {
                                 }
                             );
                             createAndShowToast(message, "success");
+                            checkNotifications();
                         }
 
                         return;
                     } else {
                         createAndShowToast(
-                            response.message || "Error updating email. Please try again.",
+                            response.message ||
+                                "Error updating email. Please try again.",
                             "error"
                         );
                     }
@@ -150,6 +152,7 @@ const changeEmail = () => {
                         "error"
                     );
                 } finally {
+                    checkNotifications();
                     loader.hide();
                 }
             }

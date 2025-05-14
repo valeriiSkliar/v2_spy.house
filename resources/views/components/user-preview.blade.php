@@ -4,9 +4,9 @@
         <div class="user-preview__avatar thumb"><span>{{ substr(auth()?->user()?->name, 0, 2) }}</span></div>
         <div class="user-preview__name">{{ auth()->user()?->login }}</div>
         <div class="btn-icon _dark">
-            <span class="icon-settings"></span>
+            <span id="notification-indicator-preview" class="icon-settings"></span>
             @if(auth()->user()->unreadNotifications->count() > 0)
-                <span class="has-notification"></span>
+                <span  class="has-notification"></span>
             @endif
         </div>
     </div>
@@ -14,7 +14,7 @@
         <nav class="user-menu">
             <ul>
                 <li><a href="{{ route('notifications.index') }}">
-                        <span class="icon-notification">
+                        <span id="notification-indicator-notification-menu" class="icon-notification">
                             @if(auth()->user()->unreadNotifications->count() > 0)
                                 <span class="has-notification"></span>
                             @endif

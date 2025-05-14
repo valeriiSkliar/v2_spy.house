@@ -26,6 +26,7 @@ import "./helpers";
 
 // Import utils
 import "@/utils";
+import { initializeNotificationChecking } from "./utils/notification-checker-usage";
 
 // Additional imports
 import "./libs/main";
@@ -35,6 +36,14 @@ import "./base-select.js";
 // import "./search-suggestions.js";
 import "./carousel.js";
 import "./tariffs";
+
+// Initialize notification checking (check every minute)
+document.addEventListener('DOMContentLoaded', function() {
+    if (document.querySelector('.user-preview')) {
+        // Only initialize if user is logged in (user preview exists)
+        initializeNotificationChecking(60000);
+    }
+});
 
 // Import the API token system
 // API token is now initialized automatically in the module
