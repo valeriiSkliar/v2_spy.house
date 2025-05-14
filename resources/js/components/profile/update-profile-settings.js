@@ -3,6 +3,7 @@ import { apiTokenHandler } from "../api-token/api-token";
 import loader from "../loader";
 import { ajaxFetcher } from "../fetcher/ajax-fetcher";
 import { config } from "../../config";
+import { initSocialMessengerField } from "./social-messenger-field";
 
 async function submitFormHandler(e) {
     try {
@@ -74,6 +75,9 @@ const updateProfileSettings = () => {
     const form = $("#personal-settings-form");
     if (form.length) {
         form.off("submit").on("submit", submitFormHandler);
+
+        // Initialize social messenger field component
+        initSocialMessengerField();
     }
 };
 
