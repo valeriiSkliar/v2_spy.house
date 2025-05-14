@@ -1,6 +1,7 @@
 import { createAndShowToast } from "../../utils/uiHelpers";
 import { apiTokenHandler } from "../api-token/api-token";
 import loader from "../loader";
+import { ajaxFetcher } from "../fetcher/ajax-fetcher";
 
 /**
  * Profile settings form handler

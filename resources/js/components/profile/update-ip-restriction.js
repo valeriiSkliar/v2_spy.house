@@ -85,7 +85,9 @@ const updateIpRestriction = () => {
 };
 
 const initUpdateIpRestriction = () => {
-    updateIpRestriction();
+    if ($("#ip-restriction-form").length) {
+        updateIpRestriction();
+    }
 };
 
 export { updateIpRestriction, initUpdateIpRestriction };

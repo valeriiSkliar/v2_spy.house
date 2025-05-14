@@ -6,34 +6,34 @@ import {
     initChangePassword,
     initChangePersonalGreeting,
     initUpdateIpRestriction,
-    profileSettingsHandler,
+    // profileSettingsHandler,
 } from "../components";
 import { config } from "../config";
 document.addEventListener("DOMContentLoaded", function () {
     // Initialize profile settings handler with API endpoint
 
     if (document.getElementById("personal-settings-form")) {
-        profileSettingsHandler.init({
-            formId: "personal-settings-form",
-            apiEndpoint: config.apiProfileSettingsEndpoint,
-        });
+        // profileSettingsHandler.init({
+        //     formId: "personal-settings-form",
+        //     apiEndpoint: config.apiProfileSettingsEndpoint,
+        // });
     }
     initChangeEmail();
     initChangePassword();
     initChangePersonalGreeting();
     initUpdateIpRestriction();
 });
-flatpickr("#dateRangePicker", {
-    // mode: "range",
-    dateFormat: "Y-m-d",
-    onOpen: function (selectedDates, dateStr, instance) {
-        instance.element
-            .closest(".data-control-date-picker")
-            .classList.add("active");
-    },
-    onClose: function (selectedDates, dateStr, instance) {
-        instance.element
-            .closest(".data-control-date-picker")
-            .classList.remove("active");
-    },
-});
+// flatpickr("#dateRangePicker", {
+//     // mode: "range",
+//     dateFormat: "Y-m-d",
+//     onOpen: function (selectedDates, dateStr, instance) {
+//         instance.element
+//             .closest(".data-control-date-picker")
+//             .classList.add("active");
+//     },
+//     onClose: function (selectedDates, dateStr, instance) {
+//         instance.element
+//             .closest(".data-control-date-picker")
+//             .classList.remove("active");
+//     },
+// });
