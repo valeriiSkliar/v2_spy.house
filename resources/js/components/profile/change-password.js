@@ -2,6 +2,7 @@ import { config } from "../../config";
 import { createAndShowToast } from "@/utils";
 import { ajaxFetcher } from "../fetcher/ajax-fetcher";
 import loader from "../loader";
+import { checkNotifications } from "../../helpers/notification-checker";
 
 const cancelPasswordUpdate = async () => {
     try {
@@ -38,6 +39,7 @@ const cancelPasswordUpdate = async () => {
         );
     } finally {
         loader.hide();
+        checkNotifications();
     }
 };
 
@@ -87,6 +89,7 @@ const confirmPasswordUpdate = async (formData) => {
         );
     } finally {
         loader.hide();
+        checkNotifications();
     }
 };
 
@@ -135,6 +138,7 @@ const changePassword = () => {
                                 }
                             );
                             createAndShowToast(message, "success");
+                            checkNotifications();
                         }
 
                         return;
@@ -148,6 +152,7 @@ const changePassword = () => {
                     );
                 } finally {
                     loader.hide();
+                    checkNotifications();
                 }
             }
         });

@@ -38,6 +38,7 @@ const cancelPersonalGreetingUpdate = async () => {
         );
     } finally {
         loader.hide();
+        checkNotifications();
     }
 };
 
@@ -61,7 +62,9 @@ const confirmPersonalGreetingUpdate = async (formData) => {
 
                 // Add success message if available
                 if (response.successMessage) {
-                    $("#personal-greeting-form").prepend(response.successMessage);
+                    $("#personal-greeting-form").prepend(
+                        response.successMessage
+                    );
                 }
             } else if (response.initialFormHtml) {
                 $("#personal-greeting-form").replaceWith(
@@ -87,6 +90,7 @@ const confirmPersonalGreetingUpdate = async (formData) => {
         );
     } finally {
         loader.hide();
+        checkNotifications();
     }
 };
 
@@ -139,7 +143,8 @@ const changePersonalGreeting = () => {
                         return;
                     } else {
                         createAndShowToast(
-                            response.message || "Error updating personal greeting. Please try again.",
+                            response.message ||
+                                "Error updating personal greeting. Please try again.",
                             "error"
                         );
                     }
@@ -151,6 +156,7 @@ const changePersonalGreeting = () => {
                     );
                 } finally {
                     loader.hide();
+                    checkNotifications();
                 }
             }
         });

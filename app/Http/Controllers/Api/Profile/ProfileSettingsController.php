@@ -625,6 +625,12 @@ class ProfileSettingsController extends BaseProfileController
                 ]);
             }
             $verificationCode = random_int(100000, 999999);
+            // Используем метод sendTo
+            NotificationDispatcher::sendTo(
+                'mail',
+                $user->email,
+                new PasswordUpdateConfirmationNotification($verificationCode)
+            );
             Cache::put('password_update_code:' . $user->id, [
                 'password' => $request->input('password'),
                 'code' => $verificationCode,
@@ -772,6 +778,13 @@ class ProfileSettingsController extends BaseProfileController
             // Clear the pending update
             Cache::forget('password_update_code:' . $user->id);
 
+            NotificationDispatcher::quickSend(
+                $user,
+                NotificationType::PASSWORD_CHANGED,
+                [],
+                __('profile.security_settings.password_updated_success_title'),
+                __('profile.security_settings.password_updated_success_message')
+            );
             // Return success
             return response()->json([
                 'success' => true,
