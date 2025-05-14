@@ -139,6 +139,9 @@ return [
         'bonus_offers_label' => 'Бонусные предложения',
         'update_success' => 'Настройки уведомлений успешно обновлены.',
     ],
+    'notifications' => [
+        'update_success' => 'Настройки уведомлений успешно обновлены.',
+    ],
     'personal_greeting_page_title' => 'Добавить личное приветствие',
     'personal_greeting_label' => 'Текст приветствия',
     'personal_greeting_update_success' => 'Личное приветствие успешно сохранено!',

@@ -7,21 +7,7 @@
         </div>
         <div class="col-12 col-lg-auto">
             <div class="confirmation-method__btns">
-                <form id="notification-settings-form" action="{{ route('profile.update-notifications') }}" method="POST">
-                    @csrf
-                    @method('PUT')
-                    <div class="row _offset20 mt-3">
-                        <div class="col-12 col-md-auto mb-10">
-                            <label class="checkbox-btn">
-                                <input type="checkbox" name="notification_settings[system]" value="1" {{ $user->notification_settings['system'] ?? false ? 'checked' : '' }}>
-                                <span class="checkbox-btn__content">
-                                    <span class="checkbox-btn__icon icon-check-circle"></span>
-                                    <span class="checkbox-btn__text">{{ __('profile.notification_settings.system_messages_label') }}</span>
-                                </span>
-                            </label>
-                        </div>
-                    </div>
-                </form>
+                <x-profile.notification-settings-form :user="$user" />
             </div>
         </div>
     </div>

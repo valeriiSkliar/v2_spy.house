@@ -6,9 +6,4 @@
             <x-profile.notification-settings :user="$user" />
         </div>
     </div>
-
-    <div class="col-12 col-md-auto mb-10">
-        <x-profile.submit-button formId="notification-settings-form" :label="__('profile.save_button')" />
-    </div>
-    <x-profile.success-message status="notifications-updated" :message="__('profile.notification_settings.update_success')" />
 </div>

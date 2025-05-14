@@ -13,4 +13,5 @@ export const config = {
     apiProfilePersonalGreetingUpdateConfirmEndpoint: `${apiBaseEndpoint}/profile/confirm-personal-greeting-update`,
     apiProfilePersonalGreetingCancelEndpoint: `${apiBaseEndpoint}/profile/cancel-personal-greeting-update`,
     apiProfileIpRestrictionUpdateEndpoint: `${apiBaseEndpoint}/profile/update-ip-restriction`,
+    apiProfileNotificationsUpdateEndpoint: `${apiBaseEndpoint}/profile/update-notifications`,
 };

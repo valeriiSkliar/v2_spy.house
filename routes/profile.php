@@ -46,6 +46,9 @@ Route::middleware(['web', 'auth', 'auth:sanctum'])
         Route::put('/profile/settings', [ProfileSettingsController::class, 'updateSettingsApi'])
             ->name('api.profile.settings');
 
+        Route::post('/profile/update-notifications', [ProfileSettingsController::class, 'updateNotificationsApi'])
+            ->name('api.profile.update-notifications');
+
         Route::post('/profile/initiate-email-update', [ProfileSettingsController::class, 'initiateEmailUpdateApi'])
             ->name('api.profile.initiate-email-update');
         Route::post('/profile/confirm-email-update', [ProfileSettingsController::class, 'confirmEmailUpdateApi'])

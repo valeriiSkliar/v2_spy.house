@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Frontend\Profile\BaseProfileController;
 use App\Http\Requests\Profile\ProfileSettingsUpdateRequest;
 use App\Http\Requests\Profile\UpdateEmailRequest;
+use App\Http\Requests\Profile\UpdateNotificationSettingsRequest;
 use App\Http\Requests\Profile\UpdatePersonalGreetingSettingsRequest;
 use App\Notifications\Profile\EmailUpdateConfirmationNotification;
 use App\Notifications\Profile\EmailUpdatedNotification;
@@ -788,5 +789,81 @@ class ProfileSettingsController extends BaseProfileController
                 'message' => __('profile.messages.error_occurred'),
             ], 500);
         }
+    }
+
+    /**
+     * Update user's notification settings via API
+     *
+     * @param \App\Http\Requests\Profile\UpdateNotificationSettingsRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function updateNotificationsApi(UpdateNotificationSettingsRequest $request): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            $validatedSettings = $request->validated('notification_settings');
+
+            // Log the received settings for debugging
+            Log::debug('Notification settings request received', [
+                'validated_settings' => $validatedSettings
+            ]);
+
+            // Get existing notification settings
+            $currentSettings = $user->notification_settings ?? [];
+
+            // Special handling for the 'system' key which is used in the UI
+            if (isset($validatedSettings['system'])) {
+                // Convert string "1"/"0" to boolean
+                $settingBool = ($validatedSettings['system'] === "1" || $validatedSettings['system'] === "true" || $validatedSettings['system'] === true);
+
+                // Update the settings directly without lookup
+                $currentSettings['system'] = $settingBool;
+            }
+
+            // This simplified version only handles the 'system' key directly
+
+            // Update user's notification settings
+            $user->notification_settings = $currentSettings;
+            $user->save();
+
+            // Log the update
+            Log::info('Notification settings updated via API', [
+                'user_id' => $user->id,
+                'system_notifications' => $currentSettings['system'] ?? false
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => __('profile.notifications.update_success'),
+                'notification_settings' => $user->notification_settings,
+                'successFormHtml' => $this->renderNotificationsForm()->render(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error updating notification settings: ' . $e->getMessage(), [
+                'user_id' => $request->user()->id ?? null,
+                'exception' => $e,
+                'request_data' => $request->all()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => __('profile.messages.error_occurred'),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get default notification channels for a specific notification type
+     *
+     * @param string $type
+     * @return array
+     */
+    protected function getDefaultChannelsForType(string $type): array
+    {
+        $notificationType = app(\App\Models\NotificationType::class)
+            ->where('key', $type)
+            ->first();
+
+        return $notificationType ? $notificationType->default_channels : ['mail', 'database'];
     }
 }

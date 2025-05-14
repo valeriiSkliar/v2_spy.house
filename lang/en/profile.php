@@ -141,6 +141,9 @@ return [
         'bonus_offers_label' => 'Bonus offers',
         'update_success' => 'Notification settings updated successfully.',
     ],
+    'notifications' => [
+        'update_success' => 'Notification settings updated successfully.',
+    ],
     'personal_greeting_page_title' => 'Add Personal Greeting',
     'personal_greeting_label' => 'Greeting Text',
     'personal_greeting_update_success' => 'Personal greeting saved successfully!',

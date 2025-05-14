@@ -128,4 +128,16 @@ class BaseProfileController extends FrontendController
             'ip_restrictions' => $this->user->ip_restrictions ?? []
         ]);
     }
+
+    /**
+     * Render notification settings form
+     *
+     * @return \Illuminate\View\View
+     */
+    protected function renderNotificationsForm(): View
+    {
+        return view('components.profile.notifications-tab', [
+            'user' => $this->user
+        ]);
+    }
 }

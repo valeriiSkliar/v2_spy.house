@@ -24,14 +24,12 @@ class UpdateNotificationSettingsRequest extends FormRequest // Наследуе�
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'notification_settings' => ['nullable', 'array'],
             'notification_settings.system' => ['nullable', 'boolean'],
-            'notification_settings.news' => ['nullable', 'boolean'],
-            'notification_settings.promotions' => ['nullable', 'boolean'],
-            'notification_settings.security' => ['nullable', 'boolean'],
-            'notification_settings.updates' => ['nullable', 'boolean'],
         ];
+
+        return $rules;
     }
 
     /**
@@ -45,16 +43,14 @@ class UpdateNotificationSettingsRequest extends FormRequest // Наследуе�
      */
     protected function prepareForValidation(): void
     {
-        $settings = $this->input('notification_settings', []); // Если массив не пришел, делаем его пустым
+        $settings = $this->input('notification_settings', []); // If array is not provided, make it empty
+        $mergedSettings = [];
+
+        // For simplified version, we only handle the 'system' key
+        $mergedSettings['system'] = filter_var($settings['system'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
         $this->merge([
-            'notification_settings' => [
-                'system' => filter_var($settings['system'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                'news' => filter_var($settings['news'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                'promotions' => filter_var($settings['promotions'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                'security' => filter_var($settings['security'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                'updates' => filter_var($settings['updates'] ?? false, FILTER_VALIDATE_BOOLEAN),
-            ],
+            'notification_settings' => $mergedSettings,
         ]);
     }
 }
