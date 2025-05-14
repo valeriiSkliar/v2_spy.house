@@ -37,19 +37,20 @@ class ProfileSettingsController extends BaseProfileController
         try {
             $user = $request->user();
             $validatedData = $request->validated();
-            $settingsData = [];
 
-            // Process validated data fields
-            $fields = [
-                'login',
-                'experience',
-                'scope_of_activity',
-                'whatsapp_phone',
-                'viber_phone',
-                'telegram'
-            ];
+            // Special handling for messenger fields to prevent empty values overwrites
+            $messengerFields = ['telegram', 'viber_phone', 'whatsapp_phone'];
 
-            // Update user record
+            // Process each messenger field
+            foreach ($messengerFields as $field) {
+                // Only update if the field is present in the request and not empty
+                if (!isset($validatedData[$field]) || $validatedData[$field] === '') {
+                    // Remove from validated data to prevent overwriting with null/empty
+                    unset($validatedData[$field]);
+                }
+            }
+
+            // Update user record with the filtered validated data
             $user->fill($validatedData);
             $user->save();
 

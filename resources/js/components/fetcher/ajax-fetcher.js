@@ -56,7 +56,11 @@ const ajaxFetcher = {
      * @param {FormData} formData - Form data to send
      * @returns {Promise} jQuery ajax promise
      */
-    form: (url, formData) => {
+    form: (url, formData, method = "POST") => {
+        if (method !== "POST") {
+            // Add _method=PUT for Laravel to handle PUT requests
+            formData.append("_method", method);
+        }
         return $.ajax({
             url,
             method: "POST",

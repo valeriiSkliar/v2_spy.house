@@ -14,7 +14,7 @@ class TokenService
      * Access token expiration time in minutes.
      * Short-lived for security reasons.
      */
-    const ACCESS_TOKEN_EXPIRATION = 5; // 5 minutes
+    const ACCESS_TOKEN_EXPIRATION = 60; // 1 hour
 
     /**
      * Refresh token expiration time in minutes.
