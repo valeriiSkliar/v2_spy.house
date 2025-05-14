@@ -14,7 +14,7 @@ class TokenService
      * Access token expiration time in minutes.
      * Short-lived for security reasons.
      */
-    const ACCESS_TOKEN_EXPIRATION = 60; // 1 hour
+    const ACCESS_TOKEN_EXPIRATION = 5; // 5 minutes
 
     /**
      * Refresh token expiration time in minutes.
@@ -75,10 +75,10 @@ class TokenService
         // Create the access token with expiration
         $expiration = now()->addMinutes(self::ACCESS_TOKEN_EXPIRATION);
         $token = $user->createToken($name, $abilities, $expiration);
-        
+
         // Generate refresh token
         $refreshToken = $this->generateRefreshToken($user, $token->accessToken->id);
-        
+
         return [
             'access_token' => $token->plainTextToken,
             'refresh_token' => $refreshToken,
@@ -88,37 +88,62 @@ class TokenService
 
     /**
      * Generate a refresh token and store it in the database
-     * 
+     *
      * @param User $user The user to create the refresh token for
      * @param int $tokenId The ID of the related access token
-     * @return string The refresh token string
+     * @return string The plaintext refresh token string to send to client
      */
     protected function generateRefreshToken(User $user, int $tokenId): string
     {
-        // Generate a unique token string
-        $refreshToken = hash('sha256', Str::random(60));
-        
-        // Store the refresh token with its association to the access token
+        // Generate a unique plaintext token string
+        $plainTextToken = Str::random(60);
+
+        // Hash the token for storage
+        $hashedToken = hash('sha256', $plainTextToken);
+
+        // Log both token prefixes for debugging
+        \Illuminate\Support\Facades\Log::debug('Generating refresh token:', [
+            'user_id' => $user->id,
+            'plaintext_prefix' => substr($plainTextToken, 0, 5) . '...',
+            'hashed_prefix' => substr($hashedToken, 0, 5) . '...',
+            'plaintext_length' => strlen($plainTextToken),
+            'hashed_length' => strlen($hashedToken)
+        ]);
+
+        // Store the hashed refresh token with its association to the access token
         $user->refreshTokens()->create([
-            'token' => $refreshToken,
+            'token' => $hashedToken,
             'access_token_id' => $tokenId,
             'expires_at' => now()->addMinutes(self::REFRESH_TOKEN_EXPIRATION),
         ]);
-        
-        return $refreshToken;
+
+        // Return plaintext token to client (NOT the hashed version)
+        return $plainTextToken;
     }
 
     /**
      * Refresh an access token using a refresh token
-     * 
+     *
      * @param User $user The user to refresh the token for
      * @param string $refreshToken The refresh token string
      * @return array|null The new tokens or null if refresh token is invalid
      */
     public function refreshToken(User $user, string $refreshToken): ?array
     {
+        // Debug log - only log token prefixes, never full tokens
+        \Illuminate\Support\Facades\Log::debug('Token refresh attempt:', [
+            'user_id' => $user->id,
+            'provided_token_prefix' => substr($refreshToken, 0, 5) . '...',
+            'token_length' => strlen($refreshToken)
+        ]);
+
         // Hash the token for database comparison
         $hashedToken = hash('sha256', $refreshToken);
+
+        // Debug log for hash comparison
+        \Illuminate\Support\Facades\Log::debug('Token hash for comparison:', [
+            'hashed_token_prefix' => substr($hashedToken, 0, 5) . '...',
+        ]);
 
         // Find the refresh token in the database
         $tokenRecord = $user->refreshTokens()
@@ -126,7 +151,23 @@ class TokenService
             ->first();
 
         if (!$tokenRecord) {
-            // Only log user ID without any token information
+            // Get existing tokens for debugging
+            $existingTokens = $user->refreshTokens()->get();
+            $tokenPrefixes = $existingTokens->map(function ($t) {
+                return substr($t->token, 0, 5) . '...';
+            });
+
+            // Debug log for comparison
+            \Illuminate\Support\Facades\Log::debug('Stored token comparison:', [
+                'user_id' => $user->id,
+                'refresh_token_count' => $existingTokens->count(),
+                'stored_token_prefixes' => $tokenPrefixes->toArray(),
+                'token_create_times' => $existingTokens->map(function ($t) {
+                    return $t->created_at->format('Y-m-d H:i:s');
+                })->toArray()
+            ]);
+
+            // Warning log as before
             \Illuminate\Support\Facades\Log::warning('Token service: No matching refresh token found for user', [
                 'user_id' => $user->id,
                 'refresh_token_count' => $user->refreshTokens()->count()
@@ -146,7 +187,7 @@ class TokenService
             $tokenRecord->delete();
             return null;
         }
-        
+
         // Get the original access token to copy its name and abilities
         $originalToken = PersonalAccessToken::find($tokenRecord->access_token_id);
         if (!$originalToken) {
@@ -154,13 +195,13 @@ class TokenService
             $tokenRecord->delete();
             return null;
         }
-        
+
         // Revoke the old token
         $originalToken->delete();
-        
+
         // Delete the used refresh token
         $tokenRecord->delete();
-        
+
         // Create a new token pair with the same abilities
         return $this->createToken($user, $originalToken->name, $originalToken->abilities);
     }
@@ -176,7 +217,7 @@ class TokenService
             ->whereJsonContains('abilities', 'read:public')
             ->where(function ($query) {
                 $query->whereNull('expires_at')
-                      ->orWhere('expires_at', '>', now());
+                    ->orWhere('expires_at', '>', now());
             })
             ->exists();
     }
@@ -206,11 +247,11 @@ class TokenService
     {
         // Delete any associated refresh tokens
         $user->refreshTokens()->where('access_token_id', $tokenId)->delete();
-        
+
         // Delete the access token itself
         return $user->tokens()->where('id', $tokenId)->delete() > 0;
     }
-    
+
     /**
      * Revoke all tokens for a user
      */
@@ -218,7 +259,7 @@ class TokenService
     {
         // Delete all refresh tokens for this user
         $user->refreshTokens()->delete();
-        
+
         // Delete all access tokens and return the count
         return $user->tokens()->delete();
     }

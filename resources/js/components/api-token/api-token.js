@@ -137,20 +137,33 @@ const apiTokenHandler = {
             // Check for manually stored refresh token as fallback
             // Note: This is less secure but provides a fallback for environments where cookies don't work
             const storedRefreshToken = localStorage.getItem("bt_refresh");
-            const useTokenFallback = storedRefreshToken && (!navigator.cookieEnabled || !document.cookie.includes('refresh_token='));
-            
+
+            // Debug refresh token status
+            if (storedRefreshToken) {
+                console.log("Found stored refresh token in localStorage, length:", storedRefreshToken.length);
+                console.log("Token prefix:", storedRefreshToken.substring(0, 5) + "...");
+            } else {
+                console.log("No refresh token found in localStorage");
+            }
+
+            const hasCookie = document.cookie.includes('refresh_token=');
+            console.log("Has refresh_token cookie:", hasCookie);
+
+            // Only use localStorage token if cookies are disabled or no cookie exists
+            const useTokenFallback = storedRefreshToken && (!navigator.cookieEnabled || !hasCookie);
+
             // Create request body with refresh token if available
-            const requestBody = useTokenFallback ? 
+            const requestBody = useTokenFallback ?
                 JSON.stringify({
                     refresh_token: storedRefreshToken || "",
                     include_refresh_token: "true" // Request refresh token in response
-                }) : 
+                }) :
                 JSON.stringify({
                     include_refresh_token: "true" // Always request refresh token in response for fallback
                 });
-            
+
             console.log("Calling refresh token endpoint...");
-            console.log("Using stored refresh token as fallback:", !!storedRefreshToken);
+            console.log("Using stored refresh token as fallback:", useTokenFallback);
             console.log("Cookies enabled in browser:", navigator.cookieEnabled);
             
             // Call the token refresh endpoint, which will use the HttpOnly cookie
@@ -225,8 +238,11 @@ const apiTokenHandler = {
                 // Store refresh token as fallback if provided in response body
                 // This is less secure but provides a fallback for environments where cookies don't work
                 if (data.refresh_token) {
-                    console.log("Storing refresh token as fallback");
+                    console.log("Storing refresh token as fallback, length:", data.refresh_token.length);
+                    console.log("New token prefix:", data.refresh_token.substring(0, 5) + "...");
                     localStorage.setItem("bt_refresh", data.refresh_token);
+                } else {
+                    console.warn("No refresh_token in response body - cookie-only mode will be used");
                 }
                 
                 // Process waiting functions
@@ -301,10 +317,32 @@ const apiTokenHandler = {
      * Checks for token in meta tag, then localStorage
      */
     init: () => {
+        // Add a global recovery method to window for emergency token reset
+        window.resetApiTokens = () => {
+            console.warn("Manual token reset initiated");
+            apiTokenHandler.removeToken();
+            alert("API tokens have been reset. Please reload the page and try again.");
+            return "Tokens cleared. Reload the page to complete reset.";
+        };
+
         // First check for token in meta tag (high priority - just set by server)
         const metaToken = document.querySelector('meta[name="api-token"]')?.getAttribute('content');
         const metaExpires = document.querySelector('meta[name="api-token-expires-at"]')?.getAttribute('content');
-        
+
+        // Check for URL parameter that forces token reset (useful for stuck states)
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('reset_tokens')) {
+            console.warn("Token reset requested via URL parameter");
+            apiTokenHandler.removeToken();
+
+            // Remove the parameter from URL to prevent repeated resets
+            if (history.replaceState) {
+                const url = new URL(window.location.href);
+                url.searchParams.delete('reset_tokens');
+                window.history.replaceState({}, '', url);
+            }
+        }
+
         if (metaToken) {
             // Store token with expiration if available
             apiTokenHandler.setToken(metaToken, metaExpires ? parseInt(metaExpires, 10) : null);

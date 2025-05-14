@@ -105,8 +105,29 @@ class AuthController extends Controller
      */
     public function refreshToken(Request $request): JsonResponse
     {
+        // Log request information for debugging
+        \Illuminate\Support\Facades\Log::debug('Token refresh request received', [
+            'has_cookie' => $request->hasCookie('refresh_token'),
+            'has_body_param' => $request->has('refresh_token'),
+            'has_json_body' => $request->isJson(),
+            'content_type' => $request->header('Content-Type'),
+            'request_ip' => $request->ip(),
+            'request_method' => $request->method(),
+            'user_agent' => $request->userAgent()
+        ]);
+
         // Get refresh token from cookie
         $refreshToken = $request->cookie('refresh_token');
+
+        // Log cookie info (careful not to log full token)
+        if ($refreshToken) {
+            \Illuminate\Support\Facades\Log::debug('Found refresh token in cookie', [
+                'token_prefix' => substr($refreshToken, 0, 5) . '...',
+                'token_length' => strlen($refreshToken)
+            ]);
+        } else {
+            \Illuminate\Support\Facades\Log::debug('No refresh token in cookie, checking request body');
+        }
 
         // If no refresh token in cookie, check the request body (for clients that don't support cookies)
         if (!$refreshToken) {
@@ -114,21 +135,31 @@ class AuthController extends Controller
             $request->validate([
                 'refresh_token' => 'sometimes|string'
             ]);
-            
+
             // Check if request has token in body
             if ($request->has('refresh_token')) {
                 $refreshToken = $request->input('refresh_token');
+                \Illuminate\Support\Facades\Log::debug('Found refresh token in request body parameter', [
+                    'token_prefix' => $refreshToken ? substr($refreshToken, 0, 5) . '...' : 'null',
+                    'token_length' => $refreshToken ? strlen($refreshToken) : 0
+                ]);
             } else {
                 // Check if token is in JSON request body
                 $jsonData = $request->json()->all();
                 if (isset($jsonData['refresh_token'])) {
                     $refreshToken = $jsonData['refresh_token'];
+                    \Illuminate\Support\Facades\Log::debug('Found refresh token in JSON body', [
+                        'token_prefix' => $refreshToken ? substr($refreshToken, 0, 5) . '...' : 'null',
+                        'token_length' => $refreshToken ? strlen($refreshToken) : 0,
+                        'json_keys' => array_keys($jsonData)
+                    ]);
                 }
             }
         }
 
         // If no refresh token found, return error
         if (!$refreshToken) {
+            \Illuminate\Support\Facades\Log::warning('No refresh token found in request');
             return response()->json([
                 'message' => 'Refresh token not provided',
             ], 400);
