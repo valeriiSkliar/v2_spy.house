@@ -1,5 +1,5 @@
 @props(['user', 'confirmationMethod', 'emailUpdatePending', 'authenticatorEnabled'])
-<form autocomplete="off" id="change-email-form" method="POST" action="{{ $emailUpdatePending ? route('profile.confirm-email-update') : route('profile.initiate-email-update') }}" class="profile-form">
+<form autocomplete="off" id="change-email-form" method="POST" action="{{ $emailUpdatePending ? route('api.profile.confirm-email-update') : route('api.profile.initiate-email-update') }}" class="profile-form">
     @csrf
     @if(!$emailUpdatePending)
         <div class="col _offset20 mb-10">
@@ -47,7 +47,7 @@
         <div class="d-flex gap-3">
             <x-profile.submit-button formId="change-email-form" :label="__('profile.security_settings.confirm_button')" />
             <div class="mb-20">
-                <a href="{{ route('profile.cancel-email-update') }}" class="btn _flex _border-red _big">
+                <a href="{{ route('api.profile.cancel-email-update') }}" class="btn _flex _border-red _big">
                     {{ __('profile.security_settings.cancel_button') }}
                 </a>
             </div>

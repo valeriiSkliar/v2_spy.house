@@ -42,4 +42,11 @@ Route::middleware(['web', 'auth', 'auth:sanctum'])
             ->name('api.profile.confirm-password-update');
         Route::get('/profile/cancel-password-update', [ProfileSettingsController::class, 'cancelPasswordUpdateApi'])
             ->name('api.profile.cancel-password-update');
+
+        Route::post('/profile/initiate-email-update', [ProfileSettingsController::class, 'initiateEmailUpdateApi'])
+            ->name('api.profile.initiate-email-update');
+        Route::post('/profile/confirm-email-update', [ProfileSettingsController::class, 'confirmEmailUpdateApi'])
+            ->name('api.profile.confirm-email-update');
+        Route::get('/profile/cancel-email-update', [ProfileSettingsController::class, 'cancelEmailUpdateApi'])
+            ->name('api.profile.cancel-email-update');
     });

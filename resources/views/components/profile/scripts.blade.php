@@ -1,5 +1,8 @@
 <script type="module">
+
     document.addEventListener('DOMContentLoaded', function() {
+
+
         // Handle base select change for scope
         const scopeSelectOptions = document.querySelectorAll('.base-select_big .base-select__option[data-scope]');
         const scopeInput = document.querySelector('input[name="scope"]');
@@ -52,7 +55,7 @@
             }
         @endif
     });
-    
+
 </script>
 
 

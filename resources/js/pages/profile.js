@@ -4,6 +4,7 @@ import "flatpickr/dist/flatpickr.css";
 import { profileSettingsHandler } from "../components";
 import { config } from "../config";
 import { initChangePassword } from "../components/profile/change-password";
+import { initChangeEmail } from "../components/profile/change-email";
 document.addEventListener("DOMContentLoaded", function () {
     // Initialize profile settings handler with API endpoint
 
@@ -13,6 +14,7 @@ document.addEventListener("DOMContentLoaded", function () {
             apiEndpoint: config.apiProfileSettingsEndpoint,
         });
     }
+    initChangeEmail();
     initChangePassword();
 });
 flatpickr("#dateRangePicker", {

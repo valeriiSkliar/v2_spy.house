@@ -2,25 +2,31 @@
 
 namespace App\Http\Controllers\Api\Profile;
 
+use App\Enums\Frontend\NotificationType;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Frontend\Profile\BaseProfileController;
 use App\Http\Requests\Profile\ProfileSettingsUpdateRequest;
+use App\Http\Requests\Profile\UpdateEmailRequest;
+use App\Notifications\Profile\EmailUpdateConfirmationNotification;
+use App\Notifications\Profile\EmailUpdatedNotification;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 use App\Http\Requests\Api\Profile\ChangePasswordApiRequest;
 use App\Notifications\Profile\PasswordUpdateConfirmationNotification;
 use App\Services\Notification\NotificationDispatcher;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use PragmaRX\Google2FALaravel\Facade as Google2FAFacade;
 
 class ProfileSettingsController extends BaseProfileController
 {
     /**
      * Update user's personal settings asynchronously
-     * 
+     *
      * @param ProfileSettingsUpdateRequest $request
      * @return JsonResponse
      */
@@ -83,6 +89,210 @@ class ProfileSettingsController extends BaseProfileController
         }
     }
 
+    /**
+     * Initiate email update process via API
+     *
+     * @param UpdateEmailRequest $request
+     * @return JsonResponse
+     */
+    public function initiateEmailUpdateApi(UpdateEmailRequest $request): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            $newEmail = $request->input('new_email');
+            $confirmationMethod = $request->input('confirmation_method');
+
+            if ($confirmationMethod === 'authenticator' && !$user->google_2fa_enabled) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('profile.security_settings.2fa_not_enabled'),
+                ], 422);
+            }
+
+            if ($confirmationMethod === 'authenticator') {
+                Cache::put('email_update_code:' . $user->id, [
+                    'new_email' => $newEmail,
+                    'method' => 'authenticator',
+                    'expires_at' => now()->addMinutes(15),
+                    'status' => 'pending'
+                ], now()->addMinutes(15));
+
+                return response()->json([
+                    'success' => true,
+                    'message' => __('profile.security_settings.authenticator_required'),
+                    'confirmation_method' => 'authenticator',
+                    'confirmation_form_html' => $this->renderChangeEmailForm('authenticator')->render(),
+                ]);
+            }
+
+            $verificationCode = random_int(100000, 999999);
+            Cache::put('email_update_code:' . $user->id, [
+                'new_email' => $newEmail,
+                'code' => $verificationCode,
+                'method' => 'email',
+                'expires_at' => now()->addMinutes(15),
+                'status' => 'pending'
+            ], now()->addMinutes(15));
+
+            // Отправляем уведомление о коде подтверждения через диспетчер
+            NotificationDispatcher::sendNotification(
+                $user,
+                EmailUpdateConfirmationNotification::class,
+                [$verificationCode]
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => __('profile.security_settings.email_code_sent'),
+                'confirmation_method' => 'email',
+                'confirmation_form_html' => $this->renderChangeEmailForm('email')->render(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error initiating email update: ' . $e->getMessage(), [
+                'user_id' => $request->user()->id ?? null,
+                'exception' => $e
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => __('profile.messages.error_occurred'),
+            ], 500);
+        }
+    }
+
+    /**
+     * Cancel email update process via API
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function cancelEmailUpdateApi(Request $request): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            $pendingUpdate = Cache::get('email_update_code:' . $user->id);
+
+            if ($pendingUpdate) {
+                Cache::forget('email_update_code:' . $user->id);
+                Log::info('Email update cancelled by user', [
+                    'user_id' => $user->id,
+                    'new_email' => $pendingUpdate['new_email'] ?? null
+                ]);
+            }
+
+            $confirmationMethod = $user->google_2fa_enabled ? 'authenticator' : 'email';
+
+            return response()->json([
+                'success' => true,
+                'message' => __('profile.security_settings.email_update_cancelled'),
+                'emailUpdatePending' => false,
+                'initialFormHtml' => $this->renderChangeEmailForm($confirmationMethod)->render(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error cancelling email update: ' . $e->getMessage(), [
+                'user_id' => $request->user()->id ?? null,
+                'exception' => $e
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => __('profile.messages.error_occurred'),
+            ], 500);
+        }
+    }
+
+    /**
+     * Confirm email update via API
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function confirmEmailUpdateApi(Request $request): JsonResponse
+    {
+        try {
+            $request->validate([
+                'verification_code' => 'required|string|digits:6'
+            ]);
+
+            $user = $request->user();
+            $pendingUpdate = Cache::get('email_update_code:' . $user->id);
+
+            if (!$pendingUpdate || !isset($pendingUpdate['status']) || $pendingUpdate['status'] !== 'pending') {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('profile.security_settings.update_request_expired'),
+                ], 422);
+            }
+
+            if (now()->isAfter($pendingUpdate['expires_at'])) {
+                Cache::forget('email_update_code:' . $user->id);
+                return response()->json([
+                    'success' => false,
+                    'message' => __('profile.security_settings.update_request_expired'),
+                ], 422);
+            }
+
+            $isValid = false;
+            if ($pendingUpdate['method'] === 'authenticator') {
+                $secret = Crypt::decryptString($user->google_2fa_secret);
+                $isValid = Google2FAFacade::verifyKey($secret, $request->input('verification_code'));
+            } else {
+                $isValid = $request->input('verification_code') === (string)$pendingUpdate['code'];
+            }
+
+            if (!$isValid) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('profile.security_settings.invalid_verification_code'),
+                ], 422);
+            }
+
+            $oldEmail = $user->email;
+            $user->email = $pendingUpdate['new_email'];
+            $user->email_verified_at = null;
+            $user->save();
+
+            Cache::forget('email_update_code:' . $user->id);
+
+            // Используем метод quickSend для отправки уведомления на старый email
+            NotificationDispatcher::quickSend(
+                $user,
+                NotificationType::EMAIL_VERIFIED,
+                [
+                    'old_email' => $oldEmail,
+                    'new_email' => $pendingUpdate['new_email'],
+                ],
+                __('profile.email_updated'),
+                __('profile.email_updated_message', [
+                    'old_email' => $oldEmail,
+                    'new_email' => $pendingUpdate['new_email']
+                ])
+            );
+
+            // Также отправляем уведомление на старый email через sendTo
+            NotificationDispatcher::sendTo(
+                'mail',
+                $oldEmail,
+                new EmailUpdatedNotification($oldEmail, $pendingUpdate['new_email'])
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => __('profile.security_settings.email_updated'),
+                'successFormHtml' => $this->renderChangeEmailForm()->render(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error confirming email update: ' . $e->getMessage(), [
+                'user_id' => $request->user()->id ?? null,
+                'exception' => $e
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => __('profile.messages.error_occurred'),
+            ], 500);
+        }
+    }
 
 
     public function updatePasswordApi(ChangePasswordApiRequest $request): JsonResponse

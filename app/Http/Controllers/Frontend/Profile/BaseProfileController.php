@@ -80,4 +80,19 @@ class BaseProfileController extends FrontendController
             'confirmationMethod' => $confirmationMethod
         ]);
     }
+
+    protected function renderChangeEmailForm($confirmationMethod = null): View
+    {
+        $pendingUpdate = Cache::get('email_update_code:' . $this->user->id);
+
+        if (!$confirmationMethod) {
+            $confirmationMethod = $this->user->google_2fa_enabled ? 'authenticator' : 'email';
+        }
+        return view('components.profile.change-email-form', [
+            'user' => $this->user,
+            'emailUpdatePending' => $pendingUpdate ? true : false,
+            'confirmationMethod' => $confirmationMethod,
+            'authenticatorEnabled' => $this->user->google_2fa_enabled
+        ]);
+    }
 }
