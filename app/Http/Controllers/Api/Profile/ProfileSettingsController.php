@@ -111,19 +111,30 @@ class ProfileSettingsController extends Controller
                     'message' => __('profile.security_settings.2fa_not_enabled'),
                 ], 422);
             }
+            if ($user->google_2fa_enabled && $confirmationMethod === 'email') {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('profile.security_settings.2fa_enabled_email_not_allowed'),
+                ], 422);
+            }
 
             if ($confirmationMethod === 'authenticator') {
                 Cache::put('password_update_code:' . $user->id, [
                     'password' => $request->input('password'),
                     'method' => 'authenticator',
                     'expires_at' => now()->addMinutes(15),
+                    'google_2fa_enabled' => $user->google_2fa_enabled,
+                    'status' => 'pending',
                 ], now()->addMinutes(15));
 
                 return response()->json([
                     'success' => true,
                     'message' => __('profile.messages.confirmation_code_sent'),
                     'confirmation_method' => 'authenticator',
-                    'confirmation_form_html' => view('components.profile.change-password-form')->render(),
+                    'confirmation_form_html' => view('components.profile.change-password-form', [
+                        'confirmationMethod' => 'authenticator',
+                        'passwordUpdatePending' => true,
+                    ])->render(),
                 ]);
             }
             $verificationCode = random_int(100000, 999999);
@@ -131,15 +142,12 @@ class ProfileSettingsController extends Controller
                 'password' => $request->input('password'),
                 'code' => $verificationCode,
                 'method' => 'email',
-                'expires_at' => now()->addMinutes(15)
+                'expires_at' => now()->addMinutes(15),
+                'google_2fa_enabled' => $user->google_2fa_enabled,
+                'status' => 'pending',
             ], now()->addMinutes(15));
 
-            // Используем метод sendNotification для отправки уведомления о смене пароля
-            NotificationDispatcher::sendTo(
-                'mail',
-                $user->email,
-                new PasswordUpdateConfirmationNotification($verificationCode)
-            );
+
 
 
 
@@ -152,12 +160,20 @@ class ProfileSettingsController extends Controller
             }
 
 
-
+            // Используем метод sendNotification для отправки уведомления о смене пароля
+            NotificationDispatcher::sendTo(
+                'mail',
+                $user->email,
+                new PasswordUpdateConfirmationNotification($verificationCode)
+            );
             return response()->json([
                 'success' => true,
                 'message' => __('profile.messages.confirmation_code_sent'),
                 'confirmation_method' => 'email',
-                'confirmation_form_html' => view('components.profile.change-password-form')->render(),
+                'confirmation_form_html' => view('components.profile.change-password-form', [
+                    'confirmationMethod' => 'email',
+                    'passwordUpdatePending' => true,
+                ])->render(),
             ]);
         } catch (\Exception $e) {
             Log::error('Error initiating password update: ' . $e->getMessage(), [
@@ -170,5 +186,19 @@ class ProfileSettingsController extends Controller
                 'message' => __('profile.messages.error_occurred'),
             ], 500);
         }
+    }
+
+    public function cancelPasswordUpdateApi(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $pendingUpdate = Cache::get('password_update_code:' . $user->id);
+        $passwordUpdateStatus = isset($pendingUpdate['status']) ? $pendingUpdate['status'] : null;
+        if ($passwordUpdateStatus === 'pending') {
+            Cache::forget('password_update_code:' . $user->id);
+        }
+        return response()->json([
+            'success' => true,
+            'message' => __('profile.messages.password_update_cancelled'),
+        ]);
     }
 }

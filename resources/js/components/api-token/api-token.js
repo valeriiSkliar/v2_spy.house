@@ -62,6 +62,7 @@ const apiTokenHandler = {
     removeToken: () => {
         localStorage.removeItem(apiTokenHandler.TOKEN_STORAGE_KEY);
         localStorage.removeItem(apiTokenHandler.TOKEN_EXPIRATION_KEY);
+        localStorage.removeItem("bt_refresh"); // Also remove the refresh token fallback
     },
 
     /**
@@ -123,7 +124,7 @@ const apiTokenHandler = {
             // Check for manually stored refresh token as fallback
             // Note: This is less secure but provides a fallback for environments where cookies don't work
             const storedRefreshToken = localStorage.getItem("bt_refresh");
-            const useTokenFallback = storedRefreshToken || !navigator.cookieEnabled;
+            const useTokenFallback = storedRefreshToken && (!navigator.cookieEnabled || !document.cookie.includes('refresh_token='));
             
             // Create request body with refresh token if available
             const requestBody = useTokenFallback ? 
@@ -131,7 +132,9 @@ const apiTokenHandler = {
                     refresh_token: storedRefreshToken || "",
                     include_refresh_token: "true" // Request refresh token in response
                 }) : 
-                null;
+                JSON.stringify({
+                    include_refresh_token: "true" // Always request refresh token in response for fallback
+                });
             
             console.log("Calling refresh token endpoint...");
             console.log("Using stored refresh token as fallback:", !!storedRefreshToken);
@@ -146,10 +149,8 @@ const apiTokenHandler = {
                 'Accept': 'application/json',
             };
             
-            // If cookies are disabled or we're using token fallback, request token in response
-            if (useTokenFallback) {
-                headers['X-Include-Refresh-Token'] = 'true';
-            }
+            // Always request token in response as fallback
+            headers['X-Include-Refresh-Token'] = 'true';
             
             const response = await fetch('/api/auth/refresh-token', {
                 method: 'POST',
@@ -177,10 +178,17 @@ const apiTokenHandler = {
                             apiTokenHandler.removeToken();
                             console.warn("Token refresh failed due to missing token. Clearing storage.");
                         }
-                    } else if (response.status === 401) {
-                        // Authentication error, clear tokens
+                    } else if (response.status === 401 || response.status === 422) {
+                        // Authentication error or validation error, clear tokens
                         apiTokenHandler.removeToken();
                         console.warn("Authentication failed during token refresh. Clearing token.");
+                        
+                        // If we're on a page that requires authentication, redirect to login
+                        const requiresAuth = document.querySelector('meta[name="requires-auth"]');
+                        if (requiresAuth && requiresAuth.getAttribute('content') === 'true') {
+                            console.warn("Page requires authentication but cannot refresh token. Redirecting to login...");
+                            window.location.href = '/login';
+                        }
                     }
                 } catch (e) {
                     // If we can't parse the error response, just log the status
@@ -231,7 +239,7 @@ const apiTokenHandler = {
             apiTokenHandler.removeToken();
             
             // Optional: redirect to login page
-            if (error.message.includes('401') || error.message.includes('403')) {
+            if (error.message.includes('401') || error.message.includes('403') || error.message.includes('422')) {
                 console.warn('Authentication error. Redirecting to login...');
                 // Uncomment if you want to redirect to login
                 // window.location.href = '/login';
