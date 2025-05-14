@@ -5,4 +5,5 @@ export const config = {
     apiProfileAvatarEndpoint: `${apiBaseEndpoint}/profile/avatar`,
     apiProfilePasswordUpdateInitiateEndpoint: `${apiBaseEndpoint}/profile/initiate-password-update`,
     apiProfilePasswordUpdateConfirmEndpoint: `${apiBaseEndpoint}/profile/confirm-password-update`,
+    apiProfilePasswordCancelEndpoint: `${apiBaseEndpoint}/profile/cancel-password-update`,
 };

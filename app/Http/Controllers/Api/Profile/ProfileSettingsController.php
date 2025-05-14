@@ -196,9 +196,20 @@ class ProfileSettingsController extends Controller
         if ($passwordUpdateStatus === 'pending') {
             Cache::forget('password_update_code:' . $user->id);
         }
+        $confirmationMethod = $user->google_2fa_enabled ? 'authenticator' : 'email';
         return response()->json([
+            'passwordUpdatePending' => false,
+            'initialFormHtml' => view('components.profile.change-password-form', [
+                'confirmationMethod' => $confirmationMethod,
+                'passwordUpdatePending' => false,
+            ])->render(),
             'success' => true,
             'message' => __('profile.messages.password_update_cancelled'),
         ]);
+    }
+
+    public function confirmPasswordUpdateApi(Request $request): JsonResponse
+    {
+        dd($request->all());
     }
 }
