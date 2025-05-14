@@ -50,17 +50,19 @@ const initSocialMessengerField = () => {
     }
 
     // Handler for messenger selection in dropdown
+    // Handler for messenger selection in dropdown
     profileFormElements.profileMessangerSelectOptions
         .off("click")
         .on("click", function () {
             const selectedValue = $(this).data("value");
-            const selectedPhone = $(this).data("phone");
+            const selectedPhone = $(this).attr("data-phone"); // <--- ИЗМЕНЕНИЕ ЗДЕСЬ
 
             // Update value in visible input field
             profileFormElements.visibleValue.val(selectedPhone);
 
             // Update data-type attribute on visible input
-            profileFormElements.visibleValue.data("type", selectedValue);
+            profileFormElements.visibleValue.data("type", selectedValue); // Можно оставить .data() если уверены что запись и чтение не конфликтуют,
+            // либо для полной согласованности также использовать .attr() для data-type
             profileFormElements.visibleValue.attr("data-type", selectedValue);
 
             // Update placeholder based on selected messenger
@@ -81,13 +83,13 @@ const initSocialMessengerField = () => {
 
             // Update trigger structure
             $trigger.html(`
-            <span class="base-select__value">
-                <span class="base-select__img">
-                    <img src="${imgSrc}" alt="${selectedValue}">
-                </span>
+        <span class="base-select__value">
+            <span class="base-select__img">
+                <img src="${imgSrc}" alt="${selectedValue}">
             </span>
-            <span class="base-select__arrow"></span>
-        `);
+        </span>
+        <span class="base-select__arrow"></span>
+    `);
 
             // Close dropdown
             profileFormElements.profileMessangerSelectDropdown.hide();
