@@ -67,11 +67,13 @@ class BaseProfileController extends FrontendController
         ]);
     }
 
-    protected function renderChangePasswordForm(): View
+    protected function renderChangePasswordForm($confirmationMethod = null): View
     {
         $pendingUpdate = Cache::get('password_update_code:' . $this->user->id);
 
-        $confirmationMethod = $this->user->google_2fa_enabled ? 'authenticator' : 'email';
+        if (!$confirmationMethod) {
+            $confirmationMethod = $this->user->google_2fa_enabled ? 'authenticator' : 'email';
+        }
         return view('components.profile.change-password-form', [
             'user' => $this->user,
             'passwordUpdatePending' => $pendingUpdate ? true : false,

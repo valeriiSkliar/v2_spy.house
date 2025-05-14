@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Profile\ProfileAvatarController;
+use App\Http\Controllers\Api\Profile\ProfileSettingsController;
 use App\Http\Controllers\Frontend\Profile\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -35,10 +36,10 @@ Route::middleware(['web', 'auth', 'auth:sanctum'])
     ->group(function () {
         Route::post('/profile/avatar', [ProfileAvatarController::class, 'upload'])->name('api.profile.avatar.upload');
 
-        Route::post('/profile/initiate-password-update', [App\Http\Controllers\Api\Profile\ProfileSettingsController::class, 'initiatePasswordUpdateApi'])
+        Route::post('/profile/initiate-password-update', [ProfileSettingsController::class, 'initiatePasswordUpdateApi'])
             ->name('api.profile.initiate-password-update');
-        Route::post('/profile/confirm-password-update', [App\Http\Controllers\Api\Profile\ProfileSettingsController::class, 'confirmPasswordUpdateApi'])
+        Route::post('/profile/confirm-password-update', [ProfileSettingsController::class, 'confirmPasswordUpdateApi'])
             ->name('api.profile.confirm-password-update');
-        Route::get('/profile/cancel-password-update', [App\Http\Controllers\Api\Profile\ProfileSettingsController::class, 'cancelPasswordUpdateApi'])
+        Route::get('/profile/cancel-password-update', [ProfileSettingsController::class, 'cancelPasswordUpdateApi'])
             ->name('api.profile.cancel-password-update');
     });

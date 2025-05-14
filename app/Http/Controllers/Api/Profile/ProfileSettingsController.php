@@ -132,10 +132,7 @@ class ProfileSettingsController extends BaseProfileController
                     'success' => true,
                     'message' => __('profile.messages.confirmation_code_sent'),
                     'confirmation_method' => 'authenticator',
-                    'confirmation_form_html' => view('components.profile.change-password-form', [
-                        'confirmationMethod' => 'authenticator',
-                        'passwordUpdatePending' => true,
-                    ])->render(),
+                    'confirmation_form_html' => $this->renderChangePasswordForm('authenticator')->render(),
                 ]);
             }
             $verificationCode = random_int(100000, 999999);
@@ -171,10 +168,7 @@ class ProfileSettingsController extends BaseProfileController
                 'success' => true,
                 'message' => __('profile.messages.confirmation_code_sent'),
                 'confirmation_method' => 'email',
-                'confirmation_form_html' => view('components.profile.change-password-form', [
-                    'confirmationMethod' => 'email',
-                    'passwordUpdatePending' => true,
-                ])->render(),
+                'confirmation_form_html' => $this->renderChangePasswordForm('email')->render(),
             ]);
         } catch (\Exception $e) {
             Log::error('Error initiating password update: ' . $e->getMessage(), [
@@ -200,10 +194,7 @@ class ProfileSettingsController extends BaseProfileController
         $confirmationMethod = $user->google_2fa_enabled ? 'authenticator' : 'email';
         return response()->json([
             'passwordUpdatePending' => false,
-            'initialFormHtml' => view('components.profile.change-password-form', [
-                'confirmationMethod' => $confirmationMethod,
-                'passwordUpdatePending' => false,
-            ])->render(),
+            'initialFormHtml' => $this->renderChangePasswordForm($confirmationMethod)->render(),
             'success' => true,
             'message' => __('profile.messages.password_update_cancelled'),
         ]);
