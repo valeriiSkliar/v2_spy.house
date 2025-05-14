@@ -32,7 +32,7 @@ class ProfileSettingsController extends BaseProfileController
      * @param ProfileSettingsUpdateRequest $request
      * @return JsonResponse
      */
-    public function update(ProfileSettingsUpdateRequest $request): JsonResponse
+    public function updateSettingsApi(ProfileSettingsUpdateRequest $request): JsonResponse
     {
         try {
             $user = $request->user();
@@ -42,25 +42,15 @@ class ProfileSettingsController extends BaseProfileController
             // Process validated data fields
             $fields = [
                 'login',
-                'name',
-                'surname',
-                'date_of_birth',
                 'experience',
                 'scope_of_activity',
-                'messengers',
                 'whatsapp_phone',
                 'viber_phone',
                 'telegram'
             ];
 
-            foreach ($fields as $field) {
-                if (isset($validatedData[$field])) {
-                    $settingsData[$field] = $validatedData[$field];
-                }
-            }
-
             // Update user record
-            $user->fill($settingsData);
+            $user->fill($validatedData);
             $user->save();
 
             // Return success response with updated user data
@@ -69,8 +59,6 @@ class ProfileSettingsController extends BaseProfileController
                 'message' => __('profile.personal_info.update_success'),
                 'user' => [
                     'login' => $user->login,
-                    'name' => $user->name,
-                    'surname' => $user->surname,
                     'experience' => $user->experience,
                     'scope_of_activity' => $user->scope_of_activity,
                     'telegram' => $user->telegram,

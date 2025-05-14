@@ -1,7 +1,7 @@
 @props(['user', 'api_token', 'scopes', 'experiences'])
 <form 
     id="personal-settings-form"
-    action="{{ route('api.profile.settings.update') }}"
+    action="{{ route('api.profile.settings') }}"
      method="POST" 
      class="pt-3"
     >
@@ -9,9 +9,6 @@
         @method('PUT')
     <x-profile.user-info 
         :user="$user" 
-    />
-    <x-profile.api-token 
-        :api_token="$api_token" 
     />
     <div class="col _offset20 mb-20">
         <div class="col-12 col-md-6 col-lg-4">
@@ -22,31 +19,6 @@
                 :value="$user->login ?? ''" 
             />
         </div>
-        {{-- <div class="col-12 col-md-6 col-lg-4">
-            <x-profile.form-field 
-                name="name" 
-                type="text" 
-                :label="__('profile.personal_info.first_name_label')" 
-                :value="$user->name" 
-                />
-        </div>
-        <div class="col-12 col-md-6 col-lg-4">
-            <x-profile.form-field 
-                name="surname" 
-                type="text" 
-                :label="__('profile.personal_info.last_name_label')" 
-                :value="$user->surname" 
-            />
-        </div> --}}
-        {{-- <div class="col-12 col-md-6 col-lg-4">
-            <x-profile.date-flatpicker-form-field 
-                name="date_of_birth" 
-                type="date" 
-                :label="__('profile.personal_info.birth_date_label')" 
-                :value="$user->date_of_birth" 
-                :placeholder="__('profile.personal_info.birth_date_label')"
-            />
-        </div> --}}
 
         <div class="col-12 col-md-6 col-lg-4">
             <x-profile.socials-messanger-field 
@@ -60,7 +32,7 @@
             <x-profile.select-field 
                 name="experience" 
                 :label="__('profile.personal_info.experience_label')" 
-                :value="$user->experience ?? \App\Enums\Frontend\UserExperience::BEGINNER" 
+                :value="$user->experience" 
                 :options="$experiences" 
                 :display-default-value="$displayDefaultValues['experience']"
             />
@@ -69,7 +41,7 @@
             <x-profile.select-field 
                 name="scope_of_activity" 
                 :label="__('profile.personal_info.scope_label')" 
-                :value="$user->scope_of_activity ?? \App\Enums\Frontend\UserScopeOfActivity::GAMBLING" 
+                :value="$user->scope_of_activity" 
                 :options="$scopes" 
                 :display-default-value="$displayDefaultValues['scope_of_activity']"
             />

@@ -37,7 +37,7 @@ Route::prefix('api')->group(function () {
 
         // Profile
         // MOVE TO PROFILE ROUTES Route::post('profile/avatar', [ProfileAvatarController::class, 'upload'])->name('api.profile.avatar.upload');
-        Route::put('profile/settings', [ProfileSettingsController::class, 'update'])->name('api.profile.settings.update');
+        // Route::put('profile/settings', [ProfileSettingsController::class, 'update'])->name('api.profile.settings.update');
 
         // Blog
         Route::post('blog/{slug}/comment', [ApiBlogController::class, 'storeComment'])->name('api.blog.comment.store');

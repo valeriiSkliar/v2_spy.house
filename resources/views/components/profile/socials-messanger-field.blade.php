@@ -117,6 +117,22 @@ const placeholders = {
     'whatsapp_phone': '+1 (999) 999-99-99'
 };
 
+// Функция валидации значений
+function validateMessengerValue(type, value) {
+    if (!value) return true;
+    
+    switch(type) {
+        case 'telegram':
+            return /^@[A-Za-z0-9_]{5,32}$/.test(value);
+        case 'viber_phone':
+        case 'whatsapp_phone':
+            const cleanValue = value.replace(/[^0-9+]/g, '');
+            return /^\+?[0-9]{10,15}$/.test(cleanValue);
+        default:
+            return false;
+    }
+}
+
 // Обработка выбора мессенджера в выпадающем списке
 $profileMessangerSelectOptions.on('click', function() {
     const selectedValue = $(this).data('value');
@@ -155,12 +171,19 @@ $profileMessangerSelectOptions.on('click', function() {
     
     // Переносим значение из поля ввода в соответствующее скрытое поле
     updateHiddenField();
-    
-    console.log(`Изменен тип мессенджера на: ${selectedValue}`);
 });
 
 // Обработка ввода в поле
 $visibleValueInput.on('input', function() {
+    const type = $(this).data('type');
+    const value = $(this).val();
+    
+    if (!validateMessengerValue(type, value)) {
+        $(this).addClass('is-invalid');
+    } else {
+        $(this).removeClass('is-invalid');
+    }
+    
     updateHiddenField();
 });
 
@@ -168,6 +191,11 @@ $visibleValueInput.on('input', function() {
 function updateHiddenField() {
     const value = $visibleValueInput.val();
     const type = $visibleValueInput.data('type');
+    
+    // Очищаем все скрытые поля
+    $telegramInput.val('');
+    $viberPhoneInput.val('');
+    $whatsappPhoneInput.val('');
     
     // Обновляем значение соответствующего скрытого поля
     if (type === 'telegram') {
@@ -177,8 +205,6 @@ function updateHiddenField() {
     } else if (type === 'whatsapp_phone') {
         $whatsappPhoneInput.val(value);
     }
-    
-    console.log(`Обновлено поле ${type} со значением ${value}`);
 }
 
 // Обработка открытия/закрытия выпадающего списка
@@ -199,3 +225,10 @@ $(document).ready(function() {
     updateHiddenField();
 });
 </script>
+
+<style>
+.input-h-57.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+</style>

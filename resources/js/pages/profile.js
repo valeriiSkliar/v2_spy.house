@@ -6,6 +6,7 @@ import {
     initChangePassword,
     initChangePersonalGreeting,
     initUpdateIpRestriction,
+    initUpdateProfileSettings,
     // profileSettingsHandler,
 } from "../components";
 import { config } from "../config";
@@ -18,6 +19,7 @@ document.addEventListener("DOMContentLoaded", function () {
         //     apiEndpoint: config.apiProfileSettingsEndpoint,
         // });
     }
+    initUpdateProfileSettings();
     initChangeEmail();
     initChangePassword();
     initChangePersonalGreeting();
