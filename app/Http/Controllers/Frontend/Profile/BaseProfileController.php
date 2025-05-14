@@ -120,4 +120,12 @@ class BaseProfileController extends FrontendController
             'authenticatorEnabled' => $this->user->google_2fa_enabled
         ]);
     }
+
+    protected function renderIpRestrictionForm(): View
+    {
+        return view('components.profile.ip-restriction-form', [
+            'user' => $this->user,
+            'ip_restrictions' => $this->user->ip_restrictions ?? []
+        ]);
+    }
 }

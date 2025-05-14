@@ -5,6 +5,7 @@ import {
     initChangeEmail,
     initChangePassword,
     initChangePersonalGreeting,
+    initUpdateIpRestriction,
     profileSettingsHandler,
 } from "../components";
 import { config } from "../config";
@@ -20,6 +21,7 @@ document.addEventListener("DOMContentLoaded", function () {
     initChangeEmail();
     initChangePassword();
     initChangePersonalGreeting();
+    initUpdateIpRestriction();
 });
 flatpickr("#dateRangePicker", {
     // mode: "range",

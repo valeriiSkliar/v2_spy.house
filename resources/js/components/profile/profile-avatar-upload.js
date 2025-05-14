@@ -2,117 +2,124 @@
  * Profile avatar upload handler
  * Manages asynchronous avatar uploads with loading state and feedback
  */
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener("DOMContentLoaded", function () {
     const avatarUploader = {
         // Configuration
-        fileInputId: 'photo',
-        uploadButtonId: 'upload-photo-button',
-        avatarContainerId: 'user-avatar-container',
-        fileNameId: 'selected-file-name',
-        loadingClass: 'is-loading',
-        apiEndpoint: '/api/profile/avatar',
+        fileInputId: "photo",
+        uploadButtonId: "upload-photo-button",
+        avatarContainerId: "user-avatar-container",
+        fileNameId: "selected-file-name",
+        loadingClass: "is-loading",
+        apiEndpoint: "/api/profile/avatar",
         originalLabel: null,
-        
+
         // DOM elements
         fileInput: null,
         uploadButton: null,
         avatarContainer: null,
         fileNameElement: null,
-        
+
         // Initialize
-        init: function() {
+        init: function () {
             // Get DOM elements
             this.fileInput = document.getElementById(this.fileInputId);
-            const uploadButtonLabel = document.querySelector(`label[for="${this.fileInputId}"]`);
+            const uploadButtonLabel = document.querySelector(
+                `label[for="${this.fileInputId}"]`
+            );
             this.uploadButton = uploadButtonLabel;
-            this.avatarContainer = document.getElementById(this.avatarContainerId);
+            this.avatarContainer = document.getElementById(
+                this.avatarContainerId
+            );
             this.fileNameElement = document.getElementById(this.fileNameId);
-            
+
             if (!this.fileInput) {
-                console.error('Avatar file input not found');
+                console.error("Avatar file input not found");
                 return;
             }
-            
+
             if (uploadButtonLabel) {
                 this.originalLabel = uploadButtonLabel.innerHTML;
             }
-            
+
             // Initialize event listeners
             this.initEventListeners();
-            
-            console.log('Avatar uploader initialized');
+
+            console.log("Avatar uploader initialized");
         },
-        
+
         // Set up event listeners
-        initEventListeners: function() {
+        initEventListeners: function () {
             // File selection event
-            this.fileInput.addEventListener('change', (event) => {
+            this.fileInput.addEventListener("change", (event) => {
                 const file = event.target.files[0];
                 if (!file) return;
-                
+
                 // Display file info
                 this.showFileInfo(file);
-                
+
                 // Upload the file automatically on selection
                 this.uploadFile(file);
             });
         },
-        
+
         // Display selected file information
-        showFileInfo: function(file) {
+        showFileInfo: function (file) {
             if (!this.fileNameElement) return;
-            
+
             const img = new Image();
             img.onload = () => {
-                const fileType = file.name.split('.').pop().toUpperCase();
+                const fileType = file.name.split(".").pop().toUpperCase();
                 const fileSizeInKB = Math.round(file.size / 1024);
-                this.fileNameElement.textContent = 
-                    `${fileType} (${img.width}x${img.height}) ${fileSizeInKB}kb`;
+                this.fileNameElement.textContent = `${fileType} (${img.width}x${img.height}) ${fileSizeInKB}kb`;
             };
             img.src = URL.createObjectURL(file);
         },
-        
+
         // Upload the file to the server
-        uploadFile: async function(file) {
+        uploadFile: async function (file) {
             if (!this.uploadButton) return;
-            
+
             try {
                 // Show loading state
                 this.showLoadingState();
-                
+
                 // Create FormData
                 const formData = new FormData();
-                formData.append('avatar', file);
-                
+                formData.append("avatar", file);
+
                 // Add CSRF token
-                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-                
+                const csrfToken = document
+                    .querySelector('meta[name="csrf-token"]')
+                    ?.getAttribute("content");
+
                 // Get API token if available
-                const apiToken = document.querySelector('meta[name="api-token"]')?.getAttribute('content');
-                
+                const apiToken = document
+                    .querySelector('meta[name="api-token"]')
+                    ?.getAttribute("content");
+
                 // Set headers
                 const headers = {
-                    'X-CSRF-TOKEN': csrfToken || '',
+                    "X-CSRF-TOKEN": csrfToken || "",
                 };
-                
+
                 if (apiToken) {
-                    headers['Authorization'] = `Bearer ${apiToken}`;
+                    headers["Authorization"] = `Bearer ${apiToken}`;
                 }
-                
+
                 // Make API request
                 const response = await fetch(this.apiEndpoint, {
-                    method: 'POST',
+                    method: "POST",
                     body: formData,
                     headers: headers,
-                    credentials: 'same-origin'
+                    credentials: "same-origin",
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (!response.ok) {
-                    throw new Error(data.message || 'Failed to upload avatar');
+                    throw new Error(data.message || "Failed to upload avatar");
                 }
-                
+
                 // Handle success
                 this.handleUploadSuccess(data);
             } catch (error) {
@@ -123,78 +130,81 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.resetLoadingState();
             }
         },
-        
+
         // Show loading state on the upload button
-        showLoadingState: function() {
+        showLoadingState: function () {
             if (!this.uploadButton) return;
-            
+
             this.uploadButton.classList.add(this.loadingClass);
             this.uploadButton.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Uploading...`;
         },
-        
+
         // Reset loading state on the upload button
-        resetLoadingState: function() {
+        resetLoadingState: function () {
             if (!this.uploadButton || !this.originalLabel) return;
-            
+
             this.uploadButton.classList.remove(this.loadingClass);
             this.uploadButton.innerHTML = this.originalLabel;
         },
-        
+
         // Handle successful upload
-        handleUploadSuccess: function(data) {
+        handleUploadSuccess: function (data) {
             // Show success toast
-            this.showToast(data.message, 'success');
-            
+            this.showToast(data.message, "success");
+
             // Update avatar image if container exists
             if (this.avatarContainer) {
                 const avatar = data.avatar;
-                
+
                 // Create image if it doesn't exist
-                let imgElement = this.avatarContainer.querySelector('img');
+                let imgElement = this.avatarContainer.querySelector("img");
                 if (!imgElement) {
-                    imgElement = document.createElement('img');
-                    this.avatarContainer.textContent = ''; // Clear any text (like initials)
+                    imgElement = document.createElement("img");
+                    this.avatarContainer.textContent = ""; // Clear any text (like initials)
                     this.avatarContainer.appendChild(imgElement);
                 }
-                
+
                 // Update image source with cache buster to force refresh
                 imgElement.src = `${avatar.url}?t=${Date.now()}`;
-                imgElement.alt = 'User Avatar';
+                imgElement.alt = "User Avatar";
             }
         },
-        
+
         // Handle upload error
-        handleUploadError: function(error) {
-            console.error('Avatar upload failed:', error);
-            
+        handleUploadError: function (error) {
+            console.error("Avatar upload failed:", error);
+
             // Show error toast
             this.showToast(
-                error.message || 'Failed to upload profile photo. Please try again.',
-                'error'
+                error.message ||
+                    "Failed to upload profile photo. Please try again.",
+                "error"
             );
-            
+
             // Reset file input to allow re-selection
             if (this.fileInput) {
-                this.fileInput.value = '';
+                this.fileInput.value = "";
             }
         },
-        
+
         // Show a toast notification
-        showToast: function(message, type = 'info') {
+        showToast: function (message, type = "info") {
             // Find toast container
-            const toastContainer = document.querySelector('.toast-container');
+            const toastContainer = document.querySelector(".toast-container");
             if (!toastContainer) {
-                console.error('Toast container not found');
+                console.error("Toast container not found");
                 alert(message); // Fallback to alert if toast container not found
                 return;
             }
-            
+
             // Create toast element
             const toastId = `toast-${Date.now()}`;
             const toastHTML = `
                 <div id="${toastId}" class="toast toast-${type}" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
                     <div class="toast-header">
-                        <strong class="me-auto">${type === 'error' ? 'Error' : 'Success'}</strong>
+                        <strong class="me-auto">${
+                            type === "error" ? "Error" : "Success"
+                        }</strong>
                         <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
                     </div>
                     <div class="toast-body">
@@ -202,24 +212,26 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
             `;
-            
+
             // Insert toast into container
-            toastContainer.insertAdjacentHTML('beforeend', toastHTML);
-            
+            toastContainer.insertAdjacentHTML("beforeend", toastHTML);
+
             // Show the toast
             const toastElement = document.getElementById(toastId);
             if (toastElement) {
                 const toast = new bootstrap.Toast(toastElement);
                 toast.show();
-                
+
                 // Remove toast after it's hidden
-                toastElement.addEventListener('hidden.bs.toast', function() {
+                toastElement.addEventListener("hidden.bs.toast", function () {
                     toastElement.remove();
                 });
             }
-        }
+        },
     };
-    
+
     // Initialize the uploader
-    avatarUploader.init();
+    if (document.getElementById("upload-photo-button")) {
+        avatarUploader.init();
+    }
 });

@@ -1,7 +1,7 @@
 <script type="module">
 
-
     document.addEventListener('DOMContentLoaded', function() {
+
 
 
         // Handle base select change for scope

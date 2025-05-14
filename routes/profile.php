@@ -56,4 +56,7 @@ Route::middleware(['web', 'auth', 'auth:sanctum'])
             ->name('api.profile.confirm-personal-greeting-update');
         Route::get('/profile/cancel-personal-greeting-update', [ProfileSettingsController::class, 'cancelPersonalGreetingUpdateApi'])
             ->name('api.profile.cancel-personal-greeting-update');
+
+        Route::post('/profile/update-ip-restriction', [ProfileSettingsController::class, 'updateIpRestrictionApi'])
+            ->name('api.profile.update-ip-restriction');
     });
