@@ -25,32 +25,53 @@ async function submitFormHandler(e) {
                     $('input[name="telegram"]').val(response.user.telegram);
                 }
                 if (response.user.viber_phone !== undefined) {
-                    $('input[name="viber_phone"]').val(response.user.viber_phone);
+                    $('input[name="viber_phone"]').val(
+                        response.user.viber_phone
+                    );
                 }
                 if (response.user.whatsapp_phone !== undefined) {
-                    $('input[name="whatsapp_phone"]').val(response.user.whatsapp_phone);
+                    $('input[name="whatsapp_phone"]').val(
+                        response.user.whatsapp_phone
+                    );
                 }
 
                 // Update visible messenger field based on which one is set
                 const visibleInput = $('input[name="visible_value"]');
-                const currentType = visibleInput.data('type');
-                if (currentType === 'telegram' && response.user.telegram !== undefined) {
+                const currentType = visibleInput.data("type");
+                if (
+                    currentType === "telegram" &&
+                    response.user.telegram !== undefined
+                ) {
                     visibleInput.val(response.user.telegram);
-                } else if (currentType === 'viber_phone' && response.user.viber_phone !== undefined) {
+                } else if (
+                    currentType === "viber_phone" &&
+                    response.user.viber_phone !== undefined
+                ) {
                     visibleInput.val(response.user.viber_phone);
-                } else if (currentType === 'whatsapp_phone' && response.user.whatsapp_phone !== undefined) {
+                } else if (
+                    currentType === "whatsapp_phone" &&
+                    response.user.whatsapp_phone !== undefined
+                ) {
                     visibleInput.val(response.user.whatsapp_phone);
                 }
 
                 // Update other form fields
                 if (response.user.login !== undefined) {
                     $('input[name="login"]').val(response.user.login);
+                    const userPreviewName = $("#user-preview-name");
+                    if (userPreviewName.length) {
+                        userPreviewName.text(response.user.login);
+                    }
                 }
                 if (response.user.experience !== undefined) {
-                    $('select[name="experience"]').val(response.user.experience);
+                    $('select[name="experience"]').val(
+                        response.user.experience
+                    );
                 }
                 if (response.user.scope_of_activity !== undefined) {
-                    $('select[name="scope_of_activity"]').val(response.user.scope_of_activity);
+                    $('select[name="scope_of_activity"]').val(
+                        response.user.scope_of_activity
+                    );
                 }
 
                 // If the server still returns HTML, use it as a fallback

@@ -152,6 +152,29 @@ document.addEventListener("DOMContentLoaded", function () {
             // Show success toast
             this.showToast(data.message, "success");
 
+            const userPreviewAvatarHeader = $("#user-preview-avatar-header");
+            if (userPreviewAvatarHeader.length) {
+                const img = userPreviewAvatarHeader.find(
+                    "#user-preview-avatar-header-img"
+                );
+                if (img.length) {
+                    img.attr("src", data.avatar.url);
+                } else {
+                    // Create new image element for the user preview header
+                    const newImg = document.createElement("img");
+                    newImg.id = "user-preview-avatar-header-img";
+                    newImg.src = data.avatar.url;
+                    newImg.alt = "User Avatar";
+
+                    // Clear any existing content (like initials)
+                    userPreviewAvatarHeader.empty();
+
+                    // Append the new image to the container
+                    userPreviewAvatarHeader.append(newImg);
+                    userPreviewAvatarHeader.attr("src", data.avatar.url);
+                }
+            }
+
             // Update avatar image if container exists
             if (this.avatarContainer) {
                 const avatar = data.avatar;

@@ -1,8 +1,14 @@
 @auth
 <div class="user-preview">
     <div class="user-preview__trigger">
-        <div class="user-preview__avatar thumb"><span>{{ substr(auth()?->user()?->name, 0, 2) }}</span></div>
-        <div class="user-preview__name">{{ auth()->user()?->login }}</div>
+        <div id="user-preview-avatar-header" class="user-preview__avatar thumb">
+            @if(auth()->user()->user_avatar)
+                <img src="{{ asset('storage/' . auth()->user()->user_avatar) }}" alt="{{ auth()->user()->name }}">
+            @else
+                <span>{{ substr(auth()?->user()?->name, 0, 2) }}</span>
+            @endif
+        </div>
+        <div id="user-preview-name" class="user-preview__name">{{ auth()->user()?->login }}</div>
         <div class="btn-icon _dark">
             <span id="notification-indicator-preview" class="icon-settings"></span>
             @if(auth()->user()->unreadNotifications->count() > 0)
