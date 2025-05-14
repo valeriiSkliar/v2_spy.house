@@ -95,4 +95,29 @@ class BaseProfileController extends FrontendController
             'authenticatorEnabled' => $this->user->google_2fa_enabled
         ]);
     }
+
+    protected function renderPersonalGreetingForm($confirmationMethod = null, $step = 'initiation'): View
+    {
+        $pendingUpdate = Cache::get('personal_greeting_update_code:' . $this->user->id);
+
+        if (!$confirmationMethod) {
+            $confirmationMethod = $this->user->google_2fa_enabled ? 'authenticator' : 'email';
+        }
+
+        if ($step === 'confirmation' || ($pendingUpdate && isset($pendingUpdate['status']) && $pendingUpdate['status'] === 'pending')) {
+            return view('components.profile.personal-greeting-confirmation-form', [
+                'user' => $this->user,
+                'personalGreetingUpdatePending' => true,
+                'confirmationMethod' => $pendingUpdate['method'] ?? $confirmationMethod,
+                'authenticatorEnabled' => $this->user->google_2fa_enabled
+            ]);
+        }
+
+        return view('components.profile.personal-greeting-form', [
+            'user' => $this->user,
+            'personalGreetingUpdatePending' => false,
+            'confirmationMethod' => $confirmationMethod,
+            'authenticatorEnabled' => $this->user->google_2fa_enabled
+        ]);
+    }
 }

@@ -49,4 +49,11 @@ Route::middleware(['web', 'auth', 'auth:sanctum'])
             ->name('api.profile.confirm-email-update');
         Route::get('/profile/cancel-email-update', [ProfileSettingsController::class, 'cancelEmailUpdateApi'])
             ->name('api.profile.cancel-email-update');
+
+        Route::post('/profile/initiate-personal-greeting-update', [ProfileSettingsController::class, 'initiatePersonalGreetingUpdateApi'])
+            ->name('api.profile.initiate-personal-greeting-update');
+        Route::post('/profile/confirm-personal-greeting-update', [ProfileSettingsController::class, 'confirmPersonalGreetingUpdateApi'])
+            ->name('api.profile.confirm-personal-greeting-update');
+        Route::get('/profile/cancel-personal-greeting-update', [ProfileSettingsController::class, 'cancelPersonalGreetingUpdateApi'])
+            ->name('api.profile.cancel-personal-greeting-update');
     });

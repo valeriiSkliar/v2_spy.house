@@ -9,4 +9,7 @@ export const config = {
     apiProfileEmailUpdateInitiateEndpoint: `${apiBaseEndpoint}/profile/initiate-email-update`,
     apiProfileEmailUpdateConfirmEndpoint: `${apiBaseEndpoint}/profile/confirm-email-update`,
     apiProfileEmailCancelEndpoint: `${apiBaseEndpoint}/profile/cancel-email-update`,
+    apiProfilePersonalGreetingUpdateInitiateEndpoint: `${apiBaseEndpoint}/profile/initiate-personal-greeting-update`,
+    apiProfilePersonalGreetingUpdateConfirmEndpoint: `${apiBaseEndpoint}/profile/confirm-personal-greeting-update`,
+    apiProfilePersonalGreetingCancelEndpoint: `${apiBaseEndpoint}/profile/cancel-personal-greeting-update`,
 };

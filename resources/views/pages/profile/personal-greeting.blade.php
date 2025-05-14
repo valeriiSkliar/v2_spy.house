@@ -23,64 +23,19 @@
 
     <div class="section profile-settings">
         @if($updateStep != 'confirmation')
-            <form id="personal-greeting-form" action="{{ route('profile.initiate-personal-greeting-update') }}" method="POST" class="pt-3">
-                @csrf
-                <input type="hidden" name="confirmation_method" value="{{ old('confirmation_method', $updateMethod) }}">
-                <div class="row _offset20 mb-10">
-                    <div class="col-12 col-md-6">
-                        <x-profile.form-field 
-                            name="personal_greeting" 
-                            type="text" 
-                            :label="__('profile.personal_greeting_label')" 
-                            :value="old('personal_greeting', $user->personal_greeting)" 
-                        />
-                    </div>
-                    {{-- <div class="col-12 col-md-6">
-                        <div class="form-item mb-20">
-                            <label for="confirmation_method" class="d-block mb-15">{{ __('profile.security_settings.confirmation_method_label') }}</label>
-                            <select name="confirmation_method" id="confirmation_method" class="form-control input-h-57">
-                                @if($user->google_2fa_enabled)
-                                <option value="authenticator">{{ __('profile.security_settings.confirmation_methods.authenticator') }}</option>
-                                @endif
-                                <option value="email">{{ __('profile.security_settings.confirmation_methods.email') }}</option>
-                            </select>
-                            @error('confirmation_method')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div> --}}
-                </div>
-                <x-profile.submit-button formId="personal-greeting-form" :label="__('profile.security_settings.next_button')" />
-            </form>
+            <x-profile.personal-greeting-form
+                :user="$user"
+                :personalGreetingUpdatePending="false"
+                :confirmation-method="$updateMethod"
+                :authenticator-enabled="$user->google_2fa_enabled"
+            />
         @else
-            <form id="confirmation-form" action="{{ route('profile.confirm-personal-greeting-update') }}" method="POST" class="pt-3">
-                @csrf
-                <div class="row _offset20 mb-20 pt-4">
-                    @if($updateMethod === 'authenticator')
-                        <div class="col-12 col-md-6 col-lg-4">
-                            <x-profile.authenticator-code />
-                        </div>
-                    @else
-                        <div class="col-12 col-md-6 col-lg-4">
-                            <x-profile.email-code />
-                        </div>
-                    @endif
-                    <div class="col-12 col-md-6 col-lg-4">
-                        <x-profile.info-message
-                            :title="__('profile.2fa.info_message_title_authenticator')"
-                            :description="__('profile.2fa.info_message_description_authenticator')"
-                        />
-                    </div>
-                </div>
-                <div class="d-flex gap-3 confirmation-method__btn">
-                    <x-profile.submit-button formId="confirmation-form" :label="__('profile.security_settings.confirm_button')" />
-                    <div class="mb-20">
-                        <a href="{{ route('profile.cancel-personal-greeting-update') }}" class="btn _flex _border-red _big">
-                            {{ __('profile.security_settings.cancel_button') }}
-                        </a>
-                    </div>
-                </div>
-            </form>
+            <x-profile.personal-greeting-confirmation-form
+                :user="$user"
+                :personalGreetingUpdatePending="true"
+                :confirmation-method="$updateMethod"
+                :authenticator-enabled="$user->google_2fa_enabled"
+            />
         @endif
         
         @if (session('status'))

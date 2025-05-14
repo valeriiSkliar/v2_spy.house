@@ -7,8 +7,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Frontend\Profile\BaseProfileController;
 use App\Http\Requests\Profile\ProfileSettingsUpdateRequest;
 use App\Http\Requests\Profile\UpdateEmailRequest;
+use App\Http\Requests\Profile\UpdatePersonalGreetingSettingsRequest;
 use App\Notifications\Profile\EmailUpdateConfirmationNotification;
 use App\Notifications\Profile\EmailUpdatedNotification;
+use App\Notifications\Profile\PersonalGreetingUpdateConfirmationNotification;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -283,6 +285,212 @@ class ProfileSettingsController extends BaseProfileController
             ]);
         } catch (\Exception $e) {
             Log::error('Error confirming email update: ' . $e->getMessage(), [
+                'user_id' => $request->user()->id ?? null,
+                'exception' => $e
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => __('profile.messages.error_occurred'),
+            ], 500);
+        }
+    }
+
+    /**
+     * Initialize personal greeting update process via API
+     *
+     * @param UpdatePersonalGreetingSettingsRequest $request
+     * @return JsonResponse
+     */
+    public function initiatePersonalGreetingUpdateApi(UpdatePersonalGreetingSettingsRequest $request): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            $newPersonalGreeting = $request->input('personal_greeting');
+            $confirmationMethod = $request->input('confirmation_method');
+
+            if ($confirmationMethod === 'authenticator' && !$user->google_2fa_enabled) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('profile.security_settings.2fa_not_enabled'),
+                ], 422);
+            }
+
+            // Clear any previous expired attempts
+            if (Cache::has('personal_greeting_update_code:' . $user->id)) {
+                Cache::forget('personal_greeting_update_code:' . $user->id);
+            }
+
+            if ($confirmationMethod === 'authenticator') {
+                Cache::put('personal_greeting_update_code:' . $user->id, [
+                    'personal_greeting' => $newPersonalGreeting,
+                    'method' => 'authenticator',
+                    'expires_at' => now()->addMinutes(15),
+                    'status' => 'pending'
+                ], now()->addMinutes(15));
+
+                Log::info('Personal greeting update initiated via authenticator (API).', ['user_id' => $user->id]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => __('profile.security_settings.authenticator_required'),
+                    'confirmation_method' => 'authenticator',
+                    'confirmation_form_html' => $this->renderPersonalGreetingForm('authenticator', 'confirmation')->render(),
+                ]);
+            }
+
+            // Email confirmation
+            $verificationCode = random_int(100000, 999999);
+            Cache::put('personal_greeting_update_code:' . $user->id, [
+                'personal_greeting' => $newPersonalGreeting,
+                'code' => $verificationCode,
+                'method' => 'email',
+                'expires_at' => now()->addMinutes(15),
+                'status' => 'pending'
+            ], now()->addMinutes(15));
+
+            // Send notification with verification code
+            NotificationDispatcher::sendNotification(
+                $user,
+                PersonalGreetingUpdateConfirmationNotification::class,
+                [$verificationCode]
+            );
+
+            Log::info('Personal greeting update initiated via email (API).', ['user_id' => $user->id, 'email' => $user->email]);
+
+            return response()->json([
+                'success' => true,
+                'message' => __('profile.security_settings.email_code_sent'),
+                'confirmation_method' => 'email',
+                'confirmation_form_html' => $this->renderPersonalGreetingForm('email', 'confirmation')->render(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error initiating personal greeting update: ' . $e->getMessage(), [
+                'user_id' => $request->user()->id ?? null,
+                'exception' => $e
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => __('profile.messages.error_occurred'),
+            ], 500);
+        }
+    }
+
+    /**
+     * Cancel personal greeting update process via API
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function cancelPersonalGreetingUpdateApi(Request $request): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            $pendingUpdate = Cache::get('personal_greeting_update_code:' . $user->id);
+
+            if ($pendingUpdate) {
+                Cache::forget('personal_greeting_update_code:' . $user->id);
+                Log::info('Personal greeting update cancelled by user (API)', ['user_id' => $user->id]);
+            }
+
+            $confirmationMethod = $user->google_2fa_enabled ? 'authenticator' : 'email';
+
+            return response()->json([
+                'success' => true,
+                'message' => __('profile.security_settings.personal_greeting_update_cancelled'),
+                'personalGreetingUpdatePending' => false,
+                'initialFormHtml' => $this->renderPersonalGreetingForm($confirmationMethod)->render(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error cancelling personal greeting update: ' . $e->getMessage(), [
+                'user_id' => $request->user()->id ?? null,
+                'exception' => $e
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => __('profile.messages.error_occurred'),
+            ], 500);
+        }
+    }
+
+    /**
+     * Confirm personal greeting update via API
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function confirmPersonalGreetingUpdateApi(Request $request): JsonResponse
+    {
+        try {
+            $request->validate([
+                'verification_code' => 'required|string|digits:6'
+            ]);
+
+            $user = $request->user();
+            $pendingUpdate = Cache::get('personal_greeting_update_code:' . $user->id);
+
+            if (!$pendingUpdate || !isset($pendingUpdate['status']) || $pendingUpdate['status'] !== 'pending') {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('profile.security_settings.update_request_expired'),
+                ], 422);
+            }
+
+            if (now()->isAfter($pendingUpdate['expires_at'])) {
+                Cache::forget('personal_greeting_update_code:' . $user->id);
+                return response()->json([
+                    'success' => false,
+                    'message' => __('profile.security_settings.update_request_expired'),
+                ], 422);
+            }
+
+            $isValid = false;
+            if ($pendingUpdate['method'] === 'authenticator') {
+                if (!$user->google_2fa_secret) {
+                    Log::error('Personal greeting 2FA confirmation failed (API): 2FA secret not found for user.', ['user_id' => $user->id]);
+                    return response()->json([
+                        'success' => false,
+                        'message' => __('profile.2fa.error_verifying_code')
+                    ], 422);
+                }
+                $secret = Crypt::decryptString($user->google_2fa_secret);
+                $isValid = Google2FAFacade::verifyKey($secret, $request->input('verification_code'));
+            } else {
+                $isValid = $request->input('verification_code') === (string)$pendingUpdate['code'];
+            }
+
+            if (!$isValid) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('profile.security_settings.invalid_verification_code'),
+                ], 422);
+            }
+
+            $user->personal_greeting = $pendingUpdate['personal_greeting'];
+            $user->save();
+
+            Cache::forget('personal_greeting_update_code:' . $user->id);
+
+            Log::info('Personal greeting updated successfully (API).', ['user_id' => $user->id]);
+
+            // Send notification about successful update
+            NotificationDispatcher::quickSend(
+                $user,
+                NotificationType::PROFILE_UPDATED,
+                ['greeting_updated' => true],
+                __('profile.personal_greeting_update.success_title'),
+                __('profile.personal_greeting_update.success_message')
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => __('profile.personal_greeting_update.success_message'),
+                'successFormHtml' => $this->renderPersonalGreetingForm()->render(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error confirming personal greeting update: ' . $e->getMessage(), [
                 'user_id' => $request->user()->id ?? null,
                 'exception' => $e
             ]);
