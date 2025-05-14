@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Profile;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Frontend\Profile\BaseProfileController;
 use App\Http\Requests\Profile\ProfileSettingsUpdateRequest;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -15,7 +16,7 @@ use App\Services\Notification\NotificationDispatcher;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 
-class ProfileSettingsController extends Controller
+class ProfileSettingsController extends BaseProfileController
 {
     /**
      * Update user's personal settings asynchronously
@@ -210,6 +211,103 @@ class ProfileSettingsController extends Controller
 
     public function confirmPasswordUpdateApi(Request $request): JsonResponse
     {
-        dd($request->all());
+        try {
+            $user = $request->user();
+            $code = $request->input('verification_code');
+
+            // Get pending update data from cache
+            $pendingUpdate = Cache::get('password_update_code:' . $user->id);
+
+            if (!$pendingUpdate || $pendingUpdate['status'] !== 'pending') {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('profile.security_settings.no_pending_update'),
+                ], 422);
+            }
+
+            // Validate expiration - handle both Carbon object and string
+            $expiresAt = $pendingUpdate['expires_at'];
+
+            // Check if expires_at is already a Carbon instance or needs parsing
+            if (is_array($expiresAt) && isset($expiresAt['date'])) {
+                // It's a serialized Carbon object
+                $expirationTime = Carbon::parse($expiresAt['date']);
+            } else if (is_string($expiresAt)) {
+                // It's a string date
+                $expirationTime = Carbon::parse($expiresAt);
+            } else {
+                // Use a default expiration (15 minutes ago + 30 minutes)
+                $expirationTime = now()->addMinutes(15);
+            }
+
+            if (now()->isAfter($expirationTime)) {
+                Cache::forget('password_update_code:' . $user->id);
+                return response()->json([
+                    'success' => false,
+                    'message' => __('profile.security_settings.confirmation_expired'),
+                ], 422);
+            }
+
+            // Handle authentication method
+            if ($pendingUpdate['method'] === 'authenticator') {
+                // For authenticator, we need to validate the 2FA code
+                $google2fa = app('pragmarx.google2fa');
+                $valid = $google2fa->verifyKey(
+                    $user->google2fa_secret,
+                    $code
+                );
+
+                if (!$valid) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => __('profile.security_settings.invalid_authenticator_code'),
+                    ], 422);
+                }
+            } else {
+                // For email confirmation
+                // Convert both values to strings and trim for comparison
+                $inputCode = trim((string)$code);
+                $storedCode = trim((string)$pendingUpdate['code']);
+
+                if ($inputCode !== $storedCode) {
+                    Log::debug('Code mismatch', [
+                        'input_code' => $inputCode,
+                        'stored_code' => $storedCode,
+                        'type_input' => gettype($inputCode),
+                        'type_stored' => gettype($storedCode)
+                    ]);
+
+                    return response()->json([
+                        'success' => false,
+                        'message' => __('profile.security_settings.invalid_code'),
+                    ], 422);
+                }
+            }
+
+            // Update the password
+            $user->forceFill([
+                'password' => Hash::make($pendingUpdate['password']),
+            ])->save();
+
+            // Clear the pending update
+            Cache::forget('password_update_code:' . $user->id);
+
+            // Return success
+            return response()->json([
+                'success' => true,
+                'message' => __('profile.security_settings.password_updated'),
+                'successFormHtml' => $this->renderChangePasswordForm()->render(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error confirming password update: ' . $e->getMessage(), [
+                'user_id' => $request->user()->id ?? null,
+                'exception' => $e
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => __('profile.messages.error_occurred'),
+            ], 500);
+        }
     }
 }

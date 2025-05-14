@@ -119,18 +119,31 @@ class TokenService
     {
         // Hash the token for database comparison
         $hashedToken = hash('sha256', $refreshToken);
-        
+
         // Find the refresh token in the database
         $tokenRecord = $user->refreshTokens()
             ->where('token', $hashedToken)
-            ->where('expires_at', '>', now())
             ->first();
-            
+
         if (!$tokenRecord) {
             // Only log user ID without any token information
             \Illuminate\Support\Facades\Log::warning('Token service: No matching refresh token found for user', [
-                'user_id' => $user->id
+                'user_id' => $user->id,
+                'refresh_token_count' => $user->refreshTokens()->count()
             ]);
+            return null;
+        }
+
+        // Check if token is expired
+        if ($tokenRecord->expires_at < now()) {
+            \Illuminate\Support\Facades\Log::warning('Token service: Refresh token expired', [
+                'user_id' => $user->id,
+                'expired_at' => $tokenRecord->expires_at->format('Y-m-d H:i:s'),
+                'now' => now()->format('Y-m-d H:i:s')
+            ]);
+
+            // Delete expired token
+            $tokenRecord->delete();
             return null;
         }
         

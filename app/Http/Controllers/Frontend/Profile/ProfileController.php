@@ -28,10 +28,11 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 use PragmaRX\Google2FALaravel\Facade as Google2FAFacade;
+use App\Http\Controllers\Frontend\Profile\BaseProfileController;
 
-class ProfileController extends FrontendController
+class ProfileController extends BaseProfileController
 {
-    private $settingsView = 'pages.profile.settings';
+    protected $settingsView = 'pages.profile.settings';
     /**
      * Display the user's profile form.
      */
@@ -131,28 +132,9 @@ class ProfileController extends FrontendController
 
     public function settings(Request $request): View
     {
-        $user = $request->user();
-        $experiences = UserExperience::getTranslatedList();
-        $scopes = UserScopeOfActivity::getTranslatedList();
         $activeTab = $request->query('tab', 'personal');
-
-        // Get user's tokens
-        $tokens = app(TokenService::class)->getUserTokens($user);
-        return view($this->settingsView, [
-            'user' => $request->user(),
-            'scopes' => $scopes,
-            'tokens' => $tokens,
-            'api_token' => session('api_token'),
-            'experiences' => $experiences,
-            'activeTab' => $activeTab,
-            'tab' => $activeTab,
-            'displayDefaultValues' => [
-                'experience' => __('profile.select_default_value'),
-                'scope_of_activity' => __('profile.select_default_value'),
-            ],
-        ]);
+        return $this->renderSettingsView($request, $activeTab);
     }
-
 
     public function changePassword(Request $request): View
     {

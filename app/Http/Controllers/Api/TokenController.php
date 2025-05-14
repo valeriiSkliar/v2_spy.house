@@ -70,10 +70,15 @@ class TokenController extends Controller
      */
     public function refreshToken(Request $request): JsonResponse
     {
+        // Get the correct app session cookie name
+        $sessionCookieName = config('session.cookie');
+
         \Illuminate\Support\Facades\Log::info('Token refresh attempt', [
             'has_cookies' => $request->hasCookie('refresh_token'),
             'cookie_names' => array_keys($request->cookies->all()),
             'has_auth' => Auth::check(),
+            'session_cookie_name' => $sessionCookieName,
+            'has_session_cookie' => $request->hasCookie($sessionCookieName),
             'content_type' => $request->header('Content-Type'),
             'user_id' => Auth::id()
         ]);

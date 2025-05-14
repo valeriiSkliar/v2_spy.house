@@ -57,12 +57,25 @@ const apiTokenHandler = {
     },
 
     /**
-     * Remove token from localStorage
+     * Remove token from localStorage and clean up foreign cookies
      */
     removeToken: () => {
+        // Clear localStorage tokens
         localStorage.removeItem(apiTokenHandler.TOKEN_STORAGE_KEY);
         localStorage.removeItem(apiTokenHandler.TOKEN_EXPIRATION_KEY);
         localStorage.removeItem("bt_refresh"); // Also remove the refresh token fallback
+
+        // Attempt to clear any foreign cookies that might interfere with authentication
+        if (typeof document !== 'undefined') {
+            const cookiesToDelete = ['eoassist_auth_session', 'refresh_token'];
+            const expires = 'expires=Thu, 01 Jan 1970 00:00:01 GMT';
+
+            cookiesToDelete.forEach(cookieName => {
+                document.cookie = `${cookieName}=; ${expires}; path=/; domain=${window.location.hostname}`;
+                document.cookie = `${cookieName}=; ${expires}; path=/;`;
+                console.log(`Attempted to delete cookie: ${cookieName}`);
+            });
+        }
     },
 
     /**
@@ -314,7 +327,7 @@ const apiTokenHandler = {
             // If we don't have a token but the user is logged in (has a session)
             // we can attempt to get a new token via the refresh endpoint
             // This helps in cases where localStorage was cleared but session is still valid
-            if (document.cookie.includes('laravel_session')) {
+            if (document.cookie.includes('spy_house_session') || document.cookie.includes('laravel_session')) {
                 console.log("User appears to be logged in. Attempting to get a new token...");
                 setTimeout(() => {
                     apiTokenHandler.refreshToken()
