@@ -67,14 +67,9 @@ const updateNotificationSettings = () => {
             if (response.success) {
                 createAndShowToast(response.message, "success");
 
-                // If server returns updated form HTML, replace it
-                if (response.successFormHtml) {
-                    $("#notification-settings-form").closest(".confirmation-method").replaceWith(
-                        response.successFormHtml
-                    );
-                    // Reinitialize after form replaced
-                    updateNotificationSettings();
-                    return;
+                // Update checkbox state based on response from server
+                if (typeof response.system_enabled === 'boolean') {
+                    checkbox.prop("checked", response.system_enabled);
                 }
             } else {
                 // Revert the checkbox if request failed

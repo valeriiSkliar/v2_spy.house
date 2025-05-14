@@ -835,8 +835,7 @@ class ProfileSettingsController extends BaseProfileController
             return response()->json([
                 'success' => true,
                 'message' => __('profile.notifications.update_success'),
-                'notification_settings' => $user->notification_settings,
-                'successFormHtml' => $this->renderNotificationsForm()->render(),
+                'system_enabled' => (bool)($currentSettings['system'] ?? false),
             ]);
         } catch (\Exception $e) {
             Log::error('Error updating notification settings: ' . $e->getMessage(), [
