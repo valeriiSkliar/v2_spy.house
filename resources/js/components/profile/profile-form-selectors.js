@@ -15,4 +15,7 @@ export const profileFormSelectors = {
     experience: 'select[name="experience"]',
     scopeOfActivity: 'select[name="scope_of_activity"]',
     userPreviewName: "#user-preview-name",
+    notificationIndicatorNotificationMenu:
+        "#notification-indicator-notification-menu",
+    notificationIndicatorPreview: "#notification-indicator-preview",
 };

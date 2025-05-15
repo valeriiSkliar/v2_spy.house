@@ -5,6 +5,8 @@
  * and update notification indicators in the UI accordingly.
  */
 
+import { profileFormSelectors } from "../components/profile/profile-form-selectors";
+
 /**
  * Check for unread notifications and update notification indicators
  *
@@ -46,37 +48,42 @@ const checkNotifications = async () => {
  */
 const updateNotificationIndicators = (unreadCount) => {
     // Get all notification indicator elements
-    const settingsIndicator = $("#notification-indicator-preview");
-    const menuIndicator = $("#notification-indicator-notification-menu");
+    const settingsIndicator = $(
+        profileFormSelectors.notificationIndicatorPreview
+    );
+    const menuIndicator = $(
+        profileFormSelectors.notificationIndicatorNotificationMenu
+    );
 
-    // Update the settings gear icon indicator
+    // Update both indicators
     updateIndicator(settingsIndicator, unreadCount);
-
-    // Update the notification menu icon indicator
     updateIndicator(menuIndicator, unreadCount);
 };
 
 /**
  * Helper function to update a specific notification indicator
  *
- * @param {string} element - jQuery element
+ * @param {jQuery} element - jQuery element
  * @param {number} unreadCount - Number of unread notifications
  */
 const updateIndicator = (element, unreadCount) => {
-    const parentElement = element;
-    if (!parentElement) return;
+    if (!element.length) return;
 
-    // Remove existing indicator if it exists
-    const existingIndicator = parentElement.find(".has-notification");
-    if (existingIndicator) {
-        existingIndicator.remove();
-    }
+    // Remove existing indicators if they exist
+    element.find(".has-notification").remove();
+    element.siblings(".has-notification").remove();
 
     // Add indicator if there are unread notifications
     if (unreadCount > 0) {
-        const indicator = document.createElement("span");
-        indicator.className = "has-notification";
-        parentElement.append(indicator);
+        const indicator = $("<span>").addClass("has-notification");
+
+        // For notification menu icon, add inside
+        if (element.attr("id") === "notification-indicator-notification-menu") {
+            element.append(indicator);
+        } else {
+            // For settings icon, add after
+            element.after(indicator);
+        }
     }
 };
 

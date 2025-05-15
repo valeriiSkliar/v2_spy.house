@@ -1,3 +1,4 @@
+import { checkNotifications } from "../../helpers/notification-checker";
 import { createAndShowToast } from "../../utils";
 import { ajaxFetcher } from "../fetcher/ajax-fetcher";
 import { config } from "@/config";
@@ -68,6 +69,7 @@ export class NotificationItem {
 
             this.updateMarkAllReadButton();
             createAndShowToast("All notifications marked as read.", "success");
+            checkNotifications();
         } catch (error) {
             createAndShowToast(
                 error.message ||

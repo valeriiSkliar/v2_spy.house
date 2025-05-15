@@ -2,6 +2,8 @@
  * Profile avatar upload handler
  * Manages asynchronous avatar uploads with loading state and feedback
  */
+import { createAndShowToast } from "@/utils/uiHelpers";
+
 document.addEventListener("DOMContentLoaded", function () {
     const avatarUploader = {
         // Configuration
@@ -150,7 +152,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // Handle successful upload
         handleUploadSuccess: function (data) {
             // Show success toast
-            this.showToast(data.message, "success");
+            createAndShowToast(data.message, "success");
 
             const userPreviewAvatarHeader = $("#user-preview-avatar-header");
             if (userPreviewAvatarHeader.length) {
@@ -198,7 +200,7 @@ document.addEventListener("DOMContentLoaded", function () {
             console.error("Avatar upload failed:", error);
 
             // Show error toast
-            this.showToast(
+            createAndShowToast(
                 error.message ||
                     "Failed to upload profile photo. Please try again.",
                 "error"
@@ -207,48 +209,6 @@ document.addEventListener("DOMContentLoaded", function () {
             // Reset file input to allow re-selection
             if (this.fileInput) {
                 this.fileInput.value = "";
-            }
-        },
-
-        // Show a toast notification
-        showToast: function (message, type = "info") {
-            // Find toast container
-            const toastContainer = document.querySelector(".toast-container");
-            if (!toastContainer) {
-                console.error("Toast container not found");
-                alert(message); // Fallback to alert if toast container not found
-                return;
-            }
-
-            // Create toast element
-            const toastId = `toast-${Date.now()}`;
-            const toastHTML = `
-                <div id="${toastId}" class="toast toast-${type}" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
-                    <div class="toast-header">
-                        <strong class="me-auto">${
-                            type === "error" ? "Error" : "Success"
-                        }</strong>
-                        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-                    </div>
-                    <div class="toast-body">
-                        ${message}
-                    </div>
-                </div>
-            `;
-
-            // Insert toast into container
-            toastContainer.insertAdjacentHTML("beforeend", toastHTML);
-
-            // Show the toast
-            const toastElement = document.getElementById(toastId);
-            if (toastElement) {
-                const toast = new bootstrap.Toast(toastElement);
-                toast.show();
-
-                // Remove toast after it's hidden
-                toastElement.addEventListener("hidden.bs.toast", function () {
-                    toastElement.remove();
-                });
             }
         },
     };
