@@ -55,7 +55,7 @@ export function showToast(toastId, options = {}) {
  * @param {'success'|'error'|'warning'|'info'} type - Тип тоста для стилизации (добавьте соответствующие CSS классы).
  * @param {number} [delay=5000] - Задержка перед автоматическим скрытием.
  */
-export function createAndShowToast(message, type = "info", delay = 5000) {
+export function createAndShowToast(message, type = "info", delay = 35000) {
     const toastContainer = document.querySelector(".toast-container");
     if (!toastContainer) {
         console.error(
@@ -65,18 +65,34 @@ export function createAndShowToast(message, type = "info", delay = 5000) {
     }
 
     const toastId = `toast-${Date.now()}`;
+    const icons = {
+        success: '<i class="fas fa-check-circle me-2"></i>',
+        error: '<i class="fas fa-times-circle me-2"></i>',
+        warning: '<i class="fas fa-exclamation-circle me-2"></i>',
+        info: '<i class="fas fa-info-circle me-2"></i>',
+    };
+
     const toastHTML = `
-        <div id="${toastId}" class="toast align-items-center text-bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="${delay}">
-            <div class="d-flex">
+        <div id="${toastId}" class="toast opacity-75 bg-primary align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="${delay}">
+            <div class="d-flex align-items-center p-3">
+                <div class="toast-icon me-3">
+                    ${icons[type] || icons.info}
+                </div>
                 <div class="toast-body">
                     ${message}
                 </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
         </div>
     `;
     toastContainer.insertAdjacentHTML("beforeend", toastHTML);
     const toastElement = document.getElementById(toastId);
+
+    // Добавляем классы для стилизации
+    toastElement.classList.add(`toast-${type}`);
+    toastElement.classList.add("bg-white");
+    toastElement.classList.add("shadow");
+
     const toastInstance = Toast.getOrCreateInstance(toastElement);
     toastInstance.show();
 

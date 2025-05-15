@@ -1,0 +1,44 @@
+.toast {
+    min-width: 300px;
+    border-radius: 8px;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.toast.show {
+    opacity: 1;
+}
+
+.toast-icon {
+    font-size: 1.25rem;
+}
+
+.toast-success .toast-icon {
+    color: $main;
+}
+
+.toast-error .toast-icon {
+    color: $red;
+}
+
+.toast-warning .toast-icon {
+    color: #ffc107;
+}
+
+.toast-info .toast-icon {
+    color: $gray;
+}
+
+.toast-body {
+    font-size: 0.9rem;
+    color: $gray;
+}
+
+.btn-close {
+    opacity: 0.5;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.btn-close:hover {
+    opacity: 1;
+}
