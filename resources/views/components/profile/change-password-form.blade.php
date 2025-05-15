@@ -19,25 +19,24 @@
                 </div>
             </div>
             <div class="col-12 col-md-6 col-lg-4">
-                <x-profile.form-field name="password" type="password" :label="__('profile.security_settings.new_password_label')" />
+                <x-profile.password-field 
+                    name="password" 
+                    type="password" 
+                    :label="__('profile.security_settings.new_password_label')" 
+                    data-pass-switch="pass-2" 
+                />
             </div>
             <div class="col-12 col-md-6 col-lg-4">
-                <x-profile.form-field name="password_confirmation" type="password" :label="__('profile.security_settings.new_password_confirmation_label')" />
+                <x-profile.password-field 
+                    name="password_confirmation" 
+                    type="password" 
+                    :label="__('profile.security_settings.new_password_confirmation_label')" 
+                    data-pass-switch="pass-3" 
+                    :value="old('password_confirmation')"
+                />
             </div>
             <div data-confirmation-method="{{ $confirmationMethod }}" class="col-12 col-md-6 col-lg-4">
                 <input type="hidden" name="confirmation_method" value="{{ $confirmationMethod }}">
-                {{-- @if ( !$authenticatorEnabled )
-                    <x-profile.select-field 
-                        name="confirmation" 
-                        :label="__('profile.security_settings.confirmation_method_label')"
-                        value="{{ __('profile.security_settings.confirmation_methods.' . $confirmationMethod) }}" 
-                    :options="[
-                        __('profile.security_settings.confirmation_methods.authenticator'),
-                        __('profile.security_settings.confirmation_methods.email'),
-                    ]" 
-                        data-confirmation="true"
-                    />
-                @endif --}}
             </div>
         </div>
         <x-profile.submit-button formId="change-password-form" :label="__('profile.security_settings.next_button')" />
