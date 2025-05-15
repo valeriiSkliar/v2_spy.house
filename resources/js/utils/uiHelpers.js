@@ -73,7 +73,7 @@ export function createAndShowToast(message, type = "info", delay = 35000) {
     };
 
     const toastHTML = `
-        <div id="${toastId}" class="toast opacity-75 bg-primary align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="${delay}">
+        <div id="${toastId}" class="toast opacity-75 align-items-center border-0 toast-${type}" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="${delay}">
             <div class="d-flex align-items-center p-3">
                 <div class="toast-icon me-3">
                     ${icons[type] || icons.info}

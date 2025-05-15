@@ -1,12 +1,14 @@
 .toast {
     min-width: 300px;
     border-radius: 8px;
-    opacity: 0;
+    /* opacity: 0; */
     transition: opacity 0.3s ease-in-out;
+    background: #fff !important;
+    opacity: 1 !important;
 }
 
 .toast.show {
-    opacity: 1;
+    opacity: 1 !important;
 }
 
 .toast-icon {
@@ -41,4 +43,52 @@
 
 .btn-close:hover {
     opacity: 1;
+}
+
+.toast.toast-success {
+    background-color: $main !important;
+    color: #fff !important;
+    opacity: 0.75 !important;
+}
+
+.toast.toast-error {
+    background-color: $red !important;
+    color: #fff !important;
+    opacity: 0.75 !important;
+}
+
+.toast.toast-info {
+    background-color: #17a2b8 !important;
+    color: #fff !important;
+    opacity: 0.75 !important;
+}
+
+.toast.toast-warning {
+    background-color: #ffc107 !important;
+    color: #212529 !important;
+    opacity: 0.75 !important;
+}
+
+.toast.toast-success .toast-body,
+.toast.toast-success .toast-icon,
+.toast.toast-error .toast-body,
+.toast.toast-error .toast-icon,
+.toast.toast-info .toast-body,
+.toast.toast-info .toast-icon {
+    color: #fff !important;
+}
+
+.toast.toast-warning .toast-body,
+.toast.toast-warning .toast-icon {
+    color: #212529 !important;
+}
+
+.toast.toast-success .btn-close,
+.toast.toast-error .btn-close,
+.toast.toast-info .btn-close {
+    filter: invert(1);
+}
+
+.toast.toast-warning .btn-close {
+    filter: none;
 }
