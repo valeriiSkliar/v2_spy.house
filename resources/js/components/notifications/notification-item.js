@@ -1,3 +1,4 @@
+import { createAndShowToast } from "../../utils";
 import { ajaxFetcher } from "../fetcher/ajax-fetcher";
 import { config } from "@/config";
 
@@ -41,6 +42,7 @@ export class NotificationItem {
 
             button.style.display = "none";
             this.updateMarkAllReadButton();
+            createAndShowToast("Notification marked as read.", "success");
         } catch (error) {
             console.error("Failed to mark notification as read:", error);
         }
@@ -65,14 +67,14 @@ export class NotificationItem {
             });
 
             this.updateMarkAllReadButton();
+            createAndShowToast("All notifications marked as read.", "success");
         } catch (error) {
+            createAndShowToast(
+                error.message ||
+                    "Error marking all notifications as read. Please try again.",
+                "error"
+            );
             console.error("Failed to mark all notifications as read:", error);
-            if (window.showToast) {
-                window.showToast(
-                    window.translations.notifications.mark_all_read_error,
-                    "error"
-                );
-            }
         }
     }
 }
