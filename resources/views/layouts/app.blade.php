@@ -39,13 +39,20 @@ use Illuminate\Support\Facades\Auth;
     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1050;">
         @if (session('toasts'))
         @foreach (session('toasts') as $toast)
-        <div class="toast toast-{{ $toast['type'] }}" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="toast-header">
-                <strong class="me-auto">{{ ucfirst($toast['type']) }}</strong>
-                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-            <div class="toast-body">
-                {{ __($toast['message']) }}
+        <div 
+            class="toast opacity-75 align-items-center border-0 toast-{{ $toast['type'] }}" 
+            role="alert" 
+            aria-live="assertive"
+            aria-atomic="true"
+            :data-bs-delay="5000"
+        >
+            <div class="d-flex align-items-center p-3">
+                <div class="toast-icon me-3">
+                </div>
+                <div class="toast-body">
+                    {{ __($toast['message']) }}
+                </div>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
         </div>
         @endforeach

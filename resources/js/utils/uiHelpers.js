@@ -55,7 +55,7 @@ export function showToast(toastId, options = {}) {
  * @param {'success'|'error'|'warning'|'info'} type - Тип тоста для стилизации (добавьте соответствующие CSS классы).
  * @param {number} [delay=5000] - Задержка перед автоматическим скрытием.
  */
-export function createAndShowToast(message, type = "info", delay = 35000) {
+export function createAndShowToast(message, type = "info", delay = 5000) {
     const toastContainer = document.querySelector(".toast-container");
     if (!toastContainer) {
         console.error(
