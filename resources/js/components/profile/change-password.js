@@ -12,6 +12,7 @@ const cancelPasswordUpdate = async () => {
         );
 
         if (response.success) {
+            createAndShowToast(response.message, "success");
             // Use the server-provided HTML form
             if (response.initialFormHtml) {
                 $("#change-password-form").replaceWith(
@@ -20,7 +21,6 @@ const cancelPasswordUpdate = async () => {
 
                 // Reinitialize form handlers
                 changePassword();
-                createAndShowToast(response.message, "success");
             } else {
                 // Fallback to reloading the page if we don't get the form HTML
                 window.location.reload();
@@ -94,7 +94,6 @@ const confirmPasswordUpdate = async (formData) => {
 };
 
 const changePassword = () => {
-    console.log("changePassword");
     const form = $("#change-password-form");
     if (form) {
         form.on("submit", async function (e) {
@@ -138,7 +137,6 @@ const changePassword = () => {
                                 }
                             );
                             createAndShowToast(message, "success");
-                            checkNotifications();
                         }
 
                         return;

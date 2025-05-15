@@ -1,9 +1,16 @@
 <?php
 
 return [
+    'email_code' => [
+        'code_from_the' => 'Код из',
+        'E-mail' => 'E-mail',
+    ],
+    'authenticator_code' => [
+        'code_from_the' => 'Код из',
+        'Authenticator' => 'Аутентификатор',
+        'app' => 'приложения',
+    ],
     '2fa' => [
-        'error_verifying_code' => 'Ошибка при проверке кода. Пожалуйста, попробуйте еще раз.',
-        'info_message_title_authenticator' => 'Аутентификатор',
         'info_message_description_authenticator' => 'это 6-значный одноразовый пароль, который пользователь должен ввести в поле для входа в систему.',
         'setup_title' => 'Настройка двухфакторной аутентификации',
         'status_enabled' => 'Двухфакторная аутентификация успешно включена.',

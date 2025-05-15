@@ -2,6 +2,7 @@ import { config } from "../../config";
 import { createAndShowToast } from "@/utils";
 import { ajaxFetcher } from "../fetcher/ajax-fetcher";
 import loader from "../loader";
+import { checkNotifications } from "@/helpers/notification-checker";
 
 const cancelPersonalGreetingUpdate = async () => {
     try {
@@ -19,7 +20,6 @@ const cancelPersonalGreetingUpdate = async () => {
 
                 // Reinitialize form handlers
                 changePersonalGreeting();
-                createAndShowToast(response.message, "success");
             } else {
                 // Fallback to reloading the page if we don't get the form HTML
                 window.location.reload();
@@ -38,7 +38,6 @@ const cancelPersonalGreetingUpdate = async () => {
         );
     } finally {
         loader.hide();
-        checkNotifications();
     }
 };
 

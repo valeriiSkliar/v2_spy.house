@@ -4,15 +4,15 @@
     @csrf
     <div class="row _offset20 mb-20 pt-4">
         @if($confirmationMethod === 'authenticator')
-            <div class="col-12 col-md-6 col-lg-4">
+            <div class="col-12 col-md-6 col-lg-6">
                 <x-profile.authenticator-code />
             </div>
         @else
-            <div class="col-12 col-md-6 col-lg-4">
+            <div class="col-12 col-md-6 col-lg-6">
                 <x-profile.email-code />
             </div>
         @endif
-        <div class="col-12 col-md-6 col-lg-4">
+        <div class="col-12 col-md-6 col-lg-6">
             <x-profile.info-message
                 :title="__('profile.2fa.info_message_title_authenticator')"
                 :description="__('profile.2fa.info_message_description_authenticator')"

@@ -12,24 +12,24 @@ const cancelEmailUpdate = async () => {
         );
 
         if (response.success) {
+            // Show success message
+            createAndShowToast(
+                response.message || "Email update cancelled successfully",
+                "success"
+            );
+
             // Use the server-provided HTML form
             if (response.initialFormHtml) {
                 $("#change-email-form").replaceWith(response.initialFormHtml);
 
                 // Reinitialize form handlers
                 changeEmail();
-                createAndShowToast(response.message, "success");
-                checkNotifications();
-            } else {
-                // Fallback to reloading the page if we don't get the form HTML
-                window.location.reload();
             }
         } else {
             createAndShowToast(
                 response.message || "Error cancelling email update",
                 "error"
             );
-            checkNotifications();
         }
     } catch (error) {
         console.error("Error cancelling email update:", error);
@@ -37,9 +37,9 @@ const cancelEmailUpdate = async () => {
             "Error cancelling email update. Please try again.",
             "error"
         );
-        checkNotifications();
     } finally {
         loader.hide();
+        checkNotifications();
     }
 };
 
@@ -67,16 +67,9 @@ const confirmEmailUpdate = async (formData) => {
                 $("#change-email-form").replaceWith(response.initialFormHtml);
                 checkNotifications();
             }
-            checkNotifications();
             changeEmail();
         } else {
             // Show error message for invalid code
-            createAndShowToast(
-                response.message || "Invalid confirmation code",
-                "error"
-            );
-
-            // Optionally highlight the code input field
             $('input[name="verification_code"]').addClass("is-invalid").focus();
         }
     } catch (error) {
@@ -87,6 +80,7 @@ const confirmEmailUpdate = async (formData) => {
         );
     } finally {
         loader.hide();
+        checkNotifications();
     }
 };
 
@@ -133,9 +127,8 @@ const changeEmail = () => {
                                     cancelEmailUpdate();
                                 }
                             );
-                            createAndShowToast(message, "success");
-                            checkNotifications();
                         }
+                        createAndShowToast(message, "success");
 
                         return;
                     } else {
