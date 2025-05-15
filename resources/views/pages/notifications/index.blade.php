@@ -17,14 +17,19 @@
         </div>
     </div>
     <div class="col-12 col-md-6 col-lg-auto mb-15">
-        <form action="{{ route('notifications.markAllAsRead') }}" method="POST">
-            @csrf
-            <button type="submit" class="btn _flex _green _medium w-100">{{ __('notifications.mark_all_read') }}</button>
-        </form>
+        <button 
+            id="mark-all-read" 
+            @disabled(count($notifications['items']))
+            type="button" 
+            class="btn _flex _green _medium w-100"
+            data-url="{{ route('notifications.markAllAsRead') }}"
+        >{{ __('notifications.mark_all_read') }}</button>
     </div>
 </div>
 
-<div class="notification-list">
+<x-notification-list :notifications="$notifications['items']" />
+
+{{-- <div class="notification-list">
     @foreach($notifications['items'] as $notification)
     <x-notification-item
         :id="$notification['id']"
@@ -34,7 +39,7 @@
         :content="$notification['content']"
         :hasButton="$notification['hasButton'] ?? false" />
     @endforeach
-</div>
+</div> --}}
 
 @if($notifications['pagination']->hasPages())
     <div class="pagination-container">
@@ -53,6 +58,7 @@
                 window.location.href = `{{ route('notifications.index') }}?per_page=${perPage}`;
             });
         }
+
     });
 </script>
 @endsection

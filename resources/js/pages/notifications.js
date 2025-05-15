@@ -1,7 +1,17 @@
 import { initializeSelectComponent } from "@/helpers";
+import { NotificationItem } from "../components/notifications/notification-item";
 
 document.addEventListener("DOMContentLoaded", function () {
-    initializeSelectComponent("#per-page-select", {
+    NotificationItem.init();
+
+    const markAllReadBtn = document.getElementById("mark-all-read");
+    if (markAllReadBtn) {
+        markAllReadBtn.addEventListener("click", function () {
+            NotificationItem.markAllAsRead(markAllReadBtn.dataset.url);
+        });
+    }
+
+    initializeSelectComponent("#per-page", {
         selectors: {
             select: ".base-select__dropdown",
             options: ".base-select__option",

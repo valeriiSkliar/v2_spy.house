@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             WebsiteDownloadSeeder::class,
             ServiceSeeder::class,
             NotificationTypesSeeder::class,
+            NotificationsSeeder::class,
             // Add other seeders here if needed
         ]);
     }

@@ -7,7 +7,7 @@ use App\Models\NotificationType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class NotificationController extends Controller
+class NotificationController extends BaseNotificationController
 {
     public $indexView = 'pages.notifications.index';
     public $emptyView = 'pages.notifications.empty';
@@ -17,73 +17,7 @@ class NotificationController extends Controller
      */
     public function index(Request $request)
     {
-        $user = $request->user();
-        $perPage = request('per_page', 12);
-        $notificationsData = $this->getNotifications($user, $perPage);
-        $unreadCount = $user->unreadNotifications->count();
-
-        if (count($notificationsData['items']) === 0) {
-            return view($this->emptyView);
-        }
-
-        return view($this->indexView, [
-            'notifications' => $notificationsData,
-            'unreadCount' => $unreadCount,
-            'selectedPerPage' => $notificationsData['selectedPerPage'],
-            'perPageOptions' => $notificationsData['perPageOptions'],
-            'perPageOptionsPlaceholder' => __('notifications.per_page', ['count' => $notificationsData['perPage']])
-        ]);
-    }
-
-    /**
-     * Get notifications from database.
-     */
-    private function getNotifications($user, $perPage): array
-    {
-        $notifications = [];
-        $dbNotifications = $user->notifications()->paginate($perPage);
-
-        foreach ($dbNotifications as $notification) {
-            $data = $notification->data;
-            $notificationType = NotificationType::where('key', $data['type'] ?? '')->first();
-
-            $notifications[] = [
-                'id' => $notification->id,
-                'read' => !is_null($notification->read_at),
-                'date' => $notification->created_at->format('d.m.y (H:i)'),
-                'title' => $data['title'] ?? ($notificationType ? $notificationType->name : 'Notification'),
-                'content' => $data['message'] ?? ($notificationType ? $notificationType->description : 'You have a new notification'),
-                'icon' => $data['icon'] ?? 'bell',
-                'hasButton' => !is_null($notification->read_at) ? false : true,
-                'data' => $data['data'] ?? [],
-            ];
-        }
-
-        $perPageOptions = [
-            ['label' => '12', 'value' => '12', 'order' => 1],
-            ['label' => '24', 'value' => '24', 'order' => 2],
-            ['label' => '48', 'value' => '48', 'order' => 3],
-            ['label' => '96', 'value' => '96', 'order' => 4]
-        ];
-
-        $selectedPerPage = null;
-        foreach ($perPageOptions as $option) {
-            if ($option['value'] == $perPage) {
-                $selectedPerPage = $option;
-                break;
-            }
-        }
-        if (!$selectedPerPage && count($perPageOptions) > 0) {
-            $selectedPerPage = $perPageOptions[0];
-        }
-
-        return [
-            'items' => $notifications,
-            'perPage' => $perPage,
-            'selectedPerPage' => $selectedPerPage,
-            'perPageOptions' => $perPageOptions,
-            'pagination' => $dbNotifications->appends(['per_page' => $perPage]),
-        ];
+        return $this->renderIndexView($request);
     }
 
     /**
@@ -93,11 +27,20 @@ class NotificationController extends Controller
     {
         $notification = $request->user()->notifications()->where('id', $id)->first();
 
-        if ($notification) {
-            $notification->markAsRead();
+        if (!$notification) {
+            return response()->json([
+                'success' => false,
+                'message' => __('notifications.not_found_or_already_read')
+            ], 404);
         }
 
-        return redirect()->back();
+        $notification->markAsRead();
+
+        return response()->json([
+            'success' => true,
+            'id' => $id,
+            'read' => true
+        ]);
     }
 
     /**
@@ -105,22 +48,30 @@ class NotificationController extends Controller
      */
     public function markAllAsRead(Request $request)
     {
-        $request->user()->unreadNotifications->markAsRead();
+        $unreadNotifications = $request->user()->unreadNotifications;
 
-        return redirect()->back();
+        if ($unreadNotifications->isNotEmpty()) {
+            $unreadNotifications->markAsRead();
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true
+            ]);
+        }
+
+        return redirect()->back()->with('status', __('notifications.all_marked_as_read'));
     }
 
     /**
      * Get the count of unread notifications.
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
      */
     public function unreadCount(Request $request)
     {
         $unreadCount = $request->user()->unreadNotifications->count();
 
         return response()->json([
+            'success' => true,
             'count' => $unreadCount
         ]);
     }
