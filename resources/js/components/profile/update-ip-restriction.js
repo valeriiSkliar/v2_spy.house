@@ -26,10 +26,11 @@ const updateIpRestriction = () => {
 
     const textareas = document.querySelectorAll(".auto-resize");
     textareas.forEach((textarea) => {
-        adjustHeight(textarea);
-        textarea.addEventListener("input", function () {
-            adjustHeight(this);
-        });
+        // TODO: fix this add loader before show textarea
+        // adjustHeight(textarea);
+        // textarea.addEventListener("input", function () {
+        //     adjustHeight(this);
+        // });
     });
 
     // Handle form submission

@@ -8,12 +8,12 @@
             <h3>{{ $title }}</h3>
             <p>{!! $content !!}</p>
         </div>
-        <div class="col-12 col-lg-auto mb-10">
+        {{-- <div class="col-12 col-lg-auto mb-10">
             @if(!$read)
             <div class="notification-item__btn">
                     <button data-id="{{ $id }}" data-read="{{ $read }}" data-url="{{ route('notifications.markAsRead', $id) }}" type="submit" class="btn _flex _border-green _medium">{{ __('notifications.acquainted') }}</button>
             </div>
             @endif
-        </div>
+        </div> --}}
     </div>
 </div>

@@ -37,7 +37,7 @@ class BlogCommentController extends Controller
 
         if (!Auth::check()) {
             return response()->json([
-                'message' => 'You must be logged in to submit a comment.'
+                'message' => __('blog.you_must_be_logged_in_to_submit_a_comment')
             ], 401);
         }
 

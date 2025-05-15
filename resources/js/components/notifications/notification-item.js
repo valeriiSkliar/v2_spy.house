@@ -51,8 +51,9 @@ export class NotificationItem {
 
     static async markAllAsRead(url) {
         try {
+            // TODO: add loader
             await ajaxFetcher.post(url);
-
+            // TODO: remove loader
             document.querySelectorAll(".notification-item").forEach((item) => {
                 item.classList.add("_read");
                 item.dataset.read = "true";

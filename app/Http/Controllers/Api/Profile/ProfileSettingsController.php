@@ -698,6 +698,9 @@ class ProfileSettingsController extends BaseProfileController
     public function confirmPasswordUpdateApi(Request $request): JsonResponse
     {
         try {
+            $request->validate([
+                'verification_code' => 'required|string|digits:6'
+            ]);
             $user = $request->user();
             $code = $request->input('verification_code');
 
@@ -737,16 +740,33 @@ class ProfileSettingsController extends BaseProfileController
             // Handle authentication method
             if ($pendingUpdate['method'] === 'authenticator') {
                 // For authenticator, we need to validate the 2FA code
-                $google2fa = app('pragmarx.google2fa');
-                $valid = $google2fa->verifyKey(
-                    $user->google2fa_secret,
-                    $code
-                );
-
-                if (!$valid) {
+                if (!$user->google_2fa_secret) {
+                    Log::error('2FA confirmation failed: 2FA secret not found for user.', ['user_id' => $user->id]);
                     return response()->json([
                         'success' => false,
-                        'message' => __('profile.security_settings.invalid_authenticator_code'),
+                        'message' => __('profile.2fa.error_verifying_code')
+                    ], 422);
+                }
+
+                try {
+                    $secret = Crypt::decryptString($user->google_2fa_secret);
+                    $google2fa = app('pragmarx.google2fa');
+                    $valid = $google2fa->verifyKey($secret, $code);
+
+                    if (!$valid) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => __('profile.security_settings.invalid_authenticator_code'),
+                        ], 422);
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Error verifying 2FA code: ' . $e->getMessage(), [
+                        'user_id' => $user->id,
+                        'exception' => $e
+                    ]);
+                    return response()->json([
+                        'success' => false,
+                        'message' => __('profile.2fa.error_verifying_code')
                     ], 422);
                 }
             } else {
@@ -785,6 +805,7 @@ class ProfileSettingsController extends BaseProfileController
                 __('profile.security_settings.password_updated_success_title'),
                 __('profile.security_settings.password_updated_success_message')
             );
+
             // Return success
             return response()->json([
                 'success' => true,

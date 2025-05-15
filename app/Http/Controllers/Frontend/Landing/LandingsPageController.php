@@ -15,31 +15,9 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
-class LandingsPageController extends FrontendController
+class LandingsPageController extends BaseLandingsPageController
 {
-    use AuthorizesRequests;
 
-    protected $indexView = 'pages.landings.index';
-    private $statusIcons = [
-        'pending' => 'pending',
-        'completed' => 'completed',
-        'failed' => 'failed',
-    ];
-    private $statusLabels = [
-        'pending' => 'landings.table.status.pending',
-        'completed' => 'landings.table.status.completed',
-        'failed' => 'landings.table.status.failed',
-    ];
-    protected LandingDownloadService $downloadService;
-    protected AntiFloodService $antiFloodService;
-
-    public function __construct(
-        LandingDownloadService $downloadService,
-        AntiFloodService $antiFloodService
-    ) {
-        $this->downloadService = $downloadService;
-        $this->antiFloodService = $antiFloodService;
-    }
 
     public function index(Request $request): View
     {
@@ -194,30 +172,15 @@ class LandingsPageController extends FrontendController
     // Renamed method and updated options
     private function getFilterOptions()
     {
-        // Correct sort options for landings
-        $sortOptions = [
-            ['value' => 'created_at', 'label' => 'Date (Newest First)', 'order' => 'desc'],
-            ['value' => 'created_at', 'label' => 'Date (Oldest First)', 'order' => 'asc'],
-            ['value' => 'status', 'label' => 'Status (Asc)', 'order' => 'asc'],
-            ['value' => 'status', 'label' => 'Status (Desc)', 'order' => 'desc'],
-            ['value' => 'url', 'label' => 'URL (Asc)', 'order' => 'asc'],
-            ['value' => 'url', 'label' => 'URL (Desc)', 'order' => 'desc'],
-        ];
 
-        $perPageOptions = [
-            ['value' => 12, 'label' => '12', 'order' => ''],
-            ['value' => 24, 'label' => '24', 'order' => ''],
-            ['value' => 48, 'label' => '48', 'order' => ''],
-            ['value' => 96, 'label' => '96', 'order' => ''],
-        ];
 
         $sortOptionsPlaceholder = 'Sort by — ';
         $perPageOptionsPlaceholder = 'On page — ';
 
         return [
-            'sortOptions' => $sortOptions,
+            'sortOptions' => $this->sortOptions,
             'sortOptionsPlaceholder' => $sortOptionsPlaceholder,
-            'perPageOptions' => $perPageOptions,
+            'perPageOptions' => $this->perPageOptions,
             'perPageOptionsPlaceholder' => $perPageOptionsPlaceholder,
         ];
     }

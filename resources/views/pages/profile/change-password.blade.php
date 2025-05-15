@@ -7,7 +7,7 @@
         $user = auth()->user();
         $pendingUpdate = Cache::get('password_update_code:' . $user->id);
         $updateStep = $pendingUpdate ? 'confirmation' : 'initiation';
-        $updateMethod = $pendingUpdate['method'] ?? ($user->authenticator_enabled ? 'authenticator' : 'email');
+        $updateMethod = $confirmationMethod ;
         $updateExpiresAt = $pendingUpdate['expires_at'] ?? null;
         $isExpired = $updateExpiresAt && now()->isAfter($updateExpiresAt);
     @endphp

@@ -26,17 +26,17 @@ class ProfileSettingsUpdateRequest extends BaseRequest
             // Avatar is now handled by the API endpoint
             'telegram' => ['nullable', 'string', function ($attribute, $value, $fail) {
                 if ($value && !$this->validation_telegram_login($value)) {
-                    $fail('Invalid Telegram username format');
+                    $fail(__('profile.invalid_telegram_username_format'));
                 }
             }],
             'viber_phone' => ['nullable', 'string', function ($attribute, $value, $fail) {
                 if ($value && !$this->validation_viber_identifier($value)) {
-                    $fail('Invalid Viber phone number format');
+                    $fail(__('profile.invalid_viber_phone_number_format'));
                 }
             }],
             'whatsapp_phone' => ['nullable', 'string', function ($attribute, $value, $fail) {
                 if ($value && !$this->validation_whatsapp_identifier($value)) {
-                    $fail('Invalid WhatsApp phone number format');
+                    $fail(__('profile.invalid_whatsapp_phone_number_format'));
                 }
             }],
         ];
@@ -65,18 +65,18 @@ class ProfileSettingsUpdateRequest extends BaseRequest
     public function messages(): array
     {
         return [
-            'login.required' => 'Login is required',
-            'login.string' => 'Login must be a string',
-            'login.max' => 'Login must be less than 255 characters',
-            'experience.required' => 'Experience is required',
-            'experience.string' => 'Experience must be a string',
-            'experience.in' => 'Invalid experience value',
-            'scope_of_activity.required' => 'Scope of activity is required',
-            'scope_of_activity.string' => 'Scope of activity must be a string',
-            'scope_of_activity.in' => 'Invalid scope of activity value',
-            'telegram.string' => 'Telegram username must be a string',
-            'viber_phone.string' => 'Viber phone number must be a string',
-            'whatsapp_phone.string' => 'WhatsApp phone number must be a string',
+            'login.required' => __('profile.login_required'),
+            'login.string' => __('profile.login_must_be_a_string'),
+            'login.max' => __('profile.login_must_be_less_than_255_characters'),
+            'experience.required' => __('profile.experience_required'),
+            'experience.string' => __('profile.experience_must_be_a_string'),
+            'experience.in' => __('profile.invalid_experience_value'),
+            'scope_of_activity.required' => __('profile.scope_of_activity_required'),
+            'scope_of_activity.string' => __('profile.scope_of_activity_must_be_a_string'),
+            'scope_of_activity.in' => __('profile.invalid_scope_of_activity_value'),
+            'telegram.string' => __('profile.telegram_username_must_be_a_string'),
+            'viber_phone.string' => __('profile.viber_phone_number_must_be_a_string'),
+            'whatsapp_phone.string' => __('profile.whatsapp_phone_number_must_be_a_string'),
         ];
     }
 

@@ -140,11 +140,11 @@ class ProfileController extends BaseProfileController
     {
         $user = $request->user();
         $pendingUpdate = Cache::get('password_update_code:' . $user->id);
-
+        $confirmationMethod = $user->google_2fa_enabled ? 'authenticator' : 'email';
         return view('pages.profile.change-password', [
             'user' => $user,
             'passwordUpdatePending' => $pendingUpdate ? true : false,
-            'confirmationMethod' => $pendingUpdate['method'] ?? null
+            'confirmationMethod' => $confirmationMethod
         ]);
     }
 
