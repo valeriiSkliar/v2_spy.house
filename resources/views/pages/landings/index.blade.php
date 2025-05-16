@@ -12,14 +12,8 @@
     :perPageOptionsPlaceholder="$perPageOptionsPlaceholder"
 />
 
-
-
-{{--<x-landings.table :landings="$landings" />
-
-
-    {{ $landings->links() }} --}}
-    <x-landings.form />
-         {{-- Изначально рендерим контент через Blade partial, как и при AJAX-запросе --}}
+<x-landings.form />
+<div id="landings-content-wrapper">
     @include('pages.landings._content_wrapper', [
         'landings' => $landings,
         'sortOptions' => $sortOptions,
@@ -28,6 +22,6 @@
         'currentPerPage' => $currentPerPage,
         'viewConfig' => $viewConfig,
     ])
-
+</div>
 
 @endsection

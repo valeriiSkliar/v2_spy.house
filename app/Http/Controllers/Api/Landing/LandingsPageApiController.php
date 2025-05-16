@@ -23,21 +23,23 @@ class LandingsPageApiController extends BaseLandingsPageController
      * @param Request $request
      * @return \Illuminate\Http\Response
      */
-    public function ajaxList(Request $request): \Illuminate\Http\Response
+    public function ajaxList(Request $request): JsonResponse
     {
         $viewConfig = $this->getViewConfig();
         $data = parent::getData($request);
 
-        $html = view('pages.landings._content_wrapper', [
-            'landings' => $data['landings'],
-            'sortOptions' => $data['sortOptions'],
-            'paginationOptions' => $data['paginationOptions'],
-            'currentSort' => $data['currentSort'],
-            'currentPerPage' => $data['currentPerPage'],
-            'viewConfig' => $viewConfig,
-        ])->render();
+        $html = $this->renderContentWrapperView($data);
 
-        return response($html);
+        $responseObject = [
+            'success' => true,
+            'message' => __('landings.successfully_loaded_message_text'),
+            'data' => [
+                'table_html' => $html,
+
+            ],
+        ];
+
+        return $this->jsonResponse($responseObject);
     }
 
     /**

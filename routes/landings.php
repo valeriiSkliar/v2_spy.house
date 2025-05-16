@@ -17,7 +17,7 @@ Route::middleware(['web', 'auth'])
 
 
 // API Routes
-Route::middleware(['auth:sanctum', 'check.abilities:read:base-token'])
+Route::middleware(['auth:sanctum', 'web'])
     ->prefix('api/landings')
     ->name('landings.')
     ->group(function () {

@@ -10,9 +10,28 @@ const ajaxFetcher = {
      * Make a GET request
      * @param {string} url - The URL to fetch
      * @param {object} data - Query parameters
+     * @param {object} settings - Settings object
      * @returns {Promise} jQuery ajax promise
      */
-    get: (url, data) => $.ajax({ url, method: "GET", data }),
+    get: (
+        url,
+        data,
+        {
+            successCallback = null,
+            errorCallback = null,
+            beforeSendCallback = null,
+            completeCallback = null,
+        }
+    ) =>
+        $.ajax({
+            url,
+            method: "GET",
+            data,
+            success: successCallback,
+            error: errorCallback,
+            beforeSend: beforeSendCallback,
+            complete: completeCallback,
+        }),
 
     /**
      * Make a POST request

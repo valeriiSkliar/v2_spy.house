@@ -137,4 +137,17 @@ class BaseLandingsPageController extends FrontendController
             ],
         ];
     }
+
+    protected function renderContentWrapperView(array $data): string
+    {
+        $viewConfig = $this->getViewConfig();
+        return view('pages.landings._content_wrapper', [
+            'landings' => $data['landings'],
+            'sortOptions' => $data['sortOptions'],
+            'paginationOptions' => $data['paginationOptions'],
+            'currentSort' => $data['currentSort'],
+            'currentPerPage' => $data['currentPerPage'],
+            'viewConfig' => $viewConfig,
+        ])->render();
+    }
 }

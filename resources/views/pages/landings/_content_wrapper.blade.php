@@ -8,11 +8,21 @@
     - $viewConfig: View configuration from BaseLandingsPageController
 --}}
 
+
 @if($landings->isNotEmpty())
     <x-landings.table :landings="$landings" :viewConfig="$viewConfig" />
-    <div class="pagination-container mt-4">
-        {{ $landings->appends(request()->only(['sort_by', 'sort_direction', 'per_page']))->links('components.pagination') }}
+
+    @if ($landings->hasPages())
+    <div class="pagination-controls mt-4"
+         data-pagination-container {{-- Маркер для JS --}}
+         data-target-selector="#landings-content-wrapper" {{-- Что обновлять --}}
+         data-ajax-url="{{ route('landings.list') }}" {{-- Куда делать запрос --}}
+         data-filter-form-selector="#landings-sort-form" {{-- Откуда брать фильтры --}}
+    >
+        {{-- Используем новый шаблон 'components.custom-pagination' --}}
+        {{ $landings->appends(request()->except('page'))->links('common.pagination.spy-pagination-default') }}
     </div>
+    @endif
 @else
     <x-landings.landings-empty-list />
-@endif 
+@endif
