@@ -1,6 +1,6 @@
 @props(['disabled' => false])
 
-<form action="{{ route('website-downloads.store') }}" method="POST" class="row mb-{{ $disabled ? '20' : '10' }}">
+<form action="{{ route('website-downloads.store') }}" method="POST" id="add-landing-form" class="row mb-{{ $disabled ? '20' : '10' }}">
     @csrf
     <div class="col-12 col-md-auto flex-grow-1 mb-10">
         <input
@@ -12,9 +12,9 @@
             class="input-h-50 w-full {{ $errors->has('url') ? 'border border-red-500' : '' }} {{ $disabled ? 'bg-gray-100 cursor-not-allowed' : '' }}"
             maxlength="300"
             {{ $disabled ? 'disabled' : '' }} />
-        <div id="url-counter" class="text-sm text-gray-500 mt-1" style="display: none;">
+        {{-- <div id="url-counter" class="text-sm text-gray-500 mt-1" style="display: none;">
             <span id="current-length">0</span>/300
-        </div>
+        </div> --}}
         @error('url')
         <div class="text-red-600 mt-1 text-sm">{{ $message }}</div>
         @enderror

@@ -256,61 +256,61 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         // Handle confirm dialogs with [data-confirm]
-        const confirmEl = e.target.closest("[data-confirm]");
-        if (confirmEl) {
-            e.preventDefault();
-            const message =
-                confirmEl.getAttribute("data-confirm") || "Are you sure?";
-            const title =
-                confirmEl.getAttribute("data-confirm-title") || "Confirmation";
-            const confirmBtn =
-                confirmEl.getAttribute("data-confirm-btn") || "Confirm";
-            const cancelBtn =
-                confirmEl.getAttribute("data-confirm-cancel") || "Cancel";
+        // const confirmEl = e.target.closest("[data-confirm]");
+        // if (confirmEl) {
+        //     e.preventDefault();
+        //     const message =
+        //         confirmEl.getAttribute("data-confirm") || "Are you sure?";
+        //     const title =
+        //         confirmEl.getAttribute("data-confirm-title") || "Confirmation";
+        //     const confirmBtn =
+        //         confirmEl.getAttribute("data-confirm-btn") || "Confirm";
+        //     const cancelBtn =
+        //         confirmEl.getAttribute("data-confirm-cancel") || "Cancel";
 
-            // Store original click action
-            const href = confirmEl.getAttribute("href");
-            const deleteUrl = confirmEl.getAttribute("data-delete-url");
-            const isForm =
-                confirmEl.tagName === "BUTTON" && confirmEl.closest("form");
-            const form = isForm ? confirmEl.closest("form") : null;
+        //     // Store original click action
+        //     const href = confirmEl.getAttribute("href");
+        //     const deleteUrl = confirmEl.getAttribute("data-delete-url");
+        //     const isForm =
+        //         confirmEl.tagName === "BUTTON" && confirmEl.closest("form");
+        //     const form = isForm ? confirmEl.closest("form") : null;
 
-            window.Modal.confirm(
-                title,
-                message,
-                function () {
-                    if (deleteUrl) {
-                        const deleteForm = document.createElement("form");
-                        deleteForm.method = "POST";
-                        deleteForm.action = deleteUrl;
-                        deleteForm.style.display = "none";
+        //     window.Modal.confirm(
+        //         title,
+        //         message,
+        //         function () {
+        //             if (deleteUrl) {
+        //                 const deleteForm = document.createElement("form");
+        //                 deleteForm.method = "POST";
+        //                 deleteForm.action = deleteUrl;
+        //                 deleteForm.style.display = "none";
 
-                        const csrfToken = document
-                            .querySelector('meta[name="csrf-token"]')
-                            .getAttribute("content");
-                        const csrfInput = document.createElement("input");
-                        csrfInput.type = "hidden";
-                        csrfInput.name = "_token";
-                        csrfInput.value = csrfToken;
-                        deleteForm.appendChild(csrfInput);
+        //                 const csrfToken = document
+        //                     .querySelector('meta[name="csrf-token"]')
+        //                     .getAttribute("content");
+        //                 const csrfInput = document.createElement("input");
+        //                 csrfInput.type = "hidden";
+        //                 csrfInput.name = "_token";
+        //                 csrfInput.value = csrfToken;
+        //                 deleteForm.appendChild(csrfInput);
 
-                        const methodInput = document.createElement("input");
-                        methodInput.type = "hidden";
-                        methodInput.name = "_method";
-                        methodInput.value = "DELETE";
-                        deleteForm.appendChild(methodInput);
+        //                 const methodInput = document.createElement("input");
+        //                 methodInput.type = "hidden";
+        //                 methodInput.name = "_method";
+        //                 methodInput.value = "DELETE";
+        //                 deleteForm.appendChild(methodInput);
 
-                        document.body.appendChild(deleteForm);
-                        deleteForm.submit();
-                    } else if (href) {
-                        window.location.href = href;
-                    } else if (form) {
-                        form.submit();
-                    }
-                },
-                confirmBtn,
-                cancelBtn
-            );
-        }
+        //                 document.body.appendChild(deleteForm);
+        //                 deleteForm.submit();
+        //             } else if (href) {
+        //                 window.location.href = href;
+        //             } else if (form) {
+        //                 form.submit();
+        //             }
+        //         },
+        //         confirmBtn,
+        //         cancelBtn
+        //     );
+        // }
     });
 });

@@ -77,7 +77,15 @@ use Illuminate\Support\Facades\Auth;
     </script>
     @endif
 
-    @yield('scripts')
+    <script>
+        window.routes = {
+            landingsAjaxList: '{{ route("landings.list") }}',
+            landingsAjaxStore: '{{ route("landings.store") }}',
+            landingsAjaxDestroyBase: '{{ route("landings.destroy", ["landing" => ":id"]) }}',
+        };
+    </script>
+    @vite(['resources/js/app.js'])
+    @stack('scripts')
 </body>
 
 </html>

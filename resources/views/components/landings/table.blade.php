@@ -1,4 +1,4 @@
-<div class="c-table">
+<div id="landings-table-container" class="c-table">
     <div class="inner">
         @if($landings->count() > 0)
         <table class="table no-wrap-table">

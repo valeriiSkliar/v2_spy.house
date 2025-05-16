@@ -1,5 +1,13 @@
 @props(['currentPage' => 1, 'totalPages' => 1])
 
+{{--
+    This partial accepts:
+    - $currentPage: Current page number
+    - $totalPages: Total number of pages
+--}}
+
+{{-- @dump($currentPage, $totalPages) --}}
+
 @php
 // Получаем текущие параметры запроса
 $queryParams = request()->query();

@@ -17,6 +17,7 @@
             <li>
                 <button @if($landing['status']==='pending' ) disabled @endif type="button"
                     class="btn-icon icon-remove delete-landing-button"
+                    data-id="{{ $landing->id }}"
                     data-confirm="{{ __('landings.table.confirmDelete.message') }}"
                     data-confirm-title="{{ __('landings.table.confirmDelete.title') }}"
                     data-confirm-btn="{{ __('landings.table.confirmDelete.confirmButton') }}"

@@ -10,6 +10,141 @@ import { ajaxFetcher } from "../components/fetcher/ajax-fetcher";
 import { createAndShowToast } from "../utils/uiHelpers";
 import { landingsConstants } from "../components/landings/constants";
 
+function initDeleteLandingHandler() {
+    const tableContainerSelector =
+        landingsConstants.LANDINGS_TABLE_CONTAINER_ID;
+    const deleteButtonSelector = ".delete-landing-button";
+
+    $(document).on(
+        "click",
+        `${tableContainerSelector} ${deleteButtonSelector}`,
+        function (event) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+
+            const $button = $(this);
+            const landingId = $button.data("id");
+            const landingName = $button.data("name") || "этот лендинг";
+
+            if (!landingId) {
+                console.error("Landing ID not found on delete button.");
+                createAndShowToast("Ошибка: ID лендинга не найден.", "error");
+                return;
+            }
+
+            if (!confirm(`Вы уверены, что хотите удалить ${landingName}?`)) {
+                return;
+            }
+
+            loader.show();
+
+            if (!window.routes || !window.routes.landingsAjaxDestroyBase) {
+                console.error(
+                    "Route for landingsAjaxDestroyBase is not defined."
+                );
+                createAndShowToast(
+                    "Ошибка конфигурации: URL для удаления не определен.",
+                    "error"
+                );
+                loader.hide();
+                return;
+            }
+            const deleteUrl = window.routes.landingsAjaxDestroyBase.replace(
+                ":id",
+                landingId
+            );
+            console.log(deleteUrl);
+            ajaxFetcher
+                .delete(deleteUrl)
+                .done(function (response) {
+                    if (response.success) {
+                        $button.closest("tr").fadeOut(300, function () {
+                            $(this).remove();
+                            if (
+                                $(tableContainerSelector).find("tbody tr")
+                                    .length === 0
+                            ) {
+                                // Если таблица пуста после удаления на текущей странице,
+                                // можно попробовать перезагрузить данные для текущей страницы пагинации.
+                                // Это поможет корректно отобразить сообщение "Нет данных" или перейти на предыдущую страницу, если это реализовано в fetchAndReplaceContent.
+                                const $paginationBox = $(
+                                    `[${landingsConstants.PAGINATION_CONTAINER_ATTR}]`
+                                ).first();
+                                const ajaxUrl = $paginationBox.data("ajax-url");
+                                const targetSelector =
+                                    $paginationBox.data("target-selector");
+                                const filterFormSelector = $paginationBox.data(
+                                    "filter-form-selector"
+                                );
+
+                                let queryParams = {};
+                                // Попытаемся получить текущие параметры фильтрации и номер страницы
+                                const currentUrl = new URL(
+                                    window.location.href
+                                );
+                                queryParams = Object.fromEntries(
+                                    currentUrl.searchParams.entries()
+                                );
+
+                                if (filterFormSelector) {
+                                    const $filterForm = $(filterFormSelector);
+                                    if ($filterForm.length) {
+                                        const formValues =
+                                            $filterForm.serializeArray();
+                                        formValues.forEach(function (field) {
+                                            if (field.name !== "page") {
+                                                // Не перезаписываем страницу из формы, если она уже есть из URL
+                                                queryParams[field.name] =
+                                                    field.value;
+                                            }
+                                        });
+                                    }
+                                }
+                                // Если queryParams.page не установлен, установим 1 (или оставим как есть, если сервер сам обрабатывает)
+                                // queryParams.page = queryParams.page || 1;
+
+                                if (ajaxUrl && targetSelector) {
+                                    fetchAndReplaceContent(
+                                        ajaxUrl,
+                                        queryParams,
+                                        targetSelector,
+                                        false
+                                    ); // false - не обновлять историю браузера для этого случая
+                                }
+                            }
+                        });
+                        createAndShowToast(
+                            response.message || "Лендинг успешно удален.",
+                            "success"
+                        );
+                    } else {
+                        createAndShowToast(
+                            response.message || "Не удалось удалить лендинг.",
+                            "error"
+                        );
+                    }
+                })
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    console.error(
+                        "Error deleting landing: ",
+                        textStatus,
+                        errorThrown,
+                        jqXHR.responseText
+                    );
+                    let errorMessage =
+                        "Произошла ошибка при удалении лендинга.";
+                    if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+                        errorMessage = jqXHR.responseJSON.message;
+                    }
+                    createAndShowToast(errorMessage, "error");
+                })
+                .always(function () {
+                    loader.hide();
+                });
+        }
+    );
+}
+
 $(document).ready(function () {
     // --- Вспомогательные функции ---
 
@@ -191,7 +326,9 @@ $(document).ready(function () {
         const state = event.originalEvent.state;
         if (state) {
             // Ищем первый универсальный контейнер пагинации и используем его конфигурацию
-            const $paginationBox = $(`[${PAGINATION_CONTAINER_ATTR}]`).first();
+            const $paginationBox = $(
+                `[${landingsConstants.PAGINATION_CONTAINER_ATTR}]`
+            ).first();
             if ($paginationBox.length) {
                 const targetSelector = $paginationBox.data("target-selector");
                 const ajaxUrl = $paginationBox.data("ajax-url");
@@ -250,6 +387,131 @@ $(document).ready(function () {
         }
     }
 
+    // --- Обработчик добавления нового лендинга ---
+    function initAddLandingHandler() {
+        const $form = $(`#${landingsConstants.ADD_LANDING_FORM_ID}`);
+        if (!$form.length) {
+            console.warn(
+                `Form with ID #${landingsConstants.ADD_LANDING_FORM_ID} not found.`
+            );
+            return;
+        }
+
+        $form.on("submit", function (event) {
+            event.preventDefault();
+            console.log("submit");
+            loader.show();
+
+            const $urlInput = $form.find(
+                `input[name="${landingsConstants.ADD_LANDING_URL_INPUT_NAME}"]`
+            );
+            const url = $urlInput.val();
+            const csrfToken = $('meta[name="csrf-token"]').attr("content");
+
+            const $submitButton = $form.find('button[type="submit"]');
+            const originalButtonText = $submitButton.html();
+            $submitButton
+                .prop("disabled", true)
+                .html('Добавление... <i class="fas fa-spinner fa-spin"></i>');
+
+            const formData = new FormData();
+            formData.append("url", url);
+            formData.append("_token", csrfToken);
+
+            ajaxFetcher.submit(window.routes.landingsAjaxStore, {
+                data: formData,
+                successCallback: function (response) {
+                    if (
+                        response.success &&
+                        response.data &&
+                        response.data.landing_html
+                    ) {
+                        createAndShowToast(
+                            response.message ||
+                                "Лендинг успешно добавлен в очередь.",
+                            "success"
+                        );
+                        $urlInput.val(""); // Очистить поле ввода
+
+                        // Добавляем новую строку в таблицу
+                        const $tableBody = $(
+                            `#${landingsConstants.LANDINGS_TABLE_BODY_ID}`
+                        );
+                        if ($tableBody.length) {
+                            $tableBody.prepend(response.data.landing_html);
+                        } else {
+                            // Если tbody не найден, возможно, стоит перезагрузить всю таблицу
+                            // Это менее оптимально, но будет работать как fallback
+                            const $paginationBox = $(
+                                `[${landingsConstants.PAGINATION_CONTAINER_ATTR}]`
+                            ).first();
+                            if ($paginationBox.length) {
+                                const targetSelector =
+                                    $paginationBox.data("target-selector");
+                                const ajaxUrl = $paginationBox.data("ajax-url");
+                                const currentUrlParams = Object.fromEntries(
+                                    new URLSearchParams(window.location.search)
+                                );
+                                fetchAndReplaceContent(
+                                    ajaxUrl,
+                                    currentUrlParams,
+                                    targetSelector,
+                                    false
+                                );
+                            }
+                        }
+                    } else {
+                        // Обработка специфических ошибок валидации от сервера
+                        if (response.errors) {
+                            let errorMessages = "";
+                            for (const field in response.errors) {
+                                errorMessages +=
+                                    response.errors[field].join("\n") + "\n";
+                            }
+                            createAndShowToast(errorMessages.trim(), "error", {
+                                title: response.message || "Ошибка валидации",
+                            });
+                        } else {
+                            createAndShowToast(
+                                response.message ||
+                                    "Не удалось добавить лендинг.",
+                                "error"
+                            );
+                        }
+                    }
+                },
+                errorCallback: function (jqXHR, textStatus, errorThrown) {
+                    console.error(
+                        "Error adding landing:",
+                        textStatus,
+                        errorThrown,
+                        jqXHR.responseText
+                    );
+                    let errorMessage =
+                        "Произошла ошибка при добавлении лендинга.";
+                    if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+                        errorMessage = jqXHR.responseJSON.message;
+                        if (jqXHR.responseJSON.errors) {
+                            for (const field in jqXHR.responseJSON.errors) {
+                                errorMessage +=
+                                    "\n" +
+                                    jqXHR.responseJSON.errors[field].join("\n");
+                            }
+                        }
+                    }
+                    loader.hide();
+                    createAndShowToast(errorMessage, "error");
+                },
+                completeCallback: function () {
+                    loader.hide();
+                    $submitButton
+                        .prop("disabled", false)
+                        .html(originalButtonText);
+                },
+            });
+        });
+    }
+
     // --- Передача маршрутов из Blade (обязательно!) ---
     // Убедитесь, что объект window.routes определен в Blade перед этим скриптом, например:
     // <script>
@@ -273,8 +535,12 @@ $(document).ready(function () {
     // window.__ = key => window.translations[key] || key; // Простая функция для локализации в JS
 
     // --- Запуск инициализаций ---
+    initSortAndFilterHandlers();
+    initAddLandingHandler();
+    initDeleteLandingHandler();
     initializeGlobalSelects();
     initAsyncPaginationHandler();
-    initSortAndFilterHandlers();
-    // Другие инициализации (для добавления, удаления, SSE) будут добавлены в следующих фазах.
+
+    // Первоначальная установка состояния из URL для popstate
+    // ... existing code ...
 });

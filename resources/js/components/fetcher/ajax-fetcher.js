@@ -75,7 +75,17 @@ const ajaxFetcher = {
      * @param {FormData} formData - Form data to send
      * @returns {Promise} jQuery ajax promise
      */
-    form: (url, formData, method = "POST") => {
+    form: (
+        url,
+        formData,
+        method = "POST",
+        settings = {
+            successCallback: null,
+            errorCallback: null,
+            beforeSendCallback: null,
+            completeCallback: null,
+        }
+    ) => {
         if (method !== "POST") {
             // Add _method=PUT for Laravel to handle PUT requests
             formData.append("_method", method);
@@ -86,7 +96,42 @@ const ajaxFetcher = {
             data: formData,
             processData: false,
             contentType: false,
+            ...settings,
         });
+    },
+
+    /**
+     * Send form data
+     * @param {string} url - The URL to send form data to
+     * @param {FormData} formData - Form data to send
+     * @returns {Promise} jQuery ajax promise
+     */
+    submit: (
+        url,
+        {
+            data = null,
+            successCallback = null,
+            errorCallback = null,
+            beforeSendCallback = null,
+            completeCallback = null,
+        } = {}
+    ) => {
+        const ajaxOptions = {
+            url,
+            method: "POST",
+            data: data,
+            success: successCallback,
+            error: errorCallback,
+            beforeSend: beforeSendCallback,
+            complete: completeCallback,
+        };
+
+        if (data instanceof FormData) {
+            ajaxOptions.processData = false;
+            ajaxOptions.contentType = false;
+        }
+
+        return $.ajax(ajaxOptions);
     },
 };
 

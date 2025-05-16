@@ -169,6 +169,7 @@ class LandingDownloadService
             'user_id' => $userId,
             'url' => $url,
             'status' => 'pending',
+            'output_path' => '',
             'options' => $options,
         ]);
 
