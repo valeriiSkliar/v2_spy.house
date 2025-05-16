@@ -1,0 +1,162 @@
+{
+	"info": {
+		"_postman_id": "{{$guid}}",
+		"name": "Landings API",
+		"description": "API collection for managing landings",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Landings",
+			"item": [
+				{
+					"name": "Get Landings List",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/landings?sort=created_at&direction=desc&per_page=12",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"landings"
+							],
+							"query": [
+								{
+									"key": "sort",
+									"value": "created_at"
+								},
+								{
+									"key": "direction",
+									"value": "desc"
+								},
+								{
+									"key": "per_page",
+									"value": "12"
+								}
+							]
+						},
+						"description": "Get list of landings with pagination and sorting"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Landing",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"url\": \"https://example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/landings",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"landings"
+							]
+						},
+						"description": "Create new landing from URL"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Landing",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "X-Requested-With",
+								"value": "XMLHttpRequest",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/landings/{{landing_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"landings",
+								"{{landing_id}}"
+							]
+						},
+						"description": "Delete landing by ID"
+					},
+					"response": []
+				}
+			],
+			"description": "Landings management endpoints"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "landing_id",
+			"value": "1",
+			"type": "string"
+		}
+	]
+} 
