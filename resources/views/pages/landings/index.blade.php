@@ -2,7 +2,7 @@
 
 @section('page-content')
 
-<x-landings.sort-selects 
+ <x-landings.sort-selects 
     :sortOptions="$sortOptions" 
     :perPageOptions="$perPageOptions" 
     :selectedSort="$selectedSort" 
@@ -13,12 +13,21 @@
 />
 
 
-<x-landings.form />
 
-<x-landings.table :landings="$landings" />
+{{--<x-landings.table :landings="$landings" />
 
 
-    {{ $landings->links() }}
+    {{ $landings->links() }} --}}
+    <x-landings.form />
+         {{-- Изначально рендерим контент через Blade partial, как и при AJAX-запросе --}}
+    @include('pages.landings._content_wrapper', [
+        'landings' => $landings,
+        'sortOptions' => $sortOptions,
+        'paginationOptions' => $paginationOptions,
+        'currentSort' => $currentSort,
+        'currentPerPage' => $currentPerPage,
+        'viewConfig' => $viewConfig,
+    ])
 
 
 @endsection

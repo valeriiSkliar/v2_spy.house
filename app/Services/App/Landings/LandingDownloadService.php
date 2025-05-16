@@ -145,4 +145,33 @@ class LandingDownloadService
         }
         rmdir($dir);
     }
+
+    /**
+     * Create and dispatch a new landing download request
+     *
+     * @param int $userId
+     * @param string $url
+     * @param array $options
+     * @return WebsiteDownloadMonitor
+     * @throws \InvalidArgumentException
+     */
+    public function createAndDispatch(int $userId, string $url, array $options = []): WebsiteDownloadMonitor
+    {
+        if (empty($url)) {
+            throw new \InvalidArgumentException('URL is required');
+        }
+
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            throw new \InvalidArgumentException('Invalid URL format');
+        }
+
+        $landing = WebsiteDownloadMonitor::create([
+            'user_id' => $userId,
+            'url' => $url,
+            'status' => 'pending',
+            'options' => $options,
+        ]);
+
+        return $landing;
+    }
 }

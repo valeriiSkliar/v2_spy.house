@@ -6,6 +6,8 @@ use App\Http\Controllers\FrontendController;
 use App\Services\App\AntiFloodService;
 use App\Services\App\Landings\LandingDownloadService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\Request;
+use App\Models\Frontend\Landings\WebsiteDownloadMonitor;
 
 class BaseLandingsPageController extends FrontendController
 {
@@ -55,5 +57,84 @@ class BaseLandingsPageController extends FrontendController
     public function renderIndexPage()
     {
         return view($this->indexView);
+    }
+
+    protected function getViewConfig(): array
+    {
+        return [
+            'statusIcons' => $this->statusIcons,
+            'statusLabels' => $this->statusLabels,
+        ];
+    }
+
+    protected function getFilterOptions(): array
+    {
+        $sortOptionsPlaceholder = 'Sort by — ';
+        $perPageOptionsPlaceholder = 'On page — ';
+
+        return [
+            'sortOptions' => $this->sortOptions,
+            'sortOptionsPlaceholder' => $sortOptionsPlaceholder,
+            'perPageOptions' => $this->perPageOptions,
+            'perPageOptionsPlaceholder' => $perPageOptionsPlaceholder,
+        ];
+    }
+
+    protected function getData(Request $request): array
+    {
+        $sortField = $request->input('sort', 'created_at');
+        $sortDirection = $request->input('direction', 'desc');
+        $perPage = $request->input('per_page', 12);
+
+        // Validate sort parameters
+        $allowedSortFields = ['created_at', 'status', 'url'];
+        $sortField = in_array($sortField, $allowedSortFields) ? $sortField : 'created_at';
+        $sortDirection = in_array($sortDirection, ['asc', 'desc']) ? $sortDirection : 'desc';
+
+        $userId = $request->user()->id;
+
+        if ($userId) {
+            $this->antiFloodService->check($userId);
+        }
+
+        $landings = WebsiteDownloadMonitor::where('user_id', $userId)
+            ->orderBy($sortField, $sortDirection)
+            ->with('user')
+            ->whereNotIn('status', ['cancelled', 'in_progress'])
+            ->paginate($perPage)
+            ->withQueryString();
+
+        // Fetch options using the renamed method
+        $filterOptions = $this->getFilterOptions();
+        $sortOptions = $filterOptions['sortOptions'];
+        $perPageOptions = $filterOptions['perPageOptions'];
+        $sortOptionsPlaceholder = $filterOptions['sortOptionsPlaceholder'];
+        $perPageOptionsPlaceholder = $filterOptions['perPageOptionsPlaceholder'];
+
+        // Find the selected sort option based on current filters
+        $selectedSort = collect($sortOptions)->first(function ($option) use ($sortField, $sortDirection) {
+            return $option['value'] === $sortField && $option['order'] === $sortDirection;
+        }) ?? $sortOptions[0];
+
+        // Find the selected per-page option
+        $selectedPerPage = collect($perPageOptions)->firstWhere('value', $perPage) ?? $perPageOptions[0];
+
+        return [
+            'landings' => $landings,
+            'sortOptions' => $sortOptions,
+            'perPageOptions' => $perPageOptions,
+            'paginationOptions' => $perPageOptions,
+            'currentSort' => $selectedSort,
+            'currentPerPage' => $selectedPerPage,
+            'selectedSort' => $selectedSort,
+            'selectedPerPage' => $selectedPerPage,
+            'sortOptionsPlaceholder' => $sortOptionsPlaceholder,
+            'perPageOptionsPlaceholder' => $perPageOptionsPlaceholder,
+            'filters' => [
+                'sort' => $sortField,
+                'direction' => $sortDirection,
+                'per_page' => $perPage,
+            ],
+        ];
     }
 }

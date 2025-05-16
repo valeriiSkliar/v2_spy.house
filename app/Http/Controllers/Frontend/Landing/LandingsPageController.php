@@ -21,64 +21,18 @@ class LandingsPageController extends BaseLandingsPageController
 
     public function index(Request $request): View
     {
-        $sortField = $request->input('sort', 'created_at');
-        $sortDirection = $request->input('direction', 'desc');
-        $perPage = $request->input('per_page', 12);
-
-        // Validate sort parameters
-        $allowedSortFields = ['created_at', 'status', 'url'];
-        $sortField = in_array($sortField, $allowedSortFields) ? $sortField : 'created_at';
-        $sortDirection = in_array($sortDirection, ['asc', 'desc']) ? $sortDirection : 'desc';
-
+        $data = $this->getData($request);
         $userId = $request->user()->id;
 
-        if ($userId) {
-            $this->antiFloodService->check($userId);
-        }
-
-        $landings = WebsiteDownloadMonitor::where('user_id', $userId)
-            ->orderBy($sortField, $sortDirection)
-            ->with('user')
-            ->whereNotIn('status', ['cancelled', 'in_progress'])
-            ->paginate($perPage)
-            ->withQueryString();
-
-        // Fetch options using the renamed method
-        $filterOptions = $this->getFilterOptions();
-        $sortOptions = $filterOptions['sortOptions'];
-        $perPageOptions = $filterOptions['perPageOptions'];
-        $sortOptionsPlaceholder = $filterOptions['sortOptionsPlaceholder'];
-        $perPageOptionsPlaceholder = $filterOptions['perPageOptionsPlaceholder'];
-
-        // Find the selected sort option based on current filters
-        $selectedSort = collect($sortOptions)->first(function ($option) use ($sortField, $sortDirection) {
-            return $option['value'] === $sortField && $option['order'] === $sortDirection;
-        }) ?? $sortOptions[0]; // Default to the first option if not found
-
-        // Find the selected per-page option
-        $selectedPerPage = collect($perPageOptions)->firstWhere('value', $perPage) ?? $perPageOptions[0];
-
-        return view($this->indexView,  [
-            'landings' => $landings,
+        return view($this->indexView, array_merge($data, [
             'pendingRequests' => WebsiteDownloadMonitor::where('user_id', $userId)
                 ->where('status', 'pending')
                 ->count(),
             'completedRequests' => WebsiteDownloadMonitor::where('user_id', $userId)
                 ->where('status', 'completed')
                 ->count(),
-            'filters' => [
-                'sort' => $sortField,
-                'direction' => $sortDirection,
-                'per_page' => $perPage,
-            ],
-            'sortOptions' => $sortOptions,
-            'perPageOptions' => $perPageOptions,
-            // Pass selected options to the view
-            'selectedSort' => $selectedSort,
-            'selectedPerPage' => $selectedPerPage,
-            'sortOptionsPlaceholder' => $sortOptionsPlaceholder,
-            'perPageOptionsPlaceholder' => $perPageOptionsPlaceholder,
-        ]);
+            'viewConfig' => $this->getViewConfig(),
+        ]));
     }
 
     public function destroy(WebsiteDownloadMonitor $landing, Request $request): RedirectResponse
@@ -170,18 +124,18 @@ class LandingsPageController extends BaseLandingsPageController
     }
 
     // Renamed method and updated options
-    private function getFilterOptions()
-    {
+    // private function getFilterOptions()
+    // {
 
 
-        $sortOptionsPlaceholder = 'Sort by — ';
-        $perPageOptionsPlaceholder = 'On page — ';
+    //     $sortOptionsPlaceholder = 'Sort by — ';
+    //     $perPageOptionsPlaceholder = 'On page — ';
 
-        return [
-            'sortOptions' => $this->sortOptions,
-            'sortOptionsPlaceholder' => $sortOptionsPlaceholder,
-            'perPageOptions' => $this->perPageOptions,
-            'perPageOptionsPlaceholder' => $perPageOptionsPlaceholder,
-        ];
-    }
+    //     return [
+    //         'sortOptions' => $this->sortOptions,
+    //         'sortOptionsPlaceholder' => $sortOptionsPlaceholder,
+    //         'perPageOptions' => $this->perPageOptions,
+    //         'perPageOptionsPlaceholder' => $perPageOptionsPlaceholder,
+    //     ];
+    // }
 }

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\App\WebsiteDownloadController;
 use App\Http\Controllers\Frontend\Landing\LandingsPageController;
+use App\Http\Controllers\Api\Landing\LandingsPageApiController;
 use Illuminate\Support\Facades\Route;
 
 // Web Routes
@@ -21,7 +22,12 @@ Route::middleware(['auth:sanctum', 'check.abilities:read:base-token'])
     ->name('landings.')
     ->group(function () {
         Route::get('/{monitor}/status', [WebsiteDownloadController::class, 'getStatus'])->name('status');
+        // AJAX Routes
+        Route::get('list', [LandingsPageApiController::class, 'ajaxList'])->name('list');
+        Route::post('store', [LandingsPageApiController::class, 'ajaxStore'])->name('store');
+        Route::delete('{landing}', [LandingsPageApiController::class, 'ajaxDestroy'])->name('destroy');
     });
+
 
 
 

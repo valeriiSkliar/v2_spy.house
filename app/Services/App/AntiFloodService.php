@@ -2,6 +2,7 @@
 
 namespace App\Services\App;
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redis;
 
 class AntiFloodService
@@ -84,5 +85,19 @@ class AntiFloodService
     {
         $key = $this->getKey($userId, $action);
         return (bool) Redis::del($key);
+    }
+
+    /**
+     * Проверяет разрешение на выполнение действия с учетом антифлуд защиты
+     *
+     * @param string $action Идентификатор действия
+     * @param int|null $limit Лимит запросов
+     * @param int|null $window Временное окно в секундах
+     * @return bool
+     */
+    public function isAllowed(string $action, ?int $limit = null, ?int $window = null): bool
+    {
+        $userId = Auth::id() ?? request()->ip();
+        return $this->check($userId, $action, $limit, $window);
     }
 }
