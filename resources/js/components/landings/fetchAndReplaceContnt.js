@@ -1,5 +1,6 @@
 import { ajaxFetcher } from "../fetcher/ajax-fetcher";
 import { hideInElement, showInElement } from "../loader";
+import landingStatusPoller from "./landing-status-poller";
 
 // --- Основная функция загрузки контента ---
 export function fetchAndReplaceContent(
@@ -31,6 +32,7 @@ export function fetchAndReplaceContent(
     ajaxFetcher.get(ajaxUrl, finalParams, {
         successCallback: function (response) {
             const data = response.data;
+            landingStatusPoller.cleanup();
             $(targetSelector).html(data.table_html);
             if (updateHistory) {
                 updateBrowserUrl(finalParams);

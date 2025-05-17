@@ -3,14 +3,19 @@ import { ajaxFetcher } from "../fetcher/ajax-fetcher";
 import { hideInElement, showInElement } from "../loader";
 import { landingsConstants } from "./constants";
 import { initializeLandingStatus } from "./initialize-landing-status";
+import landingStatusPoller from "./landing-status-poller";
 
 export const addLandingHandler = function (event) {
     event.preventDefault();
     event.stopImmediatePropagation();
+    let loaderElement = null;
     const emptyLandings = $(`#${landingsConstants.EMPTY_LANDINGS_ID}`);
+    const tableBody = $(`#${landingsConstants.CONTENT_WRAPPER_ID}`);
     if (emptyLandings.length) {
         console.log("emptyLandings", emptyLandings.length);
-        showInElement(landingsConstants.EMPTY_LANDINGS_ID);
+        loaderElement = showInElement(landingsConstants.EMPTY_LANDINGS_ID);
+    } else if (tableBody.length) {
+        loaderElement = showInElement(tableBody[0]);
     }
 
     const $form = $(event.target);
@@ -65,6 +70,7 @@ export const addLandingHandler = function (event) {
 
                     const $targetContainer = $(targetSelector);
                     if ($targetContainer.length) {
+                        landingStatusPoller.cleanup(); // Stop all current polls before replacing HTML
                         $targetContainer.html(response.data.table_html);
                         // TODO: Re-initialize any dynamic JS components within the new HTML if needed (e.g., tooltips, dropdowns)
                         initializeLandingStatus();
@@ -136,6 +142,7 @@ export const addLandingHandler = function (event) {
                         "error"
                     );
                 }
+                hideInElement(loaderElement);
             }
         },
         errorCallback: function (jqXHR, textStatus, errorThrown) {
@@ -156,13 +163,13 @@ export const addLandingHandler = function (event) {
                 }
             }
             // loader.hide();
-            hideInElement(landingsConstants.EMPTY_LANDINGS_ID);
+            hideInElement(loaderElement);
             createAndShowToast(errorMessage, "error");
         },
         completeCallback: function () {
             // loader.hide();
 
-            // hideInElement(landingsConstants.EMPTY_LANDINGS_ID);
+            hideInElement(loaderElement);
             $submitButton.prop("disabled", false).html(originalButtonText);
         },
     });
