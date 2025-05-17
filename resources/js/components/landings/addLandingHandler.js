@@ -2,6 +2,7 @@ import { createAndShowToast } from "../../utils/uiHelpers";
 import { ajaxFetcher } from "../fetcher/ajax-fetcher";
 import { hideInElement, showInElement } from "../loader";
 import { landingsConstants } from "./constants";
+import { initializeLandingStatus } from "./initialize-landing-status";
 
 export const addLandingHandler = function (event) {
     event.preventDefault();
@@ -56,7 +57,7 @@ export const addLandingHandler = function (event) {
                         // use a known ID for the content area.
                         // This should be the ID of the element that `renderContentWrapperView`'s output replaces.
                         // We assume 'landingsConstants.CONTENT_WRAPPER_SELECTOR' or a default like '#landings-list-container'
-                        // If 'landingsConstants' is not available here, we might need to define it or use a string literal.
+                        // If 'landings' is not available here, we might need to define it or use a string literal.
                         // For now, let's assume 'landings-list-container' is a reasonable default if not in constants.
                         targetSelector =
                             landingsConstants.CONTENT_WRAPPER_SELECTOR;
@@ -66,6 +67,7 @@ export const addLandingHandler = function (event) {
                     if ($targetContainer.length) {
                         $targetContainer.html(response.data.table_html);
                         // TODO: Re-initialize any dynamic JS components within the new HTML if needed (e.g., tooltips, dropdowns)
+                        initializeLandingStatus();
                     } else {
                         console.error(
                             `Target container '${targetSelector}' for full table update not found. Reloading page as a fallback.`
@@ -79,6 +81,10 @@ export const addLandingHandler = function (event) {
                     );
                     if ($tableBody.length) {
                         $tableBody.prepend(response.data.landing_html);
+                        const $newRow = $tableBody.find("tr:first-child");
+                        if ($newRow.length) {
+                            $(document).trigger("landings:new", [$newRow]);
+                        }
                     } else {
                         // Table body not found. Use existing fallback to reload content.
                         console.warn(

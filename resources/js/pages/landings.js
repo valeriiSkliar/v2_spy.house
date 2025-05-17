@@ -16,16 +16,18 @@ import {
     addLandingHandler,
 } from "../components/landings";
 
-function initDeleteLandingHandler() {
+export function initDeleteLandingHandler() {
     const tableContainerSelector =
         landingsConstants.LANDINGS_TABLE_CONTAINER_ID;
     const deleteButtonSelector = ".delete-landing-button";
 
-    $(document).on(
-        "click",
-        `${tableContainerSelector} ${deleteButtonSelector}`,
-        deleteLandingHandler
-    );
+    $(document)
+        .off("click", `${tableContainerSelector} ${deleteButtonSelector}`)
+        .on(
+            "click",
+            `${tableContainerSelector} ${deleteButtonSelector}`,
+            deleteLandingHandler
+        );
 }
 
 $(document).ready(function () {
