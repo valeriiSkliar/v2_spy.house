@@ -185,19 +185,30 @@ class LandingsPageApiController extends BaseLandingsPageController
             )->onQueue('website-downloads');
             Log::info('DownloadWebsiteJob dispatched', ['uuid' => $uuid, 'user_id' => Auth::id()]);
 
-            // Generate HTML for the new row
-            // Assuming 'components.landings.table.row' can handle a WebsiteDownloadMonitor instance
-            // or that 'landing' is a generic enough key for the view.
-            $landingHtml = view('components.landings.table.row', ['landing' => $monitor, 'viewConfig' => $this->getViewConfig()])->render();
-            Log::info('Landing HTML row rendered for response', ['uuid' => $uuid, 'user_id' => Auth::id()]);
+            $userLandingsCount = WebsiteDownloadMonitor::where('user_id', Auth::id())->count();
+            $responseData = ['landing_id' => $monitor->id];
+
+            if ($userLandingsCount === 1) {
+                // This is the first landing for the user, send the whole table structure
+                Log::info('First landing for user. Preparing full table HTML.', ['user_id' => Auth::id(), 'monitor_id' => $monitor->id]);
+                $tableData = parent::getData($request); // $request is available in the method
+                $fullTableHtml = $this->renderContentWrapperView($tableData);
+                $responseData['table_html'] = $fullTableHtml;
+                Log::info('Full table HTML prepared for response.', ['user_id' => Auth::id()]);
+            } else {
+                // Not the first landing, send only the new row
+                Log::info('Additional landing for user. Preparing row HTML.', ['user_id' => Auth::id(), 'monitor_id' => $monitor->id]);
+                // Assuming 'components.landings.table.row' can handle a WebsiteDownloadMonitor instance
+                // or that 'landing' is a generic enough key for the view.
+                $landingHtml = view('components.landings.table.row', ['landing' => $monitor, 'viewConfig' => $this->getViewConfig()])->render();
+                $responseData['landing_html'] = $landingHtml;
+                Log::info('Landing HTML row rendered for response.', ['user_id' => Auth::id()]);
+            }
 
             return response()->json([
                 'success' => true,
                 'message' => __('landings.downloadStarted.description'), // Message from WebsiteDownloadController
-                'data' => [ // Added 'data' key to encapsulate response details
-                    'landing_id' => $monitor->id, // Use monitor's ID
-                    'landing_html' => $landingHtml,
-                ]
+                'data' => $responseData
             ], 201); // 201 Created
         } catch (ValidationException $e) {
             Log::error('URL validation failed for ajaxStore', [

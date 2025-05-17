@@ -37,6 +37,13 @@ export default loader;
  * @returns {HTMLElement} The created loader element.
  */
 export function showInElement(targetElement) {
+    if (typeof targetElement === "string") {
+        let id = targetElement;
+        if (id.startsWith("#")) {
+            id = id.substring(1);
+        }
+        targetElement = document.getElementById(id);
+    }
     if (!targetElement) {
         console.error("Target element not provided for inline loader.");
         return null;
@@ -71,8 +78,15 @@ export function showInElement(targetElement) {
  * @param {HTMLElement} loaderElement The loader element to hide (returned by showInElement).
  */
 export function hideInElement(loaderElement) {
+    if (typeof loaderElement === "string") {
+        let id = loaderElement;
+        if (id.startsWith("#")) {
+            id = id.substring(1);
+        }
+        loaderElement = document.getElementById(id);
+    }
     if (!loaderElement) {
-        console.error("Loader element not provided for hiding.");
+        console.error("[hideInElement] element not provided for hiding.");
         return;
     }
 

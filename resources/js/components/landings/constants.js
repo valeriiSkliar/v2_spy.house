@@ -8,4 +8,6 @@ export const landingsConstants = {
     ADD_LANDING_URL_INPUT_NAME: "url",
     LANDINGS_TABLE_BODY_ID: "landings-table-body",
     LANDINGS_TABLE_CONTAINER_ID: "#landings-table-container",
+    EMPTY_LANDINGS_ID: "empty-landings",
+    CONTENT_WRAPPER_SELECTOR: "#landings-content-wrapper",
 };

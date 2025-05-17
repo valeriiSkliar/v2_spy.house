@@ -1,10 +1,10 @@
 <div id="landings-table-container" class="c-table">
     <div class="inner">
         @if($landings->count() > 0)
-        <table class="table no-wrap-table">
+        <table  class="table no-wrap-table">
             <x-landings.table.head
                 :headers="[ 'landings.table.header.downloadLink', 'landings.table.header.dateAdded', '']" />
-            <tbody>
+            <tbody id="landings-table-body">
                 @foreach($landings as $landing)
                 <x-landings.table.row :landing="$landing" />
                 @endforeach
