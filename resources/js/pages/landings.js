@@ -5,7 +5,7 @@
 // } from "@/components";
 import $ from "jquery";
 import { updateBrowserUrl } from "../helpers/update-browser-url";
-import loader from "../components/loader";
+import loader, { hideInElement, showInElement } from "../components/loader";
 import { ajaxFetcher } from "../components/fetcher/ajax-fetcher";
 import { createAndShowToast } from "../utils/uiHelpers";
 import { landingsConstants } from "../components/landings/constants";
@@ -155,7 +155,13 @@ $(document).ready(function () {
         targetSelector,
         updateHistory = true
     ) {
-        loader.show();
+        const targetElement = document.querySelector(targetSelector);
+        if (!targetElement) {
+            console.error(`Element not found for selector: ${targetSelector}`);
+            return;
+        }
+
+        const loaderInstance = showInElement(targetElement);
 
         // Очистка пустых параметров
         const finalParams = {};
@@ -184,7 +190,9 @@ $(document).ready(function () {
                     errorThrown,
                     jqXHR.responseText
                 );
-                loader.hide();
+                if (loaderInstance) {
+                    hideInElement(loaderInstance);
+                }
                 // Уведомить пользователя об ошибке
                 createAndShowToast(
                     "common.error_occurred_common_message",
@@ -192,7 +200,10 @@ $(document).ready(function () {
                 );
             },
             completeCallback: function () {
-                loader.hide();
+                if (loaderInstance) {
+                    hideInElement(loaderInstance);
+                }
+                // loader.hide();
             },
         });
     }

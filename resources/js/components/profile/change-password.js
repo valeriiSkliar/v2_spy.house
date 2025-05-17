@@ -8,7 +8,9 @@ const cancelPasswordUpdate = async () => {
     try {
         loader.show();
         const response = await ajaxFetcher.get(
-            config.apiProfilePasswordCancelEndpoint
+            config.apiProfilePasswordCancelEndpoint,
+            null,
+            {}
         );
 
         if (response.success) {

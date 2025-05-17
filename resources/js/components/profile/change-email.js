@@ -8,7 +8,9 @@ const cancelEmailUpdate = async () => {
     try {
         loader.show();
         const response = await ajaxFetcher.get(
-            config.apiProfileEmailCancelEndpoint
+            config.apiProfileEmailCancelEndpoint,
+            null,
+            {}
         );
 
         if (response.success) {

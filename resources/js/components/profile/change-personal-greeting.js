@@ -8,7 +8,9 @@ const cancelPersonalGreetingUpdate = async () => {
     try {
         loader.show();
         const response = await ajaxFetcher.get(
-            config.apiProfilePersonalGreetingCancelEndpoint
+            config.apiProfilePersonalGreetingCancelEndpoint,
+            null,
+            {}
         );
 
         if (response.success) {
