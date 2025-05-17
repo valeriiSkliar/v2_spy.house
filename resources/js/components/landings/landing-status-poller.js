@@ -69,32 +69,37 @@ class LandingStatusPoller {
         const $row = statusElement.closest("tr");
         const $controls = $row.find(".table-controls");
 
-        // Remove the status icon container
-        console.log(statusElement);
+        // Assuming statusElement is the <li> tag itself based on selectors like ".landing-status-icon"
+        // console.log(statusElement);
 
         if (data.status === "completed") {
+            // statusElement is the <li class="landing-status-icon" data-status="pending">
+            statusElement.remove(); // Correctly remove the pending status <li> itself
+
             // Add download button
-            const downloadButton = `
+            const downloadButtonHtml = `
             <li>
-            <a href="/landings/${landingId}/download" class="btn-icon icon-download"></a>
+                <a href="/landings/${landingId}/download" class="btn-icon icon-download"></a>
             </li>
             `;
-            statusElement.parent().remove();
-            $controls.prepend(downloadButton);
+            $controls.prepend(downloadButtonHtml); // Prepend new download button <li> to the <ul>
         } else if (data.status === "failed") {
-            // Update to error status icon
-            statusElement.remove();
-            const errorIcon = `
+            // statusElement is the <li class="landing-status-icon" data-status="pending">
+            // Update to error status icon by replacing the status <li>
+            const errorIconHtml = `
                 <li class="landing-status-icon" data-status="failed">
                     <span class="btn-icon icon-warning"></span>
                 </li>
             `;
-            $controls.prepend(errorIcon);
+            statusElement.replaceWith(errorIconHtml); // Replace the old status <li> with the new error status <li>
         }
 
         // Re-enable delete button if it was disabled
+        // This button is assumed to be already present in its own <li> with all necessary data attributes
         const $deleteButton = $controls.find(".delete-landing-button");
-        $deleteButton.prop("disabled", false);
+        if ($deleteButton.length) {
+            $deleteButton.prop("disabled", false);
+        }
     }
 
     // Clean up all active polls
