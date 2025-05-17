@@ -1,14 +1,15 @@
 // import { initializeSelectComponent } from "@/helpers";
-// import {
-//     initializeLandingStatus,
-//     initializeDynamicLandingStatus,
-// } from "@/components";
+import {
+    initializeLandingStatus,
+    initializeDynamicLandingStatus,
+} from "@/components";
 import $ from "jquery";
 import { updateBrowserUrl } from "../helpers/update-browser-url";
 import loader, { hideInElement, showInElement } from "../components/loader";
 import { ajaxFetcher } from "../components/fetcher/ajax-fetcher";
 import { createAndShowToast } from "../utils/uiHelpers";
 import { landingsConstants } from "../components/landings/constants";
+import { fetchAndReplaceContent } from "../components/landings";
 
 function initDeleteLandingHandler() {
     const tableContainerSelector =
@@ -64,6 +65,10 @@ function initDeleteLandingHandler() {
                                 $(tableContainerSelector).find("tbody tr")
                                     .length === 0
                             ) {
+                                console.log(
+                                    "tableContainerSelector",
+                                    tableContainerSelector
+                                );
                                 // Если таблица пуста после удаления на текущей странице,
                                 // можно попробовать перезагрузить данные для текущей страницы пагинации.
                                 // Это поможет корректно отобразить сообщение "Нет данных" или перейти на предыдущую страницу, если это реализовано в fetchAndReplaceContent.
@@ -87,6 +92,10 @@ function initDeleteLandingHandler() {
                                 );
 
                                 if (filterFormSelector) {
+                                    console.log(
+                                        "filterFormSelector",
+                                        filterFormSelector
+                                    );
                                     const $filterForm = $(filterFormSelector);
                                     if ($filterForm.length) {
                                         const formValues =
@@ -139,6 +148,20 @@ function initDeleteLandingHandler() {
                     createAndShowToast(errorMessage, "error");
                 })
                 .always(function () {
+                    const ajaxUrl = window.routes.landingsAjaxList;
+                    const targetSelector = `#${landingsConstants.CONTENT_WRAPPER_ID}`;
+                    let queryParams = {};
+                    // Попытаемся получить текущие параметры фильтрации и номер страницы
+                    const currentUrl = new URL(window.location.href);
+                    queryParams = Object.fromEntries(
+                        currentUrl.searchParams.entries()
+                    );
+                    fetchAndReplaceContent(
+                        ajaxUrl,
+                        queryParams,
+                        targetSelector,
+                        false
+                    );
                     loader.hide();
                 });
         }
@@ -147,66 +170,6 @@ function initDeleteLandingHandler() {
 
 $(document).ready(function () {
     // --- Вспомогательные функции ---
-
-    // --- Основная функция загрузки контента ---
-    function fetchAndReplaceContent(
-        ajaxUrl,
-        queryParams,
-        targetSelector,
-        updateHistory = true
-    ) {
-        const targetElement = document.querySelector(targetSelector);
-        if (!targetElement) {
-            console.error(`Element not found for selector: ${targetSelector}`);
-            return;
-        }
-
-        const loaderInstance = showInElement(targetElement);
-
-        // Очистка пустых параметров
-        const finalParams = {};
-        for (const key in queryParams) {
-            if (
-                queryParams[key] !== null &&
-                queryParams[key] !== undefined &&
-                queryParams[key] !== ""
-            ) {
-                finalParams[key] = queryParams[key];
-            }
-        }
-
-        ajaxFetcher.get(ajaxUrl, finalParams, {
-            successCallback: function (response) {
-                const data = response.data;
-                $(targetSelector).html(data.table_html);
-                if (updateHistory) {
-                    updateBrowserUrl(finalParams);
-                }
-            },
-            errorCallback: function (jqXHR, textStatus, errorThrown) {
-                console.error(
-                    "Error fetching content: ",
-                    textStatus,
-                    errorThrown,
-                    jqXHR.responseText
-                );
-                if (loaderInstance) {
-                    hideInElement(loaderInstance);
-                }
-                // Уведомить пользователя об ошибке
-                createAndShowToast(
-                    "common.error_occurred_common_message",
-                    "error"
-                );
-            },
-            completeCallback: function () {
-                if (loaderInstance) {
-                    hideInElement(loaderInstance);
-                }
-                // loader.hide();
-            },
-        });
-    }
 
     // --- Инициализация универсального обработчика пагинации ---
     function initAsyncPaginationHandler() {
@@ -551,6 +514,8 @@ $(document).ready(function () {
     initDeleteLandingHandler();
     initializeGlobalSelects();
     initAsyncPaginationHandler();
+    initializeLandingStatus();
+    initializeDynamicLandingStatus();
 
     // Первоначальная установка состояния из URL для popstate
     // ... existing code ...

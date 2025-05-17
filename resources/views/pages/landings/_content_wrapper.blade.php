@@ -24,5 +24,5 @@
     </div>
     @endif
 @else
-    <x-landings.landings-empty-list />
+    <x-empty-landings />
 @endif

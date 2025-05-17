@@ -79,9 +79,9 @@ use Illuminate\Support\Facades\Auth;
 
     <script>
         window.routes = {
-            landingsAjaxList: '{{ route("landings.list") }}',
-            landingsAjaxStore: '{{ route("landings.store") }}',
-            landingsAjaxDestroyBase: '{{ route("landings.destroy", ["landing" => ":id"]) }}',
+            landingsAjaxList: '{{ route("landings.list.ajax") }}',
+            landingsAjaxStore: '{{ route("landings.store.ajax") }}',
+            landingsAjaxDestroyBase: '{{ route("landings.destroy.ajax", ["landing" => ":id"]) }}',
         };
     </script>
     @vite(['resources/js/app.js'])

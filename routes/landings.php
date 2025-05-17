@@ -23,9 +23,9 @@ Route::middleware(['auth:sanctum', 'web'])
     ->group(function () {
         Route::get('/{monitor}/status', [WebsiteDownloadController::class, 'getStatus'])->name('status');
         // AJAX Routes
-        Route::get('list', [LandingsPageApiController::class, 'ajaxList'])->name('list');
-        Route::post('store', [LandingsPageApiController::class, 'ajaxStore'])->name('store');
-        Route::delete('{landing}', [LandingsPageApiController::class, 'ajaxDestroy'])->name('destroy');
+        Route::get('list', [LandingsPageApiController::class, 'ajaxList'])->name('list.ajax');
+        Route::post('store', [LandingsPageApiController::class, 'ajaxStore'])->name('store.ajax');
+        Route::delete('{landing}', [LandingsPageApiController::class, 'ajaxDestroy'])->name('destroy.ajax');
     });
 
 
