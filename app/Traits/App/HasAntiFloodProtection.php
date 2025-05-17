@@ -2,7 +2,7 @@
 
 namespace App\Traits\App;
 
-use App\Services\App\AntiFloodService;
+use App\Services\Common\AntiFloodService;
 use Illuminate\Support\Facades\App;
 
 trait HasAntiFloodProtection

@@ -3,6 +3,7 @@
 @php
 $iconClass = match($status) {
     'pending' => 'icon-reload',
+    'in_progress' => 'icon-reload',
     'completed' => 'icon-check',
     'failed' => 'icon-warning',
     default => 'icon-help'

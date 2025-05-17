@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\App\Landings;
+namespace App\Services\Common\Landings;
 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -72,7 +72,7 @@ class LandingDownloadService
             // Добавляем файлы в архив с сохранением структуры
             foreach ($files as $file) {
                 $relativePath = substr($file, strlen($folderPath) + 1);
-                $zip->addFile(storage_path('app/' . $file), $relativePath);
+                $zip->addFile(Storage::path($file), $relativePath);
             }
 
             // Добавляем пустые директории

@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Services\App\AntiFloodService;
+use App\Services\Common\AntiFloodService;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

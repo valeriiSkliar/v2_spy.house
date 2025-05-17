@@ -2,10 +2,7 @@
 
 namespace App\Http\Controllers\Frontend\Landing;
 
-use App\Http\Controllers\FrontendController;
 use App\Models\Frontend\Landings\WebsiteDownloadMonitor;
-use App\Services\App\AntiFloodService;
-use App\Services\App\Landings\LandingDownloadService;
 use App\Services\Frontend\Toast;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -13,7 +10,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class LandingsPageController extends BaseLandingsPageController
 {

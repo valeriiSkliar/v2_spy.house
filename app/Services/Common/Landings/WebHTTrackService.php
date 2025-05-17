@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Landings;
+namespace App\Services\Common\Landings;
 
 use Symfony\Component\Process\Process;
 use Symfony\Component\Process\Exception\ProcessFailedException;

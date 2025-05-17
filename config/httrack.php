@@ -1,5 +1,5 @@
 <?php
 
 return [
-    'timer_wrapper' => env('HTTRACK_TIMER_WRAPPER'),
+    'timer_wrapper' => base_path('mytimer.so'),
 ];

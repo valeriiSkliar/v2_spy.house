@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Frontend\Landing;
 
 use App\Http\Controllers\FrontendController;
-use App\Services\App\AntiFloodService;
-use App\Services\App\Landings\LandingDownloadService;
+use App\Services\Common\AntiFloodService;
+use App\Services\Common\Landings\LandingDownloadService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use App\Models\Frontend\Landings\WebsiteDownloadMonitor;
@@ -100,7 +100,7 @@ class BaseLandingsPageController extends FrontendController
         $landings = WebsiteDownloadMonitor::where('user_id', $userId)
             ->orderBy($sortField, $sortDirection)
             ->with('user')
-            ->whereNotIn('status', ['cancelled', 'in_progress'])
+            ->whereNotIn('status', ['cancelled'])
             ->paginate($perPage)
             ->withQueryString();
 

@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers\Api\Landing;
 
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\Frontend\Landing\BaseLandingsPageController;
 use App\Models\Frontend\Landings\WebsiteDownloadMonitor;
-use App\Services\App\AntiFloodService;
+use App\Services\Common\AntiFloodService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;

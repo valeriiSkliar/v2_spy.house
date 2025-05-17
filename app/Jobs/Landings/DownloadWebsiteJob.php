@@ -4,7 +4,7 @@ namespace App\Jobs\Landings;
 
 use App\Models\Frontend\Landings\WebsiteDownloadMonitor;
 use App\Notifications\Landings\WebsiteDownloadStatus;
-use App\Services\Landings\WebHTTrackService;
+use App\Services\Common\Landings\WebHTTrackService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Bus\Queueable;
 use Illuminate\Foundation\Bus\Dispatchable;

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\App;
+namespace App\Services\Common;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redis;
