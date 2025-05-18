@@ -47,24 +47,40 @@ $(document).ready(function () {
     function initSortAndFilterHandlers() {
         // Common AJAX handler for both select components
         function handleSelectChange(params) {
+            console.log("handleSelectChange - входящие параметры:", params);
+            
             const $sortForm = $("#landings-sort-form");
             if (!$sortForm.length) return;
             
+            // Проверяем, что параметры не пустые
+            if (!params || Object.keys(params).length === 0) {
+                console.error("Ошибка: пустые параметры в handleSelectChange");
+                return;
+            }
+
             // Get current form values
             const formData = Object.fromEntries(
                 new URLSearchParams($sortForm.serialize()).entries()
             );
-            
+
             // Merge with new params
             const queryParams = { ...formData, ...params, page: 1 };
-            
+
+            // Update the form inputs to reflect the new values
+            Object.entries(params).forEach(([key, value]) => {
+                const input = $sortForm.find(`input[name="${key}"]`);
+                if (input.length) {
+                    input.val(value);
+                }
+            });
+
             // Find the associated pagination container
             const $paginationBox = $(
                 `[data-filter-form-selector="#${$sortForm.attr("id")}"]`
             ).first();
-            
+
             let targetSelector, ajaxUrl;
-            
+
             if ($paginationBox.length) {
                 targetSelector = $paginationBox.data("target-selector");
                 ajaxUrl = $paginationBox.data("ajax-url");
@@ -73,12 +89,12 @@ $(document).ready(function () {
                 targetSelector = `#${landingsConstants.CONTENT_WRAPPER_ID}`;
                 ajaxUrl = window.routes.landingsAjaxList;
             }
-            
+
             if (ajaxUrl && $(targetSelector).length) {
                 fetchAndReplaceContent(ajaxUrl, queryParams, targetSelector);
             }
         }
-        
+
         // Initialize sort-by component with AJAX handler
         initializeSelectComponent("#sort-by", {
             selectors: {
@@ -93,7 +109,7 @@ $(document).ready(function () {
                 orderParam: "direction",
             },
             resetPage: true,
-            ajaxHandler: handleSelectChange
+            ajaxHandler: handleSelectChange,
         });
 
         // Initialize items-per-page component with AJAX handler
@@ -108,7 +124,7 @@ $(document).ready(function () {
                 valueParam: "per_page",
             },
             resetPage: true,
-            ajaxHandler: handleSelectChange
+            ajaxHandler: handleSelectChange,
         });
 
         // Form change handler as a backup for any other form elements
@@ -119,33 +135,30 @@ $(document).ready(function () {
         $sortForm.on("change", "input[type='hidden']", function (event) {
             // Skip if the change was triggered by one of our select components
             // (they're already handled by the ajaxHandler)
-            const inputName = $(this).attr('name');
+            const inputName = $(this).attr("name");
             if (
-                (inputName === 'sort' || inputName === 'direction') && 
+                (inputName === "sort" || inputName === "direction") &&
                 event.originalEvent === undefined
             ) {
                 return;
             }
-            if (
-                inputName === 'per_page' && 
-                event.originalEvent === undefined
-            ) {
+            if (inputName === "per_page" && event.originalEvent === undefined) {
                 return;
             }
-            
+
             // Get form data
             let queryParams = Object.fromEntries(
                 new URLSearchParams($sortForm.serialize()).entries()
             );
             queryParams.page = 1; // Reset to first page
-            
+
             // Find target container
             const $paginationBox = $(
                 `[data-filter-form-selector="#${$sortForm.attr("id")}"]`
             ).first();
-            
+
             let targetSelector, ajaxUrl;
-            
+
             if ($paginationBox.length) {
                 targetSelector = $paginationBox.data("target-selector");
                 ajaxUrl = $paginationBox.data("ajax-url");
@@ -154,7 +167,7 @@ $(document).ready(function () {
                 targetSelector = `#${landingsConstants.CONTENT_WRAPPER_ID}`;
                 ajaxUrl = window.routes.landingsAjaxList;
             }
-            
+
             if (ajaxUrl && $(targetSelector).length) {
                 fetchAndReplaceContent(ajaxUrl, queryParams, targetSelector);
             } else {

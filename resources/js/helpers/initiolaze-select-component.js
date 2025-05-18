@@ -33,9 +33,19 @@ export function initializeSelectComponent(containerId, config) {
             options.removeClass("is-selected");
             $(this).addClass("is-selected");
 
-            const selectedValue = $(this).data("value");
-            const selectedLabel = $(this).data("label");
-            const placeholder = $(this).data("placeholder");
+            // Получаем значения из текущего элемента (this)
+            const $option = $(this);
+            // Используем attr() вместо data() для получения значений из HTML-атрибутов
+            const selectedValue = $option.attr("data-value");
+            const selectedLabel = $option.attr("data-label");
+            const placeholder = $option.attr("data-placeholder");
+            
+            console.log("Выбранный элемент:", {
+                element: $option[0],
+                rawValue: selectedValue,
+                rawOrder: $option.attr("data-order"),
+                rawLabel: selectedLabel
+            });
             // Update the displayed selected value
             if (selectedLabelElement.length) {
                 trigger.text(placeholder.concat(selectedLabel));
@@ -48,9 +58,16 @@ export function initializeSelectComponent(containerId, config) {
                 valueElement.val(selectedValue).trigger("change");
             }
 
-            let selectedOrder = null;
+            // Получаем значение порядка сортировки из атрибута data-order выбранного элемента
+            let selectedOrder = $option.attr("data-order");
+            console.log("Raw selectedOrder from data attribute:", selectedOrder);
+            
+            // Проверяем, что значение не undefined и не null
+            if (selectedOrder === undefined || selectedOrder === null) {
+                selectedOrder = "asc"; // Значение по умолчанию, если не указано
+            }
+            
             if (orderElement) {
-                selectedOrder = $(this).data("order");
                 orderElement.data("order", selectedOrder);
                 if (orderElement.is("input")) {
                     orderElement.val(selectedOrder).trigger("change");
@@ -63,15 +80,46 @@ export function initializeSelectComponent(containerId, config) {
             if (config.ajaxHandler && typeof config.ajaxHandler === 'function') {
                 // Reset page if configured
                 const queryParams = {};
-                queryParams[config.params.valueParam] = selectedValue;
                 
-                if (orderElement && config.params.orderParam && selectedOrder) {
-                    queryParams[config.params.orderParam] = selectedOrder;
+                // Проверяем и логируем значения перед их использованием
+                console.log("Config params:", config.params);
+                console.log("Value param name:", config.params.valueParam);
+                console.log("Order param name:", config.params.orderParam);
+                
+                // Проверяем, что selectedValue имеет значение
+                if (selectedValue) {
+                    queryParams[config.params.valueParam] = selectedValue;
+                } else {
+                    console.error("Ошибка: selectedValue не определен");
+                    // Используем значение из HTML напрямую
+                    const rawValue = $option.attr("data-value");
+                    if (rawValue) {
+                        queryParams[config.params.valueParam] = rawValue;
+                        console.log("Используем значение из data-value:", rawValue);
+                    }
+                }
+                
+                // Получаем значение order из текущего выбранного элемента
+                if (orderElement && config.params.orderParam) {
+                    if (selectedOrder) {
+                        queryParams[config.params.orderParam] = selectedOrder;
+                    } else {
+                        console.error("Ошибка: selectedOrder не определен");
+                        // Используем значение из HTML напрямую
+                        const rawOrder = $option.attr("data-order");
+                        if (rawOrder) {
+                            queryParams[config.params.orderParam] = rawOrder;
+                            console.log("Используем значение из data-order:", rawOrder);
+                        }
+                    }
                 }
                 
                 if (config.resetPage) {
                     queryParams.page = 1;
                 }
+                
+                // Выводим отладочную информацию
+                console.log("Передаем в AJAX обработчик:", queryParams);
                 
                 // Use the provided AJAX handler
                 config.ajaxHandler(queryParams);

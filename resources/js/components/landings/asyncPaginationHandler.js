@@ -57,6 +57,17 @@ export const asyncPaginationHandler = function (event) {
                     queryParams[field.name] = field.value;
                 }
             });
+            
+            // Update form inputs with the page value from the pagination link
+            if (queryParams.page) {
+                const pageInput = $filterForm.find('input[name="page"]');
+                if (pageInput.length) {
+                    pageInput.val(queryParams.page);
+                } else {
+                    // Add a hidden input for page if it doesn't exist
+                    $filterForm.append(`<input type="hidden" name="page" value="${queryParams.page}">`);
+                }
+            }
         }
     }
 
