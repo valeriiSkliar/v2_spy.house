@@ -8,6 +8,7 @@ use App\Services\Common\Landings\LandingDownloadService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use App\Models\Frontend\Landings\WebsiteDownloadMonitor;
+use Illuminate\Support\Facades\Log;
 
 class BaseLandingsPageController extends FrontendController
 {
@@ -90,6 +91,15 @@ class BaseLandingsPageController extends FrontendController
         $allowedSortFields = ['created_at', 'status', 'url'];
         $sortField = in_array($sortField, $allowedSortFields) ? $sortField : 'created_at';
         $sortDirection = in_array($sortDirection, ['asc', 'desc']) ? $sortDirection : 'desc';
+
+        Log::info('Landings page request parameters', [
+            'user_id' => $request->user()->id,
+            'sort_field' => $sortField,
+            'sort_direction' => $sortDirection,
+            'per_page' => $perPage,
+            'request_params' => $request->all()
+        ]);
+
 
         $userId = $request->user()->id;
 

@@ -1,4 +1,4 @@
-// import { initializeSelectComponent } from "@/helpers";
+import { initializeSelectComponent } from "@/helpers";
 import {
     initializeLandingStatus,
     initializeDynamicLandingStatus,
@@ -45,52 +45,121 @@ $(document).ready(function () {
 
     // --- Инициализация обработчиков сортировки (адаптируем для универсальности) ---
     function initSortAndFilterHandlers() {
-        // Предполагаем, что форма сортировки одна для текущей страницы лендингов
-        const $sortForm = $("#landings-sort-form"); // Селектор формы сортировки
-        if (!$sortForm.length) return;
-
-        $sortForm.on("change", "select", function () {
-            // Найти связанный контейнер пагинации, чтобы взять его data-атрибуты
+        // Common AJAX handler for both select components
+        function handleSelectChange(params) {
+            const $sortForm = $("#landings-sort-form");
+            if (!$sortForm.length) return;
+            
+            // Get current form values
+            const formData = Object.fromEntries(
+                new URLSearchParams($sortForm.serialize()).entries()
+            );
+            
+            // Merge with new params
+            const queryParams = { ...formData, ...params, page: 1 };
+            
+            // Find the associated pagination container
             const $paginationBox = $(
                 `[data-filter-form-selector="#${$sortForm.attr("id")}"]`
             ).first();
-            if (!$paginationBox.length) {
-                // Если нет настроенной пагинации, просто сабмитим форму (старое поведение)
-                // $sortForm.submit();
-                console.warn(
-                    "No associated pagination container found for sort/filter form. AJAX call will not be made via pagination handler."
-                );
-                // Можно сделать прямой AJAX запрос, если нужно, но лучше полагаться на data-атрибуты пагинации.
-                // Для простоты, если нет `data-pagination-container` с таким `data-filter-form-selector`
-                // AJAX-обработка этого изменения не произойдет через этот механизм.
-                // Вместо этого, просто вызовем fetchAndReplaceContent напрямую, если знаем URL и target
-                const ajaxUrl = window.routes.landingsAjaxList; // Должен быть доступен
-                const targetSelector = `#${landingsConstants.CONTENT_WRAPPER_ID}`;
-                if (ajaxUrl && $(targetSelector).length) {
-                    let queryParams = Object.fromEntries(
-                        new URLSearchParams($sortForm.serialize()).entries()
-                    );
-                    queryParams.page = 1; // Сброс на первую страницу
-                    fetchAndReplaceContent(
-                        ajaxUrl,
-                        queryParams,
-                        targetSelector
-                    );
-                } else {
-                    $sortForm.submit(); // Fallback
-                }
+            
+            let targetSelector, ajaxUrl;
+            
+            if ($paginationBox.length) {
+                targetSelector = $paginationBox.data("target-selector");
+                ajaxUrl = $paginationBox.data("ajax-url");
+            } else {
+                // Fallback to default values
+                targetSelector = `#${landingsConstants.CONTENT_WRAPPER_ID}`;
+                ajaxUrl = window.routes.landingsAjaxList;
+            }
+            
+            if (ajaxUrl && $(targetSelector).length) {
+                fetchAndReplaceContent(ajaxUrl, queryParams, targetSelector);
+            }
+        }
+        
+        // Initialize sort-by component with AJAX handler
+        initializeSelectComponent("#sort-by", {
+            selectors: {
+                select: ".base-select__dropdown",
+                options: ".base-select__option",
+                trigger: ".base-select__trigger",
+                valueElement: "input[name='sort']",
+                orderElement: "input[name='direction']",
+            },
+            params: {
+                valueParam: "sort",
+                orderParam: "direction",
+            },
+            resetPage: true,
+            ajaxHandler: handleSelectChange
+        });
+
+        // Initialize items-per-page component with AJAX handler
+        initializeSelectComponent("#items-per-page", {
+            selectors: {
+                select: ".base-select__dropdown",
+                options: ".base-select__option",
+                trigger: ".base-select__trigger",
+                valueElement: "input[name='per_page']",
+            },
+            params: {
+                valueParam: "per_page",
+            },
+            resetPage: true,
+            ajaxHandler: handleSelectChange
+        });
+
+        // Form change handler as a backup for any other form elements
+        const $sortForm = $("#landings-sort-form");
+        if (!$sortForm.length) return;
+
+        // Handle form changes for updating content via AJAX
+        $sortForm.on("change", "input[type='hidden']", function (event) {
+            // Skip if the change was triggered by one of our select components
+            // (they're already handled by the ajaxHandler)
+            const inputName = $(this).attr('name');
+            if (
+                (inputName === 'sort' || inputName === 'direction') && 
+                event.originalEvent === undefined
+            ) {
                 return;
             }
-
-            const targetSelector = $paginationBox.data("target-selector");
-            const ajaxUrl = $paginationBox.data("ajax-url");
-
+            if (
+                inputName === 'per_page' && 
+                event.originalEvent === undefined
+            ) {
+                return;
+            }
+            
+            // Get form data
             let queryParams = Object.fromEntries(
                 new URLSearchParams($sortForm.serialize()).entries()
             );
-            queryParams.page = 1; // Сброс на первую страницу
-
-            fetchAndReplaceContent(ajaxUrl, queryParams, targetSelector);
+            queryParams.page = 1; // Reset to first page
+            
+            // Find target container
+            const $paginationBox = $(
+                `[data-filter-form-selector="#${$sortForm.attr("id")}"]`
+            ).first();
+            
+            let targetSelector, ajaxUrl;
+            
+            if ($paginationBox.length) {
+                targetSelector = $paginationBox.data("target-selector");
+                ajaxUrl = $paginationBox.data("ajax-url");
+            } else {
+                // Fallback to default values
+                targetSelector = `#${landingsConstants.CONTENT_WRAPPER_ID}`;
+                ajaxUrl = window.routes.landingsAjaxList;
+            }
+            
+            if (ajaxUrl && $(targetSelector).length) {
+                fetchAndReplaceContent(ajaxUrl, queryParams, targetSelector);
+            } else {
+                $sortForm.submit(); // Fallback
+            }
         });
     }
 
@@ -141,23 +210,10 @@ $(document).ready(function () {
         }
     });
 
-    // --- Инициализация Select2 для глобальных селектов (вне обновляемого контента) ---
+    // --- Инициализация для глобальных селектов (вне обновляемого контента) ---
+    // This is no longer needed as we're using initializeSelectComponent
     function initializeGlobalSelects() {
-        if ($.fn.select2) {
-            $("#sort-by, #sort-direction, #items-per-page").each(function () {
-                $(this).select2({
-                    theme: "bootstrap-5",
-                    width: $(this).data("width")
-                        ? $(this).data("width")
-                        : $(this).hasClass("w-100")
-                        ? "100%"
-                        : "style",
-                    placeholder: $(this).data("placeholder") || "Выберите...",
-                    minimumResultsForSearch:
-                        $(this).data("search") === "true" ? 0 : Infinity,
-                });
-            });
-        }
+        // Initialization is now handled in initSortAndFilterHandlers
     }
 
     // --- Обработчик добавления нового лендинга ---

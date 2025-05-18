@@ -42,41 +42,77 @@ export function initializeSelectComponent(containerId, config) {
                 selectedLabelElement.text(selectedLabel);
             }
 
+            // Set value to valueElement (supports both data attribute and input value)
             valueElement.data("value", selectedValue);
+            if (valueElement.is("input")) {
+                valueElement.val(selectedValue).trigger("change");
+            }
 
             let selectedOrder = null;
             if (orderElement) {
                 selectedOrder = $(this).data("order");
                 orderElement.data("order", selectedOrder);
+                if (orderElement.is("input")) {
+                    orderElement.val(selectedOrder).trigger("change");
+                }
             }
 
             select.hide();
 
-            // Update URL
-            const url = new URL(window.location.href);
-
-            if (selectedValue) {
-                url.searchParams.set(config.params.valueParam, selectedValue);
-            } else {
-                url.searchParams.delete(config.params.valueParam);
-            }
-
-            if (orderElement && config.params.orderParam) {
-                if (selectedOrder) {
-                    url.searchParams.set(
-                        config.params.orderParam,
-                        selectedOrder
-                    );
-                } else {
-                    url.searchParams.delete(config.params.orderParam);
+            // Check if custom AJAX handler is provided
+            if (config.ajaxHandler && typeof config.ajaxHandler === 'function') {
+                // Reset page if configured
+                const queryParams = {};
+                queryParams[config.params.valueParam] = selectedValue;
+                
+                if (orderElement && config.params.orderParam && selectedOrder) {
+                    queryParams[config.params.orderParam] = selectedOrder;
                 }
+                
+                if (config.resetPage) {
+                    queryParams.page = 1;
+                }
+                
+                // Use the provided AJAX handler
+                config.ajaxHandler(queryParams);
+                return;
             }
-
-            if (config.resetPage) {
-                url.searchParams.set("page", "1");
+            
+            // Check if the component is part of a form with data-ajax-enabled
+            const $form = $(container).closest('form');
+            if ($form.length && $form.data('ajax-enabled')) {
+                // Let the form handle updates (it should have its own change event handlers)
+                return;
             }
-
-            window.location.href = url.toString();
+            
+            // Default behavior - redirect the page
+            if (!$form.length) {
+                // Update URL only if not in a form
+                const url = new URL(window.location.href);
+    
+                if (selectedValue) {
+                    url.searchParams.set(config.params.valueParam, selectedValue);
+                } else {
+                    url.searchParams.delete(config.params.valueParam);
+                }
+    
+                if (orderElement && config.params.orderParam) {
+                    if (selectedOrder) {
+                        url.searchParams.set(
+                            config.params.orderParam,
+                            selectedOrder
+                        );
+                    } else {
+                        url.searchParams.delete(config.params.orderParam);
+                    }
+                }
+    
+                if (config.resetPage) {
+                    url.searchParams.set("page", "1");
+                }
+    
+                window.location.href = url.toString();
+            }
         });
     });
 
