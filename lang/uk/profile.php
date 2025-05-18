@@ -125,4 +125,5 @@ return [
         'verification_code_label' => 'Код підтвердження',
         'verification_expires' => 'Цей код підтвердження буде дійсним протягом 15 хвилин.',
     ],
+    'login_must_contain_only_latin_letters_numbers_and_underscore' => 'Логін може містити лише латинські літери, цифри та символ підкреслення.',
 ];

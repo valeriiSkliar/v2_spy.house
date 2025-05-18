@@ -127,4 +127,5 @@ return [
         'verification_code_label' => 'Código de verificación',
         'verification_expires' => 'Este código de verificación expirará en 15 minutos.',
     ],
+    'login_must_contain_only_latin_letters_numbers_and_underscore' => 'El nombre de usuario solo puede contener letras latinas, números y guiones bajos.',
 ];

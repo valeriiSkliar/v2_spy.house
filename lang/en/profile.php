@@ -174,5 +174,6 @@ return [
     ],
     'email_updated' => 'Email successfully updated',
     'email_updated_message' => 'Your email address has been successfully changed from :old_email to :new_email.',
+    'login_must_contain_only_latin_letters_numbers_and_underscore' => 'Login can only contain Latin letters, numbers, and underscore.',
 
 ];

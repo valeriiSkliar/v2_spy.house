@@ -179,4 +179,5 @@ return [
     ],
     'email_updated' => 'E-mail успешно обновлен',
     'email_updated_message' => 'Ваш адрес электронной почты был успешно изменен с :old_email на :new_email.',
+    'login_must_contain_only_latin_letters_numbers_and_underscore' => 'Логин может содержать только латинские буквы, цифры и символ подчеркивания.',
 ];
