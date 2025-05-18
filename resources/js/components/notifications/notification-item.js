@@ -2,6 +2,7 @@ import { checkNotifications } from "../../helpers/notification-checker";
 import { createAndShowToast } from "../../utils";
 import { ajaxFetcher } from "../fetcher/ajax-fetcher";
 import { config } from "@/config";
+import { hideInButton, showInButton } from "../loader";
 
 export class NotificationItem {
     static init() {
@@ -50,10 +51,14 @@ export class NotificationItem {
     }
 
     static async markAllAsRead(url) {
+        const markAllReadBtn = document.getElementById("mark-all-read");
         try {
-            // TODO: add loader
+            if (!markAllReadBtn) return;
+            
+            showInButton(markAllReadBtn);
             await ajaxFetcher.post(url);
-            // TODO: remove loader
+            hideInButton(markAllReadBtn);
+
             document.querySelectorAll(".notification-item").forEach((item) => {
                 item.classList.add("_read");
                 item.dataset.read = "true";
@@ -77,6 +82,7 @@ export class NotificationItem {
                     "Error marking all notifications as read. Please try again.",
                 "error"
             );
+            hideInButton(markAllReadBtn);
             console.error("Failed to mark all notifications as read:", error);
         }
     }
