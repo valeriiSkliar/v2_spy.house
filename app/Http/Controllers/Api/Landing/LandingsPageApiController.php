@@ -188,6 +188,18 @@ class LandingsPageApiController extends BaseLandingsPageController
             $userLandingsCount = WebsiteDownloadMonitor::where('user_id', Auth::id())->count();
             $responseData = ['landing_id' => $monitor->id];
 
+            // Get per_page from request to properly handle pagination
+            $perPage = $request->input('per_page', 12);
+            $responseData['per_page'] = $perPage;
+
+            // For pagination calculations, get the total count of items 
+            $totalCount = WebsiteDownloadMonitor::where('user_id', Auth::id())->count();
+            $responseData['total_items'] = $totalCount;
+            
+            // Calculate the last page number
+            $lastPage = ceil($totalCount / $perPage);
+            $responseData['last_page'] = $lastPage;
+
             if ($userLandingsCount === 1) {
                 // This is the first landing for the user, send the whole table structure
                 Log::info('First landing for user. Preparing full table HTML.', ['user_id' => Auth::id(), 'monitor_id' => $monitor->id]);
@@ -198,11 +210,33 @@ class LandingsPageApiController extends BaseLandingsPageController
             } else {
                 // Not the first landing, send only the new row
                 Log::info('Additional landing for user. Preparing row HTML.', ['user_id' => Auth::id(), 'monitor_id' => $monitor->id]);
-                // Assuming 'components.landings.table.row' can handle a WebsiteDownloadMonitor instance
-                // or that 'landing' is a generic enough key for the view.
-                $landingHtml = view('components.landings.table.row', ['landing' => $monitor, 'viewConfig' => $this->getViewConfig()])->render();
-                $responseData['landing_html'] = $landingHtml;
-                Log::info('Landing HTML row rendered for response.', ['user_id' => Auth::id()]);
+                
+                // For items that exceed the per_page limit, we need to return complete table HTML
+                // to properly set up pagination
+                $currentPage = $request->input('page', 1);
+                $itemsOnCurrentPage = WebsiteDownloadMonitor::where('user_id', Auth::id())
+                    ->orderBy($request->input('sort', 'created_at'), $request->input('direction', 'desc'))
+                    ->skip(($currentPage - 1) * $perPage)
+                    ->take($perPage + 1) // Check if we have more than perPage items
+                    ->count();
+                
+                if ($itemsOnCurrentPage > $perPage) {
+                    // We've exceeded per_page limit, send the full table HTML with updated pagination
+                    Log::info('Item count exceeds per_page limit. Preparing full table HTML.', [
+                        'user_id' => Auth::id(), 
+                        'items_on_page' => $itemsOnCurrentPage,
+                        'per_page' => $perPage
+                    ]);
+                    
+                    $tableData = parent::getData($request);
+                    $fullTableHtml = $this->renderContentWrapperView($tableData);
+                    $responseData['table_html'] = $fullTableHtml;
+                } else {
+                    // Just add the new row if we haven't exceeded per_page
+                    $landingHtml = view('components.landings.table.row', ['landing' => $monitor, 'viewConfig' => $this->getViewConfig()])->render();
+                    $responseData['landing_html'] = $landingHtml;
+                    Log::info('Landing HTML row rendered for response.', ['user_id' => Auth::id()]);
+                }
             }
 
             return response()->json([

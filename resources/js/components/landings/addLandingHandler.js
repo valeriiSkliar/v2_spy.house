@@ -4,6 +4,7 @@ import { hideInElement, showInButton, showInElement } from "../loader";
 import { landingsConstants } from "./constants";
 import { initializeLandingStatus } from "./initialize-landing-status";
 import landingStatusPoller from "./landing-status-poller";
+import { fetchAndReplaceContent } from "./fetchAndReplaceContnt";
 
 export const addLandingHandler = function (event) {
     event.preventDefault();
@@ -35,8 +36,9 @@ export const addLandingHandler = function (event) {
     const formData = new FormData();
     formData.append("url", url);
     formData.append("_token", csrfToken);
+    const landingsAjaxStore = window.routes.landingsAjaxStore;
 
-    ajaxFetcher.submit(window.routes.landingsAjaxStore, {
+    ajaxFetcher.submit(landingsAjaxStore, {
         data: formData,
         successCallback: function (response) {
             if (response.success && response.data) {
@@ -61,10 +63,6 @@ export const addLandingHandler = function (event) {
                     } else {
                         // Fallback: If this is the very first load and no pagination box exists yet,
                         // use a known ID for the content area.
-                        // This should be the ID of the element that `renderContentWrapperView`'s output replaces.
-                        // We assume 'landingsConstants.CONTENT_WRAPPER_SELECTOR' or a default like '#landings-list-container'
-                        // If 'landings' is not available here, we might need to define it or use a string literal.
-                        // For now, let's assume 'landings-list-container' is a reasonable default if not in constants.
                         targetSelector =
                             landingsConstants.CONTENT_WRAPPER_SELECTOR;
                     }
@@ -73,10 +71,77 @@ export const addLandingHandler = function (event) {
                     if ($targetContainer.length) {
                         landingStatusPoller.cleanup(); // Stop all current polls before replacing HTML
                         $targetContainer.html(response.data.table_html);
-                        // Wait for DOM to fully update before re-initializing
-                        setTimeout(() => {
-                            initializeLandingStatus(); // Re-initialize all status tracking
-                        }, 100);
+
+                        // Get the current page size
+                        const perPage = parseInt(
+                            response.data.per_page || 12,
+                            10
+                        );
+
+                        // Count items on current page and total items to determine if pagination should change
+                        const $tableRows = $(
+                            `${landingsConstants.LANDINGS_TABLE_CONTAINER_ID} tbody tr`
+                        );
+                        const currentItemCount = $tableRows.length;
+
+                        // Check if we've just exceeded the per_page limit for the current page
+                        if (currentItemCount > perPage) {
+                            console.log(
+                                `Item count (${currentItemCount}) exceeds per_page limit (${perPage}). Fetching updated content.`
+                            );
+
+                            // Fetch the last page where the new item would be visible
+                            const currentUrl = new URL(window.location.href);
+                            const queryParams = Object.fromEntries(
+                                currentUrl.searchParams.entries()
+                            );
+
+                            // Calculate which page the newest item would be on
+                            // For most sorting methods (like created_at desc) the newest item would be on the first page
+                            // But if we're sorting by another method, we need to determine the correct page
+                            const sortField = queryParams.sort || "created_at";
+                            const sortDirection =
+                                queryParams.direction || "desc";
+
+                            // For created_at desc, new items go to page 1
+                            if (
+                                sortField === "created_at" &&
+                                sortDirection === "desc"
+                            ) {
+                                queryParams.page = 1;
+                            } else {
+                                // For other sort methods we'll navigate to the last page
+                                // The server's response should contain the last page number
+                                if (response.data.last_page) {
+                                    queryParams.page = response.data.last_page;
+                                } else {
+                                    // Fallback: Calculate the last page based on item count
+                                    const totalItems =
+                                        response.data.total_items ||
+                                        currentItemCount + 1;
+                                    const lastPage = Math.ceil(
+                                        totalItems / perPage
+                                    );
+                                    queryParams.page = lastPage;
+                                }
+                            }
+
+                            // Make a request to fetch the proper page with correct item count
+                            const ajaxUrl = window.routes.landingsAjaxList;
+
+                            // Use fetchAndReplaceContent to update the content
+                            fetchAndReplaceContent(
+                                ajaxUrl,
+                                queryParams,
+                                targetSelector,
+                                true // Update browser URL
+                            );
+                        } else {
+                            // Wait for DOM to fully update before re-initializing if we're not refreshing
+                            setTimeout(() => {
+                                initializeLandingStatus(); // Re-initialize all status tracking
+                            }, 100);
+                        }
                     } else {
                         console.error(
                             `Target container '${targetSelector}' for full table update not found. Reloading page as a fallback.`

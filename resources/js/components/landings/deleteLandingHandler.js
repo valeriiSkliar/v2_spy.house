@@ -1,6 +1,6 @@
 import { createAndShowToast } from "../../utils/uiHelpers";
 import { ajaxFetcher } from "../fetcher/ajax-fetcher";
-import loader from "../loader";
+import loader, { hideInButton, showInButton } from "../loader";
 import { landingsConstants } from "./constants";
 import { fetchAndReplaceContent } from "./fetchAndReplaceContnt";
 
@@ -22,7 +22,7 @@ export const deleteLandingHandler = function (event) {
         return;
     }
 
-    loader.show();
+    showInButton($button, "_dark");
 
     if (!window.routes || !window.routes.landingsAjaxDestroyBase) {
         console.error("Route for landingsAjaxDestroyBase is not defined.");
@@ -30,7 +30,7 @@ export const deleteLandingHandler = function (event) {
             "Ошибка конфигурации: URL для удаления не определен.",
             "error"
         );
-        loader.hide();
+        hideInButton($button);
         return;
     }
     const deleteUrl = window.routes.landingsAjaxDestroyBase.replace(
@@ -53,8 +53,7 @@ export const deleteLandingHandler = function (event) {
                             landingsConstants.LANDINGS_TABLE_CONTAINER_ID
                         );
                         // Если таблица пуста после удаления на текущей странице,
-                        // можно попробовать перезагрузить данные для текущей страницы пагинации.
-                        // Это поможет корректно отобразить сообщение "Нет данных" или перейти на предыдущую страницу, если это реализовано в fetchAndReplaceContent.
+                        // проверим номер текущей страницы и перейдем на предыдущую, если мы не на первой странице
                         const $paginationBox = $(
                             `[${landingsConstants.PAGINATION_CONTAINER_ATTR}]`
                         ).first();
@@ -88,8 +87,17 @@ export const deleteLandingHandler = function (event) {
                                 });
                             }
                         }
-                        // Если queryParams.page не установлен, установим 1 (или оставим как есть, если сервер сам обрабатывает)
-                        // queryParams.page = queryParams.page || 1;
+                        
+                        // Check if we're on page > 1 and adjust accordingly
+                        const currentPage = parseInt(queryParams.page, 10);
+                        if (currentPage && currentPage > 1) {
+                            // Navigate to the previous page
+                            queryParams.page = currentPage - 1;
+                            console.log("Last item on page removed, navigating to previous page:", queryParams.page);
+                        } else {
+                            // We're on page 1 or page parameter isn't set, stay on page 1
+                            queryParams.page = 1;
+                        }
 
                         if (ajaxUrl && targetSelector) {
                             // This will call initializeLandingStatus() after content is replaced
@@ -97,8 +105,8 @@ export const deleteLandingHandler = function (event) {
                                 ajaxUrl,
                                 queryParams,
                                 targetSelector,
-                                false
-                            ); // false - не обновлять историю браузера для этого случая
+                                true // true - обновлять историю браузера, чтобы URL отражал текущую страницу
+                            );
                         }
                     }
                 });
@@ -127,14 +135,8 @@ export const deleteLandingHandler = function (event) {
             createAndShowToast(errorMessage, "error");
         })
         .always(function () {
-            const ajaxUrl = window.routes.landingsAjaxList;
-            const targetSelector = `#${landingsConstants.CONTENT_WRAPPER_ID}`;
-            let queryParams = {};
-            // Попытаемся получить текущие параметры фильтрации и номер страницы
-            const currentUrl = new URL(window.location.href);
-            queryParams = Object.fromEntries(currentUrl.searchParams.entries());
-            // This will call initializeLandingStatus() after content is replaced
-            fetchAndReplaceContent(ajaxUrl, queryParams, targetSelector, false);
-            loader.hide();
+            // Just hide the button loader - content update is already handled in the success callback
+            // when we check if the table is empty
+            hideInButton($button);
         });
 };

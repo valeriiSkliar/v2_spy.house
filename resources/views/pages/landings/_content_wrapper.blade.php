@@ -16,7 +16,7 @@
     <div class="pagination-controls mt-4"
          data-pagination-container {{-- Маркер для JS --}}
          data-target-selector="#landings-content-wrapper" {{-- Что обновлять --}}
-         data-ajax-url="{{ route('landings.list') }}" {{-- Куда делать запрос --}}
+         data-ajax-url="{{ route('landings.list.ajax') }}" {{-- Куда делать запрос --}}
          data-filter-form-selector="#landings-sort-form" {{-- Откуда брать фильтры --}}
     >
         {{-- Используем новый шаблон 'components.custom-pagination' --}}

@@ -124,45 +124,48 @@ export function showInButton(buttonElement, type = "default") {
     }
 
     if (!buttonEl) {
-        console.error("Button element not provided for loader.");
+        console.error("[showInButton] Button element not provided for loader.");
         return;
+    }
+
+    // Check for icon class directly on the button
+    const iconClassRegex = /^(icon-|fa-)[a-zA-Z0-9_-]+$/;
+    for (const cls of Array.from(buttonEl.classList)) {
+        if (iconClassRegex.test(cls)) {
+            buttonEl.classList.remove(cls);
+            buttonEl.dataset.originalButtonIconClass = cls;
+            break;
+        }
     }
 
     let loaderSpan = buttonEl.querySelector("span.loader-btn");
 
     if (!loaderSpan) {
-        // If loader span doesn't exist, create and prepend it
         loaderSpan = document.createElement("span");
-        loaderSpan.className = "loader-btn";
+        loaderSpan.className = `loader-btn`;
         loaderSpan.setAttribute("data-dynamically-added", "true");
-        buttonEl.prepend(loaderSpan); // Prepend to ensure it's at the start
+        buttonEl.prepend(loaderSpan);
     }
 
-    // Store original display for the loader span itself if not already stored
     if (!loaderSpan.hasAttribute("data-original-display")) {
-        loaderSpan.setAttribute(
-            "data-original-display",
-            loaderSpan.style.display || "none"
-        );
+        const originalDisplay = loaderSpan.style.display || "none";
+        loaderSpan.setAttribute("data-original-display", originalDisplay);
     }
-    loaderSpan.style.display = "inline-block"; // Or 'flex' or whatever your loader needs
+    loaderSpan.style.display = "inline-block";
 
-    // Apply type classes
     loaderSpan.classList.remove("_green", "_dark");
     if (type === "_green" || type === "_dark") {
         loaderSpan.classList.add(type);
     }
 
-    // Find and hide other icons
     const otherIcons = buttonEl.querySelectorAll(
         'span[class*="icon-"]:not(.loader-btn), span[class*="fa-"]:not(.loader-btn)'
     );
+
     otherIcons.forEach((icon) => {
         if (!icon.hasAttribute("data-original-display")) {
-            icon.setAttribute(
-                "data-original-display",
-                icon.style.display || "inline-block"
-            );
+            const originalDisplay = icon.style.display || "inline-block";
+            icon.setAttribute("data-original-display", originalDisplay);
         }
         icon.style.display = "none";
     });
@@ -203,7 +206,7 @@ export function hideInButton(buttonElement) {
         }
     }
 
-    // Restore other icons
+    // Restore other SPAN icons
     const otherIcons = buttonEl.querySelectorAll(
         'span[class*="icon-"]:not(.loader-btn), span[class*="fa-"]:not(.loader-btn)'
     );
@@ -214,6 +217,12 @@ export function hideInButton(buttonElement) {
             icon.removeAttribute("data-original-display");
         }
     });
+
+    // Restore button's own icon class if it was removed
+    if (buttonEl.dataset.originalButtonIconClass) {
+        buttonEl.classList.add(buttonEl.dataset.originalButtonIconClass);
+        delete buttonEl.dataset.originalButtonIconClass; // Clean up
+    }
 
     buttonEl.disabled = false;
 }
