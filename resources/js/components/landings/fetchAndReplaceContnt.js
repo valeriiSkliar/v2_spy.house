@@ -1,8 +1,39 @@
 import { ajaxFetcher } from "../fetcher/ajax-fetcher";
 import { hideInElement, showInElement } from "../loader";
 import landingStatusPoller from "./landing-status-poller";
+import { initializeLandingStatus } from "./initialize-landing-status";
+import { createAndShowToast } from "../../utils/uiHelpers";
 
-// --- Основная функция загрузки контента ---
+/**
+ * Update browser URL with the provided parameters
+ * @param {Object} params - Query parameters to update in URL
+ */
+function updateBrowserUrl(params) {
+    const url = new URL(window.location.href);
+    
+    // Clear existing parameters
+    [...url.searchParams.keys()].forEach(key => {
+        url.searchParams.delete(key);
+    });
+    
+    // Add new parameters
+    Object.entries(params).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && value !== '') {
+            url.searchParams.set(key, value);
+        }
+    });
+    
+    // Update URL without reloading the page
+    window.history.pushState({}, '', url.toString());
+}
+
+/**
+ * Main content loading function
+ * @param {string} ajaxUrl - URL to fetch content from
+ * @param {Object} queryParams - Query parameters to send
+ * @param {string} targetSelector - CSS selector for the target element
+ * @param {boolean} updateHistory - Whether to update browser URL history
+ */
 export function fetchAndReplaceContent(
     ajaxUrl,
     queryParams,
@@ -17,7 +48,7 @@ export function fetchAndReplaceContent(
 
     const loaderInstance = showInElement(targetElement);
 
-    // Очистка пустых параметров
+    // Clean empty parameters
     const finalParams = {};
     for (const key in queryParams) {
         if (
@@ -29,11 +60,19 @@ export function fetchAndReplaceContent(
         }
     }
 
+    // First cleanup all active pollers
+    landingStatusPoller.cleanup();
+
     ajaxFetcher.get(ajaxUrl, finalParams, {
         successCallback: function (response) {
             const data = response.data;
-            landingStatusPoller.cleanup();
             $(targetSelector).html(data.table_html);
+            
+            // Reinitialize landing status tracking on the new content
+            setTimeout(() => {
+                initializeLandingStatus();
+            }, 100); // Small delay to ensure DOM is fully updated
+            
             if (updateHistory) {
                 updateBrowserUrl(finalParams);
             }
@@ -48,14 +87,13 @@ export function fetchAndReplaceContent(
             if (loaderInstance) {
                 hideInElement(loaderInstance);
             }
-            // Уведомить пользователя об ошибке
+            // Notify user about error
             createAndShowToast("common.error_occurred_common_message", "error");
         },
         completeCallback: function () {
             if (loaderInstance) {
                 hideInElement(loaderInstance);
             }
-            // loader.hide();
         },
     });
 }

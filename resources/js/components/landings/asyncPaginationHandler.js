@@ -1,3 +1,10 @@
+import { landingsConstants } from "./constants";
+import { fetchAndReplaceContent } from "./fetchAndReplaceContnt";
+
+/**
+ * Handler for pagination links. Fetches content via AJAX instead of full page load.
+ * The fetched content will automatically re-initialize landing status tracking.
+ */
 export const asyncPaginationHandler = function (event) {
     const $link = $(this);
 

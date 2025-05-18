@@ -105,3 +105,115 @@ export function hideInElement(loaderElement) {
         }
     }
 }
+
+/**
+ * Shows a loader animation within a button element.
+ * @param {HTMLElement|string} buttonElement The button element or its ID.
+ * @param {string} [type='default'] The type of loader ('default', '_green', '_dark').
+ */
+export function showInButton(buttonElement, type = "default") {
+    let buttonEl = buttonElement;
+    if (typeof buttonElement === "string") {
+        let id = buttonElement;
+        if (id.startsWith("#")) {
+            id = id.substring(1);
+        }
+        buttonEl = document.getElementById(id);
+    } else if (buttonElement && typeof buttonElement.jquery !== "undefined") {
+        buttonEl = buttonElement[0];
+    }
+
+    if (!buttonEl) {
+        console.error("Button element not provided for loader.");
+        return;
+    }
+
+    let loaderSpan = buttonEl.querySelector("span.loader-btn");
+
+    if (!loaderSpan) {
+        // If loader span doesn't exist, create and prepend it
+        loaderSpan = document.createElement("span");
+        loaderSpan.className = "loader-btn";
+        loaderSpan.setAttribute("data-dynamically-added", "true");
+        buttonEl.prepend(loaderSpan); // Prepend to ensure it's at the start
+    }
+
+    // Store original display for the loader span itself if not already stored
+    if (!loaderSpan.hasAttribute("data-original-display")) {
+        loaderSpan.setAttribute(
+            "data-original-display",
+            loaderSpan.style.display || "none"
+        );
+    }
+    loaderSpan.style.display = "inline-block"; // Or 'flex' or whatever your loader needs
+
+    // Apply type classes
+    loaderSpan.classList.remove("_green", "_dark");
+    if (type === "_green" || type === "_dark") {
+        loaderSpan.classList.add(type);
+    }
+
+    // Find and hide other icons
+    const otherIcons = buttonEl.querySelectorAll(
+        'span[class*="icon-"]:not(.loader-btn), span[class*="fa-"]:not(.loader-btn)'
+    );
+    otherIcons.forEach((icon) => {
+        if (!icon.hasAttribute("data-original-display")) {
+            icon.setAttribute(
+                "data-original-display",
+                icon.style.display || "inline-block"
+            );
+        }
+        icon.style.display = "none";
+    });
+
+    buttonEl.disabled = true;
+}
+
+/**
+ * Hides the loader animation from a button element and restores its original content/state.
+ * @param {HTMLElement|string} buttonElement The button element or its ID.
+ */
+export function hideInButton(buttonElement) {
+    let buttonEl = buttonElement;
+    if (typeof buttonElement === "string") {
+        let id = buttonElement;
+        if (id.startsWith("#")) {
+            id = id.substring(1);
+        }
+        buttonEl = document.getElementById(id);
+    } else if (buttonElement && typeof buttonElement.jquery !== "undefined") {
+        buttonEl = buttonElement[0];
+    }
+
+    if (!buttonEl) {
+        console.error("Button element not provided for hiding loader.");
+        return;
+    }
+
+    const loaderSpan = buttonEl.querySelector("span.loader-btn");
+    if (loaderSpan) {
+        if (loaderSpan.getAttribute("data-dynamically-added") === "true") {
+            loaderSpan.remove();
+        } else {
+            loaderSpan.style.display =
+                loaderSpan.getAttribute("data-original-display") || "none";
+            loaderSpan.removeAttribute("data-original-display");
+            loaderSpan.classList.remove("_green", "_dark");
+        }
+    }
+
+    // Restore other icons
+    const otherIcons = buttonEl.querySelectorAll(
+        'span[class*="icon-"]:not(.loader-btn), span[class*="fa-"]:not(.loader-btn)'
+    );
+    otherIcons.forEach((icon) => {
+        if (icon.hasAttribute("data-original-display")) {
+            icon.style.display =
+                icon.getAttribute("data-original-display") || "inline-block";
+            icon.removeAttribute("data-original-display");
+        }
+    });
+
+    buttonEl.disabled = false;
+}

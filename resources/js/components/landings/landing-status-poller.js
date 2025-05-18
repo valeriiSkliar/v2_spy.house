@@ -1,5 +1,7 @@
 // import $ from "jquery";
 import { apiTokenHandler } from "@/components";
+import landingsStore from "./landingsStore";
+
 class LandingStatusPoller {
     constructor() {
         this.pollingInterval = 5000; // 5 seconds
@@ -7,13 +9,26 @@ class LandingStatusPoller {
     }
 
     startPolling(landingId, statusElement) {
+        // Register landing in the store
+        landingsStore.registerLanding(landingId, statusElement);
+
         // Prevent duplicate polling for the same landing
         if (this.activePolls.has(landingId)) {
             return;
         }
 
         const pollInterval = setInterval(() => {
-            this.checkStatus(landingId, statusElement)
+            // Skip this iteration if the element is no longer in the DOM
+            if (!landingsStore.isElementInDOM(landingId)) {
+                console.log(`Status element for landing ${landingId} is no longer in the DOM, stopping polling.`);
+                this.stopPolling(landingId);
+                return;
+            }
+            
+            // Get the current status element for this landing, which may have been updated
+            const currentStatusElement = landingsStore.getStatusElement(landingId);
+
+            this.checkStatus(landingId, currentStatusElement)
                 .then(async (response) => {
                     if (response.ok === false) {
                         console.error("Error polling landing status");
@@ -21,7 +36,7 @@ class LandingStatusPoller {
                         this.updateUI(
                             landingId,
                             { status: "failed" },
-                            statusElement
+                            currentStatusElement
                         );
                         // TODO: Show error toast
                         return;
@@ -29,7 +44,7 @@ class LandingStatusPoller {
                     const data = await response.json();
                     if (data.status !== "pending") {
                         this.stopPolling(landingId);
-                        this.updateUI(landingId, data, statusElement);
+                        this.updateUI(landingId, data, currentStatusElement);
                     }
                 })
                 .catch((error) => {
@@ -48,6 +63,9 @@ class LandingStatusPoller {
             clearInterval(interval);
             this.activePolls.delete(landingId);
         }
+        
+        // Also unregister from the store
+        landingsStore.unregisterLanding(landingId);
     }
 
     async checkStatus(landingId, statusElement) {
@@ -66,6 +84,12 @@ class LandingStatusPoller {
     }
 
     async updateUI(landingId, data, statusElement) {
+        // First, check if the element is still in the DOM
+        if (!landingsStore.isElementInDOM(landingId)) {
+            console.log(`Status element for landing ${landingId} is no longer in the DOM, cannot update UI.`);
+            return;
+        }
+
         const $row = statusElement.closest("tr");
         const $controls = $row.find(".table-controls");
 
@@ -100,6 +124,9 @@ class LandingStatusPoller {
         if ($deleteButton.length) {
             $deleteButton.prop("disabled", false);
         }
+
+        // Unregister from the store as we're done with this landing
+        landingsStore.unregisterLanding(landingId);
     }
 
     // Clean up all active polls
@@ -108,6 +135,9 @@ class LandingStatusPoller {
             clearInterval(interval);
         });
         this.activePolls.clear();
+        
+        // Also clear the store
+        landingsStore.clear();
     }
 }
 

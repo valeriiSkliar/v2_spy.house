@@ -1,6 +1,26 @@
 import landingStatusPoller from "./landing-status-poller";
+import landingsStore from "./landingsStore";
 
+/**
+ * Extract landing ID from delete URL
+ * @param {string} deleteUrl - URL for deleting a landing
+ * @returns {string|null} Landing ID or null if not found
+ */
+const extractLandingId = (deleteUrl) => {
+    if (!deleteUrl) return null;
+    
+    const regex = /landings\/(\d+)(?:[\/?#]|$)/;
+    const match = deleteUrl.match(regex);
+    return match && match[1] ? match[1] : null;
+};
+
+/**
+ * Initialize landing status tracking for all landings on the page
+ */
 const initializeLandingStatus = () => {
+    // Start with a clean slate - important after DOM updates
+    landingStatusPoller.cleanup();
+    
     const $landingStatusIcons = $(".landing-status-icon");
 
     if ($landingStatusIcons.length > 0) {
@@ -14,20 +34,13 @@ const initializeLandingStatus = () => {
                     .closest("tr")
                     .find(".delete-landing-button");
                 const deleteUrl = deleteButton.data("delete-url");
-                if (deleteUrl) {
-                    const regex = /landings\/(\d+)(?:[\/?#]|$)/;
-                    const match = deleteUrl.match(regex);
-                    if (match && match[1]) {
-                        const landingId = match[1];
-                        landingStatusPoller.startPolling(landingId, $element);
-                    } else {
-                        console.warn(
-                            `Could not extract landingId from delete-url: ${deleteUrl} for initial landing status. Regex was ${regex.toString()}`
-                        );
-                    }
+                const landingId = extractLandingId(deleteUrl);
+                
+                if (landingId) {
+                    landingStatusPoller.startPolling(landingId, $element);
                 } else {
                     console.warn(
-                        "delete-url not found on delete button for initial landing status."
+                        `Could not extract landingId from delete-url: ${deleteUrl} for initial landing status.`
                     );
                 }
             }
@@ -40,7 +53,9 @@ const initializeLandingStatus = () => {
     });
 };
 
-// Also handle dynamically added landings
+/**
+ * Handle dynamically added landings via event system
+ */
 const initializeDynamicLandingStatus = () => {
     $(document).on("landings:new", (event, landingElement) => {
         const $statusIcon = $(landingElement).find(".landing-status-icon");
@@ -49,20 +64,13 @@ const initializeDynamicLandingStatus = () => {
                 ".delete-landing-button"
             );
             const deleteUrl = deleteButton.data("delete-url");
-            if (deleteUrl) {
-                const regex = /landings\/(\d+)(?:[\/?#]|$)/;
-                const match = deleteUrl.match(regex);
-                if (match && match[1]) {
-                    const landingId = match[1];
-                    landingStatusPoller.startPolling(landingId, $statusIcon);
-                } else {
-                    console.warn(
-                        `Could not extract landingId from delete-url: ${deleteUrl} for dynamic landing. Regex was ${regex.toString()}`
-                    );
-                }
+            const landingId = extractLandingId(deleteUrl);
+            
+            if (landingId) {
+                landingStatusPoller.startPolling(landingId, $statusIcon);
             } else {
                 console.warn(
-                    "delete-url not found on delete button for dynamic landing."
+                    `Could not extract landingId from delete-url: ${deleteUrl} for dynamic landing.`
                 );
             }
         }

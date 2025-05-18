@@ -92,6 +92,7 @@ export const deleteLandingHandler = function (event) {
                         // queryParams.page = queryParams.page || 1;
 
                         if (ajaxUrl && targetSelector) {
+                            // This will call initializeLandingStatus() after content is replaced
                             fetchAndReplaceContent(
                                 ajaxUrl,
                                 queryParams,
@@ -132,6 +133,7 @@ export const deleteLandingHandler = function (event) {
             // Попытаемся получить текущие параметры фильтрации и номер страницы
             const currentUrl = new URL(window.location.href);
             queryParams = Object.fromEntries(currentUrl.searchParams.entries());
+            // This will call initializeLandingStatus() after content is replaced
             fetchAndReplaceContent(ajaxUrl, queryParams, targetSelector, false);
             loader.hide();
         });

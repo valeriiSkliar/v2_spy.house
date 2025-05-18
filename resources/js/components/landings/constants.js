@@ -10,4 +10,5 @@ export const landingsConstants = {
     LANDINGS_TABLE_CONTAINER_ID: "#landings-table-container",
     EMPTY_LANDINGS_ID: "empty-landings",
     CONTENT_WRAPPER_SELECTOR: "#landings-content-wrapper",
+    ADD_LANDING_SUBMIT_BUTTON_ID: "add-landing-submit-button",
 };

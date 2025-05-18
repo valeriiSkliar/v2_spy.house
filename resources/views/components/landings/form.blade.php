@@ -22,10 +22,11 @@
         <div class="text-red-600 mt-1 text-sm">{{ __('messages.' . session('message.description')) }}</div>
         @endif
     </div>
-    <div class="col-12 col-md-auto mb-10">
+    <div class="col-12 col-md-auto mb-10 ">
         <button
+            id="add-landing-submit-button"
             type="submit"
-            class="btn _flex _green w-100"
+            class="btn _flex _green w-100 d-flex justify-content-center align-items-center gap-2"
             style="height: 50px;"
             {{ $disabled ? 'disabled' : '' }}>
             <span class="icon-download mr-2"></span>

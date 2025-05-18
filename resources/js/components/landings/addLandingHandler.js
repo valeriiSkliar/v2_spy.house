@@ -1,6 +1,6 @@
 import { createAndShowToast } from "../../utils/uiHelpers";
 import { ajaxFetcher } from "../fetcher/ajax-fetcher";
-import { hideInElement, showInElement } from "../loader";
+import { hideInElement, showInButton, showInElement } from "../loader";
 import { landingsConstants } from "./constants";
 import { initializeLandingStatus } from "./initialize-landing-status";
 import landingStatusPoller from "./landing-status-poller";
@@ -25,11 +25,12 @@ export const addLandingHandler = function (event) {
     const url = $urlInput.val();
     const csrfToken = $('meta[name="csrf-token"]').attr("content");
 
-    const $submitButton = $form.find('button[type="submit"]');
+    const $submitButton = $(
+        `#${landingsConstants.ADD_LANDING_SUBMIT_BUTTON_ID}`
+    );
     const originalButtonText = $submitButton.html();
-    $submitButton
-        .prop("disabled", true)
-        .html('Добавление... <i class="fas fa-spinner fa-spin"></i>');
+    $submitButton.prop("disabled", true);
+    showInButton($submitButton);
 
     const formData = new FormData();
     formData.append("url", url);
@@ -72,8 +73,10 @@ export const addLandingHandler = function (event) {
                     if ($targetContainer.length) {
                         landingStatusPoller.cleanup(); // Stop all current polls before replacing HTML
                         $targetContainer.html(response.data.table_html);
-                        // TODO: Re-initialize any dynamic JS components within the new HTML if needed (e.g., tooltips, dropdowns)
-                        initializeLandingStatus();
+                        // Wait for DOM to fully update before re-initializing
+                        setTimeout(() => {
+                            initializeLandingStatus(); // Re-initialize all status tracking
+                        }, 100);
                     } else {
                         console.error(
                             `Target container '${targetSelector}' for full table update not found. Reloading page as a fallback.`
