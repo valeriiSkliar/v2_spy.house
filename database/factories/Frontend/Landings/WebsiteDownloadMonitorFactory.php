@@ -28,7 +28,7 @@ class WebsiteDownloadMonitorFactory extends Factory
     public function definition(): array
     {
         $status = $this->faker->randomElement(WebSiteDownloadMonitorStatus::values());
-        $status = WebSiteDownloadMonitorStatus::COMPLETED;
+        // $status = WebSiteDownloadMonitorStatus::COMPLETED;
         $outputPathUuid = Str::uuid()->toString();
 
         return [
