@@ -8,7 +8,7 @@ import landingsStore from "./landingsStore";
  */
 const extractLandingId = (deleteUrl) => {
     if (!deleteUrl) return null;
-    
+
     const regex = /landings\/(\d+)(?:[\/?#]|$)/;
     const match = deleteUrl.match(regex);
     return match && match[1] ? match[1] : null;
@@ -20,7 +20,7 @@ const extractLandingId = (deleteUrl) => {
 const initializeLandingStatus = () => {
     // Start with a clean slate - important after DOM updates
     landingStatusPoller.cleanup();
-    
+
     const $landingStatusIcons = $(".landing-status-icon");
 
     if ($landingStatusIcons.length > 0) {
@@ -29,13 +29,13 @@ const initializeLandingStatus = () => {
             const status = $element.data("status");
 
             // Only poll for pending statuses
-            if (status === "pending") {
+            if (status === "pending" || status === "in_progress") {
                 const deleteButton = $element
                     .closest("tr")
                     .find(".delete-landing-button");
                 const deleteUrl = deleteButton.data("delete-url");
                 const landingId = extractLandingId(deleteUrl);
-                
+
                 if (landingId) {
                     landingStatusPoller.startPolling(landingId, $element);
                 } else {
@@ -59,13 +59,17 @@ const initializeLandingStatus = () => {
 const initializeDynamicLandingStatus = () => {
     $(document).on("landings:new", (event, landingElement) => {
         const $statusIcon = $(landingElement).find(".landing-status-icon");
-        if ($statusIcon.length && $statusIcon.data("status") === "pending") {
+        if (
+            $statusIcon.length &&
+            ($statusIcon.data("status") === "pending" ||
+                $statusIcon.data("status") === "in_progress")
+        ) {
             const deleteButton = $(landingElement).find(
                 ".delete-landing-button"
             );
             const deleteUrl = deleteButton.data("delete-url");
             const landingId = extractLandingId(deleteUrl);
-            
+
             if (landingId) {
                 landingStatusPoller.startPolling(landingId, $statusIcon);
             } else {
