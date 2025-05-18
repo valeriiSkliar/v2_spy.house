@@ -366,4 +366,54 @@ class LandingsPageApiController extends BaseLandingsPageController
             ], 500);
         }
     }
+    
+    /**
+     * Handles AJAX request to download a landing.
+     *
+     * @param WebsiteDownloadMonitor $landing
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function ajaxDownload(WebsiteDownloadMonitor $landing, Request $request): JsonResponse
+    {
+        // Authorize the action using the policy (checks ownership and status)
+        $this->authorize('download', $landing);
+
+        try {
+            // Проверяем, что лендинг существует и имеет статус 'completed'
+            if ($landing->status !== 'completed') {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('landings.download.not_completed'),
+                ], 400);
+            }
+
+            // Проверяем, что файл архива существует
+            if (!$landing->path_to_archive || !Storage::disk('landings')->exists($landing->path_to_archive)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('landings.download.file_not_found'),
+                ], 404);
+            }
+
+            // Формируем URL для скачивания
+            $downloadUrl = route('landings.download', $landing->id);
+
+            return response()->json([
+                'success' => true,
+                'message' => __('landings.download.ready'),
+                'data' => [
+                    'download_url' => $downloadUrl,
+                    'landing_id' => $landing->id,
+                    'filename' => basename($landing->path_to_archive),
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error preparing landing download via AJAX: ' . $e->getMessage(), ['exception' => $e, 'landing_id' => $landing->id]);
+            return response()->json([
+                'success' => false,
+                'message' => __('common.error_occurred_common_message'),
+            ], 500);
+        }
+    }
 }

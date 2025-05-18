@@ -11,7 +11,7 @@
             @endif
             @if($landing['status'] === 'completed')
             <li>
-                <a href="{{ route('landings.download', $landing->id) }}" class="btn-icon icon-download"></a>
+                <button type="button" class="btn-icon icon-download download-landing-button" data-id="{{ $landing->id }}"></button>
             </li>
             @endif
             <li>

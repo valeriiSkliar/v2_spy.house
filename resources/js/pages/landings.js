@@ -14,6 +14,8 @@ import {
     deleteLandingHandler,
     fetchAndReplaceContent,
     addLandingHandler,
+    downloadLandingHandler,
+    initDownloadLandingHandler,
 } from "../components/landings";
 
 export function initDeleteLandingHandler() {
@@ -268,6 +270,7 @@ $(document).ready(function () {
     initSortAndFilterHandlers();
     initAddLandingHandler();
     initDeleteLandingHandler();
+    initDownloadLandingHandler(); // Инициализация обработчика скачивания лендинга
     initializeGlobalSelects();
     initAsyncPaginationHandler();
     initializeLandingStatus();

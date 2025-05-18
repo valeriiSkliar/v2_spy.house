@@ -6,3 +6,4 @@ export * from "./fetchAndReplaceContnt";
 export * from "./deleteLandingHandler";
 export * from "./asyncPaginationHandler";
 export * from "./addLandingHandler";
+export * from "./downloadLandingHandler";

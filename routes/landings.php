@@ -26,6 +26,7 @@ Route::middleware(['auth:sanctum', 'web'])
         Route::get('list', [LandingsPageApiController::class, 'ajaxList'])->name('list.ajax');
         Route::post('store', [LandingsPageApiController::class, 'ajaxStore'])->name('store.ajax');
         Route::delete('{landing}', [LandingsPageApiController::class, 'ajaxDestroy'])->name('destroy.ajax');
+        Route::get('{landing}/download', [LandingsPageApiController::class, 'ajaxDownload'])->name('download.ajax');
     });
 
 
