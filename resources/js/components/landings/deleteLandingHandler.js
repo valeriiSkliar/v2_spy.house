@@ -41,79 +41,87 @@ export const deleteLandingHandler = function (event) {
         .delete(deleteUrl)
         .done(function (response) {
             if (response.success) {
+                // First, remove the deleted row with animation
                 $button.closest("tr").fadeOut(300, function () {
                     $(this).remove();
-                    if (
-                        $(
-                            `${landingsConstants.LANDINGS_TABLE_CONTAINER_ID}`
-                        ).find("tbody tr").length === 0
-                    ) {
-                        console.log(
-                            "tableContainerSelector",
-                            landingsConstants.LANDINGS_TABLE_CONTAINER_ID
-                        );
-                        // Если таблица пуста после удаления на текущей странице,
-                        // проверим номер текущей страницы и перейдем на предыдущую, если мы не на первой странице
-                        const $paginationBox = $(
-                            `[${landingsConstants.PAGINATION_CONTAINER_ATTR}]`
-                        ).first();
-                        const ajaxUrl = $paginationBox.data("ajax-url");
-                        const targetSelector =
-                            $paginationBox.data("target-selector");
-                        const filterFormSelector = $paginationBox.data(
-                            "filter-form-selector"
-                        );
-
-                        let queryParams = {};
-                        // Попытаемся получить текущие параметры фильтрации и номер страницы
-                        const currentUrl = new URL(window.location.href);
-                        queryParams = Object.fromEntries(
-                            currentUrl.searchParams.entries()
-                        );
-
-                        if (filterFormSelector) {
-                            console.log(
-                                "filterFormSelector",
-                                filterFormSelector
-                            );
-                            const $filterForm = $(filterFormSelector);
-                            if ($filterForm.length) {
-                                const formValues = $filterForm.serializeArray();
-                                formValues.forEach(function (field) {
-                                    if (field.name !== "page") {
-                                        // Не перезаписываем страницу из формы, если она уже есть из URL
-                                        queryParams[field.name] = field.value;
-                                    }
-                                });
-                            }
+                    
+                    // First check if we need to navigate to a different page based on visible items
+                    const visibleItemsAfterRemoval = $(
+                        `${landingsConstants.LANDINGS_TABLE_CONTAINER_ID} tbody tr:visible`
+                    ).length;
+                    
+                    console.log("Visible items after removal:", visibleItemsAfterRemoval);
+                    
+                    // Find the pagination container to get AJAX URL and target selector
+                    const $paginationBox = $(
+                        `[${landingsConstants.PAGINATION_CONTAINER_ATTR}]`
+                    ).first();
+                    const ajaxUrl = $paginationBox.data("ajax-url") || window.routes.landingsAjaxList;
+                    const targetSelector = $paginationBox.data("target-selector") || 
+                        landingsConstants.CONTENT_WRAPPER_SELECTOR;
+                    const filterFormSelector = $paginationBox.data("filter-form-selector");
+                    
+                    // Get current filter/sort parameters
+                    let queryParams = {};
+                    const currentUrl = new URL(window.location.href);
+                    queryParams = Object.fromEntries(currentUrl.searchParams.entries());
+                    
+                    // Add filter form parameters if available
+                    if (filterFormSelector) {
+                        const $filterForm = $(filterFormSelector);
+                        if ($filterForm.length) {
+                            const formValues = $filterForm.serializeArray();
+                            formValues.forEach(function (field) {
+                                if (field.name !== "page") {
+                                    queryParams[field.name] = field.value;
+                                }
+                            });
                         }
-                        
-                        // Check if we're on page > 1 and adjust accordingly
-                        const currentPage = parseInt(queryParams.page, 10);
-                        if (currentPage && currentPage > 1) {
-                            // Navigate to the previous page
-                            queryParams.page = currentPage - 1;
-                            console.log("Last item on page removed, navigating to previous page:", queryParams.page);
-                        } else {
-                            // We're on page 1 or page parameter isn't set, stay on page 1
-                            queryParams.page = 1;
-                        }
-
-                        if (ajaxUrl && targetSelector) {
-                            // This will call initializeLandingStatus() after content is replaced
-                            fetchAndReplaceContent(
-                                ajaxUrl,
-                                queryParams,
-                                targetSelector,
-                                true // true - обновлять историю браузера, чтобы URL отражал текущую страницу
-                            );
-                        }
+                    }
+                    
+                    // Get current pagination status
+                    let currentPage = parseInt(queryParams.page, 10) || 1;
+                    const perPage = parseInt(queryParams.per_page, 10) || 12;
+                    
+                    // Get pagination data from server response or use defaults
+                    const paginationData = response.pagination || {};
+                    const totalItems = paginationData.total_items || 0;
+                    const lastPage = paginationData.last_page || Math.max(1, Math.ceil(totalItems / perPage));
+                    
+                    let targetPage = currentPage;
+                    
+                    // If there are no visible items after removal and we're not on page 1,
+                    // navigate to the previous page
+                    if (visibleItemsAfterRemoval === 0 && currentPage > 1) {
+                        targetPage = currentPage - 1;
+                        console.log("No visible items left, navigating to previous page:", targetPage);
+                    }
+                    
+                    // Make sure target page doesn't exceed last page and is at least 1
+                    targetPage = Math.min(targetPage, lastPage);
+                    targetPage = Math.max(targetPage, 1);
+                    
+                    console.log("Target page after calculations:", targetPage);
+                    
+                    // Set the target page in query params
+                    queryParams.page = targetPage;
+                    
+                    // Always refresh content to update pagination
+                    if (ajaxUrl && targetSelector) {
+                        console.log("Refreshing content with page:", targetPage);
+                        fetchAndReplaceContent(
+                            ajaxUrl,
+                            queryParams,
+                            targetSelector,
+                            true // Update browser URL
+                        );
                     }
                 });
                 createAndShowToast(
                     response.message || "Лендинг успешно удален.",
                     "success"
                 );
+                hideInButton($button);
             } else {
                 createAndShowToast(
                     response.message || "Не удалось удалить лендинг.",
@@ -133,10 +141,6 @@ export const deleteLandingHandler = function (event) {
                 errorMessage = jqXHR.responseJSON.message;
             }
             createAndShowToast(errorMessage, "error");
-        })
-        .always(function () {
-            // Just hide the button loader - content update is already handled in the success callback
-            // when we check if the table is empty
             hideInButton($button);
         });
 };

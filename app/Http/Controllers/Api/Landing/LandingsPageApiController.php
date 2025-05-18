@@ -195,7 +195,7 @@ class LandingsPageApiController extends BaseLandingsPageController
             // For pagination calculations, get the total count of items 
             $totalCount = WebsiteDownloadMonitor::where('user_id', Auth::id())->count();
             $responseData['total_items'] = $totalCount;
-            
+
             // Calculate the last page number
             $lastPage = ceil($totalCount / $perPage);
             $responseData['last_page'] = $lastPage;
@@ -210,7 +210,7 @@ class LandingsPageApiController extends BaseLandingsPageController
             } else {
                 // Not the first landing, send only the new row
                 Log::info('Additional landing for user. Preparing row HTML.', ['user_id' => Auth::id(), 'monitor_id' => $monitor->id]);
-                
+
                 // For items that exceed the per_page limit, we need to return complete table HTML
                 // to properly set up pagination
                 $currentPage = $request->input('page', 1);
@@ -219,15 +219,15 @@ class LandingsPageApiController extends BaseLandingsPageController
                     ->skip(($currentPage - 1) * $perPage)
                     ->take($perPage + 1) // Check if we have more than perPage items
                     ->count();
-                
+
                 if ($itemsOnCurrentPage > $perPage) {
                     // We've exceeded per_page limit, send the full table HTML with updated pagination
                     Log::info('Item count exceeds per_page limit. Preparing full table HTML.', [
-                        'user_id' => Auth::id(), 
+                        'user_id' => Auth::id(),
                         'items_on_page' => $itemsOnCurrentPage,
                         'per_page' => $perPage
                     ]);
-                    
+
                     $tableData = parent::getData($request);
                     $fullTableHtml = $this->renderContentWrapperView($tableData);
                     $responseData['table_html'] = $fullTableHtml;
@@ -330,11 +330,33 @@ class LandingsPageApiController extends BaseLandingsPageController
                     Storage::disk('landings')->delete($landing->path_to_archive);
                 }
             }
+            $userId = Auth::id();
             $landing->delete();
+
+            // Get current pagination stats after deletion
+            $perPage = request()->input('per_page', 12);
+            $totalItems = WebsiteDownloadMonitor::where('user_id', $userId)->count();
+            $lastPage = max(1, ceil($totalItems / $perPage));
+
+            // Calculate remaining items on current page
+            $currentPage = request()->input('page', 1);
+            $offset = ($currentPage - 1) * $perPage;
+            $itemsOnCurrentPage = WebsiteDownloadMonitor::where('user_id', $userId)
+                ->orderBy(request()->input('sort', 'created_at'), request()->input('direction', 'desc'))
+                ->skip($offset)
+                ->limit($perPage)
+                ->count();
 
             return response()->json([
                 'success' => true,
                 'message' => __('landings.successfully_deleted_message_text'),
+                'pagination' => [
+                    'total_items' => $totalItems,
+                    'per_page' => $perPage,
+                    'current_page' => $currentPage,
+                    'last_page' => $lastPage,
+                    'items_on_current_page' => $itemsOnCurrentPage
+                ]
             ]);
         } catch (\Exception $e) {
             Log::error('Error deleting landing via AJAX: ' . $e->getMessage(), ['exception' => $e]);

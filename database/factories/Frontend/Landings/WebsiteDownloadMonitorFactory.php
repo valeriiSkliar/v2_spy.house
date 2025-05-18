@@ -28,6 +28,7 @@ class WebsiteDownloadMonitorFactory extends Factory
     public function definition(): array
     {
         $status = $this->faker->randomElement(WebSiteDownloadMonitorStatus::values());
+        $status = WebSiteDownloadMonitorStatus::COMPLETED;
         $outputPathUuid = Str::uuid()->toString();
 
         return [
@@ -37,7 +38,7 @@ class WebsiteDownloadMonitorFactory extends Factory
             'progress' => $status === WebSiteDownloadMonitorStatus::COMPLETED ? 100 : ($status === WebSiteDownloadMonitorStatus::PENDING ? $this->faker->numberBetween(1, 99) : 0),
             'error' => $status === WebSiteDownloadMonitorStatus::FAILED ? $this->faker->sentence : null,
             'user_id' => User::factory(),
-            'started_at' => $status !== WebSiteDownloadMonitorStatus::PENDING ? $this->faker->dateTimeThisMonth : null,
+            'started_at' => $status !== WebSiteDownloadMonitorStatus::PENDING ? null : $this->faker->dateTimeThisMonth,
             'completed_at' => in_array($status, [WebSiteDownloadMonitorStatus::COMPLETED, WebSiteDownloadMonitorStatus::FAILED]) ? $this->faker->dateTimeThisMonth : null,
         ];
     }
