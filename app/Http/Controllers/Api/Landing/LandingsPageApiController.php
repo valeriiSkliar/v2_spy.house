@@ -390,6 +390,18 @@ class LandingsPageApiController extends BaseLandingsPageController
 
             // Проверяем, что файл архива существует
             if (!$landing->path_to_archive || !Storage::disk('landings')->exists($landing->path_to_archive)) {
+                // Обновляем статус лендинга на "failed"
+                $landing->update([
+                    'status' => 'failed',
+                    'error' => 'File not found on server',
+                    'completed_at' => now()
+                ]);
+                
+                Log::warning('Landing file not found, status updated to failed', [
+                    'landing_id' => $landing->id,
+                    'path_to_archive' => $landing->path_to_archive
+                ]);
+                
                 return response()->json([
                     'success' => false,
                     'message' => __('landings.download.file_not_found'),

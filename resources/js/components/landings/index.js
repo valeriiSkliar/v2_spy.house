@@ -7,3 +7,4 @@ export * from "./deleteLandingHandler";
 export * from "./asyncPaginationHandler";
 export * from "./addLandingHandler";
 export * from "./downloadLandingHandler";
+export * from "./updateLandingStatus";

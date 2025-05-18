@@ -1,5 +1,6 @@
 import { landingsConstants } from "./constants";
 import { createAndShowToast } from "../../utils/uiHelpers";
+import { markLandingAsFailed } from "./updateLandingStatus";
 
 /**
  * Обработчик для асинхронного скачивания лендинга
@@ -62,6 +63,9 @@ export const downloadLandingHandler = function (event) {
                 // Показываем уведомление об ошибке
                 createAndShowToast(errorMessage, "error");
                 
+                // Обновляем статус лендинга на "failed"
+                markLandingAsFailed(landingId);
+                
                 console.error(`Ошибка скачивания лендинга ID=${landingId}:`, response);
             }
         },
@@ -87,6 +91,9 @@ export const downloadLandingHandler = function (event) {
             
             // Показываем уведомление об ошибке
             createAndShowToast(errorMessage, "error");
+            
+            // Обновляем статус лендинга на "failed"
+            markLandingAsFailed(landingId);
             
             console.error(`Ошибка скачивания лендинга ID=${landingId}:`, { status, error, xhr });
         },
