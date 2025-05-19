@@ -190,3 +190,17 @@ html {
     background: #c93d3d;
     color: #fff;
 }
+
+// Icon reload animation
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.icon-reload {
+    // display: inline-block;
+}
+
+.icon-reload.spinning:before {
+    animation: spin 1s linear infinite;
+}
