@@ -1,5 +1,4 @@
 import { createAndShowToast } from "../../utils/uiHelpers";
-import { apiTokenHandler } from "../api-token/api-token";
 import loader from "../loader";
 import { ajaxFetcher } from "../fetcher/ajax-fetcher";
 import { config } from "../../config";
@@ -52,59 +51,29 @@ async function submitFormHandler(e) {
             const formContainer = profileFormElements.form;
             if (formContainer && response.user) {
                 // Update messenger field values
-                if (response.user.telegram !== undefined) {
-                    profileFormElements.telegram.val(response.user.telegram);
-                    profileFormElements.profileMessangerSelectOptions
-                        .filter('[data-value="telegram"]')
-                        .attr("data-phone", response.user.telegram);
-                }
-                if (response.user.viber_phone !== undefined) {
-                    profileFormElements.viberPhone.val(
-                        response.user.viber_phone
-                    );
-                    profileFormElements.profileMessangerSelectOptions
-                        .filter('[data-value="viber_phone"]')
-                        .attr("data-phone", response.user.viber_phone);
-                }
-                if (response.user.whatsapp_phone !== undefined) {
-                    profileFormElements.whatsappPhone.val(
-                        response.user.whatsapp_phone
-                    );
-                    profileFormElements.profileMessangerSelectOptions
-                        .filter('[data-value="whatsapp_phone"]')
-                        .attr("data-phone", response.user.whatsapp_phone);
-                }
-
-                // Update visible messenger field based on which one is set
-                const visibleInput = profileFormElements.visibleValue;
-                const currentType = visibleInput.data("type");
-                if (
-                    currentType === "telegram" &&
-                    response.user.telegram !== undefined
-                ) {
-                    visibleInput.val(response.user.telegram);
-                    updateSelectedMessengerState(
-                        "telegram",
-                        response.user.telegram
-                    );
-                } else if (
-                    currentType === "viber_phone" &&
-                    response.user.viber_phone !== undefined
-                ) {
-                    visibleInput.val(response.user.viber_phone);
-                    updateSelectedMessengerState(
-                        "viber_phone",
-                        response.user.viber_phone
-                    );
-                } else if (
-                    currentType === "whatsapp_phone" &&
-                    response.user.whatsapp_phone !== undefined
-                ) {
-                    visibleInput.val(response.user.whatsapp_phone);
-                    updateSelectedMessengerState(
-                        "whatsapp_phone",
-                        response.user.whatsapp_phone
-                    );
+                if (response.user.messenger_type !== undefined && response.user.messenger_contact !== undefined) {
+                    profileFormElements.messengerType.val(response.user.messenger_type);
+                    profileFormElements.messengerContact.val(response.user.messenger_contact);
+                    
+                    // Update selected messenger in dropdown
+                    profileFormElements.profileMessangerSelectOptions.removeClass('is-selected');
+                    const selectedOption = profileFormElements.profileMessangerSelectOptions
+                        .filter(`[data-value="${response.user.messenger_type}"]`);
+                    
+                    if (selectedOption.length) {
+                        selectedOption.addClass('is-selected');
+                        
+                        // Update trigger image
+                        const imgSrc = selectedOption.find("img").attr("src");
+                        profileFormElements.profileMessangerSelectTrigger.html(`
+                            <span class="base-select__value">
+                                <span class="base-select__img">
+                                    <img src="${imgSrc}" alt="${response.user.messenger_type}">
+                                </span>
+                            </span>
+                            <span class="base-select__arrow"></span>
+                        `);
+                    }
                 }
 
                 // Update other form fields

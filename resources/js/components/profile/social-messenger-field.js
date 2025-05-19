@@ -9,8 +9,8 @@ const initSocialMessengerField = () => {
     // Object with placeholders for each messenger type
     const placeholders = {
         telegram: "@username",
-        viber_phone: "+1 (999) 999-99-99",
-        whatsapp_phone: "+1 (999) 999-99-99",
+        viber: "+1 (999) 999-99-99",
+        whatsapp: "+1 (999) 999-99-99",
     };
 
     // Function to validate messenger values
@@ -20,8 +20,8 @@ const initSocialMessengerField = () => {
         switch (type) {
             case "telegram":
                 return /^@[A-Za-z0-9_]{5,32}$/.test(value);
-            case "viber_phone":
-            case "whatsapp_phone":
+            case "viber":
+            case "whatsapp":
                 const cleanValue = value.replace(/[^0-9+]/g, "");
                 return /^\+?[0-9]{10,15}$/.test(cleanValue);
             default:
@@ -29,110 +29,72 @@ const initSocialMessengerField = () => {
         }
     }
 
-    // Function to update hidden field values
-    function updateHiddenField() {
-        const value = profileFormElements.visibleValue.val();
-        const type = profileFormElements.visibleValue.data("type");
-
-        // Clear all hidden fields
-        profileFormElements.telegram.val("");
-        profileFormElements.viberPhone.val("");
-        profileFormElements.whatsappPhone.val("");
-
-        // Update the value of the corresponding hidden field
-        if (type === "telegram") {
-            profileFormElements.telegram.val(value);
-        } else if (type === "viber_phone") {
-            profileFormElements.viberPhone.val(value);
-        } else if (type === "whatsapp_phone") {
-            profileFormElements.whatsappPhone.val(value);
-        }
+    if (!profileFormElements.profileMessangerSelect.length) {
+        return;
     }
 
-    // Handler for messenger selection in dropdown
-    // Handler for messenger selection in dropdown
-    profileFormElements.profileMessangerSelectOptions
-        .off("click")
-        .on("click", function () {
-            const selectedValue = $(this).data("value");
-            const selectedPhone = $(this).attr("data-phone"); // <--- ИЗМЕНЕНИЕ ЗДЕСЬ
+    // Toggle dropdown on trigger click
+    profileFormElements.profileMessangerSelectTrigger.off("click").on("click", function () {
+        profileFormElements.profileMessangerSelect
+            .find(".base-select__dropdown")
+            .slideToggle(200);
+    });
 
-            // Update value in visible input field
-            profileFormElements.visibleValue.val(selectedPhone);
+    // Handle option selection
+    profileFormElements.profileMessangerSelectOptions.off("click").on("click", function () {
+        const selectedOption = $(this);
+        const selectedType = selectedOption.data("value");
 
-            // Update data-type attribute on visible input
-            profileFormElements.visibleValue.data("type", selectedValue); // Можно оставить .data() если уверены что запись и чтение не конфликтуют,
-            // либо для полной согласованности также использовать .attr() для data-type
-            profileFormElements.visibleValue.attr("data-type", selectedValue);
+        // Update selected class
+        profileFormElements.profileMessangerSelectOptions.removeClass("is-selected");
+        selectedOption.addClass("is-selected");
 
-            // Update placeholder based on selected messenger
-            profileFormElements.visibleValue.attr(
-                "placeholder",
-                placeholders[selectedValue]
-            );
-
-            // Update selected class in dropdown
-            profileFormElements.profileMessangerSelectOptions.removeClass(
-                "is-selected"
-            );
-            $(this).addClass("is-selected");
-
-            // Update image in trigger
-            const imgSrc = $(this).find("img").attr("src");
-            const $trigger = profileFormElements.profileMessangerSelectTrigger;
-
-            // Update trigger structure
-            $trigger.html(`
-        <span class="base-select__value">
-            <span class="base-select__img">
-                <img src="${imgSrc}" alt="${selectedValue}">
+        // Update trigger image
+        const imgSrc = selectedOption.find("img").attr("src");
+        profileFormElements.profileMessangerSelectTrigger.html(`
+            <span class="base-select__value">
+                <span class="base-select__img">
+                    <img src="${imgSrc}" alt="${selectedType}">
+                </span>
             </span>
-        </span>
-        <span class="base-select__arrow"></span>
-    `);
+            <span class="base-select__arrow"></span>
+        `);
 
-            // Close dropdown
-            profileFormElements.profileMessangerSelectDropdown.hide();
+        // Update messenger type hidden input
+        profileFormElements.messengerType.val(selectedType);
 
-            // Update hidden field value
-            updateHiddenField();
-        });
+        // Update placeholder based on selected type
+        profileFormElements.messengerContact.attr("placeholder", placeholders[selectedType] || "@username");
 
-    // Handler for input in visible field
-    profileFormElements.visibleValue.off("input").on("input", function () {
-        const type = $(this).data("type");
+        // Close dropdown
+        profileFormElements.profileMessangerSelect
+            .find(".base-select__dropdown")
+            .slideUp(200);
+    });
+
+    // Handle input validation
+    profileFormElements.messengerContact.off("input").on("input", function () {
         const value = $(this).val();
+        const type = profileFormElements.messengerType.val();
 
         if (!validateMessengerValue(type, value)) {
             $(this).addClass("is-invalid");
         } else {
             $(this).removeClass("is-invalid");
         }
-
-        updateHiddenField();
     });
 
-    // Toggle dropdown on trigger click
-    profileFormElements.profileMessangerSelectTrigger
-        .off("click")
-        .on("click", function () {
-            profileFormElements.profileMessangerSelectDropdown.toggle();
-        });
-
     // Close dropdown when clicking outside
-    $(document)
-        .off("click.messengerDropdown")
-        .on("click.messengerDropdown", function (e) {
-            if (
-                !$(e.target).closest(profileFormElements.profileMessangerSelect)
-                    .length
-            ) {
-                profileFormElements.profileMessangerSelectDropdown.hide();
-            }
-        });
-
-    // Initialize on page load
-    updateHiddenField();
+    $(document).off("click.messengerDropdown").on("click.messengerDropdown", function (e) {
+        if (
+            !profileFormElements.profileMessangerSelect.is(e.target) &&
+            profileFormElements.profileMessangerSelect.has(e.target).length === 0
+        ) {
+            profileFormElements.profileMessangerSelect
+                .find(".base-select__dropdown")
+                .slideUp(200);
+        }
+    });
 };
 
 export { initSocialMessengerField };

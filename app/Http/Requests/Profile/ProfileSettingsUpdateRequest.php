@@ -36,21 +36,21 @@ class ProfileSettingsUpdateRequest extends BaseRequest
                 switch ($messengerType) {
                     case 'telegram':
                         if ($value && !$this->validation_telegram_login($value)) {
-                            $fail(__('profile.invalid_telegram_username_format'));
+                            $fail('Неверный формат имени пользователя Telegram. Должен начинаться с @ и содержать 5-32 символа (буквы, цифры, подчеркивание).');
                         }
                         break;
                     case 'viber':
                         if ($value && !$this->validation_viber_identifier($value)) {
-                            $fail(__('profile.invalid_viber_phone_number_format'));
+                            $fail('Неверный формат номера телефона Viber. Должен содержать 10-15 цифр.');
                         }
                         break;
                     case 'whatsapp':
                         if ($value && !$this->validation_whatsapp_identifier($value)) {
-                            $fail(__('profile.invalid_whatsapp_phone_number_format'));
+                            $fail('Неверный формат номера телефона WhatsApp. Должен содержать 10-15 цифр.');
                         }
                         break;
                     default:
-                        $fail(__('profile.invalid_messenger_type'));
+                        $fail('Неверный тип мессенджера. Должен быть один из: telegram, viber, whatsapp.');
                         break;
                 }
             }],
@@ -58,22 +58,6 @@ class ProfileSettingsUpdateRequest extends BaseRequest
             'experience' => ['nullable', 'string', 'in:' . implode(',', UserExperience::names())],
             // Use values instead of names for validation
             'scope_of_activity' => ['nullable', 'string', 'in:' . implode(',', UserScopeOfActivity::names())],
-            // Avatar is now handled by the API endpoint
-            'telegram' => ['nullable', 'string', function ($attribute, $value, $fail) {
-                if ($value && !$this->validation_telegram_login($value)) {
-                    $fail(__('profile.invalid_telegram_username_format'));
-                }
-            }],
-            'viber_phone' => ['nullable', 'string', function ($attribute, $value, $fail) {
-                if ($value && !$this->validation_viber_identifier($value)) {
-                    $fail(__('profile.invalid_viber_phone_number_format'));
-                }
-            }],
-            'whatsapp_phone' => ['nullable', 'string', function ($attribute, $value, $fail) {
-                if ($value && !$this->validation_whatsapp_identifier($value)) {
-                    $fail(__('profile.invalid_whatsapp_phone_number_format'));
-                }
-            }],
         ];
     }
 
@@ -87,7 +71,7 @@ class ProfileSettingsUpdateRequest extends BaseRequest
         }
 
         // Исключаем пустые значения
-        $fields = ['telegram', 'viber_phone', 'whatsapp_phone', 'login', 'experience', 'scope_of_activity'];
+        $fields = ['messenger_type', 'messenger_contact', 'login', 'experience', 'scope_of_activity'];
         foreach ($fields as $field) {
             if (isset($validated[$field]) && empty(trim($validated[$field]))) {
                 unset($validated[$field]);
@@ -100,19 +84,22 @@ class ProfileSettingsUpdateRequest extends BaseRequest
     public function messages(): array
     {
         return [
-            'login.required' => __('profile.login_required'),
-            'login.string' => __('profile.login_must_be_a_string'),
-            'login.max' => __('profile.login_must_be_less_than_255_characters'),
-            'login.regex' => __('profile.login_must_contain_only_latin_letters_numbers_and_underscore'),
-            'experience.required' => __('profile.experience_required'),
-            'experience.string' => __('profile.experience_must_be_a_string'),
-            'experience.in' => __('profile.invalid_experience_value'),
-            'scope_of_activity.required' => __('profile.scope_of_activity_required'),
-            'scope_of_activity.string' => __('profile.scope_of_activity_must_be_a_string'),
-            'scope_of_activity.in' => __('profile.invalid_scope_of_activity_value'),
-            'telegram.string' => __('profile.telegram_username_must_be_a_string'),
-            'viber_phone.string' => __('profile.viber_phone_number_must_be_a_string'),
-            'whatsapp_phone.string' => __('profile.whatsapp_phone_number_must_be_a_string'),
+            'login.required' => 'Логин обязателен',
+            'login.string' => 'Логин должен быть строкой',
+            'login.max' => 'Логин не должен превышать 255 символов',
+            'login.regex' => 'Логин должен содержать только латинские буквы, цифры и символ подчеркивания',
+            'login.unique' => 'Этот логин уже занят',
+            'messenger_type.required' => 'Тип мессенджера обязателен',
+            'messenger_type.string' => 'Тип мессенджера должен быть строкой',
+            'messenger_type.in' => 'Выбран недопустимый тип мессенджера',
+            'messenger_contact.required' => 'Контакт мессенджера обязателен',
+            'messenger_contact.string' => 'Контакт мессенджера должен быть строкой',
+            'experience.required' => 'Опыт обязателен',
+            'experience.string' => 'Опыт должен быть строкой',
+            'experience.in' => 'Выбрано недопустимое значение опыта',
+            'scope_of_activity.required' => 'Сфера деятельности обязательна',
+            'scope_of_activity.string' => 'Сфера деятельности должна быть строкой',
+            'scope_of_activity.in' => 'Выбрано недопустимое значение сферы деятельности',
         ];
     }
 
@@ -131,16 +118,12 @@ class ProfileSettingsUpdateRequest extends BaseRequest
             $this->merge(['scope_of_activity' => $this->sanitizeInput($this->input('scope_of_activity'))]);
         }
 
-        if ($this->has('telegram') && $this->input('telegram') !== null) {
-            $this->merge(['telegram' => $this->sanitizeInput($this->input('telegram'))]);
+        if ($this->has('messenger_type') && $this->input('messenger_type') !== null) {
+            $this->merge(['messenger_type' => $this->sanitizeInput($this->input('messenger_type'))]);
         }
 
-        if ($this->has('viber_phone') && $this->input('viber_phone') !== null) {
-            $this->merge(['viber_phone' => $this->sanitizeInput($this->input('viber_phone'))]);
-        }
-
-        if ($this->has('whatsapp_phone') && $this->input('whatsapp_phone') !== null) {
-            $this->merge(['whatsapp_phone' => $this->sanitizeInput($this->input('whatsapp_phone'))]);
+        if ($this->has('messenger_contact') && $this->input('messenger_contact') !== null) {
+            $this->merge(['messenger_contact' => $this->sanitizeInput($this->input('messenger_contact'))]);
         }
     }
 

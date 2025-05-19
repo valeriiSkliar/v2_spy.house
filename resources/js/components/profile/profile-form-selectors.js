@@ -1,8 +1,6 @@
 export const profileFormSelectors = {
-    telegram: 'input[name="telegram"]',
-    viberPhone: 'input[name="viber_phone"]',
-    whatsappPhone: 'input[name="whatsapp_phone"]',
-    visibleValue: 'input[name="visible_value"]',
+    messengerType: 'input[name="messenger_type"]',
+    messengerContact: 'input[name="messenger_contact"]',
     profileMessangerSelect: "#profile-messanger-select",
     profileMessangerSelectTrigger:
         "#profile-messanger-select .base-select__trigger",

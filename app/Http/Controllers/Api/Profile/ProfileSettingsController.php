@@ -39,15 +39,13 @@ class ProfileSettingsController extends BaseProfileController
             $user = $request->user();
             $validatedData = $request->validated();
 
-            // Special handling for messenger fields to prevent empty values overwrites
-            $messengerFields = ['telegram', 'viber_phone', 'whatsapp_phone'];
-
-            // Process each messenger field
-            foreach ($messengerFields as $field) {
-                // Only update if the field is present in the request and not empty
-                if (!isset($validatedData[$field]) || $validatedData[$field] === '') {
-                    // Remove from validated data to prevent overwriting with null/empty
-                    unset($validatedData[$field]);
+            // Проверяем наличие обязательных полей мессенджера
+            if (isset($validatedData['messenger_type']) && isset($validatedData['messenger_contact'])) {
+                // Проверяем, что значения не пустые
+                if (empty($validatedData['messenger_type']) || empty($validatedData['messenger_contact'])) {
+                    // Если одно из полей пустое, удаляем оба поля из валидированных данных
+                    unset($validatedData['messenger_type']);
+                    unset($validatedData['messenger_contact']);
                 }
             }
 
@@ -58,14 +56,13 @@ class ProfileSettingsController extends BaseProfileController
             // Return success response with updated user data
             return response()->json([
                 'success' => true,
-                'message' => __('profile.personal_info.update_success'),
+                'message' => 'Настройки профиля успешно обновлены',
                 'user' => [
                     'login' => $user->login,
                     'experience' => $user->experience,
                     'scope_of_activity' => $user->scope_of_activity,
-                    'telegram' => $user->telegram,
-                    'viber_phone' => $user->viber_phone,
-                    'whatsapp_phone' => $user->whatsapp_phone,
+                    'messenger_type' => $user->messenger_type,
+                    'messenger_contact' => $user->messenger_contact,
                 ],
             ]);
         } catch (\Exception $e) {
@@ -76,7 +73,7 @@ class ProfileSettingsController extends BaseProfileController
 
             return response()->json([
                 'success' => false,
-                'message' => __('profile.personal_info.update_error'),
+                'message' => 'Произошла ошибка при обновлении настроек профиля',
             ], 500);
         }
     }

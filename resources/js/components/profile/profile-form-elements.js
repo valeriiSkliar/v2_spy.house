@@ -1,10 +1,8 @@
 import { profileFormSelectors } from "./profile-form-selectors";
 
 export const profileFormElements = {
-    telegram: null,
-    viberPhone: null,
-    whatsappPhone: null,
-    visibleValue: null,
+    messengerType: null,
+    messengerContact: null,
     profileMessangerSelect: null,
     profileMessangerSelectTrigger: null,
     profileMessangerSelectDropdown: null,
@@ -17,10 +15,8 @@ export const profileFormElements = {
 };
 
 export const initProfileFormElements = () => {
-    profileFormElements.telegram = $(profileFormSelectors.telegram);
-    profileFormElements.viberPhone = $(profileFormSelectors.viberPhone);
-    profileFormElements.whatsappPhone = $(profileFormSelectors.whatsappPhone);
-    profileFormElements.visibleValue = $(profileFormSelectors.visibleValue);
+    profileFormElements.messengerType = $(profileFormSelectors.messengerType);
+    profileFormElements.messengerContact = $(profileFormSelectors.messengerContact);
     profileFormElements.profileMessangerSelect = $(
         profileFormSelectors.profileMessangerSelect
     );
