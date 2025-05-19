@@ -3,7 +3,7 @@
         @if($landings->count() > 0)
         <table  class="table no-wrap-table">
             <x-landings.table.head
-                :headers="[ 'landings.table.header.downloadLink', 'landings.table.header.dateAdded', '']" />
+                :headers="[ 'landings.table.header.id',  'landings.table.header.dateAdded', 'landings.table.header.downloadLink','']" />
             <tbody id="landings-table-body">
                 @foreach($landings as $landing)
                 <x-landings.table.row :landing="$landing" />
