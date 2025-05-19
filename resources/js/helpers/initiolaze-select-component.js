@@ -1,6 +1,6 @@
 import { setupOutsideClickListener } from "./outside-click";
 import { logger, loggerError } from "./logger";
-import { updateUrlWithRedirect } from "./update-browser-url";
+import { buildQueryParams, updateUrlWithRedirect } from "./update-browser-url";
 
 /**
  * Обновляет отображаемую метку выбранного элемента
@@ -33,7 +33,7 @@ function updateValueElement(selectors, selectedValue) {
  * @param {string} selectedOrder - Выбранный порядок сортировки
  */
 function updateOrderElement(selectors, selectedOrder) {
-    if (selectors.orderElement) {
+    if (selectors.orderElement && selectors.orderElement.length) {
         selectors.orderElement.data("order", selectedOrder);
         if (selectors.orderElement.is("input")) {
             selectors.orderElement.val(selectedOrder).trigger("change");
@@ -49,8 +49,10 @@ function updateOrderElement(selectors, selectedOrder) {
  */
 function getOrderValue($option, defaultValue = "asc") {
     const order = $option.attr("data-order");
-    return order !== undefined && order !== null ? order : defaultValue;
+    return (order !== undefined && order !== null && order !== '') ? order : defaultValue;
 }
+
+
 
 export function initializeSelectComponent(containerId, config) {
     if (!containerId || !config || !config.selectors || !config.params) {
@@ -117,45 +119,8 @@ export function initializeSelectComponent(containerId, config) {
 
             // Check if custom AJAX handler is provided
             if (config.ajaxHandler && typeof config.ajaxHandler === 'function') {
-                // Reset page if configured
-                const queryParams = {};
-                
-                // Проверяем и логируем значения перед их использованием
-                logger("Config params:", config.params);
-                logger("Value param name:", config.params.valueParam);
-                logger("Order param name:", config.params.orderParam);
-                
-                // Проверяем, что selectedValue имеет значение
-                if (selectedValue) {
-                    queryParams[config.params.valueParam] = selectedValue;
-                } else {
-                    loggerError("Ошибка: selectedValue не определен");
-                    // Используем значение из HTML напрямую
-                    const rawValue = $option.attr("data-value");
-                    if (rawValue) {
-                        queryParams[config.params.valueParam] = rawValue;
-                        logger("Используем значение из data-value:", rawValue);
-                    }
-                }
-                
-                // Получаем значение order из текущего выбранного элемента
-                if (selectors.orderElement && config.params.orderParam) {
-                    if (selectedOrder) {
-                        queryParams[config.params.orderParam] = selectedOrder;
-                    } else {
-                        loggerError("Ошибка: selectedOrder не определен");
-                        // Используем значение из HTML напрямую
-                        const rawOrder = $option.attr("data-order");
-                        if (rawOrder) {
-                            queryParams[config.params.orderParam] = rawOrder;
-                            logger("Используем значение из data-order:", rawOrder);
-                        }
-                    }
-                }
-                
-                if (config.resetPage) {
-                    queryParams.page = 1;
-                }
+                // Формируем параметры запроса с помощью вспомогательной функции
+                const queryParams = buildQueryParams($option, selectedValue, selectedOrder, config.params, config.resetPage);
                 
                 // Выводим отладочную информацию
                 logger("Передаем в AJAX обработчик:", queryParams);

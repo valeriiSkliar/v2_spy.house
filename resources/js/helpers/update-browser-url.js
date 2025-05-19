@@ -90,4 +90,43 @@ function updateUrlWithRedirect(valueParam, selectedValue, orderParam, selectedOr
     }
 }
 
-export { updateBrowserUrl, updateUrlWithRedirect };
+/**
+ * Формирует объект параметров запроса для AJAX-обработчика
+ * @param {jQuery} $option - jQuery-элемент выбранной опции
+ * @param {string} selectedValue - Выбранное значение
+ * @param {string} selectedOrder - Выбранный порядок сортировки
+ * @param {Object} params - Параметры конфигурации (valueParam, orderParam)
+ * @param {boolean} resetPage - Флаг сброса страницы
+ * @returns {Object} - Объект с параметрами запроса
+ */
+function buildQueryParams($option, selectedValue, selectedOrder, params, resetPage = false) {
+    const queryParams = {};
+    
+    // Добавляем параметр значения
+    if (params.valueParam) {
+        if (selectedValue) {
+            queryParams[params.valueParam] = selectedValue;
+        } else {
+            // Используем значение из HTML напрямую
+            const rawValue = $option.attr("data-value");
+            if (rawValue) {
+                queryParams[params.valueParam] = rawValue;
+                logger("Используем значение из data-value:", rawValue);
+            }
+        }
+    }
+    
+    // Добавляем параметр порядка сортировки
+    if (params.orderParam && selectedOrder) {
+        queryParams[params.orderParam] = selectedOrder;
+    }
+    
+    // Сбрасываем страницу, если нужно
+    if (resetPage) {
+        queryParams.page = 1;
+    }
+    
+    return queryParams;
+}
+
+export { updateBrowserUrl, updateUrlWithRedirect, buildQueryParams };
