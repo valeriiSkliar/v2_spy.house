@@ -12,7 +12,7 @@
     <div class="col-12 col-lg-auto mr-auto">
         <h1>{{ __('landings.index.title') }}</h1>
     </div>
-    <form id="landings-sort-form" class="d-flex flex-wrap" data-ajax-enabled="true">
+    <form id="landings-sort-form" class="d-flex flex-wrap" data-form-type="ajax" data-update-method="ajax">
         <div class="col-12 col-md-6 col-lg-auto mb-15">
             <div class="base-select-icon">
                 <x-common.base-select

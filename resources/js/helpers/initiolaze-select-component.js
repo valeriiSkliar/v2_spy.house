@@ -53,19 +53,16 @@ function getOrderValue($option, defaultValue = "asc") {
 }
 
 export function initializeSelectComponent(containerId, config) {
-    // Проверка входных параметров
     if (!containerId || !config || !config.selectors || !config.params) {
-        loggerError('Неверные параметры containerId или config');
+        loggerError(`Неверные параметры инициализации: containerId, config, config.selectors или config.params отсутствуют.`);
         return false;
     }
-    
     const container = $(containerId);
     if (!container.length) {
-        loggerError(`Контейнер ${containerId} не найден`);
+        loggerError(`Контейнер с селектором ${containerId} не найден.`);
         return false;
     }
 
-    // Кэширование jQuery-объектов в одном месте
     const selectors = {
         container: container,
         select: $(config.selectors.select, container),
@@ -81,6 +78,7 @@ export function initializeSelectComponent(containerId, config) {
     selectors.trigger.on("click", function (e) {
         e.stopPropagation();
         selectors.select.show();
+        return false;
     });
 
     // Handle option selection using event delegation
@@ -162,15 +160,26 @@ export function initializeSelectComponent(containerId, config) {
                 // Выводим отладочную информацию
                 logger("Передаем в AJAX обработчик:", queryParams);
                 
-                // Use the provided AJAX handler
-                config.ajaxHandler(queryParams);
+                // Use the provided AJAX handler with error handling
+                try {
+                    config.ajaxHandler(queryParams);
+                } catch (error) {
+                    loggerError("Ошибка при выполнении AJAX-обработчика:", error);
+                }
                 return;
             }
             
-            // Check if the component is part of a form with data-ajax-enabled
+            // Check if the component is part of a form with AJAX handling
             const $form = selectors.container.closest('form');
-            if ($form.length && $form.data('ajax-enabled')) {
-                // Let the form handle updates (it should have its own change event handlers)
+            if ($form.length && ($form.attr('data-form-type') === 'ajax' || $form.attr('data-update-method') === 'ajax')) {
+                // Форма с AJAX-обработкой, позволяем ей обрабатывать изменения
+                // Генерируем событие 'select:change' для формы
+                const eventData = {
+                    value: selectedValue,
+                    order: selectedOrder,
+                    element: $option[0]
+                };
+                $form.trigger('select:change', [eventData]);
                 return;
             }
             
