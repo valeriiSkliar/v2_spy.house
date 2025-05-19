@@ -286,18 +286,45 @@ class LandingsPageApiController extends BaseLandingsPageController
         $this->authorize('delete', $landing); // Использует WebsiteDownloadMonitorPolicy
 
         try {
-            if ($landing->output_path && Storage::disk('landings')->exists($landing->output_path)) {
-                // Удаляем всю директорию лендинга, так как HTTrack создает поддиректорию с именем сайта
-                $directoryPath = dirname($landing->output_path);
-                if ($directoryPath !== '.') { // Предосторожность, чтобы не удалить корень диска 'landings'
-                    Storage::disk('landings')->deleteDirectory($directoryPath);
+            // Сохраняем путь до удаления записи из базы
+            $outputPath = $landing->output_path;
+            $userId = Auth::id();
+            
+            // Сначала удаляем запись из базы данных
+            $landing->delete();
+            
+            // Затем удаляем файлы, если они существуют
+            if ($outputPath) {
+                Log::info('Attempting to delete landing files', [
+                    'output_path' => $outputPath,
+                    'user_id' => $userId
+                ]);
+                
+                // Проверяем существование директории или файла
+                if (Storage::exists($outputPath)) {
+                    // Определяем, является ли путь директорией
+                    $fullPath = Storage::path($outputPath);
+                    if (is_dir($fullPath)) {
+                        // Удаляем всю директорию лендинга
+                        $result = Storage::deleteDirectory($outputPath);
+                        Log::info('Deleted landing directory', [
+                            'output_path' => $outputPath,
+                            'success' => $result
+                        ]);
+                    } else {
+                        // Удаляем только файл
+                        $result = Storage::delete($outputPath);
+                        Log::info('Deleted landing file', [
+                            'output_path' => $outputPath,
+                            'success' => $result
+                        ]);
+                    }
                 } else {
-                    // Если путь к архиву не содержит поддиректорий, удаляем только сам файл
-                    Storage::disk('landings')->delete($landing->output_path);
+                    Log::warning('Landing files not found for deletion', [
+                        'output_path' => $outputPath
+                    ]);
                 }
             }
-            $userId = Auth::id();
-            $landing->delete();
 
             // Get current pagination stats after deletion
             $perPage = request()->input('per_page', 12);
