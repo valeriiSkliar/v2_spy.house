@@ -27,40 +27,6 @@ class LandingsPageApiController extends BaseLandingsPageController
         $this->antiFloodService = $antiFloodService;
     }
 
-    // private function getViewConfig(): array
-    // {
-    //     return [
-    //         'show_status' => true,
-    //         'show_progress' => true,
-    //         'show_actions' => true,
-    //         'show_domain' => true,
-    //         'show_download_date' => true,
-    //         'date_format' => 'd.m.Y H:i',
-    //         'column_classes' => [
-    //             'name' => 'col-lg-3 col-md-4 col-sm-6',
-    //             'domain' => 'col-lg-2 col-md-3 d-none d-md-table-cell',
-    //             'status' => 'col-lg-2 col-md-2 col-sm-3',
-    //             'progress' => 'col-lg-2 col-md-3 d-none d-lg-table-cell',
-    //             'download_date' => 'col-lg-2 col-md-3 d-none d-md-table-cell text-muted small',
-    //             'actions' => 'col-lg-1 col-md-2 col-sm-3 text-end',
-    //         ],
-    //         'action_icons' => [
-    //             'ACTION_DOWNLOAD' => 'fas fa-download',
-    //             'ACTION_RETRY' => 'fas fa-sync-alt',
-    //             'ACTION_VIEW' => 'fas fa-eye',
-    //             'ACTION_DELETE' => 'fas fa-trash-alt text-danger',
-    //             'ACTION_CANCEL' => 'fas fa-ban text-warning',
-    //         ],
-    //         'badge_config' => [
-    //             'completed' => ['class' => 'bg-success-soft', 'icon' => 'fas fa-check-circle'],
-    //             'in_progress' => ['class' => 'bg-primary-soft', 'icon' => 'fas fa-spinner fa-pulse'],
-    //             'pending' => ['class' => 'bg-secondary-soft', 'icon' => 'fas fa-clock'],
-    //             'failed' => ['class' => 'bg-danger-soft', 'icon' => 'fas fa-exclamation-triangle'],
-    //             'cancelled' => ['class' => 'bg-warning-soft', 'icon' => 'fas fa-ban'],
-    //             'moderation' => ['class' => 'bg-info-soft', 'icon' => 'fas fa-gavel'],
-    //         ]
-    //     ];
-    // }
 
     /**
      * Handles AJAX request to get a list of landings.
@@ -320,14 +286,14 @@ class LandingsPageApiController extends BaseLandingsPageController
         $this->authorize('delete', $landing); // Использует WebsiteDownloadMonitorPolicy
 
         try {
-            if ($landing->path_to_archive && Storage::disk('landings')->exists($landing->path_to_archive)) {
+            if ($landing->output_path && Storage::disk('landings')->exists($landing->output_path)) {
                 // Удаляем всю директорию лендинга, так как HTTrack создает поддиректорию с именем сайта
-                $directoryPath = dirname($landing->path_to_archive);
+                $directoryPath = dirname($landing->output_path);
                 if ($directoryPath !== '.') { // Предосторожность, чтобы не удалить корень диска 'landings'
                     Storage::disk('landings')->deleteDirectory($directoryPath);
                 } else {
                     // Если путь к архиву не содержит поддиректорий, удаляем только сам файл
-                    Storage::disk('landings')->delete($landing->path_to_archive);
+                    Storage::disk('landings')->delete($landing->output_path);
                 }
             }
             $userId = Auth::id();
@@ -376,10 +342,21 @@ class LandingsPageApiController extends BaseLandingsPageController
      */
     public function ajaxDownload(WebsiteDownloadMonitor $landing, Request $request): JsonResponse
     {
+        Log::debug('Starting landing download via AJAX', [
+            'landing_id' => $landing->getKey(),
+            'user_id' => Auth::id(),
+            'ip' => $request->ip()
+        ]);
+        
         // Authorize the action using the policy (checks ownership and status)
         $this->authorize('download', $landing);
 
         try {
+            Log::debug('Checking landing status', [
+                'landing_id' => $landing->getKey(),
+                'current_status' => $landing->status
+            ]);
+            
             // Проверяем, что лендинг существует и имеет статус 'completed'
             if ($landing->status !== 'completed') {
                 return response()->json([
@@ -388,8 +365,14 @@ class LandingsPageApiController extends BaseLandingsPageController
                 ], 400);
             }
 
+            Log::debug('Checking archive file existence', [
+                'landing_id' => $landing->getKey(),
+                'output_path' => $landing->output_path,
+                'disk' => 'landings'
+            ]);
+            
             // Проверяем, что файл архива существует
-            if (!$landing->path_to_archive || !Storage::disk('landings')->exists($landing->path_to_archive)) {
+            if (!$landing->output_path || !file_exists(Storage::path($landing->output_path))) {
                 // Обновляем статус лендинга на "failed"
                 $landing->update([
                     'status' => 'failed',
@@ -398,8 +381,8 @@ class LandingsPageApiController extends BaseLandingsPageController
                 ]);
                 
                 Log::warning('Landing file not found, status updated to failed', [
-                    'landing_id' => $landing->id,
-                    'path_to_archive' => $landing->path_to_archive
+                    'landing_id' => $landing->getKey(),
+                    'output_path' => $landing->output_path
                 ]);
                 
                 return response()->json([
@@ -408,20 +391,34 @@ class LandingsPageApiController extends BaseLandingsPageController
                 ], 404);
             }
 
+            Log::debug('Archive file exists, preparing download URL', [
+                'landing_id' => $landing->getKey()
+            ]);
+            
             // Формируем URL для скачивания
-            $downloadUrl = route('landings.download', $landing->id);
+            $downloadUrl = route('landings.download', $landing->getKey());
 
+            Log::debug('Returning successful download response', [
+                'landing_id' => $landing->getKey(),
+                'download_url' => $downloadUrl,
+                'filename' => basename($landing->output_path)
+            ]);
+            
             return response()->json([
                 'success' => true,
                 'message' => __('landings.download.ready'),
                 'data' => [
                     'download_url' => $downloadUrl,
-                    'landing_id' => $landing->id,
-                    'filename' => basename($landing->path_to_archive),
+                    'landing_id' => $landing->getKey(),
+                    'filename' => basename($landing->output_path),
                 ]
             ]);
         } catch (\Exception $e) {
-            Log::error('Error preparing landing download via AJAX: ' . $e->getMessage(), ['exception' => $e, 'landing_id' => $landing->id]);
+            Log::error('Error preparing landing download via AJAX: ' . $e->getMessage(), [
+                'exception' => $e, 
+                'landing_id' => $landing->getKey(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => __('common.error_occurred_common_message'),
