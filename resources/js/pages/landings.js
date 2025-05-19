@@ -17,6 +17,7 @@ import {
     downloadLandingHandler,
     initDownloadLandingHandler,
 } from "../components/landings";
+import { logger, loggerError } from "../helpers/logger";
 
 export function initDeleteLandingHandler() {
     const tableContainerSelector =
@@ -49,14 +50,14 @@ $(document).ready(function () {
     function initSortAndFilterHandlers() {
         // Common AJAX handler for both select components
         function handleSelectChange(params) {
-            console.log("handleSelectChange - входящие параметры:", params);
+            logger("handleSelectChange - входящие параметры:", params);
             
             const $sortForm = $("#landings-sort-form");
             if (!$sortForm.length) return;
             
             // Проверяем, что параметры не пустые
             if (!params || Object.keys(params).length === 0) {
-                console.error("Ошибка: пустые параметры в handleSelectChange");
+                loggerError("Ошибка: пустые параметры в handleSelectChange");
                 return;
             }
 
