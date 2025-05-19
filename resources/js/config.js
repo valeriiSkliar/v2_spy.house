@@ -17,3 +17,8 @@ export const config = {
     apiNotificationsMarkAsReadEndpoint: `${apiBaseEndpoint}/notifications/{id}/mark-read`,
     apiNotificationsMarkAllAsReadEndpoint: `${apiBaseEndpoint}/notifications/mark-all-read`,
 };
+
+export const debagConfig = {
+    debug: false
+};
+    
