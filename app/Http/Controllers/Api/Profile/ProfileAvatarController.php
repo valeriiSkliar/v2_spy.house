@@ -3,8 +3,7 @@
 namespace App\Http\Controllers\Api\Profile;
 
 use App\Http\Controllers\Controller;
-use App\Services\App\ImageService;
-use App\Services\Frontend\Toast;
+use App\Services\Common\ImageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;

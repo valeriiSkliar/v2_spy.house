@@ -15,16 +15,18 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('login')->nullable();
+            $table->string('login')->unique()->nullable();
             $table->string('name')->nullable();
             $table->string('surname')->nullable();
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('preferred_locale', 10)->nullable()->comment('User preferred localization, e.g., en, ru');
-            $table->string('whatsapp_phone', 20)->nullable()->comment('WhatsApp phone number');
-            $table->string('viber_phone', 20)->nullable()->comment('Viber phone number');
-            $table->string('telegram', 255)->nullable()->comment('Telegram username');
+            $table->string('messenger_type')->comment('Type of messenger, e.g., WhatsApp, Viber, Telegram');
+            $table->string('messenger_contact')->comment('Contact of the user in the messenger');
+            // $table->string('whatsapp_phone', 20)->nullable()->comment('WhatsApp phone number');
+            // $table->string('viber_phone', 20)->nullable()->comment('Viber phone number');
+            // $table->string('telegram', 255)->nullable()->comment('Telegram username');
             $table->enum('scope_of_activity', UserScopeOfActivity::names())->nullable()->comment('User\'s business activity');
             $table->enum('experience', UserExperience::names())->nullable()->comment('User\'s experience level');
             $table->text('personal_greeting')->nullable()->comment('For anti-phishing protection');

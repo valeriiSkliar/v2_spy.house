@@ -19,13 +19,13 @@ class WebsiteDownloadSeeder extends Seeder
 
         // Create 10 monitor records
         WebsiteDownloadMonitor::factory()
-            ->count(30)
+            ->count(5)
             ->for($user)
             ->create();
 
         // Create 5 notification records
         WebsiteDownloadNotification::factory()
-            ->count(32)
+            ->count(5)
             ->for($user)
             ->create();
     }

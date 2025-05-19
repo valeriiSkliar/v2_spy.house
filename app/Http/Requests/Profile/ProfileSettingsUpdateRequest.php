@@ -7,6 +7,8 @@ use App\Enums\Frontend\UserScopeOfActivity;
 use App\Http\Requests\BaseRequest;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
+
 
 class ProfileSettingsUpdateRequest extends BaseRequest
 {
@@ -17,8 +19,41 @@ class ProfileSettingsUpdateRequest extends BaseRequest
 
     public function rules(): array
     {
+        $user = Auth::user();
+
         return [
-            'login' => ['nullable', 'string', 'max:255'],
+            'login' => [
+                'required', 
+                'string', 
+                'max:255', 
+                'regex:/^[a-zA-Z0-9_]+$/', 
+                Rule::unique('users', 'login')->ignore($user->id),
+            ],
+            'messenger_type' => ['required', 'string', Rule::in(['whatsapp', 'viber', 'telegram'])],
+            'messenger_contact' => ['required', 'string', function ($attribute, $value, $fail) {
+                $messengerType = $this->input('messenger_type');
+                
+                switch ($messengerType) {
+                    case 'telegram':
+                        if ($value && !$this->validation_telegram_login($value)) {
+                            $fail(__('profile.invalid_telegram_username_format'));
+                        }
+                        break;
+                    case 'viber':
+                        if ($value && !$this->validation_viber_identifier($value)) {
+                            $fail(__('profile.invalid_viber_phone_number_format'));
+                        }
+                        break;
+                    case 'whatsapp':
+                        if ($value && !$this->validation_whatsapp_identifier($value)) {
+                            $fail(__('profile.invalid_whatsapp_phone_number_format'));
+                        }
+                        break;
+                    default:
+                        $fail(__('profile.invalid_messenger_type'));
+                        break;
+                }
+            }],
             // Use values instead of names for validation - the dropdown sends value not enum name
             'experience' => ['nullable', 'string', 'in:' . implode(',', UserExperience::names())],
             // Use values instead of names for validation
@@ -68,6 +103,7 @@ class ProfileSettingsUpdateRequest extends BaseRequest
             'login.required' => __('profile.login_required'),
             'login.string' => __('profile.login_must_be_a_string'),
             'login.max' => __('profile.login_must_be_less_than_255_characters'),
+            'login.regex' => __('profile.login_must_contain_only_latin_letters_numbers_and_underscore'),
             'experience.required' => __('profile.experience_required'),
             'experience.string' => __('profile.experience_must_be_a_string'),
             'experience.in' => __('profile.invalid_experience_value'),
@@ -108,45 +144,5 @@ class ProfileSettingsUpdateRequest extends BaseRequest
         }
     }
 
-    private function validation_telegram_login(string $str): bool
-    {
-        if (!str_starts_with($str, '@')) {
-            return false;
-        }
 
-        $clean_str = substr($str, 1);
-        $length = strlen($clean_str);
-
-        if ($length < 5 || $length > 32) {
-            return false;
-        }
-
-        return preg_match('/^[A-Za-z0-9_]{5,32}$/', $clean_str) === 1;
-    }
-
-    private function validation_whatsapp_identifier(string $str): bool
-    {
-        $clean_str  = preg_replace('/[^0-9+]/', '', $str);
-        $identifier = str_starts_with($clean_str, '+') ? substr($clean_str, 1) : trim($clean_str);
-
-        $length = strlen($identifier);
-        if ($length < 10 || $length > 15) {
-            return false;
-        }
-
-        return preg_match('/^[0-9]{10,15}$/', $identifier) === 1;
-    }
-
-    private function validation_viber_identifier(string $str): bool
-    {
-        $clean_str  = preg_replace('/[^0-9+]/', '', $str);
-        $identifier = str_starts_with($clean_str, '+') ? substr($clean_str, 1) : trim($clean_str);
-
-        $length = strlen($identifier);
-        if ($length < 10 || $length > 15) {
-            return false;
-        }
-
-        return preg_match('/^[0-9]{10,15}$/', $identifier) === 1;
-    }
 }
