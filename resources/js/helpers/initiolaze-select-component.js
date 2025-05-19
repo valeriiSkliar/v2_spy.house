@@ -3,7 +3,7 @@ import { setupOutsideClickListener } from "./outside-click";
 export function initializeSelectComponent(containerId, config) {
     const container = $(containerId);
     if (!container.length) {
-        return;
+        return false;
     }
 
     const select = $(config.selectors.select, container);
@@ -24,6 +24,7 @@ export function initializeSelectComponent(containerId, config) {
     trigger.on("click", function (e) {
         e.stopPropagation();
         select.show();
+        return false;
     });
 
     // Handle option selection
@@ -53,7 +54,7 @@ export function initializeSelectComponent(containerId, config) {
             }
 
             // Set value to valueElement (supports both data attribute and input value)
-            valueElement.data("value", selectedValue);
+            valueElement.attr("data-value", selectedValue);
             if (valueElement.is("input")) {
                 valueElement.val(selectedValue).trigger("change");
             }
@@ -68,7 +69,7 @@ export function initializeSelectComponent(containerId, config) {
             }
             
             if (orderElement) {
-                orderElement.data("order", selectedOrder);
+                orderElement.attr("data-order", selectedOrder);
                 if (orderElement.is("input")) {
                     orderElement.val(selectedOrder).trigger("change");
                 }
@@ -128,7 +129,7 @@ export function initializeSelectComponent(containerId, config) {
             
             // Check if the component is part of a form with data-ajax-enabled
             const $form = $(container).closest('form');
-            if ($form.length && $form.data('ajax-enabled')) {
+            if ($form.length && $form.attr('data-ajax-enabled')) {
                 // Let the form handle updates (it should have its own change event handlers)
                 return;
             }
