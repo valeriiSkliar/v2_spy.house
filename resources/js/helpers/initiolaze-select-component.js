@@ -2,6 +2,45 @@ import { setupOutsideClickListener } from "./outside-click";
 import { logger, loggerError } from "./logger";
 import { updateUrlWithRedirect } from "./update-browser-url";
 
+/**
+ * Обновляет отображаемую метку выбранного элемента
+ * @param {Object} selectors - Объект с кэшированными jQuery-элементами
+ * @param {string} placeholder - Текст плейсхолдера
+ * @param {string} selectedLabel - Текст выбранного элемента
+ */
+function updateSelectedLabel(selectors, placeholder, selectedLabel) {
+    if (selectors.selectedLabel.length) {
+        selectors.trigger.text(placeholder.concat(selectedLabel));
+        selectors.selectedLabel.text(selectedLabel);
+    }
+}
+
+/**
+ * Обновляет элемент значения
+ * @param {Object} selectors - Объект с кэшированными jQuery-элементами
+ * @param {string} selectedValue - Выбранное значение
+ */
+function updateValueElement(selectors, selectedValue) {
+    selectors.valueElement.data("value", selectedValue);
+    if (selectors.valueElement.is("input")) {
+        selectors.valueElement.val(selectedValue).trigger("change");
+    }
+}
+
+/**
+ * Обновляет элемент порядка сортировки
+ * @param {Object} selectors - Объект с кэшированными jQuery-элементами
+ * @param {string} selectedOrder - Выбранный порядок сортировки
+ */
+function updateOrderElement(selectors, selectedOrder) {
+    if (selectors.orderElement) {
+        selectors.orderElement.data("order", selectedOrder);
+        if (selectors.orderElement.is("input")) {
+            selectors.orderElement.val(selectedOrder).trigger("change");
+        }
+    }
+}
+
 export function initializeSelectComponent(containerId, config) {
     // Проверка входных параметров
     if (!containerId || !config || !config.selectors || !config.params) {
@@ -55,17 +94,9 @@ export function initializeSelectComponent(containerId, config) {
             rawOrder: $option.attr("data-order"),
             rawLabel: selectedLabel
         });
-            // Update the displayed selected value
-            if (selectors.selectedLabel.length) {
-                selectors.trigger.text(placeholder.concat(selectedLabel));
-                selectors.selectedLabel.text(selectedLabel);
-            }
-
-            // Set value to valueElement (supports both data attribute and input value)
-            selectors.valueElement.data("value", selectedValue);
-            if (selectors.valueElement.is("input")) {
-                selectors.valueElement.val(selectedValue).trigger("change");
-            }
+            // Обновляем отображаемые элементы
+            updateSelectedLabel(selectors, placeholder, selectedLabel);
+            updateValueElement(selectors, selectedValue);
 
             // Получаем значение порядка сортировки из атрибута data-order выбранного элемента
             let selectedOrder = $option.attr("data-order");
@@ -76,12 +107,7 @@ export function initializeSelectComponent(containerId, config) {
                 selectedOrder = "asc"; // Значение по умолчанию, если не указано
             }
             
-            if (selectors.orderElement) {
-                selectors.orderElement.data("order", selectedOrder);
-                if (selectors.orderElement.is("input")) {
-                    selectors.orderElement.val(selectedOrder).trigger("change");
-                }
-            }
+            updateOrderElement(selectors, selectedOrder);
 
             selectors.select.hide();
 
