@@ -41,6 +41,17 @@ function updateOrderElement(selectors, selectedOrder) {
     }
 }
 
+/**
+ * Получает значение порядка сортировки из элемента с установкой значения по умолчанию
+ * @param {jQuery} $option - jQuery-элемент опции
+ * @param {string} defaultValue - Значение по умолчанию
+ * @returns {string} - Значение порядка сортировки
+ */
+function getOrderValue($option, defaultValue = "asc") {
+    const order = $option.attr("data-order");
+    return order !== undefined && order !== null ? order : defaultValue;
+}
+
 export function initializeSelectComponent(containerId, config) {
     // Проверка входных параметров
     if (!containerId || !config || !config.selectors || !config.params) {
@@ -98,14 +109,9 @@ export function initializeSelectComponent(containerId, config) {
             updateSelectedLabel(selectors, placeholder, selectedLabel);
             updateValueElement(selectors, selectedValue);
 
-            // Получаем значение порядка сортировки из атрибута data-order выбранного элемента
-            let selectedOrder = $option.attr("data-order");
-            logger("Raw selectedOrder from data attribute:", selectedOrder);
-            
-            // Проверяем, что значение не undefined и не null
-            if (selectedOrder === undefined || selectedOrder === null) {
-                selectedOrder = "asc"; // Значение по умолчанию, если не указано
-            }
+            // Получаем значение порядка сортировки с использованием вспомогательной функции
+            const selectedOrder = getOrderValue($option);
+            logger("Selected order value:", selectedOrder);
             
             updateOrderElement(selectors, selectedOrder);
 
