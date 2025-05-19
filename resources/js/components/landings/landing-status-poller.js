@@ -1,6 +1,8 @@
 // import $ from "jquery";
 import { apiTokenHandler } from "@/components";
 import landingsStore from "./landingsStore";
+import { createAndShowToast } from "../../utils";
+import { initDownloadLandingHandler } from "./downloadLandingHandler";
 
 class LandingStatusPoller {
     constructor() {
@@ -38,13 +40,14 @@ class LandingStatusPoller {
                             { status: "failed" },
                             currentStatusElement
                         );
-                        // TODO: Show error toast
+                        createAndShowToast("Error polling landing status", "error");
                         return;
                     }
                     const data = await response.json();
-                    if (data.status !== "pending") {
+                    if (data.status !== "pending" && data.status !== "in_progress") {
+                        // Сначала обновляем UI, затем останавливаем поллинг
+                        await this.updateUI(landingId, data, currentStatusElement);
                         this.stopPolling(landingId);
-                        this.updateUI(landingId, data, currentStatusElement);
                     }
                 })
                 .catch((error) => {
@@ -72,20 +75,25 @@ class LandingStatusPoller {
         const token = apiTokenHandler.getToken();
         if (!token) {
             console.error("API token not found in localStorage (key: bt)");
-            return;
+            return { ok: false, error: "API token not found" };
         }
-        return fetch(`/api/landings/${landingId}/status`, {
-            method: "GET",
-            credentials: "omit",
-            headers: {
-                Authorization: "Bearer " + token,
-            },
-        });
+        try {
+            return await fetch(`/api/landings/${landingId}/status`, {
+                method: "GET",
+                credentials: "omit",
+                headers: {
+                    Authorization: "Bearer " + token,
+                },
+            });
+        } catch (error) {
+            console.error(`Error fetching status for landing ${landingId}:`, error);
+            return { ok: false, error: error.message };
+        }
     }
 
     async updateUI(landingId, data, statusElement) {
-        // First, check if the element is still in the DOM
-        if (!landingsStore.isElementInDOM(landingId)) {
+        // Проверяем, существует ли элемент и находится ли он в DOM
+        if (!statusElement || !statusElement.length || !$.contains(document, statusElement[0])) {
             console.log(`Status element for landing ${landingId} is no longer in the DOM, cannot update UI.`);
             return;
         }
@@ -93,20 +101,40 @@ class LandingStatusPoller {
         const $row = statusElement.closest("tr");
         const $controls = $row.find(".table-controls");
 
-        // Assuming statusElement is the <li> tag itself based on selectors like ".landing-status-icon"
-        // console.log(statusElement);
-
+        console.log(`Updating UI for landing ${landingId} with status: ${data.status}, current element status: ${statusElement.data('status')}`);
+    
         if (data.status === "completed") {
-            // statusElement is the <li class="landing-status-icon" data-status="pending">
-            statusElement.remove(); // Correctly remove the pending status <li> itself
-
-            // Add download button
-            const downloadButtonHtml = `
-            <li>
-                <a href="/landings/${landingId}/download" class="btn-icon icon-download"></a>
-            </li>
-            `;
-            $controls.prepend(downloadButtonHtml); // Prepend new download button <li> to the <ul>
+            console.log(`Landing ${landingId} completed, removing status element and adding download button`);
+            
+            // Проверяем, существует ли уже кнопка скачивания
+            const existingDownloadButton = $controls.find('a.icon-download');
+            if (existingDownloadButton.length === 0) {
+                // Удаляем элемент статуса
+                statusElement.remove();
+                
+                // Добавляем кнопку скачивания с атрибутом data-id для обработчика
+                const downloadButtonHtml = `
+                <li>
+                    <a href="/landings/${landingId}/download" class="btn-icon icon-download download-landing-button" data-id="${landingId}"></a>
+                </li>
+                `;
+                $controls.prepend(downloadButtonHtml); // Добавляем кнопку скачивания в начало списка
+                
+                // Инициализируем обработчик скачивания
+                initDownloadLandingHandler();
+            } else {
+                console.log(`Download button already exists for landing ${landingId}, updating button attributes and removing status element`);
+                
+                // Обновляем атрибуты существующей кнопки скачивания
+                const existingDownloadButton = $controls.find('a.icon-download');
+                existingDownloadButton.addClass('download-landing-button').attr('data-id', landingId);
+                
+                // Удаляем элемент статуса
+                statusElement.remove();
+                
+                // Инициализируем обработчик скачивания
+                initDownloadLandingHandler();
+            }
         } else if (data.status === "failed") {
             // statusElement is the <li class="landing-status-icon" data-status="pending">
             // Update to error status icon by replacing the status <li>
