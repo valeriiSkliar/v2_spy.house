@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\PreLogin2FACheckRequest;
 use App\Services\Api\TokenService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -71,6 +73,24 @@ class AuthenticatedSessionController extends Controller
         }
 
         return redirect()->intended(route('profile.settings', absolute: false));
+    }
+
+    public function preLogin2FACheck(PreLogin2FACheckRequest $request): JsonResponse
+    {
+        $user = \App\Models\User::where('email', $request->email)->first();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'User found',
+            'data' => [
+                'has_2fa' => $user->google_2fa_enabled,
+                'html' => view('components.auth.login-2fa-confirmation', [
+                    'error' => '',
+                    'message' => '',
+                ])->render(),
+                'button_text' => 'Confirm',
+            ],
+        ]);
     }
 
     /**

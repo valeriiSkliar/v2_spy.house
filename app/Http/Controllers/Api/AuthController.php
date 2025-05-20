@@ -38,25 +38,25 @@ class AuthController extends Controller
         // Use TokenService to create a token pair with refresh token
         $tokenService = app(\App\Services\Api\TokenService::class);
         $tokenData = $tokenService->createAdvancedToken($user, $request->device_name);
-        
+
         // Check if client wants the refresh token in the response body
-        $includeRefreshToken = $request->input('include_refresh_token') === 'true' || 
-                              $request->header('X-Include-Refresh-Token') === 'true';
-        
+        $includeRefreshToken = $request->input('include_refresh_token') === 'true' ||
+            $request->header('X-Include-Refresh-Token') === 'true';
+
         $responseData = [
             'access_token' => $tokenData['access_token'],
             'expires_at' => $tokenData['expires_at'],
             'token_type' => 'Bearer',
             'user' => $user,
         ];
-        
+
         // Include refresh token in response body if requested
         if ($includeRefreshToken) {
             $responseData['refresh_token'] = $tokenData['refresh_token'];
         }
-        
+
         $response = response()->json($responseData);
-        
+
         // Set refresh token in a HttpOnly cookie
         return $this->setRefreshTokenCookie($response, $tokenData['refresh_token']);
     }
@@ -72,10 +72,10 @@ class AuthController extends Controller
         $token = $request->user()->currentAccessToken();
         if ($token) {
             /** @var \Laravel\Sanctum\PersonalAccessToken $token */
-            
+
             // Delete associated refresh tokens
             $request->user()->refreshTokens()->where('access_token_id', $token->id)->delete();
-            
+
             // Delete the access token
             $token->delete();
         }
@@ -95,7 +95,7 @@ class AuthController extends Controller
     {
         return response()->json($request->user());
     }
-    
+
     /**
      * Refresh the access token using a refresh token.
      *
@@ -176,19 +176,19 @@ class AuthController extends Controller
             $refreshTokenRecord = \App\Models\RefreshToken::where('token', $hashedToken)
                 ->where('expires_at', '>', now())
                 ->first();
-                
+
             if ($refreshTokenRecord) {
                 $user = User::find($refreshTokenRecord->user_id);
             }
         }
-        
+
         // If no user found, return error
         if (!$user) {
             return response()->json([
                 'message' => 'User not found for this refresh token',
             ], 401);
         }
-        
+
         // Attempt to refresh the token
         $tokenService = app(TokenService::class);
         $tokenData = $tokenService->refreshToken($user, $refreshToken);
@@ -200,8 +200,8 @@ class AuthController extends Controller
         }
 
         // Check if client wants the refresh token in the response body
-        $includeRefreshToken = $request->input('include_refresh_token') === 'true' || 
-                              $request->header('X-Include-Refresh-Token') === 'true';
+        $includeRefreshToken = $request->input('include_refresh_token') === 'true' ||
+            $request->header('X-Include-Refresh-Token') === 'true';
 
         // Return new access token and set new refresh token in cookie
         $responseData = [
@@ -209,18 +209,18 @@ class AuthController extends Controller
             'expires_at' => $tokenData['expires_at'],
             'token_type' => 'Bearer',
         ];
-        
+
         // Include refresh token in response body if requested
         if ($includeRefreshToken) {
             $responseData['refresh_token'] = $tokenData['refresh_token'];
         }
-        
+
         $response = response()->json($responseData);
-        
+
         // Set new refresh token in a HttpOnly cookie
         return $this->setRefreshTokenCookie($response, $tokenData['refresh_token']);
     }
-    
+
     /**
      * Set the refresh token cookie on the response.
      *
@@ -232,7 +232,7 @@ class AuthController extends Controller
     {
         // Calculate minutes from now to the TokenService::REFRESH_TOKEN_EXPIRATION
         $minutes = TokenService::REFRESH_TOKEN_EXPIRATION;
-        
+
         // Set cookie options - Note: Using Lax for SameSite to enable cross-origin requests
         // while still providing some CSRF protection
         $cookie = cookie(
