@@ -1,0 +1,45 @@
+.step-2fa{
+  .step-2fa__head{
+    padding-left: 45px;
+    position: relative;
+    padding-top: 5px;
+    padding-bottom: 15px;
+  }
+  .step-2fa__content{
+    @media screen and (min-width: 767px){
+      padding-left: 45px;
+    }
+  }
+  .step-2fa__number{
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 30px;
+    height: 30px;
+    background: $main;
+    color: #fff;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .step-2fa__qr{
+    width: 220px;
+    @media screen and (max-width: 767px) {
+      margin: 0 auto;
+    }
+    img{
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+  }
+  .step-2fa__key{
+    text-align: center;
+    max-width: 250px;
+    @media screen and (max-width: 767px) {
+      margin: 0 auto;
+    }
+  }
+}
