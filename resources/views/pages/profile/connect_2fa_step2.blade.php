@@ -21,10 +21,16 @@
 
             <form method="POST" action="{{ route('profile.store-2fa') }}" class="mt-3" id="twoFactorForm">
                 @csrf
-                <div class="col-12 col-md-6 col-lg-6">
-                    <x-profile.authenticator-code />
+                <div class="row _offset20 mb-20 pt-4">
+                    <div class="col-12 col-md-6 col-lg-6">
+                        <x-profile.authenticator-code />
+                    </div>
+                    <div class="col-12 col-md-6 col-lg-6">
+                        <x-profile.info-message :title="__('profile.2fa.info_message_title_authenticator')"
+                            :description="__('profile.2fa.info_message_description_authenticator')" />
+                    </div>
                 </div>
-
+                {{--
                 @error('verification_code')
                 <div class="message _bg _with-border font-weight-500 mb-20">
                     <span class="icon-warning font-18"></span>
@@ -32,7 +38,7 @@
                         <strong>{{ $message }}</strong>
                     </div>
                 </div>
-                @enderror
+                @enderror --}}
 
                 <div class="d-flex justify-content-start mt-4">
                     <button type="submit" class="btn _flex _green _big min-200 mt-15 w-mob-100">{{

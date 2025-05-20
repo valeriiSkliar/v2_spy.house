@@ -6,7 +6,7 @@
         <img src="/img/google-authenticator.svg" alt="">
         <input type="text" name="verification_code" class="input-h-57" placeholder="xxx  xxx">
     </div>
-    @error('verification_code')
+    {{-- @error('verification_code')
     <span class="text-danger">{{ $message }}</span>
-    @enderror
+    @enderror --}}
 </div>
