@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
@@ -79,16 +80,25 @@ class AuthenticatedSessionController extends Controller
     {
         $user = \App\Models\User::where('email', $request->email)->first();
 
+        // Always return success to prevent user enumeration attacks
+        // Only reveal 2FA form if the user exists and has 2FA enabled
+        $has2fa = false;
+        $buttonText = __('Log In');
+
+        if ($user && $request->password && Hash::check($request->password, $user->password)) {
+            $has2fa = $user->google_2fa_enabled;
+            $buttonText = $has2fa ? __('Confirm') : __('Log In');
+        }
+
         return response()->json([
             'status' => 'success',
-            'message' => 'User found',
             'data' => [
-                'has_2fa' => $user->google_2fa_enabled,
-                'html' => view('components.auth.login-2fa-confirmation', [
+                'has_2fa' => $has2fa,
+                'html' => $has2fa ? view('components.auth.login-2fa-confirmation', [
                     'error' => '',
                     'message' => '',
-                ])->render(),
-                'button_text' => 'Confirm',
+                ])->render() : '',
+                'button_text' => $buttonText,
             ],
         ]);
     }

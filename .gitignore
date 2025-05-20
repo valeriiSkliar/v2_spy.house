@@ -25,3 +25,5 @@ yarn-error.log
 /CLAUDE.md
 /mytimer.c
 /old_users.sql
+/.prettierrc
+/intelephense.json
