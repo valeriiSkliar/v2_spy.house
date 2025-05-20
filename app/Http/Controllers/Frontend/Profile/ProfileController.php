@@ -360,10 +360,28 @@ class ProfileController extends BaseProfileController
             );
         }
 
-        return view('pages.profile.connect_2fa', [
+        return view('pages.profile.connect_2fa_step1', [
             'user' => $user,
             'qrCodeInline' => $qrCodeInline,
             'google_2fa_secret' => $secret,
+        ]);
+    }
+
+    /**
+     * Display the second step of 2FA setup
+     */
+    public function connect2faStep2(Request $request): View|RedirectResponse
+    {
+        $user = $request->user();
+
+        // Проверяем, есть ли временный секрет в сессии
+        if (!$request->session()->has('google_2fa_secret_temp')) {
+            return redirect()->route('profile.connect-2fa')
+                ->withErrors(['error' => 'Необходимо начать процесс активации с первого шага']);
+        }
+
+        return view('pages.profile.connect_2fa_step2', [
+            'user' => $user,
         ]);
     }
 
@@ -398,25 +416,63 @@ class ProfileController extends BaseProfileController
             return Redirect::route('profile.settings', ['tab' => 'security'])->with('status', '2fa-enabled');
         } else {
             // Pass the secret back to the view so the same QR code can be shown
-            $request->session()->flash('google_2fa_secret_temp', $secret);
-            return Redirect::route('profile.connect-2fa')
+            return Redirect::route('profile.connect-2fa-step2')
                 ->withInput()
                 ->withErrors(['one_time_password' => __('profile.2fa.invalid_code')]);
         }
     }
 
-    public function disable2fa(Request $request): RedirectResponse
+    public function disable2fa(Request $request): View|RedirectResponse
     {
         $user = $request->user();
-        // For security, user might need to confirm with password or current 2FA code
-        // For simplicity, directly disabling here. Add confirmation if needed.
 
-        $user->google_2fa_enabled = false;
-        $user->google_2fa_secret = null; // Clear the secret
-        $user->save();
-        $activeTab = $request->query('tab', 'security');
+        // Проверяем, что 2FA действительно включен у пользователя
+        if (!$user->google_2fa_enabled) {
+            return redirect()->route('profile.settings', ['tab' => 'security'])
+                ->withErrors(['error' => 'Двухфакторная аутентификация уже отключена']);
+        }
 
-        return Redirect::route('profile.settings', ['tab' => $activeTab])->with('status', 'authenticator-disabled');
+        return view('pages.profile.disable_2fa', [
+            'user' => $user,
+        ]);
+    }
+
+    /**
+     * Подтверждение и отключение 2FA после проверки одноразового пароля
+     */
+    public function confirmDisable2fa(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'one_time_password' => 'required|string|digits:6',
+        ]);
+
+        $user = $request->user();
+
+        // Проверяем, что 2FA включен у пользователя
+        if (!$user->google_2fa_enabled || !$user->google_2fa_secret) {
+            return redirect()->route('profile.settings', ['tab' => 'security'])
+                ->withErrors(['error' => 'Двухфакторная аутентификация уже отключена']);
+        }
+
+        $google2fa = app('pragmarx.google2fa');
+        $secret = Crypt::decryptString($user->google_2fa_secret);
+
+        // Проверяем одноразовый пароль
+        $valid = $google2fa->verifyKey($secret, $request->input('one_time_password'));
+
+        if ($valid) {
+            // Отключаем 2FA
+            $user->google_2fa_enabled = false;
+            $user->google_2fa_secret = null; // Clear the secret
+            $user->save();
+
+            $activeTab = $request->query('tab', 'security');
+            return redirect()->route('profile.settings', ['tab' => $activeTab])
+                ->with('status', 'authenticator-disabled');
+        } else {
+            return redirect()->route('profile.disable-2fa')
+                ->withErrors(['one_time_password' => __('profile.2fa.invalid_code')]);
+        }
     }
 
     /**

@@ -19,11 +19,13 @@ Route::middleware(['web', 'auth', 'auth:sanctum'])->group(function () {
     Route::get('/profile/ip-restriction', [ProfileController::class, 'ipRestriction'])->name('profile.ip-restriction');
     Route::put('/profile/ip-restriction', [ProfileController::class, 'updateIpRestriction'])->name('profile.update-ip-restriction');
     Route::get('/profile/connect-2fa', [ProfileController::class, 'connect2fa'])->name('profile.connect-2fa');
+    Route::get('/profile/connect-2fa-step2', [ProfileController::class, 'connect2faStep2'])->name('profile.connect-2fa-step2');
     Route::post('/profile/connect-2fa', [ProfileController::class, 'store2fa'])->name('profile.store-2fa');
     Route::get('/profile/connect-pin', [ProfileController::class, 'connectPin'])->name('profile.connect-pin');
     Route::post('/profile/connect-pin', [ProfileController::class, 'storePin'])->name('profile.store-pin');
     Route::put('/profile/update-notifications', [ProfileController::class, 'updateNotifications'])->name('profile.update-notifications');
-    Route::post('/profile/2fa/disable', [ProfileController::class, 'disable2fa'])->name('profile.disable-2fa');
+    Route::get('/profile/2fa/disable', [ProfileController::class, 'disable2fa'])->name('profile.disable-2fa');
+    Route::post('/profile/2fa/confirm-disable', [ProfileController::class, 'confirmDisable2fa'])->name('profile.confirm-disable-2fa');
 
     Route::get('/profile/personal-greeting', [ProfileController::class, 'personalGreeting'])->name('profile.personal-greeting');
     Route::post('/profile/initiate-personal-greeting-update', [ProfileController::class, 'initiatePersonalGreetingUpdate'])->name('profile.initiate-personal-greeting-update');
