@@ -35,6 +35,7 @@ import './libs/main';
 import './base-select.js';
 // import "./search-suggestions.js";
 import './carousel.js';
+import './components/profile/profile-settings-form-validation.js';
 import { initLogin2FA } from './pages/login.js';
 import './tariffs';
 

@@ -60,55 +60,7 @@ class ProfileController extends BaseProfileController
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
 
-    /**
-     * Update the user's profile settings information.
-     */
-    public function updateSettings(ProfileSettingsUpdateRequest $request): RedirectResponse
-    {
-        $user = $request->user();
-        $validatedData = $request->validated();
-        $settingsData = [];
-        if (isset($validatedData['login'])) {
-            $settingsData['login'] = $validatedData['login'];
-        }
-        if (isset($validatedData['name'])) {
-            $settingsData['name'] = $validatedData['name'];
-        }
-        if (isset($validatedData['surname'])) {
-            $settingsData['surname'] = $validatedData['surname'];
-        }
-        if (isset($validatedData['date_of_birth'])) {
-            $settingsData['date_of_birth'] = $validatedData['date_of_birth'];
-        }
-        if (isset($validatedData['experience'])) {
-            $settingsData['experience'] = $validatedData['experience'];
-        }
-        if (isset($validatedData['scope_of_activity'])) {
-            $settingsData['scope_of_activity'] = $validatedData['scope_of_activity'];
-        }
-        if (isset($validatedData['messengers'])) {
-            $settingsData['messengers'] = $validatedData['messengers'];
-        }
-        if (isset($validatedData['whatsapp_phone'])) {
-            $settingsData['whatsapp_phone'] = $validatedData['whatsapp_phone'] ?? null;
-        }
-        if (isset($validatedData['viber_phone'])) {
-            $settingsData['viber_phone'] = $validatedData['viber_phone'] ?? null;
-        }
-        if (isset($validatedData['telegram'])) {
-            $settingsData['telegram'] = $validatedData['telegram'] ?? null;
-        }
 
-        // Avatar uploads are now handled by the API endpoint and not through the form
-
-        $user->fill($settingsData);
-        $user->save();
-
-        // Get the tab query parameter if it exists
-        $tab = $request->query('tab', 'personal');
-
-        return Redirect::route('profile.settings', ['tab' => $tab])->with('status', 'settings-updated');
-    }
 
     /**
      * Delete the user's account.
