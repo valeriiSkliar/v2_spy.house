@@ -10,19 +10,7 @@
         <a href="/" class="header__logo"><img src="img/logo.svg" alt="" width="142" height="36"></a>
     </div>
     <div class="header__lang">
-        <div class="lang-menu">
-            <div class="base-select">
-                <div class="base-select__trigger">
-                    <span class="base-select__value"><img src="img/flags/US.svg" alt="">Eng</span>
-                    <span class="base-select__arrow"></span>
-                </div>
-                <ul class="base-select__dropdown" style="display: none;">
-                    <li class="base-select__option is-selected"><img src="img/flags/US.svg" alt="">Eng</li>
-                    <li class="base-select__option"><img src="img/flags/UA.svg" alt="">Uk</li>
-                    <li class="base-select__option"><img src="img/flags/ES.svg" alt="">Esp</li>
-                </ul>
-            </div>
-        </div>
+        <x-frontend.language-selector />
     </div>
 </header>
         <div class="login-page__content">
@@ -96,8 +84,19 @@
                             <a href="{{ route('home') }}" class="btn _flex _dark2">
                                 <span class="icon-home mr-2 font-20"></span>{{ __('Go home') }}
                             </a>
-                            <x-language-selector />
-                        </div>
+                            <div class="lang-menu">
+                                <div class="base-select base-select_login">
+                                    <div class="base-select__trigger">
+                                        <span class="base-select__value"><img src="{{ asset('img/flags/US.svg') }}" alt="">Eng</span>
+                                        <span class="base-select__arrow"></span>
+                                    </div>
+                                    <ul class="base-select__dropdown" style="display: none;">
+                                        <li class="base-select__option is-selected"><img src="{{ asset('img/flags/US.svg') }}" alt="">Eng</li>
+                                        <li class="base-select__option"><img src="{{ asset('img/flags/UA.svg') }}" alt="">Uk</li>
+                                        <li class="base-select__option"><img src="{{ asset('img/flags/ES.svg') }}" alt="">Esp</li>
+                                    </ul>
+                                </div>
+                            </div>                        </div>
                         <div class="login-body__main">
                             <div class="login-body__logo">
                                 <img src="{{ asset('img/logo-big.svg') }}" alt="{{ config('app.name') }}">

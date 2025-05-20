@@ -20,6 +20,10 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
+Route::get('/terms', function () {
+    return view('pages.terms');
+})->name('terms');
+
 Route::get('/modal/{type}', [ModalController::class, 'loadModal'])->name('modal.load');
 
 

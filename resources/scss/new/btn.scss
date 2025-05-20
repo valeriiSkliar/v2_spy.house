@@ -1,339 +1,381 @@
-.btn{
-  &._flex{
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 10px;
-    height: 50px;
-    font-size: 14px;
-    font-weight: 500;
-    padding: 0 25px;
-    &:disabled{
-      pointer-events: none;
-      opacity: .35;
+.btn {
+    &._flex {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        height: 50px;
+        font-size: 14px;
+        font-weight: 500;
+        padding: 0 25px;
+        &:disabled {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+        &:focus {
+            opacity: 1;
+        }
     }
-    &:focus{
-      opacity: 1;
+    &._border-green {
+        border: 1px solid #3dc98a;
+        background: 0;
+        color: #3dc98a;
+        & > span {
+            position: relative;
+            transition: padding 0.3s;
+        }
+        .icon-more {
+            opacity: 0;
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-40%);
+            transition: opacity 0.3s;
+        }
+        &:hover {
+            background: #3dc98a;
+            color: #fff;
+            & > span {
+                padding-right: 30px;
+            }
+            .icon-more {
+                opacity: 1;
+            }
+        }
     }
-  }
-  &._border-green{
-    border: 1px solid #3DC98A;
-    background: 0;
-    color: #3DC98A;
-    &>span{
-      position: relative;
-      transition: padding .3s;
+
+    &._border-red {
+        color: #c93d3d;
+        background: transparent;
+        border: 1px solid #c93d3d;
+        &:hover {
+            background: #c93d3d;
+            color: #fff;
+        }
     }
-    .icon-more{
-      opacity: 0;
-      position: absolute;
-      right: 0;
-      top: 50%;
-      transform: translateY(-40%);
-      transition: opacity .3s;
+
+    &._green {
+        background: #3dc98a;
+        color: #fff;
     }
-    &:hover{
-      background: #3DC98A;
-      color: #fff;
-      &>span{
-        padding-right: 30px;
-      }
-      .icon-more{
+    &._green2 {
+        background: rgba(61, 201, 138, 0.25);
+        color: #fff;
+        [class^="icon-"],
+        [class*=" icon-"] {
+            color: $main;
+        }
+    }
+    &._gray {
+        background: #f3f5f6;
+        color: #3b4a51;
         opacity: 1;
-      }
+        &:hover {
+            background: darken(#f3f5f6, 2%);
+        }
+        &:active {
+            background: darken(#f3f5f6, 3%);
+        }
+
+        &.active {
+            background: #dae2e6;
+        }
     }
-  }
-  &._green{
-    background: #3DC98A;
-    color: #fff;
-  }
-  &._green2{
-    background: rgba(61, 201, 138, 0.25);
-    color: #fff;
-    [class^="icon-"],
-    [class*=" icon-"] {
-      color: $main;
+    &._gray2 {
+        background: #fafafa;
+        color: #3b4a51;
+        opacity: 1;
+        &:hover {
+            background: darken(#fafafa, 2%);
+        }
+        &:active {
+            background: darken(#fafafa, 3%);
+        }
     }
-  }
-  &._gray{
-    background: #F3F5F6;
-    color: #3B4A51;
-    opacity: 1;
-    &:hover{
-      background: darken(#F3F5F6, 2%);
+    &._code {
+        border-radius: 5px;
+        border: 1px dashed #a0adb2;
+        background: #fafbfc;
+        color: #677378;
     }
-    &:active{
-      background: darken(#F3F5F6, 3%);
+    .icon-more {
+        font-size: 0.7em;
+    }
+    .icon-download {
+        font-size: 1.2em;
     }
 
-    &.active{
-      background: #DAE2E6;
+    &._big {
+        height: 57px;
+        padding: 0 30px;
+        font-weight: 700;
+        font-size: 16px;
     }
-  }
-  &._gray2{
-    background: #FAFAFA;
-    color: #3B4A51;
-    opacity: 1;
-    &:hover{
-      background: darken(#FAFAFA, 2%);
+    &._medium {
+        height: 40px;
+        padding: 0 15px;
     }
-    &:active{
-      background: darken(#FAFAFA, 3%);
+    &._small {
+        height: 34px;
+        border-radius: 7px;
+        padding: 0 15px;
+        font-size: 13px;
     }
-  }
-  &._code{
+    &._dark {
+        background: #334044;
+        color: #d7e0e4;
+        &:hover {
+            background: #4c5c60;
+        }
+        &:active {
+            background: lighten(#4c5c60, 2%);
+        }
+    }
+    &._dark2 {
+        background: #495559;
+        color: #d7e0e4;
+        &:hover {
+            background: #495559;
+        }
+        &:active {
+            background: lighten(#495559, 2%);
+        }
+    }
+    &._black {
+        background: #243035;
+        color: #fff;
+        &:hover {
+            background: #243035;
+        }
+        &:active {
+            background: lighten(#243035, 2%);
+        }
+    }
+    &._blue {
+        background: #5183b5;
+        color: #fff;
+        &:hover {
+            background: darken(#5183b5, 10%);
+        }
+    }
+    &._red {
+        background: #c93d3d;
+        color: #fff;
+    }
+
+    .btn__count {
+        height: 26px;
+        display: flex;
+        align-items: center;
+        padding: 0 5px;
+        background: #ffd262;
+        margin-left: 11px;
+        border-radius: 5px;
+        position: relative;
+        font-weight: 600;
+        font-size: 12px;
+        &:after {
+            @extend .a;
+            width: 8px;
+            height: 8px;
+            background: #ffd262;
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            border-radius: 3px 0 0 0;
+            transition: 0.3s;
+        }
+    }
+
+    &._link {
+        background: 0;
+        padding: 0;
+        height: 20px;
+        color: $main;
+        &:disabled {
+            color: #3b4a51;
+        }
+    }
+}
+
+.btn.copy-btn {
+    height: 24px;
     border-radius: 5px;
-    border: 1px dashed #A0ADB2;
-    background: #FAFBFC;
-    color: #677378;
-  }
-  .icon-more{
-    font-size: .7em;
-  }
-  .icon-download{
-    font-size: 1.2em;
-  }
+    font-size: 11px;
+    padding: 0 8px;
+    gap: 4px;
+    min-width: 62px;
+    position: relative;
+    &:focus {
+        opacity: 1;
+    }
+    .copy-btn__copied {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: $main;
+        border-radius: 5px;
+        visibility: hidden;
+    }
+    &.copied-success {
+        .copy-btn__copied {
+            visibility: visible;
+        }
+    }
+}
 
-
-  &._big{
-    height: 57px;
-    padding: 0 30px;
-    font-weight: 700;
-    font-size: 16px;
-  }
-  &._medium{
-    height: 40px;
-    padding: 0 15px;
-  }
-  &._small{
+.btn-icon {
+    appearance: none;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 0;
+    width: 34px;
     height: 34px;
     border-radius: 7px;
-    padding: 0 15px;
-    font-size: 13px;
-  }
-  &._dark{
-    background: #334044;
-    color: #D7E0E4;
-    &:hover{
-      background: #4C5C60;
-    }
-    &:active{
-      background: lighten(#4C5C60, 2%);
-    }
-  }
-  &._blue{
-    background: #5183B5;
-    color: #fff;
-    &:hover{
-      background: darken(#5183B5, 10%);
-    }
-  }
-
-  .btn__count{
-    height: 26px;
-    display: flex;
-    align-items: center;
-    padding: 0 5px;
-    background: #FFD262;
-    margin-left: 11px;
-    border-radius: 5px;
+    background: #f3f5f5;
+    color: #7a8488;
+    font-size: 16px;
+    outline: none !important;
+    transition: background 0.3s, color 0.3s, border 0.3s;
     position: relative;
-    font-weight: 600;
-    font-size: 12px;
-    &:after{
-      @extend .a;
-      width: 8px;
-      height: 8px;
-      background: #FFD262;
-      position: absolute;
-      left: 0;
-      top: 50%;
-      transform: translate(-50%, -50%) rotate(-45deg);
-      border-radius: 3px 0 0 0;
-      transition: .3s;
+    cursor: pointer;
+    &:hover {
+        background: darken(#f3f5f5, 5%);
     }
-  }
-}
-
-.btn.copy-btn{
-  height: 24px;
-  border-radius: 5px;
-  font-size: 11px;
-  padding: 0 8px;
-  gap: 4px;
-  min-width: 62px;
-  position: relative;
-  &:focus{
-    opacity: 1;
-  }
-  .copy-btn__copied{
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    background: $main;
-    border-radius: 5px;
-    visibility: hidden;
-  }
-  &.copied-success{
-    .copy-btn__copied{
-      visibility: visible;
+    &:active {
+        background: darken(#f3f5f5, 2%);
     }
-  }
-}
-
-.btn-icon{
-  appearance: none;
-  padding: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border: 0;
-  width: 34px;
-  height: 34px;
-  border-radius: 7px;
-  background: #F3F5F5;
-  color: #7A8488;
-  font-size: 16px;
-  outline: none !important;
-  transition: background .3s, color .3s, border .3s;
-  position: relative;
-  cursor: pointer;
-  &:hover{
-    background: darken(#F3F5F5, 5%);
-  }
-  &:active{
-    background: darken(#F3F5F5, 2%);
-  }
-  &.icon-download{
-    background: #EEF9F4;
-    color: #3DC98A;
-    &:hover{
-      background: darken(#EEF9F4, 5%);
+    &.icon-download {
+        background: #eef9f4;
+        color: #3dc98a;
+        &:hover {
+            background: darken(#eef9f4, 5%);
+        }
+        &:active {
+            background: darken(#eef9f4, 2%);
+        }
     }
-    &:active{
-      background: darken(#EEF9F4, 2%);
+    &._green {
+        background: $main;
+        color: #fff;
+        &:hover {
+            background: darken($main, 5%);
+        }
+        &:active {
+            background: darken($main, 2%);
+        }
     }
-  }
-  &._green{
-    background: $main;
-    color: #fff;
-    &:hover{
-      background: darken($main, 5%);
+    &._dark {
+        background: #334044;
+        color: #d7e0e4;
+        &:hover {
+            background: #4c5c60;
+        }
+        &:active {
+            background: lighten(#4c5c60, 2%);
+        }
     }
-    &:active{
-      background: darken($main, 2%);
+    &._black {
+        background: #1d2426;
+        color: #d7e0e4;
+        &:hover {
+            background: #4c5c60;
+        }
+        &:active {
+            background: lighten(#4c5c60, 2%);
+        }
     }
-  }
-  &._dark{
-    background: #334044;
-    color: #D7E0E4;
-    &:hover{
-      background: #4C5C60;
+    &._gray {
+        background: #f3f5f6;
+        &:hover {
+            background: darken(#f3f5f6, 4%);
+        }
+        &:active {
+            background: darken(#4c5c60, 2%);
+        }
     }
-    &:active{
-      background: lighten(#4C5C60, 2%);
+    &._gray2 {
+        background: #e6eaec;
+        &:hover {
+            background: darken(#e6eaec, 4%);
+        }
+        &:active {
+            background: darken(#e6eaec, 2%);
+        }
     }
-  }
-  &._black{
-    background: #1D2426;
-    color: #D7E0E4;
-    &:hover{
-      background: #4C5C60;
-    }
-    &:active{
-      background: lighten(#4C5C60, 2%);
-    }
-  }
-  &._gray{
-    background: #F3F5F6;
-    &:hover{
-      background: darken(#F3F5F6, 4%);
-    }
-    &:active{
-      background: darken(#4C5C60, 2%);
-    }
-  }
-  &._gray2{
-    background: #E6EAEC;
-    &:hover{
-      background: darken(#E6EAEC, 4%);
-    }
-    &:active{
-      background: darken(#E6EAEC, 2%);
+    &._white {
+        box-shadow: 0px 2px 15px 0px #e7eaec;
+        background: #fff;
+        &:hover {
+            color: $main;
+        }
     }
 
-  }
-  &._white{
-    box-shadow: 0px 2px 15px 0px #E7EAEC;
-    background: #fff;
-    &:hover{
-      color: $main;
+    &._border-gray {
+        background: transparent;
+        border: 1px solid #ced8db;
+        color: inherit;
+        &:hover {
+            border-color: darken(#ced8db, 20%);
+        }
     }
-  }
 
-  &._border-gray{
-    background: transparent;
-    border: 1px solid #CED8DB;
-    color: inherit;
-    &:hover{
-      border-color: darken(#CED8DB, 20%);
+    &._transparent {
+        background: transparent;
+        color: #939ea2;
+        &:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
     }
-  }
 
-  &._transparent{
-    background: transparent;
-    color: #939EA2;
-    &:hover{
-      background: rgba(255,255,255,.1);
+    &._filter {
+        .icon-up {
+            display: none;
+        }
+        &.active {
+            background: #848f92;
+            color: #fff;
+            [class^="icon-"],
+            [class*=" icon-"] {
+                display: none;
+            }
+            .icon-up {
+                display: block;
+            }
+        }
     }
-  }
 
-  &._filter{
-    .icon-up{
-      display: none;
+    &.copied-success {
+        border-color: $main !important;
+        background: $main !important;
+        color: #fff;
+        .icon-copy,
+        .icon-copy2 {
+            display: none;
+        }
+        .icon-check {
+            display: block !important;
+        }
     }
-    &.active{
-      background: #848F92;
-      color: #fff;
-      [class^="icon-"],
-      [class*=" icon-"] {
-        display: none;
-      }
-      .icon-up{
-        display: block;
-      }
+
+    &._big {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
     }
-  }
-
-  &.copied-success{
-    border-color: $main !important;
-    background: $main !important;
-    color: #fff;
-    .icon-copy,
-    .icon-copy2{
-      display: none;
+    &._small {
+        width: 26px;
+        height: 26px;
+        border-radius: 7px;
+        font-size: 12px;
     }
-    .icon-check{
-      display: block !important;
+
+    .icon-favorite-empty,
+    .icon-favorite {
+        font-size: 17px;
     }
-  }
-
-
-  &._big{
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-  }
-  &._small{
-    width: 26px;
-    height: 26px;
-    border-radius: 7px;
-    font-size: 12px;
-  }
-
-  .icon-favorite-empty,
-  .icon-favorite{
-    font-size: 17px;
-  }
 }
