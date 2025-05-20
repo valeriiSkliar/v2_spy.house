@@ -5,6 +5,7 @@ namespace App\Http\Requests\Auth;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -92,7 +93,7 @@ class LoginRequest extends FormRequest
         }
 
         // Check if secret key exists and has proper length
-        if (empty($user->google_2fa_secret) || strlen($user->google_2fa_secret) < 16) {
+        if (empty($user->google_2fa_secret)) {
             // Log this error as it indicates a problem with the user's 2FA setup
             Log::error('Invalid 2FA secret key for user', [
                 'user_id' => $user->id,
@@ -103,8 +104,11 @@ class LoginRequest extends FormRequest
 
         try {
             $google2fa = new Google2FA();
+            // Расшифровываем секретный ключ перед проверкой
+            $secret = Crypt::decryptString($user->google_2fa_secret);
+
             return $google2fa->verifyKey(
-                $user->google_2fa_secret,
+                $secret,
                 $code,
                 // Allow 1 window of leeway (30 seconds window)
                 1
@@ -112,6 +116,13 @@ class LoginRequest extends FormRequest
         } catch (Google2FAException $e) {
             // Log the exception
             Log::error('2FA verification error', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        } catch (\Exception $e) {
+            // Добавляем обработку ошибок расшифровки
+            Log::error('Error decrypting 2FA secret', [
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),
             ]);
