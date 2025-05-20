@@ -29,6 +29,7 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 use PragmaRX\Google2FALaravel\Facade as Google2FAFacade;
 use App\Http\Controllers\Frontend\Profile\BaseProfileController;
+use App\Services\Frontend\Toast;
 
 class ProfileController extends BaseProfileController
 {
@@ -335,12 +336,15 @@ class ProfileController extends BaseProfileController
     public function connect2fa(Request $request): View
     {
         $user = $request->user();
+        Log::debug('2FA setup initiated', ['user_id' => $user->id, 'email' => $user->email]);
+
         $google2fa = app('pragmarx.google2fa');
 
         // Generate a new secret only if one doesn't exist or 2FA is not enabled
         if (empty($user->google_2fa_secret) || !$user->google_2fa_enabled) {
             $secret = $google2fa->generateSecretKey();
             $request->session()->put('google_2fa_secret_temp', $secret);
+            Log::debug('New 2FA secret generated', ['user_id' => $user->id, 'secret_length' => strlen($secret)]);
         } else {
             // If 2FA is enabled, this page should ideally be for disabling or viewing status.
             // For now, if a temp secret is in session (e.g. refresh during setup), use it.
@@ -349,6 +353,7 @@ class ProfileController extends BaseProfileController
             // For this version, we'll re-fetch/generate if $secret is not in session.
             $secret = $google2fa->generateSecretKey(); // Regenerate if not in session for setup page
             $request->session()->put('google_2fa_secret_temp', $secret);
+            Log::debug('Regenerating 2FA secret for existing 2FA user', ['user_id' => $user->id, 'is_2fa_enabled' => $user->google_2fa_enabled]);
         }
 
         $qrCodeInline = null;
@@ -358,6 +363,9 @@ class ProfileController extends BaseProfileController
                 $user->email,
                 $secret
             );
+            Log::debug('QR code generated successfully', ['user_id' => $user->id]);
+        } else {
+            Log::error('Failed to generate QR code - no secret', ['user_id' => $user->id]);
         }
 
         return view('pages.profile.connect_2fa_step1', [
@@ -373,12 +381,18 @@ class ProfileController extends BaseProfileController
     public function connect2faStep2(Request $request): View|RedirectResponse
     {
         $user = $request->user();
+        Log::debug('2FA setup step 2 initiated', ['user_id' => $user->id]);
 
         // Проверяем, есть ли временный секрет в сессии
         if (!$request->session()->has('google_2fa_secret_temp')) {
+            Log::warning('No temp 2FA secret found in session', ['user_id' => $user->id]);
+            Toast::error(__('profile.2fa.secret_not_found'));
             return redirect()->route('profile.connect-2fa')
                 ->withErrors(['error' => 'Необходимо начать процесс активации с первого шага']);
         }
+
+        $secret = $request->session()->get('google_2fa_secret_temp');
+        Log::debug('Retrieved temp 2FA secret from session', ['user_id' => $user->id, 'secret_length' => strlen($secret)]);
 
         return view('pages.profile.connect_2fa_step2', [
             'user' => $user,
@@ -388,50 +402,73 @@ class ProfileController extends BaseProfileController
     public function store2fa(Request $request): RedirectResponse
     {
         $request->validate([
-            'one_time_password' => 'required|string|digits:6',
+            'verification_code' => 'required|string|digits:6',
         ]);
 
         $user = $request->user();
+        $otp = $request->input('verification_code');
+        Log::debug('2FA verification attempt', [
+            'user_id' => $user->id,
+            'otp_length' => strlen($otp),
+            'otp_masked' => substr($otp, 0, 2) . '****'
+        ]);
+
         $google2fa = app('pragmarx.google2fa');
 
         $secret = $request->session()->get('google_2fa_secret_temp');
 
         if (!$secret) {
+            Log::error('No temp 2FA secret found in session during verification', ['user_id' => $user->id]);
+            Toast::error(__('profile.2fa.secret_not_found'));
             return Redirect::route('profile.connect-2fa')
-                ->withErrors(['one_time_password' => __('profile.2fa.secret_not_found')]);
+                ->withErrors(['verification_code' => __('profile.2fa.secret_not_found')]);
         }
+
+        Log::debug('Retrieved temp 2FA secret from session for verification', ['user_id' => $user->id, 'secret_length' => strlen($secret)]);
 
         // Ensure the secret being verified is the one stored (encrypted) for the user if 2FA was already enabled and being re-verified (not typical for initial setup)
         // For initial setup, $secret from session is correct.
 
-        $valid = $google2fa->verifyKey($secret, $request->input('one_time_password'));
+        $valid = $google2fa->verifyKey($secret, $otp);
+        Log::debug('2FA verification result', ['user_id' => $user->id, 'is_valid' => $valid]);
 
         if ($valid) {
             $user->google_2fa_secret = Crypt::encryptString($secret);
             $user->google_2fa_enabled = true;
             $user->save();
+            Log::info('2FA successfully enabled for user', ['user_id' => $user->id]);
 
             $request->session()->forget('google_2fa_secret_temp');
+            Log::debug('Temp 2FA secret removed from session', ['user_id' => $user->id]);
 
+            Toast::success(__('profile.2fa.enabled'));
             return Redirect::route('profile.settings', ['tab' => 'security'])->with('status', '2fa-enabled');
         } else {
             // Pass the secret back to the view so the same QR code can be shown
+            Log::warning('Invalid 2FA verification code provided', [
+                'user_id' => $user->id,
+                'otp_masked' => substr($otp, 0, 2) . '****'
+            ]);
+            Toast::error(__('profile.2fa.invalid_code'));
             return Redirect::route('profile.connect-2fa-step2')
                 ->withInput()
-                ->withErrors(['one_time_password' => __('profile.2fa.invalid_code')]);
+                ->withErrors(['verification_code' => __('profile.2fa.invalid_code')]);
         }
     }
 
     public function disable2fa(Request $request): View|RedirectResponse
     {
         $user = $request->user();
+        Log::debug('2FA disable page requested', ['user_id' => $user->id]);
 
         // Проверяем, что 2FA действительно включен у пользователя
         if (!$user->google_2fa_enabled) {
+            Log::warning('Attempt to disable 2FA for user without 2FA enabled', ['user_id' => $user->id]);
             return redirect()->route('profile.settings', ['tab' => 'security'])
                 ->withErrors(['error' => 'Двухфакторная аутентификация уже отключена']);
         }
 
+        Log::debug('Displaying 2FA disable form', ['user_id' => $user->id]);
         return view('pages.profile.disable_2fa', [
             'user' => $user,
         ]);
@@ -443,35 +480,56 @@ class ProfileController extends BaseProfileController
     public function confirmDisable2fa(Request $request): RedirectResponse
     {
         $request->validate([
-            'one_time_password' => 'required|string|digits:6',
+            'verification_code' => 'required|string|digits:6',
         ]);
 
         $user = $request->user();
+        $otp = $request->input('verification_code');
+        Log::debug('2FA disable verification attempt', [
+            'user_id' => $user->id,
+            'otp_length' => strlen($otp),
+            'otp_masked' => substr($otp, 0, 2) . '****'
+        ]);
 
         // Проверяем, что 2FA включен у пользователя
         if (!$user->google_2fa_enabled || !$user->google_2fa_secret) {
+            Log::warning('Attempt to disable 2FA for user without 2FA enabled', ['user_id' => $user->id]);
             return redirect()->route('profile.settings', ['tab' => 'security'])
                 ->withErrors(['error' => 'Двухфакторная аутентификация уже отключена']);
         }
 
         $google2fa = app('pragmarx.google2fa');
-        $secret = Crypt::decryptString($user->google_2fa_secret);
+
+        try {
+            $secret = Crypt::decryptString($user->google_2fa_secret);
+            Log::debug('Retrieved and decrypted 2FA secret for verification', ['user_id' => $user->id, 'secret_length' => strlen($secret)]);
+        } catch (\Exception $e) {
+            Log::error('Failed to decrypt 2FA secret', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+            return redirect()->route('profile.disable-2fa')
+                ->withErrors(['verification_code' => 'Ошибка расшифровки секретного ключа. Пожалуйста, обратитесь в поддержку.']);
+        }
 
         // Проверяем одноразовый пароль
-        $valid = $google2fa->verifyKey($secret, $request->input('one_time_password'));
+        $valid = $google2fa->verifyKey($secret, $otp);
+        Log::debug('2FA disable verification result', ['user_id' => $user->id, 'is_valid' => $valid]);
 
         if ($valid) {
             // Отключаем 2FA
             $user->google_2fa_enabled = false;
             $user->google_2fa_secret = null; // Clear the secret
             $user->save();
+            Log::info('2FA successfully disabled for user', ['user_id' => $user->id]);
 
             $activeTab = $request->query('tab', 'security');
             return redirect()->route('profile.settings', ['tab' => $activeTab])
                 ->with('status', 'authenticator-disabled');
         } else {
+            Log::warning('Invalid 2FA code provided for disabling 2FA', [
+                'user_id' => $user->id,
+                'otp_masked' => substr($otp, 0, 2) . '****'
+            ]);
             return redirect()->route('profile.disable-2fa')
-                ->withErrors(['one_time_password' => __('profile.2fa.invalid_code')]);
+                ->withErrors(['verification_code' => __('profile.2fa.invalid_code')]);
         }
     }
 

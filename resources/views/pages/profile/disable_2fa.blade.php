@@ -15,28 +15,59 @@
     </div>
     @enderror
 
-    <form method="POST" action="{{ route('profile.confirm-disable-2fa') }}"
-        class="mt-3 d-flex flex-column align-items-center gap-4">
+    <form method="POST" action="{{ route('profile.confirm-disable-2fa') }}" class="mt-3" id="disableTwoFactorForm">
         @csrf
-        <div class="form-group text-center">
-            <label class="mb-15" for="one_time_password">{{ __('profile.2fa.otp_label') }}</label>
-            <input id="one_time_password" type="text"
-                class="form-control input-h-57 input-h-57-lg text-center @error('one_time_password') is-invalid @enderror"
-                name="one_time_password" required autofocus>
-            @error('one_time_password')
-            <div class="message _bg _with-border font-weight-500">
-                <span class="icon-warning font-18"></span>
-                <div class="message__txt">
-                    <strong>{{ $message }}</strong>
-                </div>
-            </div>
-            @enderror
+        <div class="col-12 col-md-6 col-lg-6">
+            <x-profile.authenticator-code />
         </div>
-        <button type="submit" class="btn _flex _red _big min-200 mt-15 w-mob-100">Отключить 2FA</button>
+
+        @error('verification_code')
+        <div class="message _bg _with-border font-weight-500 mb-20">
+            <span class="icon-warning font-18"></span>
+            <div class="message__txt">
+                <strong>{{ $message }}</strong>
+            </div>
+        </div>
+        @enderror
+
+        <div class="d-flex justify-content-center mt-4">
+            <button type="submit" class="btn _flex _red _big min-200 mt-15 w-mob-100">Отключить 2FA</button>
+        </div>
     </form>
 </div>
 @endsection
 
 @section('scripts')
 <x-profile.scripts />
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+            console.log('[DEBUG] 2FA Disable - DOM loaded');
+            
+            const otpInput = document.querySelector('input[name="verification_code"]');
+            const form = document.getElementById('disableTwoFactorForm');
+            
+            if (!otpInput || !form) {
+                console.error('[ERROR] 2FA Disable - Required elements not found:', {
+                    otpInput: !!otpInput,
+                    form: !!form
+                });
+                return;
+            }
+            
+            console.log('[DEBUG] 2FA Disable - Form fields found successfully');
+            
+            // Обработка отправки формы
+            form.addEventListener('submit', function(e) {
+                // Проверяем, заполнено ли поле
+                if (!otpInput.value || otpInput.value.length === 0) {
+                    e.preventDefault();
+                    alert('Пожалуйста, введите код подтверждения');
+                    console.error('[ERROR] 2FA Disable - Empty verification code');
+                    return false;
+                }
+                
+                console.log('[DEBUG] 2FA Disable - Form submission with code, length:', otpInput.value.length);
+            });
+        });
+</script>
 @endsection
