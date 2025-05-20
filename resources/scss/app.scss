@@ -21,6 +21,7 @@
 @import "header.scss";
 @import "footer.scss";
 @import "new/style.scss";
+@import "components/write-telegram.scss";
 
 @import "blocks/search.scss";
 @import "blocks/addsList.scss";
@@ -42,7 +43,6 @@
 @import "pages/404.scss";
 @import "pages/blogPage.scss";
 @import "pages/sBlogPage.scss";
-
 @import "pages/blogSite.scss";
 @import "pages/creatives.scss";
 
@@ -61,6 +61,7 @@
 
 // Toast
 @import "toast.scss";
+@import "pages/login.scss";
 
 // Custom
 @import "custom.scss";

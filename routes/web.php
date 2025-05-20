@@ -18,7 +18,7 @@ Route::get('/', function () {
     return view('index', [
         'user' => auth(),
     ]);
-});
+})->name('home');
 
 Route::get('/modal/{type}', [ModalController::class, 'loadModal'])->name('modal.load');
 

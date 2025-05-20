@@ -18,7 +18,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(): View
     {
-        return view('auth.login');
+        return view('pages.login');
     }
 
     /**
@@ -30,7 +30,7 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
         $user = Auth::user();
-        
+
         // Check if user has a valid basic access token
         $hasValidToken = $user->tokens()
             ->where('name', 'basic-access')
@@ -38,21 +38,21 @@ class AuthenticatedSessionController extends Controller
             ->whereJsonContains('abilities', 'read:public')
             ->where(function ($query) {
                 $query->whereNull('expires_at')
-                      ->orWhere('expires_at', '>', now());
+                    ->orWhere('expires_at', '>', now());
             })
             ->exists();
-        
+
         if (!$hasValidToken) {
             // Get the token service to create a basic token with refresh token
             $tokenService = app(TokenService::class);
             $tokenData = $tokenService->createBasicToken($user);
-            
+
             // Store the access token in the session for JavaScript to use (not as flash)
             session(['api_token' => $tokenData['access_token']]);
-            
+
             // Add expires_at to session to allow JavaScript to know when token expires
             session(['api_token_expires_at' => $tokenData['expires_at']]);
-            
+
             // Store the refresh token in an HttpOnly cookie
             $cookie = cookie(
                 'refresh_token',                  // name
@@ -65,11 +65,11 @@ class AuthenticatedSessionController extends Controller
                 false,                            // raw
                 'Strict'                          // sameSite
             );
-            
+
             // Add the cookie to the response
             return redirect()->intended(route('profile.settings', absolute: false))->cookie($cookie);
         }
-        
+
         return redirect()->intended(route('profile.settings', absolute: false));
     }
 
@@ -84,7 +84,7 @@ class AuthenticatedSessionController extends Controller
             // Optionally, revoke all tokens for the user
             app(TokenService::class)->revokeAllTokens($user);
         }
-        
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
