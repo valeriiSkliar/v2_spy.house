@@ -28,4 +28,42 @@ export default defineConfig({
   optimizeDeps: {
     include: ['jquery'],
   },
+  build: {
+    chunkSizeWarningLimit: 600,
+    cssCodeSplit: true,
+    cssMinify: 'lightningcss',
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info', 'logger'],
+      },
+      mangle: {
+        safari10: true,
+      },
+      format: {
+        comments: false,
+      },
+    },
+    rollupOptions: {
+      output: {
+        entryFileNames: 'assets/[name].[hash].js',
+        chunkFileNames: 'assets/[name].[hash].js',
+        assetFileNames: 'assets/[name].[hash].[ext]',
+        manualChunks: {
+          vendor: ['jquery', 'alpinejs', 'axios'],
+          ui: ['bootstrap', 'slick-carousel', 'swiper'],
+          forms: [
+            'bootstrap-datepicker',
+            'bootstrap-select',
+            'flatpickr',
+            'daterangepicker',
+            'select2',
+          ],
+          utils: ['moment'],
+        },
+      },
+    },
+  },
 });
