@@ -2,7 +2,14 @@ import { initializeSelectComponent } from '../../../helpers/initiolaze-select-co
 import { logger } from '../../../helpers/logger';
 
 /**
- * Класс для управления фильтрами сервисов.
+ * Класс для управления фильтрами, сортировкой и пагинацией сервисов.
+ *
+ * Возможности:
+ * - Фильтрация по категориям и бонусам
+ * - Поиск по тексту
+ * - Сортировка данных
+ * - Пагинация результатов
+ * - Выбор количества элементов на странице
  *
  * @example
  * // Использование с jQuery-хелпером (по умолчанию)
@@ -33,32 +40,51 @@ class ServiceFilterManager {
     this.searchInput = this.container.querySelector('input[type="search"]');
     this.resetButton = this.container.querySelector('.reset-btn a');
 
+    // Элементы пагинации и сортировки
+    this.sortingSelect = document.getElementById('sort-by');
+    this.perPageSelect = document.getElementById('per-page');
+    this.paginationContainer = document.querySelector('.pagination');
+
+    // Подписываемся на изменения фильтров и пагинации
+    this.storeUnsubscribe = this.store.subscribe(this.handleStoreChanges.bind(this));
+
     this.bindEvents();
     this.initFilters();
+    this.initPagination();
+    this.initSorting();
+  }
+
+  // Проверка существования элемента в DOM
+  elementExists(element) {
+    return element && element instanceof HTMLElement && document.body.contains(element);
   }
 
   bindEvents() {
     // Добавляем слушатели событий для base-select
-    if (this.categoryFilter) {
-      // Выбираем реализацию в зависимости от опций
-      if (this.options.useJqueryHelper) {
-        this.initializeSelectWithHelper(this.categoryFilter, 'category');
-      } else {
-        this.initBaseSelectListener(this.categoryFilter, 'category');
-      }
+    if (this.elementExists(this.categoryFilter)) {
+      // Всегда используем jQuery helper
+      this.initializeSelectWithHelper(this.categoryFilter, 'category');
     }
 
-    if (this.bonusesFilter) {
-      // Выбираем реализацию в зависимости от опций
-      if (this.options.useJqueryHelper) {
-        this.initializeSelectWithHelper(this.bonusesFilter, 'bonuses');
-      } else {
-        this.initBaseSelectListener(this.bonusesFilter, 'bonuses');
-      }
+    if (this.elementExists(this.bonusesFilter)) {
+      // Всегда используем jQuery helper
+      this.initializeSelectWithHelper(this.bonusesFilter, 'bonuses');
+    }
+
+    // Добавляем обработчики для сортировки, если элемент найден
+    if (this.elementExists(this.sortingSelect)) {
+      // Всегда используем jQuery helper
+      this.initializeSortingWithHelper();
+    }
+
+    // Добавляем обработчики для выбора количества элементов на странице
+    if (this.elementExists(this.perPageSelect)) {
+      // Всегда используем jQuery helper
+      this.initializePerPageWithHelper();
     }
 
     // Поиск
-    if (this.searchInput) {
+    if (this.elementExists(this.searchInput)) {
       this.searchInput.addEventListener('input', this.handleSearchInput.bind(this));
       // Предотвращаем стандартную отправку формы
       const searchForm = this.searchInput.closest('form');
@@ -71,11 +97,16 @@ class ServiceFilterManager {
     }
 
     // Кнопка сброса
-    if (this.resetButton) {
+    if (this.elementExists(this.resetButton)) {
       this.resetButton.addEventListener('click', e => {
         e.preventDefault();
         this.resetFilters();
       });
+    }
+
+    // Инициализация пагинации
+    if (this.elementExists(this.paginationContainer)) {
+      this.initPaginationListeners();
     }
   }
 
@@ -203,6 +234,16 @@ class ServiceFilterManager {
       this.resetBaseSelect(this.bonusesFilter);
     }
 
+    // Сбрасываем настройки сортировки
+    if (this.sortingSelect) {
+      this.resetBaseSelect(this.sortingSelect);
+    }
+
+    // Сбрасываем настройки количества элементов на странице
+    if (this.perPageSelect) {
+      this.resetBaseSelect(this.perPageSelect);
+    }
+
     // Сбрасываем поле поиска
     if (this.searchInput) {
       this.searchInput.value = '';
@@ -210,6 +251,12 @@ class ServiceFilterManager {
 
     // Сбрасываем все фильтры в сторе
     this.store.setFilters({});
+
+    // Сбрасываем страницу на первую
+    this.store.setCurrentPage(1);
+
+    // Возвращаем значение по умолчанию для количества элементов на странице
+    this.store.setPerPage(12); // или другое значение по умолчанию
   }
 
   resetBaseSelect(selectContainer) {
@@ -271,6 +318,449 @@ class ServiceFilterManager {
         placeholder.style.display = 'none';
       }
     }
+  }
+
+  // Методы для работы с пагинацией
+  initPagination() {
+    // Инициализация состояния пагинации на основе данных из хранилища
+    const pagination = this.store.getState().pagination;
+    logger('Initial pagination state', pagination, { debug: true });
+
+    // Проверяем, есть ли установленное значение количества элементов на странице
+    const perPage = pagination.per_page;
+
+    // Если есть значение per_page, инициализируем селектор
+    if (perPage && this.perPageSelect) {
+      this.setPerPageSelectValue(perPage.toString());
+    }
+    // Если нет, устанавливаем значение по умолчанию из первой опции или 12
+    else if (this.perPageSelect) {
+      // Получаем первую опцию или устанавливаем 12 как значение по умолчанию
+      const defaultOption = this.perPageSelect.querySelector('.base-select__option');
+      if (defaultOption) {
+        const defaultValue = parseInt(defaultOption.dataset.value);
+        logger('Setting default per_page', defaultValue, { debug: true });
+
+        // Устанавливаем значение по умолчанию в сторе, но не обновляем UI,
+        // так как это происходит при первоначальной загрузке
+        this.store.setPerPage(defaultValue);
+      } else {
+        // Если нет опций, устанавливаем стандартное значение 12
+        this.store.setPerPage(12);
+      }
+    }
+  }
+
+  initPaginationListeners() {
+    // Находим все ссылки пагинации и добавляем обработчики
+    const pageLinks = this.paginationContainer.querySelectorAll('a[data-page]');
+
+    pageLinks.forEach(link => {
+      link.addEventListener('click', e => {
+        e.preventDefault();
+        const page = parseInt(link.dataset.page);
+        if (!isNaN(page)) {
+          this.setPage(page);
+        }
+      });
+    });
+  }
+
+  setPage(page) {
+    // Устанавливаем текущую страницу
+    logger('Setting page to:', page, { debug: true });
+    this.store.setCurrentPage(page);
+  }
+
+  // Методы для работы с сортировкой
+  initSorting() {
+    // Инициализация состояния сортировки на основе данных из хранилища
+    const filters = this.store.getState().filters;
+    const sortBy = filters.sort_by || filters.sortBy;
+    const sortOrder = filters.sort_order || filters.sortOrder;
+
+    logger(
+      'Initial sorting state',
+      {
+        sort_by: sortBy,
+        sort_order: sortOrder,
+      },
+      { debug: true }
+    );
+
+    // Если в сторе нет значений сортировки, устанавливаем значения по умолчанию
+    if (!sortBy && this.sortingSelect) {
+      // Получаем первую опцию или устанавливаем 'default' как значение по умолчанию
+      const defaultOption = this.sortingSelect.querySelector('.base-select__option');
+      if (defaultOption) {
+        const defaultValue = defaultOption.dataset.value;
+        const defaultOrder = defaultOption.dataset.order || 'asc';
+
+        logger(
+          'Setting default sorting',
+          {
+            sort_by: defaultValue,
+            sort_order: defaultOrder,
+          },
+          { debug: true }
+        );
+
+        // Устанавливаем значения по умолчанию в сторе
+        this.updateSorting({
+          sort_by: defaultValue,
+          sort_order: defaultOrder,
+        });
+      } else {
+        // Если нет опций, устанавливаем стандартные значения
+        this.updateSorting({
+          sort_by: 'default',
+          sort_order: 'desc',
+        });
+      }
+    }
+    // Если есть значения сортировки в сторе, обновляем визуальное состояние
+    else if (sortBy && this.sortingSelect) {
+      this.setSortingSelectValue(sortBy, sortOrder);
+    }
+  }
+
+  setSortingSelectValue(value, order = 'asc') {
+    logger('Setting UI sort value', { value, order }, { debug: true });
+
+    const options = this.sortingSelect.querySelectorAll('.base-select__option');
+    let selectedOption = null;
+
+    options.forEach(option => {
+      if (option.dataset.value === value) {
+        option.classList.add('is-selected');
+        selectedOption = option;
+      } else {
+        option.classList.remove('is-selected');
+      }
+    });
+
+    if (selectedOption) {
+      const selectedLabel = this.sortingSelect.querySelector('.base-select__selected-label');
+      if (selectedLabel) {
+        selectedLabel.textContent = selectedOption.dataset.label;
+        logger('Updated sort select UI with label', selectedOption.dataset.label, { debug: true });
+      }
+    } else {
+      logger('No matching option found for sort value', value, { debug: true, isWarning: true });
+    }
+  }
+
+  initializeSortingWithHelper() {
+    // Используем jQuery helper для инициализации сортировки
+    const containerId = `#${this.sortingSelect.id}`;
+
+    const config = {
+      selectors: {
+        select: '.base-select__dropdown',
+        options: '.base-select__option',
+        trigger: '.base-select__trigger',
+        valueElement: '.base-select__value',
+        orderElement: '.base-select__order',
+      },
+      params: {
+        valueParam: 'sort_by',
+        orderParam: 'sort_order',
+      },
+      ajaxHandler: queryParams => {
+        this.updateSorting(queryParams);
+      },
+      // Добавляем resetPage для сброса пагинации при изменении сортировки
+      resetPage: true,
+    };
+
+    // Инициализируем компонент с помощью внешней функции
+    initializeSelectComponent(containerId, config);
+  }
+
+  initSortingListener() {
+    // Нативная реализация инициализации сортировки
+    const options = this.sortingSelect.querySelectorAll('.base-select__option');
+    const trigger = this.sortingSelect.querySelector('.base-select__trigger');
+
+    if (trigger) {
+      trigger.addEventListener('click', () => {
+        const dropdown = this.sortingSelect.querySelector('.base-select__dropdown');
+        if (dropdown) {
+          dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        }
+      });
+    }
+
+    options.forEach(option => {
+      option.addEventListener('click', () => {
+        const field = option.dataset.value;
+        const order = option.dataset.order || 'asc';
+        const label = option.dataset.label;
+
+        // Обновляем внешний вид
+        options.forEach(opt => opt.classList.remove('is-selected'));
+        option.classList.add('is-selected');
+
+        // Обновляем отображаемую метку
+        const selectedLabel = this.sortingSelect.querySelector('.base-select__selected-label');
+        if (selectedLabel) {
+          selectedLabel.textContent = label;
+        }
+
+        // Закрываем выпадающий список
+        const dropdown = this.sortingSelect.querySelector('.base-select__dropdown');
+        if (dropdown) {
+          dropdown.style.display = 'none';
+        }
+
+        // Обновляем сортировку
+        this.updateSorting({ sort_by: field, sort_order: order });
+      });
+    });
+
+    // Закрытие при клике вне элемента
+    document.addEventListener('click', e => {
+      if (!this.sortingSelect.contains(e.target)) {
+        const dropdown = this.sortingSelect.querySelector('.base-select__dropdown');
+        if (dropdown) {
+          dropdown.style.display = 'none';
+        }
+      }
+    });
+  }
+
+  updateSorting(params) {
+    // Обновляем параметры сортировки в хранилище
+    logger('Updating sorting with params:', params, { debug: true });
+
+    // Проверяем, что параметры корректные
+    if (!params || (!params.sort_by && !params.sortBy)) {
+      logger('Invalid sorting params', params, { debug: true, isError: true });
+      return;
+    }
+
+    const sorting = {
+      field: params.sort_by || params.sortBy,
+      order: params.sort_order || params.sortOrder || 'asc',
+    };
+
+    // Обновляем визуальное представление, если селектор существует
+    if (this.sortingSelect) {
+      this.setSortingSelectValue(sorting.field, sorting.order);
+    }
+
+    // Обновляем сортировку в сторе
+    this.store.setSorting(sorting);
+
+    // При изменении сортировки также сбрасываем страницу на первую
+    this.store.setCurrentPage(1);
+  }
+
+  // Методы для работы с количеством элементов на странице
+  initializePerPageWithHelper() {
+    // Используем jQuery helper для инициализации выбора количества элементов
+    const containerId = `#${this.perPageSelect.id}`;
+
+    const config = {
+      selectors: {
+        select: '.base-select__dropdown',
+        options: '.base-select__option',
+        trigger: '.base-select__trigger',
+        valueElement: '.base-select__value',
+      },
+      params: {
+        valueParam: 'per_page',
+      },
+      ajaxHandler: queryParams => {
+        if (queryParams.per_page) {
+          this.updatePerPage(parseInt(queryParams.per_page));
+        }
+      },
+      // Добавляем resetPage для сброса пагинации при изменении количества элементов
+      resetPage: true,
+    };
+
+    // Инициализируем компонент с помощью внешней функции
+    initializeSelectComponent(containerId, config);
+  }
+
+  initPerPageListener() {
+    // Нативная реализация для выбора количества элементов на странице
+    const options = this.perPageSelect.querySelectorAll('.base-select__option');
+    const trigger = this.perPageSelect.querySelector('.base-select__trigger');
+
+    if (trigger) {
+      trigger.addEventListener('click', () => {
+        const dropdown = this.perPageSelect.querySelector('.base-select__dropdown');
+        if (dropdown) {
+          dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        }
+      });
+    }
+
+    options.forEach(option => {
+      option.addEventListener('click', () => {
+        const perPage = parseInt(option.dataset.value);
+        const label = option.dataset.label;
+
+        // Обновляем внешний вид
+        options.forEach(opt => opt.classList.remove('is-selected'));
+        option.classList.add('is-selected');
+
+        // Обновляем отображаемую метку
+        const selectedLabel = this.perPageSelect.querySelector('.base-select__selected-label');
+        if (selectedLabel) {
+          selectedLabel.textContent = label;
+        }
+
+        // Закрываем выпадающий список
+        const dropdown = this.perPageSelect.querySelector('.base-select__dropdown');
+        if (dropdown) {
+          dropdown.style.display = 'none';
+        }
+
+        // Обновляем количество элементов на странице
+        this.updatePerPage(perPage);
+      });
+    });
+
+    // Закрытие при клике вне элемента
+    document.addEventListener('click', e => {
+      if (!this.perPageSelect.contains(e.target)) {
+        const dropdown = this.perPageSelect.querySelector('.base-select__dropdown');
+        if (dropdown) {
+          dropdown.style.display = 'none';
+        }
+      }
+    });
+  }
+
+  updatePerPage(perPage) {
+    // Обновляем количество элементов на странице в хранилище
+    if (!isNaN(perPage) && perPage > 0) {
+      logger('Updating per page to:', perPage, { debug: true });
+
+      // Обновляем визуальное представление, если селектор существует
+      if (this.perPageSelect) {
+        this.setPerPageSelectValue(perPage.toString());
+      }
+
+      // Обновляем количество элементов на странице в сторе
+      this.store.setPerPage(perPage);
+
+      // При изменении количества элементов, сбрасываем страницу на первую
+      this.store.setCurrentPage(1);
+    } else {
+      logger('Invalid per page value:', perPage, { debug: true, isError: true });
+    }
+  }
+
+  setPerPageSelectValue(value) {
+    logger('Setting UI per_page value', value, { debug: true });
+
+    const options = this.perPageSelect.querySelectorAll('.base-select__option');
+    let selectedOption = null;
+
+    options.forEach(option => {
+      if (option.dataset.value === value) {
+        option.classList.add('is-selected');
+        selectedOption = option;
+      } else {
+        option.classList.remove('is-selected');
+      }
+    });
+
+    if (selectedOption) {
+      const selectedLabel = this.perPageSelect.querySelector('.base-select__selected-label');
+      if (selectedLabel) {
+        selectedLabel.textContent = selectedOption.dataset.label;
+        logger('Updated per_page select UI with label', selectedOption.dataset.label, {
+          debug: true,
+        });
+      }
+    } else {
+      logger('No matching option found for per_page value', value, {
+        debug: true,
+        isWarning: true,
+      });
+    }
+  }
+
+  // Обработчик изменений в сторе
+  handleStoreChanges(state) {
+    // Сохраняем предыдущее состояние при первом запуске
+    if (!this.previousState) {
+      this.previousState = { ...state };
+      return;
+    }
+
+    // Ищем и логируем изменения
+    const changes = {};
+
+    // Проверяем изменения в фильтрах
+    if (JSON.stringify(state.filters) !== JSON.stringify(this.previousState.filters)) {
+      changes.filters = {
+        previous: this.previousState.filters,
+        current: state.filters,
+      };
+    }
+
+    // Проверяем изменения в пагинации
+    if (JSON.stringify(state.pagination) !== JSON.stringify(this.previousState.pagination)) {
+      changes.pagination = {
+        previous: this.previousState.pagination,
+        current: state.pagination,
+      };
+    }
+
+    // Логируем изменения, если они есть
+    if (Object.keys(changes).length > 0) {
+      logger('Store changes detected', changes, { debug: true });
+    }
+
+    // Обновляем предыдущее состояние
+    this.previousState = { ...state };
+  }
+
+  // Обновляем все селекторы в соответствии с текущими фильтрами и пагинацией
+  updateSelectorsFromStore() {
+    const state = this.store.getState();
+    const { filters, pagination } = state;
+
+    // Обновляем селектор категорий
+    if (this.categoryFilter && filters.category) {
+      this.setBaseSelectValue(this.categoryFilter, filters.category);
+    }
+
+    // Обновляем селектор бонусов
+    if (this.bonusesFilter && filters.bonuses) {
+      this.setBaseSelectValue(this.bonusesFilter, filters.bonuses);
+    }
+
+    // Обновляем селектор сортировки
+    if (this.sortingSelect && (filters.sort_by || filters.sortBy)) {
+      const sortBy = filters.sort_by || filters.sortBy;
+      const sortOrder = filters.sort_order || filters.sortOrder || 'asc';
+      this.setSortingSelectValue(sortBy, sortOrder);
+    }
+
+    // Обновляем селектор количества элементов на странице
+    if (this.perPageSelect && pagination.per_page) {
+      this.setPerPageSelectValue(pagination.per_page.toString());
+    }
+  }
+
+  // Метод для освобождения ресурсов при уничтожении компонента
+  destroy() {
+    // Отписываемся от изменений в сторе
+    if (this.storeUnsubscribe) {
+      this.storeUnsubscribe();
+    }
+
+    // Удаляем все обработчики событий, если необходимо
+    // ...
+
+    logger('ServiceFilterManager destroyed', null, { debug: true });
   }
 }
 

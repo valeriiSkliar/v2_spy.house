@@ -1,5 +1,3 @@
-import { logger } from '../../../helpers/logger';
-
 class ServiceStore {
   constructor(initialData) {
     this.state = {
@@ -7,10 +5,10 @@ class ServiceStore {
       categories: initialData.categories || [],
       filters: initialData.filters || {}, // Текущие фильтры
       pagination: initialData.pagination || {
-        currentPage: 1,
-        lastPage: 1,
+        current_page: 1,
+        total_pages: 1,
         total: 0,
-        perPage: 12,
+        per_page: 12,
       },
       currentServiceId: null, // ID текущего просматриваемого сервиса
       loading: false,
@@ -64,8 +62,45 @@ class ServiceStore {
     this.setState({ filters });
   }
 
+  // Метод для обновления пагинации
+  setPagination(pagination) {
+    const currentPagination = this.state.pagination;
+    this.setState({
+      pagination: {
+        ...currentPagination,
+        ...pagination,
+      },
+    });
+  }
+
+  // Метод для обновления настроек сортировки
+  setSorting(sorting) {
+    const newFilters = { ...this.state.filters };
+
+    if (sorting.field) {
+      newFilters.sort_by = sorting.field;
+    }
+
+    if (sorting.order) {
+      newFilters.sort_order = sorting.order;
+    }
+
+    this.setState({ filters: newFilters });
+  }
+
+  // Метод для установки количества элементов на странице
+  setPerPage(perPage) {
+    const pagination = { ...this.state.pagination, per_page: perPage };
+    this.setState({ pagination });
+  }
+
+  // Метод для установки текущей страницы
+  setCurrentPage(page) {
+    const pagination = { ...this.state.pagination, current_page: page };
+    this.setState({ pagination });
+  }
+
   setCurrentServiceId(id) {
-    logger('setCurrentServiceId', id, { debug: true });
     this.setState({ currentServiceId: id });
   }
 
