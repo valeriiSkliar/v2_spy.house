@@ -43,7 +43,7 @@ class ServiceFilterManager {
     // Элементы пагинации и сортировки
     this.sortingSelect = document.getElementById('sort-by');
     this.perPageSelect = document.getElementById('services-per-page');
-    this.paginationContainer = document.querySelector('.pagination');
+    this.paginationContainer = document.querySelector('.pagination-nav');
 
     // Подписываемся на изменения фильтров и пагинации
     this.storeUnsubscribe = this.store.subscribe(this.handleStoreChanges.bind(this));
@@ -51,10 +51,59 @@ class ServiceFilterManager {
     // Добавляем обработчик события popstate для корректной работы с историей браузера
     window.addEventListener('popstate', this.handlePopState.bind(this));
 
+    // Инициализируем MutationObserver для отслеживания изменений в DOM
+    this.initMutationObserver();
+
     this.bindEvents();
     this.initFilters();
     this.initPagination();
     this.initSorting();
+  }
+
+  // Инициализация MutationObserver для отслеживания изменений в DOM
+  initMutationObserver() {
+    // Получаем контейнер с услугами
+    const servicesContainer = document.getElementById('services-container');
+    if (!servicesContainer) {
+      logger('Services container not found for MutationObserver', null, {
+        debug: true,
+        isWarning: true,
+      });
+      return;
+    }
+
+    // Создаем новый MutationObserver
+    this.observer = new MutationObserver(mutations => {
+      // Теперь нам не нужно переинициализировать слушатели пагинации,
+      // так как мы используем делегирование событий
+      // Но мы все еще можем использовать MutationObserver для других задач в будущем
+
+      // Например, логирование существенных изменений в DOM
+      mutations.forEach(mutation => {
+        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+          // Проверяем, добавлены ли новые элементы пагинации
+          const addedPagination = Array.from(mutation.addedNodes).some(
+            node =>
+              node.nodeType === Node.ELEMENT_NODE &&
+              (node.classList.contains('pagination-nav') || node.querySelector('.pagination-nav'))
+          );
+
+          if (addedPagination) {
+            logger('Pagination elements added to DOM', null, { debug: true });
+          }
+        }
+      });
+    });
+
+    // Опции для наблюдателя
+    const config = {
+      childList: true, // наблюдаем за добавлением/удалением дочерних элементов
+      subtree: true, // наблюдаем за изменениями во всем поддереве
+    };
+
+    // Начинаем наблюдение
+    this.observer.observe(servicesContainer, config);
+    logger('MutationObserver initialized for services container', null, { debug: true });
   }
 
   // Проверка существования элемента в DOM
@@ -107,9 +156,25 @@ class ServiceFilterManager {
       });
     }
 
-    // Инициализация пагинации
-    if (this.elementExists(this.paginationContainer)) {
-      this.initPaginationListeners();
+    // Безусловно инициализируем обработчики пагинации, не проверяя существование контейнера
+    this.initPaginationListeners();
+
+    // Для диагностики - выведем информацию о контейнере пагинации
+    if (this.paginationContainer) {
+      logger(
+        'Pagination container found',
+        {
+          element: this.paginationContainer.tagName,
+          id: this.paginationContainer.id,
+          class: this.paginationContainer.className,
+        },
+        { debug: true }
+      );
+    } else {
+      logger('Pagination container not found on initial load', null, {
+        debug: true,
+        isWarning: true,
+      });
     }
   }
 
@@ -360,18 +425,112 @@ class ServiceFilterManager {
   }
 
   initPaginationListeners() {
-    // Находим все ссылки пагинации и добавляем обработчики
-    const pageLinks = this.paginationContainer.querySelectorAll('a[data-page]');
+    // Удаляем предыдущий обработчик, если он был
+    if (this.paginationClickHandler) {
+      document.removeEventListener('click', this.paginationClickHandler);
+    }
 
-    pageLinks.forEach(link => {
-      link.addEventListener('click', e => {
-        e.preventDefault();
-        const page = parseInt(link.dataset.page);
-        if (!isNaN(page)) {
-          this.setPage(page);
+    // Создаем обработчик с делегированием на уровне документа
+    this.paginationClickHandler = event => {
+      // Проверяем, является ли цель клика или его родитель ссылкой внутри .pagination-nav
+      // или имеет атрибут data-page
+      const target = event.target;
+      const paginationNav = document.querySelector('.pagination-nav');
+
+      if (!paginationNav) {
+        // Если нет контейнера пагинации, не делаем ничего
+        return;
+      }
+
+      // Проверяем, был ли клик внутри пагинации
+      let isPaginationClick = false;
+      let paginationLink = null;
+
+      // Проверяем, был ли клик по ссылке или её потомку внутри pagination-nav
+      if (paginationNav.contains(target)) {
+        // Находим родительскую ссылку, если клик был по элементу внутри ссылки
+        paginationLink = target.closest('a');
+        if (paginationLink) {
+          isPaginationClick = true;
+          logger(
+            'Pagination area click detected on link',
+            {
+              href: paginationLink.href,
+              element: paginationLink.outerHTML,
+            },
+            { debug: true }
+          );
         }
-      });
-    });
+      }
+
+      // Если клик был не по ссылке пагинации, выходим
+      if (!isPaginationClick || !paginationLink) {
+        return;
+      }
+
+      // Принудительно предотвращаем стандартное действие для всех кликов внутри пагинации
+      event.preventDefault();
+      logger('Preventing default navigation for pagination link', null, { debug: true });
+
+      // Получаем значение страницы
+      let newPage;
+      let pageData = null;
+
+      // Проверяем наличие атрибута data-page
+      if (paginationLink.hasAttribute('data-page')) {
+        pageData = paginationLink.dataset.page;
+      }
+
+      // Определяем номер страницы
+      if (pageData === 'prev' || paginationLink.classList.contains('prev')) {
+        // Предыдущая страница
+        newPage = Math.max(this.store.getState().pagination.current_page - 1, 1);
+        logger('Detected prev page click', newPage, { debug: true });
+      } else if (pageData === 'next' || paginationLink.classList.contains('next')) {
+        // Следующая страница
+        const currentPage = this.store.getState().pagination.current_page;
+        const totalPages = this.store.getState().pagination.total_pages || 1;
+        newPage = Math.min(currentPage + 1, totalPages);
+        logger('Detected next page click', newPage, { debug: true });
+      } else if (pageData && !isNaN(parseInt(pageData))) {
+        // Конкретная страница из data-page
+        newPage = parseInt(pageData);
+        logger('Detected specific page click from data-page', newPage, { debug: true });
+      } else {
+        // Пытаемся получить номер страницы из URL
+        try {
+          const url = new URL(paginationLink.href);
+          const pageParam = url.searchParams.get('page');
+          if (pageParam && !isNaN(parseInt(pageParam))) {
+            newPage = parseInt(pageParam);
+            logger('Extracted page number from URL', newPage, { debug: true });
+          }
+        } catch (e) {
+          logger('Error parsing pagination URL', e, { debug: true, isError: true });
+        }
+      }
+
+      // Если удалось определить номер страницы, применяем его
+      if (!isNaN(newPage)) {
+        logger('Setting page to:', newPage, { debug: true });
+        this.setPage(newPage);
+
+        // Обновляем URL без перезагрузки страницы
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('page', newPage);
+        history.pushState({ page: newPage }, '', currentUrl.toString());
+      } else {
+        logger('Could not determine page number from link', paginationLink.outerHTML, {
+          debug: true,
+          isWarning: true,
+        });
+      }
+    };
+
+    // Добавляем обработчик на уровне документа с захватом в фазе перехвата (true)
+    // Это гарантирует, что наш обработчик будет вызван до обработчиков по умолчанию
+    document.addEventListener('click', this.paginationClickHandler, true);
+    logger('Pagination click delegation initialized with capture phase', null, { debug: true });
   }
 
   setPage(page) {
@@ -836,6 +995,18 @@ class ServiceFilterManager {
 
     // Отписываемся от события popstate
     window.removeEventListener('popstate', this.handlePopState);
+
+    // Отключаем наблюдатель за DOM
+    if (this.observer) {
+      this.observer.disconnect();
+      logger('MutationObserver disconnected', null, { debug: true });
+    }
+
+    // Удаляем обработчик кликов пагинации, с учетом опции capture
+    if (this.paginationClickHandler) {
+      document.removeEventListener('click', this.paginationClickHandler, true);
+      logger('Pagination click handler removed', null, { debug: true });
+    }
 
     // Удаляем все обработчики событий, если необходимо
     // ...
