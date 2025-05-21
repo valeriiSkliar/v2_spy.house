@@ -17,7 +17,7 @@
 </div>
 <div class="col-12 col-md-6 col-lg-auto mb-15">
     <div class="base-select-icon">
-        <x-common.base-select id="per-page" :selected="$selectedPerPage" :options="$perPageOptions"
+        <x-common.base-select id="services-per-page" :selected="$selectedPerPage" :options="$perPageOptions"
             :placeholder="$perPageOptionsPlaceholder" :icon="'list'" />
         <span class="icon-list"></span>
     </div>

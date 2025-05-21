@@ -42,11 +42,14 @@ class ServiceFilterManager {
 
     // Элементы пагинации и сортировки
     this.sortingSelect = document.getElementById('sort-by');
-    this.perPageSelect = document.getElementById('per-page');
+    this.perPageSelect = document.getElementById('services-per-page');
     this.paginationContainer = document.querySelector('.pagination');
 
     // Подписываемся на изменения фильтров и пагинации
     this.storeUnsubscribe = this.store.subscribe(this.handleStoreChanges.bind(this));
+
+    // Добавляем обработчик события popstate для корректной работы с историей браузера
+    window.addEventListener('popstate', this.handlePopState.bind(this));
 
     this.bindEvents();
     this.initFilters();
@@ -332,6 +335,9 @@ class ServiceFilterManager {
     // Если есть значение per_page, инициализируем селектор
     if (perPage && this.perPageSelect) {
       this.setPerPageSelectValue(perPage.toString());
+      // Убедимся, что значение установлено в сторе
+      this.store.setPerPage(perPage);
+      logger('Initializing per_page with value from state', perPage, { debug: true });
     }
     // Если нет, устанавливаем значение по умолчанию из первой опции или 12
     else if (this.perPageSelect) {
@@ -341,8 +347,10 @@ class ServiceFilterManager {
         const defaultValue = parseInt(defaultOption.dataset.value);
         logger('Setting default per_page', defaultValue, { debug: true });
 
-        // Устанавливаем значение по умолчанию в сторе, но не обновляем UI,
-        // так как это происходит при первоначальной загрузке
+        // Обновляем UI селектора
+        this.setPerPageSelectValue(defaultValue.toString());
+
+        // Устанавливаем значение по умолчанию в сторе
         this.store.setPerPage(defaultValue);
       } else {
         // Если нет опций, устанавливаем стандартное значение 12
@@ -494,11 +502,26 @@ class ServiceFilterManager {
         orderParam: 'sort_order',
       },
       ajaxHandler: queryParams => {
-        // Логируем все переданные параметры
+        // Предотвращаем перезагрузку страницы и обрабатываем изменение сортировки
         logger('Sort select change with params', queryParams, { debug: true });
 
-        // Передаем все параметры в обработчик, чтобы учесть page и другие возможные параметры
-        this.updateSorting(queryParams);
+        // Проверяем наличие параметров сортировки
+        if (queryParams.sort_by) {
+          // Создаем объект с параметрами сортировки
+          const sortingParams = {
+            sort_by: queryParams.sort_by,
+            sort_order: queryParams.sort_order || 'asc',
+          };
+
+          // Обновляем хранилище с новыми параметрами сортировки
+          this.updateSorting(sortingParams);
+
+          // Обновляем URL без перезагрузки страницы
+          const currentUrl = new URL(window.location.href);
+          currentUrl.searchParams.set('sort_by', sortingParams.sort_by);
+          currentUrl.searchParams.set('sort_order', sortingParams.sort_order);
+          history.pushState(sortingParams, '', currentUrl.toString());
+        }
       },
       // Добавляем resetPage для сброса пагинации при изменении сортировки
       resetPage: true,
@@ -614,8 +637,20 @@ class ServiceFilterManager {
         valueParam: 'per_page',
       },
       ajaxHandler: queryParams => {
+        // Предотвращаем перезагрузку страницы и обрабатываем изменение количества записей на странице
         if (queryParams.per_page) {
-          this.updatePerPage(parseInt(queryParams.per_page));
+          logger('Per page select change with params', queryParams, { debug: true });
+
+          // Преобразуем в число, чтобы избежать проблем с типами
+          const perPage = parseInt(queryParams.per_page);
+
+          // Обновляем хранилище
+          this.updatePerPage(perPage);
+
+          // Обновляем URL без перезагрузки страницы
+          const currentUrl = new URL(window.location.href);
+          currentUrl.searchParams.set('per_page', perPage);
+          history.pushState({ per_page: perPage }, '', currentUrl.toString());
         }
       },
       // Добавляем resetPage для сброса пагинации при изменении количества элементов
@@ -799,10 +834,61 @@ class ServiceFilterManager {
       this.storeUnsubscribe();
     }
 
+    // Отписываемся от события popstate
+    window.removeEventListener('popstate', this.handlePopState);
+
     // Удаляем все обработчики событий, если необходимо
     // ...
 
     logger('ServiceFilterManager destroyed', null, { debug: true });
+  }
+
+  // Обработчик события popstate (навигация по истории браузера)
+  handlePopState(event) {
+    logger('Navigation event detected', event.state, { debug: true });
+
+    // Получаем текущие параметры из URL
+    const url = new URL(window.location.href);
+    const params = {};
+
+    // Извлекаем все параметры
+    for (const [key, value] of url.searchParams.entries()) {
+      params[key] = value;
+    }
+
+    // Обновляем фильтры на основе параметров URL
+    if (params.category) {
+      this.updateFilter('category', params.category);
+    }
+
+    if (params.bonuses) {
+      this.updateFilter('bonuses', params.bonuses);
+    }
+
+    if (params.search) {
+      this.updateFilter('search', params.search);
+      if (this.searchInput) {
+        this.searchInput.value = params.search;
+      }
+    }
+
+    // Обновляем сортировку
+    if (params.sort_by) {
+      this.updateSorting({
+        sort_by: params.sort_by,
+        sort_order: params.sort_order || 'asc',
+      });
+    }
+
+    // Обновляем количество элементов на странице
+    if (params.per_page) {
+      this.updatePerPage(parseInt(params.per_page));
+    }
+
+    // Обновляем страницу
+    if (params.page) {
+      this.setPage(parseInt(params.page));
+    }
   }
 }
 
