@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Service\ServicesApiController;
 use App\Http\Controllers\Frontend\Service\ServiceRedirectController;
 use App\Http\Controllers\Frontend\Service\ServicesController;
 use Illuminate\Support\Facades\Route;
@@ -19,4 +20,7 @@ Route::prefix('api')
     ->middleware('auth:sanctum') // Simplified to just require authentication without specific abilities
     ->group(function () {
         Route::get('/services/{id}/rate/{rating}', [ServicesController::class, 'rate'])->name('services.rate');
+        // Сервисы API
+        Route::get('/services', [ServicesApiController::class, 'index']);
+        Route::get('/services/{id}/rating', [ServicesApiController::class, 'getUserRating']);
     });

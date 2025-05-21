@@ -1,17 +1,13 @@
 @props(['service', 'route' => 'services.show', 'target' => '_self', 'buttonText' => 'More info'])
 <div class="col-12 col-md-6 col-lg-4 col-xl-3 d-flex">
-    <div class="market-list__item">
+    <div data-id="{{ $service['id'] }}" class="market-list__item">
         <div class="market-list__thumb">
-            <img 
-                src="{{ $service['logo'] }}" 
-                alt="{{ $service['name'] }}" 
-            />
+            <img src="{{ $service['logo'] }}" alt="{{ $service['name'] }}" />
         </div>
         <h4>
             {{ $service['name'] }}
         </h4>
-        <div 
-            class="market-list__desc">
+        <div class="market-list__desc">
             {{ $service['description'] }}
         </div>
         <ul class="market-list__info">

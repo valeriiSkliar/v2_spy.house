@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Frontend\Service;
+namespace App\Http\Controllers\Api\Service;
 
 use App\Http\Controllers\FrontendController;
 use App\Models\Frontend\Service\Service;
@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 
-class ServicesController extends FrontendController
+class ServicesApiController extends FrontendController
 {
     private $indexView = 'pages.services.index';
     private $showView = 'pages.services.show';
@@ -170,8 +170,6 @@ class ServicesController extends FrontendController
             ['value' => 96, 'label' => '96', 'order' => ''],
         ];
 
-
-
         $bonusesOptions = [
             ['value' => 'all', 'label' => 'All Bonuses', 'order' => ''],
             ['value' => 'with_discount', 'label' => 'With Discount', 'order' => ''],
@@ -199,11 +197,6 @@ class ServicesController extends FrontendController
             $categoriesOptions->prepend($allCategoriesOption);
         }
 
-        $sortOptionsPlaceholder = 'Sort by — ';
-        $perPageOptionsPlaceholder = 'On Page — ';
-        $bonusesOptionsPlaceholder = 'Bonuses — ';
-        $categoriesOptionsPlaceholder = 'Category — ';
-
         $selectedSort = collect($sortOptions)->first(function ($option) use ($sortField, $sortOrder) {
             return $option['value'] === $sortField && $option['order'] === $sortOrder;
         });
@@ -213,8 +206,8 @@ class ServicesController extends FrontendController
 
         $selectedPerPage = collect($perPageOptions)->firstWhere('value', $perPage) ?? $perPageOptions[0];
 
-        // Создаем массив с начальными данными для клиентского JavaScript
-        $initialData = [
+        // Возвращаем данные в формате JSON
+        return response()->json([
             'services' => $paginator->items(),
             'pagination' => [
                 'current_page' => $paginator->currentPage(),
@@ -232,153 +225,9 @@ class ServicesController extends FrontendController
             'selectedPerPage' => $selectedPerPage,
             'selectedCategory' => $selectedCategory,
             'selectedBonuses' => $selectedBonuses,
-        ];
-
-        return view($this->indexView, [
-            'services'   => $paginator,
-            'categories' => $categories,
-            'filters'    => $filters,
-            'currentPage' => $currentPage,
-            'totalPages' => ceil($totalServices / $perPage),
-            'sortOptions' => $sortOptions,
-            'perPageOptions' => $perPageOptions,
-            'selectedSort' => $selectedSort,
-            'selectedPerPage' => $selectedPerPage,
-            'categoriesOptions' => $categoriesOptions,
-            'selectedCategory' => $selectedCategory,
-            'bonusesOptions' => $bonusesOptions,
-            'selectedBonuses' => $selectedBonuses,
-            'sortOptionsPlaceholder' => $sortOptionsPlaceholder,
-            'perPageOptionsPlaceholder' => $perPageOptionsPlaceholder,
-            'bonusesOptionsPlaceholder' => $bonusesOptionsPlaceholder,
-            'categoriesOptionsPlaceholder' => $categoriesOptionsPlaceholder,
-            'initialData' => json_encode($initialData),
         ]);
     }
 
-    public function show($id)
-    {
-        $locale = app()->getLocale();
-        $service = Service::where('id', $id)
-            ->where('status', 'Active')
-            ->with('ratings')
-            ->with('category')
-            ->firstOrFail();
-
-        // Increment views
-        $service->increment('views');
-        $userRating = Auth::check() ? Auth::user()->getRatingForService($service->id) : null;
-
-        // Get translations for the current locale
-        $translatedService = [
-            'id' => $service->id,
-            'name' => $service->getTranslation('name', $locale),
-            'description' => $service->getTranslation('description', $locale),
-            'code' => $service->code,
-            'code_description' => $service->getTranslation('code_description', $locale),
-            'transitions' => $service->transitions,
-            'category' => $service->category,
-            'rating' => $service->rating,
-            'views' => $service->views,
-            'url' => $service->url,
-            'redirect_url' => $service->redirect_url,
-            'logo' => $service->logo,
-            'is_active_code' => $service->is_active_code,
-            'userRating' => $userRating,
-        ];
-
-
-        $relatedServices = Service::where('status', 'Active')
-            ->where('id', '!=', $service->id)
-            ->take(4)
-            ->inRandomOrder()
-            ->with('category')
-            ->get()
-            ->map(function ($service) use ($locale) {
-                return [
-                    'id' => $service->id,
-                    'name' => $service->getTranslation('name', $locale),
-                    'description' => $service->getTranslation('description', $locale),
-                    'category' => $service->category,
-                    'transitions' => $service->transitions,
-                    'rating' => $service->rating,
-                    'views' => $service->views,
-                    'url' => $service->url,
-                    'redirect_url' => $service->redirect_url,
-                    'logo' => $service->logo,
-                    'is_active_code' => $service->is_active_code,
-                ];
-            });
-
-        return view($this->showView, [
-            'service' => $translatedService,
-            'relatedServices' => $relatedServices,
-        ]);
-    }
-
-    /**
-     * Rate a service
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function rate(Request $request, $id, $rating)
-    {
-        // Validate the rating value
-        if (!in_array($rating, [1, 2, 3, 4, 5])) {
-            return response()->json(['error' => 'Invalid rating value.'], 400);
-        }
-
-        $service = Service::findOrFail($id);
-        $userId = Auth::id(); // Get authenticated user ID
-
-        // Check if the user has already rated this service
-        $existingRating = Rating::where('service_id', $service->id)
-            ->where('user_id', $userId)
-            ->first();
-
-        if ($existingRating) {
-            // User has already rated, return an error or appropriate response
-            return response()->json(['error' => 'You have already rated this service.'], 409); // 409 Conflict
-        }
-
-
-        // Create a new rating
-        $newRating = new Rating([
-            'service_id' => $service->id,
-            'user_id' => $userId, // Use the authenticated user's ID
-            'rating' => $rating,
-            'comment' => $request->input('comment', '') // Optionally get comment from request
-        ]);
-
-        $newRating->save();
-
-        // Recalculate average rating and update service
-        $reviewsCount = $service->ratings()->count();
-
-        $averageRating = $service->averageRating();
-        $service->update([
-            'rating' => $averageRating,
-            'reviews_count' => $reviewsCount
-        ]);
-
-        $formattedRating = number_format($averageRating, 1);
-        $ratedHtml = view('components.services.show.rated-rating', [
-            'userRating' => $newRating->rating ?? 0,
-            'formattedRating' => $formattedRating
-        ])->render();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Rating submitted successfully',
-            'rating' => $newRating,
-            'user_rating' => $rating,
-            'average_rating' => number_format($averageRating, 1),
-            'reviews_count' => $reviewsCount,
-            'ratedHtml' => $ratedHtml
-        ]);
-    }
 
     public function getUserRating(string $id)
     {

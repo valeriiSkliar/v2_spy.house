@@ -9,6 +9,8 @@ use App\Http\Controllers\Test\API\BaseTokenController;
 use App\Services\Api\TokenService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\Service\ServicesApiController;
+use Illuminate\Http\Request;
 
 // Place all API routes under the /api prefix with proper naming
 Route::prefix('api')->group(function () {
@@ -48,4 +50,8 @@ Route::prefix('api')->group(function () {
         // Test
         Route::get('test-api-token2', [BaseTokenController::class, 'testBaseToken2'])->name('test-base-token2');
     });
+});
+
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    return $request->user();
 });
