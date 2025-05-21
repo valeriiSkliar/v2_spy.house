@@ -129,16 +129,31 @@ document.addEventListener('DOMContentLoaded', function () {
       // Update content
       container.innerHTML = data.html;
       
-      // Update pagination
+      // Update pagination container
       const paginationContainer = document.getElementById('services-pagination-container');
-      if (paginationContainer && data.pagination) {
-        paginationContainer.innerHTML = data.pagination;
+      if (paginationContainer) {
+        // If pagination data exists, show it
+        if (data.hasPagination && data.pagination) {
+          paginationContainer.innerHTML = data.pagination;
+          paginationContainer.style.display = 'block';
+        } else {
+          // Otherwise hide the pagination container
+          paginationContainer.innerHTML = '';
+          paginationContainer.style.display = 'none';
+        }
       }
       
       // Scroll to top of services container for better UX
       if (scrollToTop) {
         container.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
+      
+      console.log('Services loaded:', {
+        count: data.count,
+        currentPage: data.currentPage,
+        totalPages: data.totalPages,
+        hasPagination: data.hasPagination
+      });
     })
     .catch(error => {
       console.error('Error fetching services:', error);

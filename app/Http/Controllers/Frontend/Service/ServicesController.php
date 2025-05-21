@@ -384,27 +384,41 @@ class ServicesController extends FrontendController
         
         // If this is an AJAX request, return only the services list partial
         if ($request->ajax()) {
-            $services = $view->getData()['services'];
-            $currentPage = $view->getData()['currentPage'];
-            $totalPages = $view->getData()['totalPages'];
+            $viewData = $view->getData();
+            $services = $viewData['services'];
+            $currentPage = $viewData['currentPage'];
+            $totalPages = $viewData['totalPages'];
             
+            // Render services list
             $servicesHtml = view('components.services.index.list.services-list', [
                 'services' => $services
             ])->render();
             
+            // Check if pagination should be shown
+            $hasPagination = $services->hasPages();
+            
+            // Only render pagination if needed
             $paginationHtml = '';
-            if ($services->hasPages()) {
+            if ($hasPagination) {
+                // Make sure we pass all necessary data for the pagination component
                 $paginationHtml = view('components.pagination', [
                     'currentPage' => $currentPage,
                     'totalPages' => $totalPages
                 ])->render();
             }
             
+            // If services is empty, render the empty services component
+            if ($services->isEmpty()) {
+                $servicesHtml = view('components.services.index.list.empty-services')->render();
+            }
+            
             return response()->json([
                 'html' => $servicesHtml,
                 'pagination' => $paginationHtml,
+                'hasPagination' => $hasPagination,
                 'currentPage' => $currentPage,
-                'totalPages' => $totalPages
+                'totalPages' => $totalPages,
+                'count' => $services->count()
             ]);
         }
         

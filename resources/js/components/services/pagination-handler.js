@@ -94,9 +94,17 @@ const initServicesPagination = () => {
             // Update content
             servicesContainer.innerHTML = data.html;
             
-            // Update pagination
-            if (data.pagination) {
-                paginationContainer.innerHTML = data.pagination;
+            // Update pagination container
+            if (paginationContainer) {
+                // If pagination data exists, show it
+                if (data.hasPagination && data.pagination) {
+                    paginationContainer.innerHTML = data.pagination;
+                    paginationContainer.style.display = 'block';
+                } else {
+                    // Otherwise hide the pagination container
+                    paginationContainer.innerHTML = '';
+                    paginationContainer.style.display = 'none';
+                }
             }
             
             // Scroll to top of services container
