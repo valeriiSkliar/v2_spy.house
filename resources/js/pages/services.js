@@ -12,6 +12,76 @@ document.addEventListener('DOMContentLoaded', function () {
       reloadServicesContent(servicesContainer, ajaxUrl);
     }
   });
+  
+  // Add click handler for reset button
+  const resetBtn = document.getElementById('services-reset-btn');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', function(event) {
+      event.preventDefault();
+      
+      // Get the reset URL
+      const resetUrl = this.getAttribute('data-reset-url');
+      if (!resetUrl) return;
+      
+      // Update browser URL without query parameters
+      history.pushState({}, '', resetUrl);
+      
+      // Get services container
+      const servicesContainer = document.getElementById('services-container');
+      const ajaxUrl = servicesContainer?.getAttribute('data-services-ajax-url');
+      
+      if (servicesContainer && ajaxUrl) {
+        // Show loading state
+        servicesContainer.classList.add('loading');
+        
+        // Reset all select components to default state
+        resetFilters();
+        
+        // Fetch default services list
+        fetch(ajaxUrl, {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          // Update content
+          servicesContainer.innerHTML = data.html;
+          
+          // Update pagination container
+          const paginationContainer = document.getElementById('services-pagination-container');
+          if (paginationContainer) {
+            // If pagination data exists, show it
+            if (data.hasPagination && data.pagination) {
+              paginationContainer.innerHTML = data.pagination;
+              paginationContainer.style.display = 'block';
+            } else {
+              // Otherwise hide the pagination container
+              paginationContainer.innerHTML = '';
+              paginationContainer.style.display = 'none';
+            }
+          }
+          
+          // Scroll to top of services container
+          servicesContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          
+          console.log('Filters reset, services reloaded');
+        })
+        .catch(error => {
+          console.error('Error resetting services:', error);
+        })
+        .finally(() => {
+          // Remove loading state
+          servicesContainer.classList.remove('loading');
+        });
+      }
+    });
+  }
   // --- Initialize Components ---
 
   // Service Components
@@ -165,10 +235,51 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   /**
+   * Reset all filter components to their default state
+   */
+  function resetFilters() {
+    // Get filter selectors
+    const filterSelectors = [
+      '#sort-by', 
+      '#services-per-page', 
+      '#category-filter', 
+      '#bonuses-filter'
+    ];
+    
+    // Reset each select component
+    filterSelectors.forEach(selector => {
+      const container = $(selector);
+      if (!container.length) return;
+      
+      // Find default option
+      const defaultOption = container.find('.base-select__option[data-value="all"]');
+      if (defaultOption.length) {
+        // Simulate click on default option
+        defaultOption.click();
+      } else {
+        // If no 'all' option, try first option
+        const firstOption = container.find('.base-select__option').first();
+        if (firstOption.length) {
+          firstOption.click();
+        }
+      }
+    });
+    
+    // Also reset search form if present
+    const searchForm = document.getElementById('searchForm');
+    if (searchForm) {
+      const searchInput = searchForm.querySelector('input[name="search"]');
+      if (searchInput) {
+        searchInput.value = '';
+      }
+    }
+  }
+
+  /**
    * Handle filter changes for AJAX loading
    * @param {Event} event - Change event
    * @param {Object} data - Optional event data from select component
-   */
+   */  
   function handleFilterChange(event, data) {
     if (!useAjax) return;
     

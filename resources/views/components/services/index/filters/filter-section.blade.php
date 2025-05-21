@@ -33,8 +33,10 @@
             </div>
             <div class="col-12 col-md-auto mb-10">
                 <div class="reset-btn">
-                    <a href="{{ route('services.index') }}" class="btn-icon"><span class="icon-clear"></span> <span
-                            class="ml-2 d-md-none">Reset</span></a>
+                    <a href="{{ route('services.index') }}" class="btn-icon" id="services-reset-btn" data-reset-url="{{ route('services.index') }}">
+                        <span class="icon-clear"></span> 
+                        <span class="ml-2 d-md-none">Reset</span>
+                    </a>
                 </div>
             </div>
         </div>
