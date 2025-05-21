@@ -6,6 +6,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Service Components
   initializeServiceComponents();
+  
+  const servicesContainer = document.getElementById('services-container');
+  const ajaxUrl = servicesContainer?.getAttribute('data-services-ajax-url');
+  const useAjax = !!ajaxUrl;
+  
   // Sort By
   initializeSelectComponent('#sort-by', {
     selectors: {
@@ -20,6 +25,7 @@ document.addEventListener('DOMContentLoaded', function () {
       orderParam: 'sortOrder',
     },
     resetPage: true,
+    preventReload: useAjax, // When Ajax is enabled, prevent form reload
   });
 
   // Per Page
@@ -36,6 +42,7 @@ document.addEventListener('DOMContentLoaded', function () {
       // No order param
     },
     resetPage: true,
+    preventReload: useAjax, // When Ajax is enabled, prevent form reload
   });
 
   // Category Filter
@@ -50,6 +57,7 @@ document.addEventListener('DOMContentLoaded', function () {
       valueParam: 'category',
     },
     resetPage: false, // Do not reset page for filters
+    preventReload: useAjax, // When Ajax is enabled, prevent form reload
   });
 
   // Bonuses Filter
@@ -64,5 +72,67 @@ document.addEventListener('DOMContentLoaded', function () {
       valueParam: 'bonuses',
     },
     resetPage: false, // Do not reset page for filters
+    preventReload: useAjax, // When Ajax is enabled, prevent form reload
   });
+  
+  // If AJAX is enabled, add handlers for filter changes
+  if (useAjax) {
+    const filterSelectors = [
+      '#sort-by', 
+      '#services-per-page', 
+      '#category-filter', 
+      '#bonuses-filter'
+    ];
+    
+    filterSelectors.forEach(selector => {
+      const container = document.querySelector(selector);
+      if (container) {
+        container.addEventListener('change', handleFilterChange);
+      }
+    });
+  }
+  
+  /**
+   * Handle filter changes for AJAX loading
+   * @param {Event} event - Change event
+   */
+  function handleFilterChange(event) {
+    if (!useAjax) return;
+    
+    // Show loading state
+    servicesContainer.classList.add('loading');
+    
+    // Build URL with the current query parameters
+    const url = new URL(window.location.href);
+    
+    // Make AJAX request
+    fetch(`${ajaxUrl}?${url.searchParams.toString()}`, {
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(data => {
+      // Update content
+      servicesContainer.innerHTML = data.html;
+      
+      // Update pagination
+      const paginationContainer = document.getElementById('services-pagination-container');
+      if (paginationContainer && data.pagination) {
+        paginationContainer.innerHTML = data.pagination;
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching services:', error);
+    })
+    .finally(() => {
+      // Remove loading state
+      servicesContainer.classList.remove('loading');
+    });
+  }
 });

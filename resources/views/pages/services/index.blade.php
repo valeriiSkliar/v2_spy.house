@@ -13,14 +13,19 @@
     :perPageOptionsPlaceholder="$perPageOptionsPlaceholder" :selectedCategory="$selectedCategory"
     :selectedBonuses="$selectedBonuses" :categoriesOptionsPlaceholder="$categoriesOptionsPlaceholder"
     :bonusesOptionsPlaceholder="$bonusesOptionsPlaceholder" />
-@if ($services->isEmpty())
-<x-services.index.list.empty-services />
-@else
-<x-services.index.list.services-list :services="$services" />
-@endif
 
-{{-- {{ $services->links('common.pagination.spy-pagination-default') }} --}}
-@if ($services->hasPages())
-<x-pagination :currentPage="$currentPage" :totalPages="$totalPages" />
-@endif
+<div id="services-container" data-services-ajax-url="{{ route('api.services.list') }}">
+    @if ($services->isEmpty())
+    <x-services.index.list.empty-services />
+    @else
+    <x-services.index.list.services-list :services="$services" />
+    @endif
+</div>
+
+<div id="services-pagination-container" data-pagination-container>
+    {{-- {{ $services->links('common.pagination.spy-pagination-default') }} --}}
+    @if ($services->hasPages())
+    <x-pagination :currentPage="$currentPage" :totalPages="$totalPages" />
+    @endif
+</div>
 @endsection

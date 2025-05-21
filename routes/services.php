@@ -16,7 +16,12 @@ Route::middleware('web')
 
 // API routes
 Route::prefix('api')
-    ->middleware('auth:sanctum') // Simplified to just require authentication without specific abilities
     ->group(function () {
-        Route::get('/services/{id}/rate/{rating}', [ServicesController::class, 'rate'])->name('services.rate');
+        Route::middleware('auth:sanctum')
+            ->group(function () {
+                Route::get('/services/{id}/rate/{rating}', [ServicesController::class, 'rate'])->name('services.rate');
+            });
+        
+        // Public API routes
+        Route::get('/services/list', [ServicesController::class, 'ajaxList'])->name('api.services.list');
     });

@@ -33,7 +33,9 @@ $prevUrl = $currentPage <= 1 ? '' : buildUrl($prevParams);
             <li>
                 <a class="pagination-link prev {{ $currentPage <= 1 ? 'disabled' : '' }}"
                     aria-disabled="{{ $currentPage <= 1 ? 'true' : 'false' }}"
-                    href="{{ $prevUrl }}">
+                    href="{{ $prevUrl }}"
+                    data-page="{{ $currentPage - 1 }}"
+                    data-action="prev">
                     <span class="icon-prev"></span>
                     <span class="pagination-link__txt">Previous</span>
                 </a>
@@ -48,14 +50,17 @@ $prevUrl = $currentPage <= 1 ? '' : buildUrl($prevParams);
                 @endphp
                 <li>
                 <a class="pagination-link {{ $i == $currentPage ? 'active' : '' }}"
-                    href="{{ $pageUrl }}">{{ $i }}</a>
+                    href="{{ $pageUrl }}"
+                    data-page="{{ $i }}">{{ $i }}</a>
                 </li>
                 @endfor
 
                 <li>
                     <a class="pagination-link next {{ $currentPage >= $totalPages ? 'disabled' : '' }}"
                         aria-disabled="{{ $currentPage >= $totalPages ? 'true' : 'false' }}"
-                        href="{{ $nextUrl }}">
+                        href="{{ $nextUrl }}"
+                        data-page="{{ $currentPage + 1 }}"
+                        data-action="next">
                         <span class="pagination-link__txt">Next</span>
                         <span class="icon-next"></span>
                     </a>

@@ -148,7 +148,7 @@ export function initializeSelectComponent(containerId, config) {
                 return;
             }
             
-            // Default behavior - redirect the page
+            // Default behavior - redirect the page or update URL only
             if (!$form.length) {
                 // Используем функцию для обновления URL
                 const redirectUrl = updateUrlWithRedirect(
@@ -159,7 +159,23 @@ export function initializeSelectComponent(containerId, config) {
                     config.resetPage
                 );
                 
-                window.location.href = redirectUrl;
+                // If preventReload is set, don't redirect, just update URL and trigger change event
+                if (config.preventReload) {
+                    // Use History API to update URL without page reload
+                    history.pushState({}, '', redirectUrl);
+                    
+                    // Trigger a custom 'select:changed' event on the container
+                    const eventData = {
+                        value: selectedValue,
+                        order: selectedOrder,
+                        element: $option[0],
+                        queryParams: buildQueryParams($option, selectedValue, selectedOrder, config.params, config.resetPage)
+                    };
+                    selectors.container.trigger('change', [eventData]);
+                } else {
+                    // Standard behavior - redirect to new URL
+                    window.location.href = redirectUrl;
+                }
             }
         });
 

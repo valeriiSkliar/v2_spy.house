@@ -370,4 +370,45 @@ class ServicesController extends FrontendController
             'hasRated' => $rating ? true : false
         ]);
     }
+
+    /**
+     * AJAX endpoint for loading services list
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\Response
+     */
+    public function ajaxList(Request $request)
+    {
+        // Call the index method to get the data
+        $view = $this->index($request);
+        
+        // If this is an AJAX request, return only the services list partial
+        if ($request->ajax()) {
+            $services = $view->getData()['services'];
+            $currentPage = $view->getData()['currentPage'];
+            $totalPages = $view->getData()['totalPages'];
+            
+            $servicesHtml = view('components.services.index.list.services-list', [
+                'services' => $services
+            ])->render();
+            
+            $paginationHtml = '';
+            if ($services->hasPages()) {
+                $paginationHtml = view('components.pagination', [
+                    'currentPage' => $currentPage,
+                    'totalPages' => $totalPages
+                ])->render();
+            }
+            
+            return response()->json([
+                'html' => $servicesHtml,
+                'pagination' => $paginationHtml,
+                'currentPage' => $currentPage,
+                'totalPages' => $totalPages
+            ]);
+        }
+        
+        // Otherwise, return the full view
+        return $view;
+    }
 }
