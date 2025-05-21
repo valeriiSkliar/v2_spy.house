@@ -5,9 +5,26 @@ document.addEventListener('DOMContentLoaded', function () {
   const personalSettingsForm = document.getElementById('personal-settings-form');
 
   if (personalSettingsForm) {
+    // Добавляем обработчики событий для полей ввода
+    const formInputs = personalSettingsForm.querySelectorAll('input, select');
+    formInputs.forEach(input => {
+      input.addEventListener('input', function () {
+        // Удаляем класс ошибки при изменении значения
+        this.classList.remove('error');
+        // Удаляем сообщение об ошибке, если оно есть
+        const errorElement = this.parentElement.querySelector('.validation-error');
+        if (errorElement) {
+          errorElement.remove();
+        }
+      });
+    });
+
     personalSettingsForm.addEventListener('submit', function (event) {
       // Удаляем существующие сообщения об ошибках
       document.querySelectorAll('.validation-error').forEach(el => el.remove());
+
+      // Удаляем класс ошибки со всех полей
+      document.querySelectorAll('input, select').forEach(el => el.classList.remove('error'));
 
       // Проверяем форму
       const isValid = validatePersonalSettingsForm();
