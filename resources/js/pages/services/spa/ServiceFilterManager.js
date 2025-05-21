@@ -377,7 +377,7 @@ class ServiceFilterManager {
     // Инициализация состояния сортировки на основе данных из хранилища
     const filters = this.store.getState().filters;
     const sortBy = filters.sort_by || filters.sortBy;
-    const sortOrder = filters.sort_order || filters.sortOrder;
+    const sortOrder = filters.sort_order || filters.sortOrder || 'asc'; // Добавляем значение по умолчанию
 
     logger(
       'Initial sorting state',
@@ -420,6 +420,7 @@ class ServiceFilterManager {
     }
     // Если есть значения сортировки в сторе, обновляем визуальное состояние
     else if (sortBy && this.sortingSelect) {
+      // Используем и значение сортировки, и направление
       this.setSortingSelectValue(sortBy, sortOrder);
     }
   }
@@ -429,15 +430,37 @@ class ServiceFilterManager {
 
     const options = this.sortingSelect.querySelectorAll('.base-select__option');
     let selectedOption = null;
+    let fallbackOption = null; // Для случая, если не найдем точное соответствие
 
     options.forEach(option => {
-      if (option.dataset.value === value) {
+      // Проверяем как значение, так и направление сортировки
+      const optionValue = option.dataset.value;
+      const optionOrder = option.dataset.order || 'asc'; // Если order не указан, считаем asc по умолчанию
+
+      // Проверяем точное соответствие
+      if (optionValue === value && optionOrder === order) {
         option.classList.add('is-selected');
         selectedOption = option;
+      }
+      // Запасной вариант - просто совпадение по значению
+      else if (optionValue === value && !fallbackOption) {
+        fallbackOption = option;
+        option.classList.remove('is-selected');
       } else {
         option.classList.remove('is-selected');
       }
     });
+
+    // Если точное соответствие не найдено, но есть совпадение по значению
+    if (!selectedOption && fallbackOption) {
+      fallbackOption.classList.add('is-selected');
+      selectedOption = fallbackOption;
+      logger(
+        'Exact match not found, using fallback option with matching value',
+        { value, fallbackOrder: fallbackOption.dataset.order },
+        { debug: true, isWarning: true }
+      );
+    }
 
     if (selectedOption) {
       const selectedLabel = this.sortingSelect.querySelector('.base-select__selected-label');
@@ -446,7 +469,11 @@ class ServiceFilterManager {
         logger('Updated sort select UI with label', selectedOption.dataset.label, { debug: true });
       }
     } else {
-      logger('No matching option found for sort value', value, { debug: true, isWarning: true });
+      logger(
+        'No matching option found for sort value and order',
+        { value, order },
+        { debug: true, isWarning: true }
+      );
     }
   }
 
@@ -467,6 +494,10 @@ class ServiceFilterManager {
         orderParam: 'sort_order',
       },
       ajaxHandler: queryParams => {
+        // Логируем все переданные параметры
+        logger('Sort select change with params', queryParams, { debug: true });
+
+        // Передаем все параметры в обработчик, чтобы учесть page и другие возможные параметры
         this.updateSorting(queryParams);
       },
       // Добавляем resetPage для сброса пагинации при изменении сортировки
@@ -497,8 +528,10 @@ class ServiceFilterManager {
         const order = option.dataset.order || 'asc';
         const label = option.dataset.label;
 
-        // Обновляем внешний вид
+        // Обновляем внешний вид - снимаем выделение со всех элементов
         options.forEach(opt => opt.classList.remove('is-selected'));
+
+        // Устанавливаем выделение только для выбранного элемента
         option.classList.add('is-selected');
 
         // Обновляем отображаемую метку
@@ -513,8 +546,11 @@ class ServiceFilterManager {
           dropdown.style.display = 'none';
         }
 
-        // Обновляем сортировку
-        this.updateSorting({ sort_by: field, sort_order: order });
+        // Обновляем сортировку с учетом конкретного порядка
+        this.updateSorting({
+          sort_by: field,
+          sort_order: order,
+        });
       });
     });
 
@@ -552,8 +588,14 @@ class ServiceFilterManager {
     // Обновляем сортировку в сторе
     this.store.setSorting(sorting);
 
-    // При изменении сортировки также сбрасываем страницу на первую
-    this.store.setCurrentPage(1);
+    // Если передана страница - устанавливаем её, иначе сбрасываем на первую
+    if (params.page) {
+      // Устанавливаем указанную страницу
+      this.store.setCurrentPage(parseInt(params.page));
+    } else {
+      // При изменении сортировки без указания страницы сбрасываем на первую
+      this.store.setCurrentPage(1);
+    }
   }
 
   // Методы для работы с количеством элементов на странице
