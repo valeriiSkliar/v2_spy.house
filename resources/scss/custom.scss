@@ -236,3 +236,21 @@ html {
         transform: translate(-50%, -50%) rotate(360deg);
     }
 }
+
+/* Search input styling for minimum character warning */
+#services-search-input.min-chars-warning {
+    border-color: #ffae00;
+    box-shadow: 0 0 0 1px rgba(255, 174, 0, 0.3);
+    background-color: rgba(255, 174, 0, 0.05);
+}
+
+/* Add a pulsing animation to show more characters are needed */
+@keyframes pulse-warning {
+    0% { box-shadow: 0 0 0 0 rgba(255, 174, 0, 0.4); }
+    70% { box-shadow: 0 0 0 5px rgba(255, 174, 0, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 174, 0, 0); }
+}
+
+#services-search-input.min-chars-warning {
+    animation: pulse-warning 1.5s infinite;
+}

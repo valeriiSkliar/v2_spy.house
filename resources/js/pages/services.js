@@ -1,17 +1,23 @@
 import { initializeSelectComponent } from '@/helpers';
 import { initializeServiceComponents } from '../components';
+import { debounce } from '../helpers/custom-debounce';
 
 document.addEventListener('DOMContentLoaded', function () {
+  // Get services container reference for reuse
+  const servicesContainer = document.getElementById('services-container');
+  const ajaxUrl = servicesContainer?.getAttribute('data-services-ajax-url');
+  const useAjax = !!ajaxUrl;
+  
   // Add popstate event listener to handle browser back/forward navigation
   window.addEventListener('popstate', function(event) {
     // Reload services content when navigating through history
-    const servicesContainer = document.getElementById('services-container');
-    const ajaxUrl = servicesContainer?.getAttribute('data-services-ajax-url');
-    
     if (servicesContainer && ajaxUrl) {
       reloadServicesContent(servicesContainer, ajaxUrl);
     }
   });
+  
+  // Setup search functionality
+  setupSearchForm();
   
   // Add click handler for reset button
   const resetBtn = document.getElementById('services-reset-btn');
@@ -86,10 +92,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Service Components
   initializeServiceComponents();
-  
-  const servicesContainer = document.getElementById('services-container');
-  const ajaxUrl = servicesContainer?.getAttribute('data-services-ajax-url');
-  const useAjax = !!ajaxUrl;
   
   // Sort By
   initializeSelectComponent('#sort-by', {
@@ -268,18 +270,99 @@ document.addEventListener('DOMContentLoaded', function () {
     // Also reset search form if present
     const searchForm = document.getElementById('searchForm');
     if (searchForm) {
-      const searchInput = searchForm.querySelector('input[name="search"]');
+      const searchInput = document.getElementById('services-search-input');
       if (searchInput) {
+        // Clear input value
         searchInput.value = '';
+        
+        // Remove warning class if any
+        searchInput.classList.remove('min-chars-warning');
+        
+        // Trigger the search event to update results
+        const searchEvent = new Event('search');
+        searchInput.dispatchEvent(searchEvent);
       }
     }
   }
 
   /**
-   * Handle filter changes for AJAX loading
-   * @param {Event} event - Change event
-   * @param {Object} data - Optional event data from select component
-   */  
+   * Initialize search form functionality
+   */
+  function setupSearchForm() {
+    if (!useAjax) return;
+    
+    const searchForm = document.getElementById('searchForm');
+    const searchInput = document.getElementById('services-search-input');
+    
+    if (!searchForm || !searchInput) return;
+    
+    // Get minimum characters for search
+    const minChars = parseInt(searchInput.getAttribute('data-min-chars') || '3', 10);
+    
+    // Prevent the default form submission
+    searchForm.addEventListener('submit', function(event) {
+      event.preventDefault();
+      
+      const searchValue = searchInput.value.trim();
+      
+      // Check for minimum characters
+      if (searchValue.length >= minChars || searchValue.length === 0) {
+        performSearch(searchValue);
+      }
+    });
+    
+    // Create debounced search function (300ms delay)
+    const debouncedSearch = debounce(function(value) {
+      // Check for minimum characters
+      if (value.length >= minChars || value.length === 0) {
+        performSearch(value);
+      }
+    }, 300);
+    
+    // Add input event listener
+    searchInput.addEventListener('input', function() {
+      const searchValue = this.value.trim();
+      
+      // Show visual indicator that minimum characters are needed
+      if (searchValue.length > 0 && searchValue.length < minChars) {
+        searchInput.classList.add('min-chars-warning');
+      } else {
+        searchInput.classList.remove('min-chars-warning');
+        debouncedSearch(searchValue);
+      }
+    });
+    
+    // Also handle search when clear/X button is clicked (for browsers that support it)
+    searchInput.addEventListener('search', function() {
+      const searchValue = this.value.trim();
+      
+      if (searchValue.length >= minChars || searchValue.length === 0) {
+        performSearch(searchValue);
+      }
+    });
+  }
+  
+  /**
+   * Perform search with the given query
+   * @param {string} query - Search query
+   */
+  function performSearch(query) {
+    // Update URL with the search parameter
+    const url = new URL(window.location.href);
+    
+    if (query && query.length > 0) {
+      url.searchParams.set('search', query);
+    } else {
+      url.searchParams.delete('search');
+    }
+    
+    // Update the browser URL
+    history.pushState({}, '', url.toString());
+    
+    // Reload services with the new search parameter
+    reloadServicesContent(servicesContainer, ajaxUrl, true);
+  }
+
   function handleFilterChange(event, data) {
     if (!useAjax) return;
     
