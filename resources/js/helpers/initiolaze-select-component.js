@@ -164,14 +164,24 @@ export function initializeSelectComponent(containerId, config) {
                     // Use History API to update URL without page reload
                     history.pushState({}, '', redirectUrl);
                     
-                    // Trigger a custom 'select:changed' event on the container
+                    // Build query params
+                    const queryParams = buildQueryParams($option, selectedValue, selectedOrder, config.params, config.resetPage);
+                    
+                    // Trigger a custom event on the container
                     const eventData = {
                         value: selectedValue,
                         order: selectedOrder,
                         element: $option[0],
-                        queryParams: buildQueryParams($option, selectedValue, selectedOrder, config.params, config.resetPage)
+                        queryParams: queryParams
                     };
+                    
+                    // Trigger change directly on the container for event bubbling
                     selectors.container.trigger('change', [eventData]);
+                    
+                    // Also trigger a custom event in case we want to listen specifically
+                    selectors.container.trigger('select:changed', [eventData]);
+                    
+                    logger("Triggered change event with data:", eventData);
                 } else {
                     // Standard behavior - redirect to new URL
                     window.location.href = redirectUrl;

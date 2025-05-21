@@ -2,6 +2,16 @@ import { initializeSelectComponent } from '@/helpers';
 import { initializeServiceComponents } from '../components';
 
 document.addEventListener('DOMContentLoaded', function () {
+  // Add popstate event listener to handle browser back/forward navigation
+  window.addEventListener('popstate', function(event) {
+    // Reload services content when navigating through history
+    const servicesContainer = document.getElementById('services-container');
+    const ajaxUrl = servicesContainer?.getAttribute('data-services-ajax-url');
+    
+    if (servicesContainer && ajaxUrl) {
+      reloadServicesContent(servicesContainer, ajaxUrl);
+    }
+  });
   // --- Initialize Components ---
 
   // Service Components
@@ -85,28 +95,26 @@ document.addEventListener('DOMContentLoaded', function () {
     ];
     
     filterSelectors.forEach(selector => {
-      const container = document.querySelector(selector);
-      if (container) {
-        container.addEventListener('change', handleFilterChange);
-      }
+      // jQuery is needed because our custom events are triggered with jQuery
+      $(selector).on('change', handleFilterChange);
     });
   }
   
   /**
-   * Handle filter changes for AJAX loading
-   * @param {Event} event - Change event
+   * Generic function to reload services content
+   * @param {HTMLElement} container - The services container
+   * @param {string} url - The AJAX URL to fetch data
+   * @param {boolean} scrollToTop - Whether to scroll to top after loading
    */
-  function handleFilterChange(event) {
-    if (!useAjax) return;
-    
+  function reloadServicesContent(container, url, scrollToTop = true) {
     // Show loading state
-    servicesContainer.classList.add('loading');
+    container.classList.add('loading');
     
     // Build URL with the current query parameters
-    const url = new URL(window.location.href);
+    const requestUrl = new URL(window.location.href);
     
     // Make AJAX request
-    fetch(`${ajaxUrl}?${url.searchParams.toString()}`, {
+    fetch(`${url}?${requestUrl.searchParams.toString()}`, {
       headers: {
         'X-Requested-With': 'XMLHttpRequest'
       }
@@ -119,12 +127,17 @@ document.addEventListener('DOMContentLoaded', function () {
     })
     .then(data => {
       // Update content
-      servicesContainer.innerHTML = data.html;
+      container.innerHTML = data.html;
       
       // Update pagination
       const paginationContainer = document.getElementById('services-pagination-container');
       if (paginationContainer && data.pagination) {
         paginationContainer.innerHTML = data.pagination;
+      }
+      
+      // Scroll to top of services container for better UX
+      if (scrollToTop) {
+        container.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     })
     .catch(error => {
@@ -132,7 +145,21 @@ document.addEventListener('DOMContentLoaded', function () {
     })
     .finally(() => {
       // Remove loading state
-      servicesContainer.classList.remove('loading');
+      container.classList.remove('loading');
     });
+  }
+
+  /**
+   * Handle filter changes for AJAX loading
+   * @param {Event} event - Change event
+   * @param {Object} data - Optional event data from select component
+   */
+  function handleFilterChange(event, data) {
+    if (!useAjax) return;
+    
+    console.log('Filter change detected', { event, data });
+    
+    // Use the generic reload function
+    reloadServicesContent(servicesContainer, ajaxUrl, true);
   }
 });

@@ -68,9 +68,6 @@ const initServicesPagination = () => {
      * @param {string|number} page - Page number to load
      */
     function loadServicesPage(page) {
-        // Show loading state
-        servicesContainer.classList.add('loading');
-        
         // Build URL with the current query parameters
         const url = new URL(window.location.href);
         url.searchParams.set('page', page);
@@ -78,6 +75,9 @@ const initServicesPagination = () => {
         // Update browser URL
         updateBrowserUrl({ page });
 
+        // Show loading state
+        servicesContainer.classList.add('loading');
+        
         // Make AJAX request
         fetch(`${ajaxUrl}?${url.searchParams.toString()}`, {
             headers: {
