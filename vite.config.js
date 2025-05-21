@@ -32,6 +32,10 @@ export default defineConfig({
     chunkSizeWarningLimit: 600,
     cssCodeSplit: true,
     cssMinify: 'lightningcss',
+    lightningcss: {
+      minify: true,
+      removeCssComments: true,
+    },
     minify: 'terser',
     terserOptions: {
       compress: {
