@@ -411,16 +411,33 @@ class ProfileController extends BaseProfileController
     public function disable2fa(Request $request): View|RedirectResponse
     {
         $user = $request->user();
-        Log::debug('2FA disable page requested', ['user_id' => $user->id]);
+        Log::debug('2FA disable page requested', [
+            'user_id' => $user->id,
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'timestamp' => now()->toIso8601String(),
+            'is_2fa_enabled' => $user->google_2fa_enabled,
+            'has_2fa_secret' => !empty($user->google_2fa_secret)
+        ]);
 
         // Проверяем, что 2FA действительно включен у пользователя
         if (!$user->google_2fa_enabled) {
-            Log::warning('Attempt to disable 2FA for user without 2FA enabled', ['user_id' => $user->id]);
+            Log::warning('Attempt to disable 2FA for user without 2FA enabled', [
+                'user_id' => $user->id,
+                'ip' => $request->ip(),
+                'timestamp' => now()->toIso8601String()
+            ]);
+            Toast::error(__('profile.2fa.already_disabled'));
             return redirect()->route('profile.settings', ['tab' => 'security'])
                 ->withErrors(['error' => 'Двухфакторная аутентификация уже отключена']);
         }
 
-        Log::debug('Displaying 2FA disable form', ['user_id' => $user->id]);
+        Log::debug('Displaying 2FA disable form', [
+            'user_id' => $user->id,
+            'route' => $request->route()->getName(),
+            'session_id' => $request->session()->getId(),
+            'timestamp' => now()->toIso8601String()
+        ]);
         return view('pages.profile.disable_2fa', [
             'user' => $user,
         ]);
@@ -437,49 +454,124 @@ class ProfileController extends BaseProfileController
 
         $user = $request->user();
         $otp = $request->input('verification_code');
+
         Log::debug('2FA disable verification attempt', [
             'user_id' => $user->id,
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
             'otp_length' => strlen($otp),
-            'otp_masked' => substr($otp, 0, 2) . '****'
+            'otp_masked' => $otp ? substr($otp, 0, 2) . '****' : 'null',
+            'request_all' => $request->all(),
+            'timestamp' => now()->toIso8601String(),
+            'session_id' => $request->session()->getId()
         ]);
 
         // Проверяем, что 2FA включен у пользователя
         if (!$user->google_2fa_enabled || !$user->google_2fa_secret) {
-            Log::warning('Attempt to disable 2FA for user without 2FA enabled', ['user_id' => $user->id]);
+            Log::warning('Attempt to disable 2FA for user without 2FA enabled', [
+                'user_id' => $user->id,
+                'ip' => $request->ip(),
+                'has_2fa_enabled' => $user->google_2fa_enabled,
+                'has_2fa_secret' => !empty($user->google_2fa_secret),
+                'timestamp' => now()->toIso8601String()
+            ]);
+            Toast::error(__('profile.2fa.already_disabled'));
             return redirect()->route('profile.settings', ['tab' => 'security'])
                 ->withErrors(['error' => 'Двухфакторная аутентификация уже отключена']);
         }
 
         $google2fa = app('pragmarx.google2fa');
+        Log::debug('Google2FA instance created', [
+            'user_id' => $user->id,
+            'timestamp' => now()->toIso8601String()
+        ]);
 
         try {
             $secret = Crypt::decryptString($user->google_2fa_secret);
-            Log::debug('Retrieved and decrypted 2FA secret for verification', ['user_id' => $user->id, 'secret_length' => strlen($secret)]);
+            Log::debug('Retrieved and decrypted 2FA secret for verification', [
+                'user_id' => $user->id,
+                'secret_length' => strlen($secret),
+                'secret_hash' => md5($secret), // Хеш для отладки без раскрытия самого секрета
+                'timestamp' => now()->toIso8601String()
+            ]);
         } catch (\Exception $e) {
-            Log::error('Failed to decrypt 2FA secret', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+            Log::error('Failed to decrypt 2FA secret', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'ip' => $request->ip(),
+                'timestamp' => now()->toIso8601String()
+            ]);
+            Toast::error(__('profile.2fa.error_decrypting_secret'));
             return redirect()->route('profile.disable-2fa')
                 ->withErrors(['verification_code' => 'Ошибка расшифровки секретного ключа. Пожалуйста, обратитесь в поддержку.']);
         }
 
         // Проверяем одноразовый пароль
+        Log::debug('About to verify OTP', [
+            'user_id' => $user->id,
+            'otp_masked' => substr($otp, 0, 2) . '****',
+            'secret_hash' => md5($secret),
+            'timestamp' => now()->toIso8601String()
+        ]);
+
         $valid = $google2fa->verifyKey($secret, $otp);
-        Log::debug('2FA disable verification result', ['user_id' => $user->id, 'is_valid' => $valid]);
+        Log::debug('2FA disable verification result', [
+            'user_id' => $user->id,
+            'is_valid' => $valid,
+            'ip' => $request->ip(),
+            'timestamp' => now()->toIso8601String(),
+            'verification_time_ms' => microtime(true) - LARAVEL_START
+        ]);
 
         if ($valid) {
             // Отключаем 2FA
+            Log::info('About to disable 2FA for user', [
+                'user_id' => $user->id,
+                'ip' => $request->ip(),
+                'timestamp' => now()->toIso8601String()
+            ]);
+
             $user->google_2fa_enabled = false;
             $user->google_2fa_secret = null; // Clear the secret
             $user->save();
-            Log::info('2FA successfully disabled for user', ['user_id' => $user->id]);
 
+            Log::info('2FA successfully disabled for user', [
+                'user_id' => $user->id,
+                'ip' => $request->ip(),
+                'timestamp' => now()->toIso8601String(),
+                'db_update_success' => true
+            ]);
+
+            Toast::success(__('profile.2fa.disabled'));
             $activeTab = $request->query('tab', 'security');
+
+            Log::debug('Redirecting after successful 2FA disable', [
+                'user_id' => $user->id,
+                'redirect_to' => 'profile.settings',
+                'tab' => $activeTab,
+                'timestamp' => now()->toIso8601String()
+            ]);
+
             return redirect()->route('profile.settings', ['tab' => $activeTab])
                 ->with('status', 'authenticator-disabled');
         } else {
+            Toast::error(__('profile.2fa.invalid_code'));
             Log::warning('Invalid 2FA code provided for disabling 2FA', [
                 'user_id' => $user->id,
-                'otp_masked' => substr($otp, 0, 2) . '****'
+                'otp_masked' => substr($otp, 0, 2) . '****',
+                'ip' => $request->ip(),
+                'attempt_time' => now()->toIso8601String(),
+                'user_agent' => $request->userAgent(),
+                'failed_verification' => true
             ]);
+
+            Log::debug('Redirecting after failed 2FA disable attempt', [
+                'user_id' => $user->id,
+                'redirect_to' => 'profile.disable-2fa',
+                'timestamp' => now()->toIso8601String()
+            ]);
+
             return redirect()->route('profile.disable-2fa')
                 ->withErrors(['verification_code' => __('profile.2fa.invalid_code')]);
         }
