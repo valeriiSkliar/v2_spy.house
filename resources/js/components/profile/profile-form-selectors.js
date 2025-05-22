@@ -13,4 +13,5 @@ export const profileFormSelectors = {
   notificationIndicatorNotificationMenu: '#notification-indicator-notification-menu',
   notificationIndicatorPreview: '#notification-indicator-preview',
   submitButton: '#personal-settings-form-button',
+  profileSettingsTabContent: '#profile-settings',
 };

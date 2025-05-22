@@ -34,4 +34,5 @@ export const initProfileFormElements = () => {
   profileFormElements.scopeOfActivity = $(profileFormSelectors.scopeOfActivity);
   profileFormElements.userPreviewName = $(profileFormSelectors.userPreviewName);
   profileFormElements.submitButton = $(profileFormSelectors.submitButton);
+  profileFormElements.profileSettingsTabContent = $(profileFormSelectors.profileSettingsTabContent);
 };

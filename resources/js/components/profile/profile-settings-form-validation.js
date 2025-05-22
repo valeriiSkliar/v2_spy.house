@@ -1,5 +1,3 @@
-import { createAndShowToast } from '../../utils';
-
 /**
  * Enhanced validation for profile settings form
  */
@@ -49,16 +47,13 @@ document.addEventListener('DOMContentLoaded', function () {
       const value = input.value.trim();
 
       if (!value) {
-        createAndShowToast('Логин обязателен', 'error');
+        input.classList.add('error');
         return false;
       } else if (value.length > 255) {
-        createAndShowToast('Логин не должен превышать 255 символов', 'error');
+        input.classList.add('error');
         return false;
       } else if (!/^[a-zA-Z0-9_]+$/.test(value)) {
-        createAndShowToast(
-          'Логин должен содержать только латинские буквы, цифры и символ подчеркивания',
-          'error'
-        );
+        input.classList.add('error');
         return false;
       }
 
@@ -70,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const value = input.value.trim();
 
       if (!value) {
-        createAndShowToast('Контакт мессенджера обязателен', 'error');
+        input.classList.add('error');
         return false;
       }
 
@@ -86,28 +81,19 @@ document.addEventListener('DOMContentLoaded', function () {
       switch (messengerType) {
         case 'telegram':
           if (!validationTelegramLogin(value)) {
-            createAndShowToast(
-              'Неверный формат имени пользователя Telegram. Должен начинаться с @ и содержать 5-32 символа (буквы, цифры, подчеркивание).',
-              'error'
-            );
+            input.classList.add('error');
             return false;
           }
           break;
         case 'viber':
           if (!validationViberIdentifier(value)) {
-            createAndShowToast(
-              'Неверный формат номера телефона Viber. Должен содержать 10-15 цифр.',
-              'error'
-            );
+            input.classList.add('error');
             return false;
           }
           break;
         case 'whatsapp':
           if (!validationWhatsappIdentifier(value)) {
-            createAndShowToast(
-              'Неверный формат номера телефона WhatsApp. Должен содержать 10-15 цифр.',
-              'error'
-            );
+            input.classList.add('error');
             return false;
           }
           break;
@@ -126,6 +112,11 @@ document.addEventListener('DOMContentLoaded', function () {
       formInputs.forEach(input => {
         const errorElement = input.parentElement.querySelector('.validation-error');
         if (errorElement) {
+          isValid = false;
+        }
+
+        // Check if input has error class
+        if (input.classList.contains('error')) {
           isValid = false;
         }
       });
@@ -171,6 +162,12 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     }
 
+    // Initial form validation
+    formInputs.forEach(input => {
+      validateInput(input);
+    });
+    updateFormValidity();
+
     // Submit event handling
     personalSettingsForm.addEventListener('submit', function (event) {
       // Clear all errors
@@ -198,19 +195,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (firstError) {
           firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-
-        // Show form-level error message
-        const formError = document.createElement('div');
-        formError.className = 'alert alert-danger mb-3 form-level-error';
-        formError.textContent = 'Пожалуйста, исправьте ошибки в форме';
-
-        // Insert at the top of the form
-        this.insertBefore(formError, this.firstChild);
-
-        // Auto-remove after 5 seconds
-        setTimeout(() => {
-          formError.remove();
-        }, 5000);
       } else if (submitButton) {
         // Disable button
         submitButton.disabled = true;
@@ -255,33 +239,6 @@ function validationWhatsappIdentifier(value) {
   // Better phone number validation - matches digits only for now
   // In a production app, consider using libphonenumber-js for proper validation
   return /^\d{10,15}$/.test(value);
-}
-
-/**
- * Показывает сообщение об ошибке под элементом формы
- * @param {HTMLElement} inputElement - Элемент формы
- * @param {string} message - Сообщение об ошибке
- */
-function showError(inputElement, message) {
-  // Remove existing error for this element
-  clearError(inputElement);
-
-  const errorElement = document.createElement('div');
-  errorElement.className = 'validation-error text-danger mt-1';
-  errorElement.setAttribute('role', 'alert'); // For accessibility
-  errorElement.textContent = message;
-
-  const parentElement = inputElement.parentElement;
-  parentElement.appendChild(errorElement);
-
-  // Add error class to input with animation
-  inputElement.classList.add('error');
-
-  // Add shake animation
-  inputElement.classList.add('shake-error');
-  setTimeout(() => {
-    inputElement.classList.remove('shake-error');
-  }, 500);
 }
 
 /**

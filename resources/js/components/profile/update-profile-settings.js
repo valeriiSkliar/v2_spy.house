@@ -2,7 +2,7 @@ import { loggerError } from '@/helpers/logger';
 import { config } from '../../config';
 import { createAndShowToast } from '../../utils/uiHelpers';
 import { ajaxFetcher } from '../fetcher/ajax-fetcher';
-import { hideInButton, showInButton } from '../loader';
+import { hideInButton, hideInElement, showInButton, showInElement } from '../loader';
 import { initProfileFormElements, profileFormElements } from './profile-form-elements';
 import { initSocialMessengerField } from './social-messenger-field';
 // Function to update selected messenger state
@@ -30,8 +30,23 @@ const updateSelectedMessengerState = (type, value) => {
 };
 
 async function submitFormHandler(e) {
+  let loader = null;
   try {
     e.preventDefault();
+
+    // Проверяем наличие DOM-элемента перед показом лоадера
+    if (
+      profileFormElements.profileSettingsTabContent &&
+      profileFormElements.profileSettingsTabContent.length > 0
+    ) {
+      loader = showInElement(profileFormElements.profileSettingsTabContent[0]);
+    } else {
+      // Альтернативный вариант - показываем лоадер в контейнере формы
+      if (profileFormElements.form && profileFormElements.form.length > 0) {
+        loader = showInElement(profileFormElements.form[0]);
+      }
+    }
+
     const formData = new FormData(this);
 
     showInButton(profileFormElements.submitButton);
@@ -107,6 +122,7 @@ async function submitFormHandler(e) {
     createAndShowToast('Error updating profile settings', 'error');
   } finally {
     hideInButton(profileFormElements.submitButton);
+    hideInElement(loader);
   }
 }
 
