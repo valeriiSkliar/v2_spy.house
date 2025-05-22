@@ -91,6 +91,14 @@ class RegisteredUserRequest extends BaseRequest
         if ($this->has('password') && $this->input('password') !== null) {
             $this->merge(['password' => $this->sanitizeInput($this->input('password'))]);
         }
+        
+        if ($this->has('experience') && $this->input('experience') !== null) {
+            $this->merge(['experience' => $this->sanitizeInput($this->input('experience'))]);
+        }
+        
+        if ($this->has('scope_of_activity') && $this->input('scope_of_activity') !== null) {
+            $this->merge(['scope_of_activity' => $this->sanitizeInput($this->input('scope_of_activity'))]);
+        }
     }
 
     protected function sanitizeInput($input): string

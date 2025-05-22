@@ -35,6 +35,7 @@ class RegisteredUserController extends Controller
 
         $user = User::create([
             'login' => $data['login'],
+            'name' => $data['login'],  // Using login as name initially
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             'messenger_type' => $data['messenger_type'],
