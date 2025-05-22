@@ -1,177 +1,174 @@
-import { config } from "../../config";
-import { createAndShowToast } from "@/utils";
-import { ajaxFetcher } from "../fetcher/ajax-fetcher";
-import loader from "../loader";
-import { checkNotifications } from "@/helpers/notification-checker";
+import { checkNotifications } from '@/helpers/notification-checker';
+import { createAndShowToast } from '@/utils';
+import { config } from '../../config';
+import { ajaxFetcher } from '../fetcher/ajax-fetcher';
+import { hideInElement, showInElement } from '../loader';
 
 const cancelPersonalGreetingUpdate = async () => {
-    try {
-        loader.show();
-        const response = await ajaxFetcher.get(
-            config.apiProfilePersonalGreetingCancelEndpoint,
-            null,
-            {}
-        );
+  const form = $('#personal-greeting-form');
+  let loader = null;
+  try {
+    loader = showInElement(form[0]);
+    const response = await ajaxFetcher.get(
+      config.apiProfilePersonalGreetingCancelEndpoint,
+      null,
+      {}
+    );
 
-        if (response.success) {
-            // Use the server-provided HTML form
-            if (response.initialFormHtml) {
-                $("#personal-greeting-form").replaceWith(
-                    response.initialFormHtml
-                );
+    if (response.success) {
+      // Use the server-provided HTML form
+      if (response.initialFormHtml) {
+        form.replaceWith(response.initialFormHtml);
 
-                // Reinitialize form handlers
-                changePersonalGreeting();
-            } else {
-                // Fallback to reloading the page if we don't get the form HTML
-                window.location.reload();
-            }
-        } else {
-            createAndShowToast(
-                response.message || "Error cancelling personal greeting update",
-                "error"
-            );
-        }
-    } catch (error) {
-        console.error("Error cancelling personal greeting update:", error);
-        createAndShowToast(
-            "Error cancelling personal greeting update. Please try again.",
-            "error"
-        );
-    } finally {
-        loader.hide();
+        // Reinitialize form handlers
+        changePersonalGreeting();
+      } else {
+        // Fallback to reloading the page if we don't get the form HTML
+        window.location.reload();
+      }
+    } else {
+      createAndShowToast(response.message || 'Error cancelling personal greeting update', 'error');
     }
+  } catch (error) {
+    console.error('Error cancelling personal greeting update:', error);
+    createAndShowToast('Error cancelling personal greeting update. Please try again.', 'error');
+  } finally {
+    hideInElement(loader);
+    checkNotifications();
+  }
 };
 
-const confirmPersonalGreetingUpdate = async (formData) => {
-    try {
-        loader.show();
-        const response = await ajaxFetcher.form(
-            config.apiProfilePersonalGreetingUpdateConfirmEndpoint,
-            formData
-        );
+const confirmPersonalGreetingUpdate = async formData => {
+  let loader = null;
+  try {
+    loader = showInElement('#personal-greeting-form');
+    const response = await ajaxFetcher.form(
+      config.apiProfilePersonalGreetingUpdateConfirmEndpoint,
+      formData
+    );
 
-        if (response.success) {
-            // Show success message
-            createAndShowToast(response.message, "success");
+    if (response.success) {
+      // Show success message
+      createAndShowToast(response.message, 'success');
 
-            // Replace form with success message or original form
-            if (response.successFormHtml) {
-                $("#personal-greeting-form").replaceWith(
-                    response.successFormHtml
-                );
+      // Replace form with success message or original form
+      if (response.successFormHtml) {
+        $('#personal-greeting-form').replaceWith(response.successFormHtml);
 
-                // Add success message if available
-                if (response.successMessage) {
-                    $("#personal-greeting-form").prepend(
-                        response.successMessage
-                    );
-                }
-            } else if (response.initialFormHtml) {
-                $("#personal-greeting-form").replaceWith(
-                    response.initialFormHtml
-                );
-            }
-            changePersonalGreeting();
-        } else {
-            // Show error message for invalid code
-            createAndShowToast(
-                response.message || "Invalid confirmation code",
-                "error"
-            );
-
-            // Optionally highlight the code input field
-            $('input[name="verification_code"]').addClass("is-invalid").focus();
+        // Add success message if available
+        if (response.successMessage) {
+          $('#personal-greeting-form').prepend(response.successMessage);
         }
-    } catch (error) {
-        console.error("Error confirming personal greeting update:", error);
-        createAndShowToast(
-            "Error confirming personal greeting update. Please try again.",
-            "error"
-        );
-    } finally {
-        loader.hide();
-        checkNotifications();
+      } else if (response.initialFormHtml) {
+        $('#personal-greeting-form').replaceWith(response.initialFormHtml);
+      }
+      changePersonalGreeting();
+    } else {
+      // Show error message for invalid code
+      createAndShowToast(response.message || 'Invalid confirmation code', 'error');
+
+      // Optionally highlight the code input field
+      $('input[name="verification_code"]').addClass('error').focus();
     }
+  } catch (error) {
+    console.error('Error confirming personal greeting update:', error);
+    createAndShowToast('Error confirming personal greeting update. Please try again.', 'error');
+  } finally {
+    loader.hide();
+    checkNotifications();
+  }
 };
 
 const changePersonalGreeting = () => {
-    const form = $("#personal-greeting-form");
-    if (form.length) {
-        form.on("submit", async function (e) {
-            loader.show();
-            e.preventDefault();
-            const formData = new FormData(this);
+  const form = $('#personal-greeting-form');
+  let loader = null;
+  if (form.length) {
+    form.on('submit', async function (e) {
+      loader = showInElement(form[0]);
+      e.preventDefault();
+      const formData = new FormData(this);
 
-            // Determine if this is a confirmation form or initial form
-            const isConfirmationForm =
-                $(this).find('input[name="verification_code"]').length > 0 ||
-                $(this).attr("action").includes("confirm");
+      // Determine if this is a confirmation form or initial form
+      const isConfirmationForm =
+        $(this).find('input[name="verification_code"]').length > 0 ||
+        $(this).attr('action').includes('confirm');
 
-            if (isConfirmationForm) {
-                // Handle confirmation submission
-                await confirmPersonalGreetingUpdate(formData);
-            } else {
-                // Handle initial personal greeting update request
-                try {
-                    const response = await ajaxFetcher.form(
-                        config.apiProfilePersonalGreetingUpdateInitiateEndpoint,
-                        formData
-                    );
+      if (isConfirmationForm) {
+        // Handle confirmation submission
+        await confirmPersonalGreetingUpdate(formData);
+      } else {
+        // Handle initial personal greeting update request
+        try {
+          const response = await ajaxFetcher.form(
+            config.apiProfilePersonalGreetingUpdateInitiateEndpoint,
+            formData
+          );
 
-                    if (response.success) {
-                        const message = response.message;
-                        const confirmationMethod = response.confirmation_method;
-                        const confirmationFormHtml =
-                            response.confirmation_form_html;
+          if (response.success) {
+            const message = response.message;
+            const confirmationMethod = response.confirmation_method;
+            const confirmationFormHtml = response.confirmation_form_html;
 
-                        // Replace form with confirmation form
-                        if (confirmationFormHtml) {
-                            $(this).replaceWith(confirmationFormHtml);
-                            // Reinitialize form handlers
-                            changePersonalGreeting();
-                            // Add event listener for cancel button
-                            $(".btn._border-red._big").on(
-                                "click",
-                                function (e) {
-                                    e.preventDefault();
-                                    cancelPersonalGreetingUpdate();
-                                }
-                            );
-                            createAndShowToast(message, "success");
-                        }
-
-                        return;
-                    } else {
-                        createAndShowToast(
-                            response.message ||
-                                "Error updating personal greeting. Please try again.",
-                            "error"
-                        );
-                    }
-                } catch (error) {
-                    console.error("Error updating personal greeting:", error);
-                    createAndShowToast(
-                        "Error updating personal greeting. Please try again.",
-                        "error"
-                    );
-                } finally {
-                    loader.hide();
-                    checkNotifications();
-                }
+            // Replace form with confirmation form
+            if (confirmationFormHtml) {
+              $(this).replaceWith(confirmationFormHtml);
+              // Reinitialize form handlers
+              changePersonalGreeting();
+              // Add event listener for cancel button
+              $('.btn._border-red._big').on('click', function (e) {
+                e.preventDefault();
+                cancelPersonalGreetingUpdate();
+              });
+              createAndShowToast(message, 'success');
             }
-        });
-    }
 
-    // Add event listener for cancel button if it exists
-    $(".btn._border-red._big").on("click", function (e) {
-        e.preventDefault();
-        cancelPersonalGreetingUpdate();
+            return;
+          } else {
+            createAndShowToast(
+              response.message || 'Error updating personal greeting. Please try again.',
+              'error'
+            );
+          }
+        } catch (error) {
+          console.error('Error updating personal greeting:', error);
+
+          // Проверяем ответ на наличие ошибок валидации (код 422)
+          if (error.status === 422 && error.responseJSON) {
+            const errorData = error.responseJSON;
+
+            // Если есть сообщение от сервера, показываем его
+            if (errorData.message) {
+              createAndShowToast(errorData.message, 'error');
+            } else if (errorData.errors) {
+              // Если есть объект с ошибками, формируем сообщение из первых ошибок каждого поля
+              const errorMessages = Object.values(errorData.errors)
+                .map(fieldErrors => fieldErrors[0])
+                .join(', ');
+
+              createAndShowToast(errorMessages, 'error');
+            } else {
+              createAndShowToast('Error updating personal greeting. Please try again.', 'error');
+            }
+          } else {
+            createAndShowToast('Error updating personal greeting. Please try again.', 'error');
+          }
+        } finally {
+          hideInElement(loader);
+          checkNotifications();
+        }
+      }
     });
+  }
+
+  // Add event listener for cancel button if it exists
+  $('.btn._border-red._big').on('click', function (e) {
+    e.preventDefault();
+    cancelPersonalGreetingUpdate();
+  });
 };
 
 const initChangePersonalGreeting = () => {
-    changePersonalGreeting();
+  changePersonalGreeting();
 };
 
 export { changePersonalGreeting, initChangePersonalGreeting };
