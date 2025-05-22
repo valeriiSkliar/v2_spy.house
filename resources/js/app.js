@@ -1,4 +1,5 @@
 import jQuery from 'jquery';
+import 'jquery-validation';
 import 'slick-carousel';
 window.jQuery = jQuery;
 window.$ = jQuery;

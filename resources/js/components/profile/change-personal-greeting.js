@@ -1,5 +1,7 @@
 import { checkNotifications } from '@/helpers/notification-checker';
 import { createAndShowToast } from '@/utils';
+import $ from 'jquery';
+import 'jquery-validation';
 import { config } from '../../config';
 import { ajaxFetcher } from '../fetcher/ajax-fetcher';
 import { hideInElement, showInElement } from '../loader';
@@ -81,11 +83,88 @@ const confirmPersonalGreetingUpdate = async formData => {
 
 const changePersonalGreeting = () => {
   const form = $('#personal-greeting-form');
+
+  // Отслеживание состояния touched для полей
+  const touchedFields = new Set();
+
+  form.validate({
+    rules: {
+      personal_greeting: {
+        required: true,
+        minlength: 3,
+        maxlength: 100,
+      },
+    },
+    messages: {
+      personal_greeting: {
+        required: '',
+        minlength: '',
+        maxlength: '',
+      },
+    },
+    // Отключаем автоматическую валидацию при потере фокуса
+    onfocusout: false,
+    onkeyup: false,
+    onclick: false,
+    // Запускаем валидацию только при отправке формы
+    invalidHandler: function (event, validator) {
+      // Помечаем все поля как touched при попытке отправки формы
+      form.find('input, select, textarea').each(function () {
+        touchedFields.add($(this).attr('name'));
+      });
+      validateAndToggleButton();
+    },
+  });
+
+  // Функция для проверки валидности и управления кнопкой
+  const validateAndToggleButton = () => {
+    // Валидируем только touched поля
+    let isValid = true;
+
+    // Проверяем каждое поле с правилами валидации
+    $.each(form.validate().settings.rules, function (fieldName, _) {
+      const field = form.find(`[name="${fieldName}"]`);
+
+      // Проверяем только если поле имеет статус touched
+      if (touchedFields.has(fieldName)) {
+        // Запускаем валидацию для конкретного поля
+        if (!field.valid()) {
+          isValid = false;
+        }
+      }
+    });
+
+    const submitButton = form.find('button[type="submit"]');
+    submitButton.prop('disabled', !isValid);
+  };
+
+  // Обработчики для отслеживания touched состояния
+  form.find('input, select, textarea').on('focus', function () {
+    const fieldName = $(this).attr('name');
+    if (fieldName) {
+      touchedFields.add(fieldName);
+    }
+  });
+
+  // Проверка при изменении полей, но только для touched полей
+  form.find('input, select, textarea').on('input change blur', function () {
+    const fieldName = $(this).attr('name');
+    if (fieldName && touchedFields.has(fieldName)) {
+      validateAndToggleButton();
+    }
+  });
+
   let loader = null;
   if (form.length) {
     form.on('submit', async function (e) {
-      loader = showInElement(form[0]);
       e.preventDefault();
+
+      // Проверяем валидность формы перед отправкой
+      if (!form.valid()) {
+        return false;
+      }
+
+      loader = showInElement(form[0]);
       const formData = new FormData(this);
 
       // Determine if this is a confirmation form or initial form
@@ -119,10 +198,10 @@ const changePersonalGreeting = () => {
                 e.preventDefault();
                 cancelPersonalGreetingUpdate();
               });
-              createAndShowToast(message, 'success');
             }
+            createAndShowToast(message, 'success');
 
-            return;
+            return false;
           } else {
             createAndShowToast(
               response.message || 'Error updating personal greeting. Please try again.',
@@ -167,7 +246,18 @@ const changePersonalGreeting = () => {
   });
 };
 
+// const initPersonalGreetingFieldValidation = () => {
+//   const form = $('#personal-greeting-form');
+//   const fields = form.find('input, select, textarea');
+//   fields.each(function () {
+//     $(this).attr('autocomplete', 'off');
+//     $(this).attr('required', true);
+//     $(this);
+//   });
+// };
+
 const initChangePersonalGreeting = () => {
+  // initPersonalGreetingFieldValidation();
   changePersonalGreeting();
 };
 
