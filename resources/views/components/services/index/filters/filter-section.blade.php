@@ -11,12 +11,12 @@
             <div class="col-12 col-md-auto flex-grow-1">
                 <div class="row">
                     <div class="col-12 col-lg-4 mb-10">
-                        <form action="{{ route('services.index') }}" method="GET" id="searchForm" data-ajax-search="true">
+                        <form action="{{ route('services.index') }}" method="GET" id="searchForm"
+                            data-ajax-search="true">
                             <div class="form-search">
                                 <span class="icon-search"></span>
-                                <input type="search" name="search" placeholder="Search by Keyword (min 3 chars)" 
-                                    value="{{ request('search') }}" id="services-search-input" 
-                                    data-min-chars="3">
+                                <input type="search" name="search" placeholder="Search by Keyword"
+                                    value="{{ request('search') }}" id="services-search-input" data-min-chars="3">
                             </div>
                         </form>
                     </div>
@@ -34,8 +34,9 @@
             </div>
             <div class="col-12 col-md-auto mb-10">
                 <div class="reset-btn">
-                    <a href="{{ route('services.index') }}" class="btn-icon" id="services-reset-btn" data-reset-url="{{ route('services.index') }}">
-                        <span class="icon-clear"></span> 
+                    <a href="{{ route('services.index') }}" class="btn-icon" id="services-reset-btn"
+                        data-reset-url="{{ route('services.index') }}">
+                        <span class="icon-clear"></span>
                         <span class="ml-2 d-md-none">Reset</span>
                     </a>
                 </div>
