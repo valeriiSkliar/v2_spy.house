@@ -1,5 +1,6 @@
 import { initializeSelectComponent } from '@/helpers';
 import { initializeServiceComponents } from '../components';
+import { hideInElement, showInElement } from '../components/loader';
 import { debounce } from '../helpers/custom-debounce';
 import { updateBrowserUrl } from '../helpers/update-browser-url';
 
@@ -39,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
       if (servicesContainer && ajaxUrl) {
         // Show loading state
-        servicesContainer.classList.add('loading');
+        const loader = showInElement(servicesContainer);
 
         // Reset all select components to default state
         resetFilters();
@@ -84,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function () {
           })
           .finally(() => {
             // Remove loading state
-            servicesContainer.classList.remove('loading');
+            hideInElement(loader);
           });
       }
     });
@@ -181,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function () {
    */
   function reloadServicesContent(container, url, scrollToTop = true) {
     // Show loading state
-    container.classList.add('loading');
+    const loader = showInElement(container);
 
     // Build URL with the current query parameters
     const requestUrl = new URL(window.location.href);
@@ -234,7 +235,7 @@ document.addEventListener('DOMContentLoaded', function () {
       })
       .finally(() => {
         // Remove loading state
-        container.classList.remove('loading');
+        hideInElement(loader);
       });
   }
 
