@@ -268,7 +268,7 @@ class ServicesController extends FrontendController
 
         $relatedServices = Service::where('status', 'Active')
             ->where('id', '!=', $service->id)
-            ->take(4)
+            ->take(5)
             ->inRandomOrder()
             ->with('category')
             ->get()
@@ -381,22 +381,22 @@ class ServicesController extends FrontendController
     {
         // Call the index method to get the data
         $view = $this->index($request);
-        
+
         // If this is an AJAX request, return only the services list partial
         if ($request->ajax()) {
             $viewData = $view->getData();
             $services = $viewData['services'];
             $currentPage = $viewData['currentPage'];
             $totalPages = $viewData['totalPages'];
-            
+
             // Render services list
             $servicesHtml = view('components.services.index.list.services-list', [
                 'services' => $services
             ])->render();
-            
+
             // Check if pagination should be shown
             $hasPagination = $services->hasPages();
-            
+
             // Only render pagination if needed
             $paginationHtml = '';
             if ($hasPagination) {
@@ -406,12 +406,12 @@ class ServicesController extends FrontendController
                     'totalPages' => $totalPages
                 ])->render();
             }
-            
+
             // If services is empty, render the empty services component
             if ($services->isEmpty()) {
                 $servicesHtml = view('components.services.index.list.empty-services')->render();
             }
-            
+
             return response()->json([
                 'html' => $servicesHtml,
                 'pagination' => $paginationHtml,
@@ -421,7 +421,7 @@ class ServicesController extends FrontendController
                 'count' => $services->count()
             ]);
         }
-        
+
         // Otherwise, return the full view
         return $view;
     }
