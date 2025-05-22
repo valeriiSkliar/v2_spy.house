@@ -8,6 +8,7 @@ export default defineConfig({
         // 'resources/css/app.css',
         'resources/scss/app.scss',
         'resources/js/app.js',
+        'resources/js/services.js',
         'resources/img/telegram.svg',
         'resources/img/viber.svg',
         'resources/img/whatsapp.svg',

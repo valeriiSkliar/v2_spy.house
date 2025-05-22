@@ -1,23 +1,13 @@
 @extends('layouts.authorized')
 
-@section('page-content')    
-    <x-services.show.back-to-list-button 
-        :route="'services.index'" 
-        :text="'To the list of services'" 
-    />
-    <x-services.show.details-block
-        :service="$service"
-        :isPromo="$service['code']"
-        :userRating="$service['userRating']"
-    />
+@section('page-content')
+<x-services.show.back-to-list-button :route="'services.index'" :text="'To the list of services'" />
+<x-services.show.details-block :service="$service" :isPromo="$service['code']" :userRating="$service['userRating']" />
 
-    <x-services.show.related-services 
-        :relatedServices="$relatedServices" 
-        :title="'Offers from other companies'" 
-    />
+<x-services.show.related-services :relatedServices="$relatedServices" :title="'Offers from other companies'" />
 @endsection
 
-@section('scripts')
+{{-- @section('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Toggle read more/less
@@ -68,4 +58,7 @@
 
     });
 </script>
-@endsection
+@endsection --}}
+@push('scripts')
+@vite(['resources/js/services.js'])
+@endpush

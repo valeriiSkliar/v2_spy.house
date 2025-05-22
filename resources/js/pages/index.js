@@ -3,4 +3,3 @@ export * from './landings';
 export * from './login';
 export * from './notifications';
 export * from './profile';
-export * from './services';
