@@ -1,5 +1,4 @@
 <script type="module">
-
     document.addEventListener('DOMContentLoaded', function() {
 
 
@@ -58,6 +57,3 @@
     });
 
 </script>
-
-
-

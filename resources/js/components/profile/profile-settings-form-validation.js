@@ -1,129 +1,229 @@
+import { createAndShowToast } from '../../utils';
+
 /**
- * Валидация формы настроек профиля
+ * Enhanced validation for profile settings form
  */
 document.addEventListener('DOMContentLoaded', function () {
   const personalSettingsForm = document.getElementById('personal-settings-form');
+  const submitButton = personalSettingsForm?.querySelector('button[type="submit"]');
+  let debounceTimeout = null;
 
   if (personalSettingsForm) {
-    // Добавляем обработчики событий для полей ввода
-    const formInputs = personalSettingsForm.querySelectorAll('input, select');
+    // Add validation to messenger select
+    const messengerTypeSelect = document.getElementById('profile-messanger-select');
+    const messengerContactInput = document.querySelector('input[name="messenger_contact"]');
+    const messengerTypeInput = document.querySelector('input[name="messenger_type"]');
+
+    // Debounced input validation
+    const validateInputWithDebounce = input => {
+      clearTimeout(debounceTimeout);
+      debounceTimeout = setTimeout(() => {
+        validateInput(input);
+        updateFormValidity();
+      }, 300);
+    };
+
+    // Validate a specific input
+    const validateInput = input => {
+      // Clear previous errors
+      clearError(input);
+
+      const name = input.getAttribute('name');
+
+      switch (name) {
+        case 'login':
+          return validateLogin(input);
+        case 'messenger_contact':
+          return validateMessengerContact(input, messengerTypeInput?.value);
+        case 'experience':
+        case 'scope_of_activity':
+          // These fields are selects and don't need client-side validation
+          return true;
+        default:
+          return true;
+      }
+    };
+
+    // Login validation
+    const validateLogin = input => {
+      const value = input.value.trim();
+
+      if (!value) {
+        createAndShowToast('Логин обязателен', 'error');
+        return false;
+      } else if (value.length > 255) {
+        createAndShowToast('Логин не должен превышать 255 символов', 'error');
+        return false;
+      } else if (!/^[a-zA-Z0-9_]+$/.test(value)) {
+        createAndShowToast(
+          'Логин должен содержать только латинские буквы, цифры и символ подчеркивания',
+          'error'
+        );
+        return false;
+      }
+
+      return true;
+    };
+
+    // Messenger contact validation
+    const validateMessengerContact = (input, messengerType) => {
+      const value = input.value.trim();
+
+      if (!value) {
+        createAndShowToast('Контакт мессенджера обязателен', 'error');
+        return false;
+      }
+
+      // Update placeholder based on messenger type
+      const placeholders = {
+        telegram: '@username',
+        viber: '+1 (999) 999-99-99',
+        whatsapp: '+1 (999) 999-99-99',
+      };
+
+      input.placeholder = placeholders[messengerType] || placeholders['telegram'];
+
+      switch (messengerType) {
+        case 'telegram':
+          if (!validationTelegramLogin(value)) {
+            createAndShowToast(
+              'Неверный формат имени пользователя Telegram. Должен начинаться с @ и содержать 5-32 символа (буквы, цифры, подчеркивание).',
+              'error'
+            );
+            return false;
+          }
+          break;
+        case 'viber':
+          if (!validationViberIdentifier(value)) {
+            createAndShowToast(
+              'Неверный формат номера телефона Viber. Должен содержать 10-15 цифр.',
+              'error'
+            );
+            return false;
+          }
+          break;
+        case 'whatsapp':
+          if (!validationWhatsappIdentifier(value)) {
+            createAndShowToast(
+              'Неверный формат номера телефона WhatsApp. Должен содержать 10-15 цифр.',
+              'error'
+            );
+            return false;
+          }
+          break;
+      }
+
+      return true;
+    };
+
+    // Check if form is valid and update button state
+    const updateFormValidity = () => {
+      const formInputs = personalSettingsForm.querySelectorAll(
+        'input:not([type="hidden"]), select'
+      );
+      let isValid = true;
+
+      formInputs.forEach(input => {
+        const errorElement = input.parentElement.querySelector('.validation-error');
+        if (errorElement) {
+          isValid = false;
+        }
+      });
+
+      if (submitButton) {
+        submitButton.disabled = !isValid;
+      }
+
+      return isValid;
+    };
+
+    // Add event listeners for input validation
+    const formInputs = personalSettingsForm.querySelectorAll('input:not([type="hidden"]), select');
     formInputs.forEach(input => {
       input.addEventListener('input', function () {
-        // Удаляем класс ошибки при изменении значения
-        this.classList.remove('error');
-        // Удаляем сообщение об ошибке, если оно есть
-        const errorElement = this.parentElement.querySelector('.validation-error');
-        if (errorElement) {
-          errorElement.remove();
-        }
+        validateInputWithDebounce(this);
+      });
+
+      input.addEventListener('blur', function () {
+        validateInput(this);
+        updateFormValidity();
       });
     });
 
+    // Add event listener for messenger type change
+    if (messengerTypeSelect) {
+      messengerTypeSelect.addEventListener('baseSelect:change', function (e) {
+        const messengerType = e.detail.value;
+        if (messengerContactInput) {
+          validateMessengerContact(messengerContactInput, messengerType);
+          updateFormValidity();
+        }
+      });
+    }
+
+    // Submit event handling
     personalSettingsForm.addEventListener('submit', function (event) {
-      // Удаляем существующие сообщения об ошибках
+      // Clear all errors
       document.querySelectorAll('.validation-error').forEach(el => el.remove());
+      const formLevelError = document.querySelector('.form-level-error');
+      if (formLevelError) {
+        formLevelError.remove();
+      }
 
-      // Удаляем класс ошибки со всех полей
-      document.querySelectorAll('input, select').forEach(el => el.classList.remove('error'));
+      // Validate all inputs
+      const formInputs = this.querySelectorAll('input:not([type="hidden"]), select');
+      let isValid = true;
 
-      // Проверяем форму
-      const isValid = validatePersonalSettingsForm();
+      formInputs.forEach(input => {
+        if (!validateInput(input)) {
+          isValid = false;
+        }
+      });
 
       if (!isValid) {
         event.preventDefault();
+
+        // Scroll to first error
+        const firstError = document.querySelector('.validation-error');
+        if (firstError) {
+          firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Show form-level error message
+        const formError = document.createElement('div');
+        formError.className = 'alert alert-danger mb-3 form-level-error';
+        formError.textContent = 'Пожалуйста, исправьте ошибки в форме';
+
+        // Insert at the top of the form
+        this.insertBefore(formError, this.firstChild);
+
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+          formError.remove();
+        }, 5000);
+      } else if (submitButton) {
+        // Disable button and show loading state
+        submitButton.disabled = true;
+        const originalButtonText = submitButton.innerHTML;
+        submitButton.innerHTML =
+          '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Сохранение...';
+
+        // Re-enable button after timeout (in case of network issues)
+        setTimeout(() => {
+          if (submitButton.disabled) {
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalButtonText;
+          }
+        }, 10000);
       }
     });
   }
 });
 
 /**
- * Валидирует форму настроек профиля
- * @returns {boolean} - возвращает true если форма валидна
- */
-function validatePersonalSettingsForm() {
-  let isValid = true;
-
-  // Валидация логина
-  const loginInput = document.querySelector('input[name="login"]');
-  if (loginInput) {
-    const login = loginInput.value.trim();
-
-    if (!login) {
-      showError(loginInput, 'Логин обязателен');
-      isValid = false;
-    } else if (login.length > 255) {
-      showError(loginInput, 'Логин не должен превышать 255 символов');
-      isValid = false;
-    } else if (!/^[a-zA-Z0-9_]+$/.test(login)) {
-      showError(
-        loginInput,
-        'Логин должен содержать только латинские буквы, цифры и символ подчеркивания'
-      );
-      isValid = false;
-    }
-  }
-
-  // Валидация типа мессенджера
-  const messengerTypeInput = document.querySelector('select[name="messenger_type"]');
-  if (messengerTypeInput) {
-    const messengerType = messengerTypeInput.value;
-
-    if (!messengerType) {
-      showError(messengerTypeInput, 'Тип мессенджера обязателен');
-      isValid = false;
-    } else if (!['whatsapp', 'viber', 'telegram'].includes(messengerType)) {
-      showError(messengerTypeInput, 'Выбран недопустимый тип мессенджера');
-      isValid = false;
-    }
-  }
-
-  // Валидация контакта мессенджера
-  const messengerContactInput = document.querySelector('input[name="messenger_contact"]');
-  if (messengerContactInput) {
-    const messengerContact = messengerContactInput.value.trim();
-    const messengerType = messengerTypeInput ? messengerTypeInput.value : '';
-
-    if (!messengerContact) {
-      showError(messengerContactInput, 'Контакт мессенджера обязателен');
-      isValid = false;
-    } else {
-      switch (messengerType) {
-        case 'telegram':
-          if (!validationTelegramLogin(messengerContact)) {
-            showError(
-              messengerContactInput,
-              'Неверный формат имени пользователя Telegram. Должен начинаться с @ и содержать 5-32 символа (буквы, цифры, подчеркивание).'
-            );
-            isValid = false;
-          }
-          break;
-        case 'viber':
-          if (!validationViberIdentifier(messengerContact)) {
-            showError(
-              messengerContactInput,
-              'Неверный формат номера телефона Viber. Должен содержать 10-15 цифр.'
-            );
-            isValid = false;
-          }
-          break;
-        case 'whatsapp':
-          if (!validationWhatsappIdentifier(messengerContact)) {
-            showError(
-              messengerContactInput,
-              'Неверный формат номера телефона WhatsApp. Должен содержать 10-15 цифр.'
-            );
-            isValid = false;
-          }
-          break;
-      }
-    }
-  }
-
-  return isValid;
-}
-
-/**
  * Проверка формата логина Telegram
+ * @param {string} value - Значение для проверки
+ * @returns {boolean} - Валиден ли формат
  */
 function validationTelegramLogin(value) {
   return /^@[a-zA-Z0-9_]{4,31}$/.test(value);
@@ -131,29 +231,64 @@ function validationTelegramLogin(value) {
 
 /**
  * Проверка формата идентификатора Viber
+ * @param {string} value - Значение для проверки
+ * @returns {boolean} - Валиден ли формат
  */
 function validationViberIdentifier(value) {
+  // Better phone number validation - matches digits only for now
+  // In a production app, consider using libphonenumber-js for proper validation
   return /^\d{10,15}$/.test(value);
 }
 
 /**
  * Проверка формата идентификатора WhatsApp
+ * @param {string} value - Значение для проверки
+ * @returns {boolean} - Валиден ли формат
  */
 function validationWhatsappIdentifier(value) {
+  // Better phone number validation - matches digits only for now
+  // In a production app, consider using libphonenumber-js for proper validation
   return /^\d{10,15}$/.test(value);
 }
 
 /**
  * Показывает сообщение об ошибке под элементом формы
+ * @param {HTMLElement} inputElement - Элемент формы
+ * @param {string} message - Сообщение об ошибке
  */
 function showError(inputElement, message) {
+  // Remove existing error for this element
+  clearError(inputElement);
+
   const errorElement = document.createElement('div');
   errorElement.className = 'validation-error text-danger mt-1';
+  errorElement.setAttribute('role', 'alert'); // For accessibility
   errorElement.textContent = message;
 
   const parentElement = inputElement.parentElement;
   parentElement.appendChild(errorElement);
 
-  // Добавляем класс к полю ввода для визуального отображения ошибки
+  // Add error class to input with animation
   inputElement.classList.add('error');
+
+  // Add shake animation
+  inputElement.classList.add('shake-error');
+  setTimeout(() => {
+    inputElement.classList.remove('shake-error');
+  }, 500);
+}
+
+/**
+ * Удаляет сообщение об ошибке и классы ошибок
+ * @param {HTMLElement} inputElement - Элемент формы
+ */
+function clearError(inputElement) {
+  // Remove error class
+  inputElement.classList.remove('error');
+
+  // Remove error message
+  const errorElement = inputElement.parentElement.querySelector('.validation-error');
+  if (errorElement) {
+    errorElement.remove();
+  }
 }
