@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api\Profile;
 use App\Enums\Frontend\NotificationType;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Frontend\Profile\BaseProfileController;
-use App\Http\Requests\Profile\ProfileSettingsUpdateRequest;
+use App\Http\Requests\Profile\ProfileUpdateRequest;
 use App\Http\Requests\Profile\UpdateEmailRequest;
 use App\Http\Requests\Profile\UpdateNotificationSettingsRequest;
 use App\Http\Requests\Profile\UpdatePersonalGreetingSettingsRequest;
@@ -31,10 +31,10 @@ class ProfileSettingsController extends BaseProfileController
     /**
      * Update user's personal settings asynchronously
      *
-     * @param ProfileSettingsUpdateRequest $request
+     * @param ProfileUpdateRequest $request
      * @return JsonResponse
      */
-    public function updateSettingsApi(ProfileSettingsUpdateRequest $request): JsonResponse
+    public function updateSettingsApi(ProfileUpdateRequest $request): JsonResponse
     {
         try {
             $user = $request->user();
@@ -856,5 +856,27 @@ class ProfileSettingsController extends BaseProfileController
             ->first();
 
         return $notificationType ? $notificationType->default_channels : ['mail', 'database'];
+    }
+
+    /**
+     * Validate login uniqueness for jQuery Validation remote rule
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function validateLoginUnique(Request $request): JsonResponse
+    {
+        $login = $request->input('login');
+        $userId = $request->user()->id;
+
+        if (!$login) {
+            return response()->json(['valid' => false]);
+        }
+
+        $exists = \App\Models\User::where('login', $login)
+            ->where('id', '!=', $userId)
+            ->exists();
+
+        return response()->json(['valid' => !$exists]);
     }
 }

@@ -66,4 +66,7 @@ Route::middleware(['web', 'auth', 'auth:sanctum'])
 
         Route::post('/profile/update-ip-restriction', [ProfileSettingsController::class, 'updateIpRestrictionApi'])
             ->name('api.profile.update-ip-restriction');
+
+        Route::post('/validate-login-unique', [ProfileSettingsController::class, 'validateLoginUnique'])
+            ->name('api.validate-login-unique');
     });

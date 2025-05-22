@@ -1,214 +1,201 @@
+import $ from 'jquery';
+import 'jquery-validation';
+import { debounce } from '../../helpers/custom-debounce';
+
 /**
- * Enhanced validation for profile settings form
+ * Enhanced validation for profile settings form using jQuery Validation
  */
-document.addEventListener('DOMContentLoaded', function () {
-  const personalSettingsForm = document.getElementById('personal-settings-form');
-  const submitButton = personalSettingsForm?.querySelector('button[type="submit"]');
-  let debounceTimeout = null;
+$(document).ready(function () {
+  const $personalSettingsForm = $('#personal-settings-form');
 
-  if (personalSettingsForm) {
-    // Add validation to messenger select
-    const messengerTypeSelect = document.getElementById('profile-messanger-select');
-    const messengerContactInput = document.querySelector('input[name="messenger_contact"]');
-    const messengerTypeInput = document.querySelector('input[name="messenger_type"]');
+  if ($personalSettingsForm.length) {
+    initProfileSettingsValidation($personalSettingsForm);
+  }
+});
 
-    // Debounced input validation
-    const validateInputWithDebounce = input => {
-      clearTimeout(debounceTimeout);
-      debounceTimeout = setTimeout(() => {
-        validateInput(input);
-        updateFormValidity();
-      }, 300);
-    };
+/**
+ * Initialize jQuery Validation for profile settings form
+ */
+function initProfileSettingsValidation($form) {
+  // Add custom validation methods
+  addCustomValidationMethods();
 
-    // Validate a specific input
-    const validateInput = input => {
-      // Clear previous errors
-      clearError(input);
+  // Configure jQuery Validation
+  const validator = $form.validate({
+    rules: {
+      login: {
+        required: true,
+        maxlength: 255,
+        pattern: /^[a-zA-Z0-9_]+$/,
+        remote: {
+          url: '/api/validate-login-unique',
+          type: 'POST',
+          data: {
+            login: function () {
+              return $('input[name="login"]').val();
+            },
+            _token: function () {
+              return $('meta[name="csrf-token"]').attr('content');
+            },
+          },
+          dataFilter: function (data) {
+            const json = JSON.parse(data);
+            return json.valid ? 'true' : 'false';
+          },
+          beforeSend: debounce(function () {
+            return true;
+          }, 500),
+        },
+      },
+      messenger_contact: {
+        messengerContactValidation: true,
+      },
+    },
+    messages: {
+      login: {
+        required: 'Login is required',
+        maxlength: 'Login must not exceed 255 characters',
+        pattern: 'Login can only contain letters, numbers and underscores',
+        remote: 'This login is already taken',
+      },
+      messenger_contact: {
+        messengerContactValidation: 'Please enter a valid contact for the selected messenger type',
+      },
+    },
+    errorElement: 'div',
+    errorClass: 'validation-error',
+    validClass: 'valid',
 
-      const name = input.getAttribute('name');
+    // Custom error placement
+    errorPlacement: function (error, element) {
+      error.addClass('validation-error');
+      element.closest('.form-group, .input-group').append(error);
+    },
 
-      switch (name) {
-        case 'login':
-          return validateLogin(input);
-        case 'messenger_contact':
-          return validateMessengerContact(input, messengerTypeInput?.value);
-        case 'experience':
-        case 'scope_of_activity':
-          // These fields are selects and don't need client-side validation
-          return true;
-        default:
-          return true;
-      }
-    };
+    // Highlight invalid fields
+    highlight: function (element, errorClass, validClass) {
+      $(element).addClass('error').removeClass(validClass);
+    },
 
-    // Login validation
-    const validateLogin = input => {
-      const value = input.value.trim();
+    // Unhighlight valid fields
+    unhighlight: function (element, errorClass, validClass) {
+      $(element).removeClass('error').addClass(validClass);
+    },
 
-      if (!value) {
-        input.classList.add('error');
-        return false;
-      } else if (value.length > 255) {
-        input.classList.add('error');
-        return false;
-      } else if (!/^[a-zA-Z0-9_]+$/.test(value)) {
-        input.classList.add('error');
-        return false;
-      }
+    // Handle form submission
+    submitHandler: function (form) {
+      const $submitButton = $form.find('button[type="submit"]');
 
+      // Disable button to prevent double submission
+      $submitButton.prop('disabled', true);
+
+      // Re-enable after timeout in case of network issues
+      setTimeout(() => {
+        $submitButton.prop('disabled', false);
+      }, 10000);
+
+      // Allow form to submit
       return true;
-    };
+    },
 
-    // Messenger contact validation
-    const validateMessengerContact = (input, messengerType) => {
-      const value = input.value.trim();
-
-      if (!value) {
-        input.classList.add('error');
-        return false;
+    // Invalid form handler
+    invalidHandler: function (event, validator) {
+      // Scroll to first error
+      if (validator.numberOfInvalids() > 0) {
+        const $firstError = $(validator.errorList[0].element);
+        $('html, body').animate(
+          {
+            scrollTop: $firstError.offset().top - 100,
+          },
+          500
+        );
       }
+    },
+  });
 
-      // Update placeholder based on messenger type
-      const placeholders = {
-        telegram: '@username',
-        viber: '+1 (999) 999-99-99',
-        whatsapp: '+1 (999) 999-99-99',
-      };
+  // Handle messenger type changes
+  const $messengerTypeSelect = $('#profile-messanger-select');
+  if ($messengerTypeSelect.length) {
+    $messengerTypeSelect.on('baseSelect:change', function (e) {
+      const $messengerContactInput = $('input[name="messenger_contact"]');
+      if ($messengerContactInput.length) {
+        // Update placeholder
+        updateMessengerPlaceholder($messengerContactInput, e.detail.value);
 
-      input.placeholder = placeholders[messengerType] || placeholders['telegram'];
-
-      switch (messengerType) {
-        case 'telegram':
-          if (!validationTelegramLogin(value)) {
-            input.classList.add('error');
-            return false;
-          }
-          break;
-        case 'viber':
-          if (!validationViberIdentifier(value)) {
-            input.classList.add('error');
-            return false;
-          }
-          break;
-        case 'whatsapp':
-          if (!validationWhatsappIdentifier(value)) {
-            input.classList.add('error');
-            return false;
-          }
-          break;
-      }
-
-      return true;
-    };
-
-    // Check if form is valid and update button state
-    const updateFormValidity = () => {
-      const formInputs = personalSettingsForm.querySelectorAll(
-        'input:not([type="hidden"]), select'
-      );
-      let isValid = true;
-
-      formInputs.forEach(input => {
-        const errorElement = input.parentElement.querySelector('.validation-error');
-        if (errorElement) {
-          isValid = false;
+        // Revalidate if there's a value
+        if ($messengerContactInput.val().trim()) {
+          validator.element($messengerContactInput[0]);
         }
-
-        // Check if input has error class
-        if (input.classList.contains('error')) {
-          isValid = false;
-        }
-      });
-
-      if (submitButton) {
-        submitButton.disabled = !isValid;
-      }
-
-      return isValid;
-    };
-
-    // Add event listeners for input validation
-    const formInputs = personalSettingsForm.querySelectorAll('input:not([type="hidden"]), select');
-    formInputs.forEach(input => {
-      input.addEventListener('input', function () {
-        validateInputWithDebounce(this);
-      });
-
-      input.addEventListener('blur', function () {
-        validateInput(this);
-        updateFormValidity();
-      });
-    });
-
-    // Add event listener for messenger type change
-    if (messengerTypeSelect) {
-      messengerTypeSelect.addEventListener('baseSelect:change', function (e) {
-        const messengerType = e.detail.value;
-        if (messengerContactInput) {
-          // Get the current value after it's been updated by the messenger field component
-          const currentValue = messengerContactInput.value.trim();
-
-          // Only validate if there's a value (not required to have a value immediately after type change)
-          if (currentValue) {
-            validateMessengerContact(messengerContactInput, messengerType);
-          } else {
-            // Clear any previous errors if field is empty
-            clearError(messengerContactInput);
-          }
-
-          updateFormValidity();
-        }
-      });
-    }
-
-    // Initial form validation
-    formInputs.forEach(input => {
-      validateInput(input);
-    });
-    updateFormValidity();
-
-    // Submit event handling
-    personalSettingsForm.addEventListener('submit', function (event) {
-      // Clear all errors
-      document.querySelectorAll('.validation-error').forEach(el => el.remove());
-      const formLevelError = document.querySelector('.form-level-error');
-      if (formLevelError) {
-        formLevelError.remove();
-      }
-
-      // Validate all inputs
-      const formInputs = this.querySelectorAll('input:not([type="hidden"]), select');
-      let isValid = true;
-
-      formInputs.forEach(input => {
-        if (!validateInput(input)) {
-          isValid = false;
-        }
-      });
-
-      if (!isValid) {
-        event.preventDefault();
-
-        // Scroll to first error
-        const firstError = document.querySelector('.validation-error');
-        if (firstError) {
-          firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      } else if (submitButton) {
-        // Disable button
-        submitButton.disabled = true;
-
-        // Re-enable button after timeout (in case of network issues)
-        setTimeout(() => {
-          if (submitButton.disabled) {
-            submitButton.disabled = false;
-          }
-        }, 10000);
       }
     });
   }
-});
+
+  // Применение debounce к событию изменения поля логина
+  const $loginInput = $('input[name="login"]');
+  const debouncedValidation = debounce(function () {
+    if ($loginInput.val().length > 0) {
+      validator.element($loginInput);
+    }
+  }, 500);
+
+  $loginInput.on('input', debouncedValidation);
+
+  return validator;
+}
+
+/**
+ * Add custom validation methods
+ */
+function addCustomValidationMethods() {
+  // Pattern validation method
+  $.validator.addMethod(
+    'pattern',
+    function (value, element, regexp) {
+      return this.optional(element) || regexp.test(value);
+    },
+    'Please enter a valid format.'
+  );
+
+  // Messenger contact validation
+  $.validator.addMethod(
+    'messengerContactValidation',
+    function (value, element) {
+      if (!value || !value.trim()) {
+        return true; // Optional field
+      }
+
+      const messengerType = $('input[name="messenger_type"]').val();
+      if (!messengerType) {
+        return true; // No messenger type selected
+      }
+
+      switch (messengerType) {
+        case 'telegram':
+          return validationTelegramLogin(value);
+        case 'viber':
+          return validationViberIdentifier(value);
+        case 'whatsapp':
+          return validationWhatsappIdentifier(value);
+        default:
+          return true;
+      }
+    },
+    'Please enter a valid contact for the selected messenger type.'
+  );
+}
+
+/**
+ * Update messenger contact placeholder based on type
+ */
+function updateMessengerPlaceholder($input, messengerType) {
+  const placeholders = {
+    telegram: '@username',
+    viber: '+1 (999) 999-99-99',
+    whatsapp: '+1 (999) 999-99-99',
+  };
+
+  $input.attr('placeholder', placeholders[messengerType] || placeholders['telegram']);
+}
 
 /**
  * Проверка формата логина Telegram
@@ -241,17 +228,10 @@ function validationWhatsappIdentifier(value) {
   return /^\d{10,15}$/.test(value);
 }
 
-/**
- * Удаляет сообщение об ошибке и классы ошибок
- * @param {HTMLElement} inputElement - Элемент формы
- */
-function clearError(inputElement) {
-  // Remove error class
-  inputElement.classList.remove('error');
-
-  // Remove error message
-  const errorElement = inputElement.parentElement.querySelector('.validation-error');
-  if (errorElement) {
-    errorElement.remove();
-  }
-}
+// Export for use in other modules
+export {
+  initProfileSettingsValidation,
+  validationTelegramLogin,
+  validationViberIdentifier,
+  validationWhatsappIdentifier,
+};

@@ -5,6 +5,7 @@ import { ajaxFetcher } from '../fetcher/ajax-fetcher';
 import { hideInButton, hideInElement, showInButton, showInElement } from '../loader';
 import { initProfileFormElements, profileFormElements } from './profile-form-elements';
 import { initSocialMessengerField } from './social-messenger-field';
+import { initProfileSettingsValidation } from './profile-settings-form-validation';
 // Function to update selected messenger state
 const updateSelectedMessengerState = (type, value) => {
   const selectedOption = profileFormElements.profileMessangerSelectOptions.filter(
@@ -128,7 +129,21 @@ async function submitFormHandler(e) {
 
 const updateProfileSettings = () => {
   if (profileFormElements.form.length) {
-    profileFormElements.form.off('submit').on('submit', submitFormHandler);
+    // Remove previous event handlers to avoid duplicates
+    profileFormElements.form.off('submit');
+    
+    // Initialize jQuery Validation
+    const validator = initProfileSettingsValidation(profileFormElements.form);
+    
+    // Override the submitHandler to use our custom logic
+    if (validator) {
+      validator.settings.submitHandler = submitFormHandler;
+    } else {
+      // Fallback for forms without validation
+      profileFormElements.form.on('submit', submitFormHandler);
+    }
+    
+    // Initialize social messenger field
     initSocialMessengerField();
   }
 };
