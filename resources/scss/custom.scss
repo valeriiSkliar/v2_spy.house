@@ -272,3 +272,50 @@ html {
 .form-phone .base-select {
   z-index: 2;
 }
+.form-phone {
+  position: relative;
+  &:after {
+    @extend .a;
+    position: absolute;
+    top: 12px;
+    bottom: 12px;
+    width: 1px;
+    background: #e8e8ee;
+    left: 90px;
+  }
+  input {
+    padding-left: 135px;
+  }
+  .base-select {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 70px !important;
+    z-index: 400;
+    .base-select__trigger {
+      padding: 0 3px 0 12px !important;
+      border-radius: 7px;
+      background: #fff;
+      box-shadow: 0px 4px 30px 0px rgba(0, 0, 0, 0.1);
+      border: 0;
+    }
+    .base-select__option {
+      padding-left: 12px;
+      padding-right: 12px;
+    }
+    .base-select__img {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      img {
+        width: 20px;
+      }
+    }
+    .base-select__arrow {
+      right: 4px;
+      background-color: transparent;
+      box-shadow: none;
+    }
+  }
+}
