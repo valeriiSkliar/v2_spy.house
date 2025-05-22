@@ -29,5 +29,6 @@
     {{-- here will be add validation messages for each field, on currend user locale, for using on client side --}}
 
     <x-profile.success-message status="profile-updated" :message="__('profile.personal_info.update_success')" />
-    <x-profile.submit-button formId="personal-settings-form" :label="__('profile.save_button')" />
+    <x-profile.submit-button id="personal-settings-form-button" formId="personal-settings-form"
+        :label="__('profile.save_button')" />
 </form>

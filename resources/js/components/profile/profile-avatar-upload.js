@@ -2,8 +2,9 @@
  * Profile avatar upload handler
  * Manages asynchronous avatar uploads with loading state and feedback
  */
+import { logger, loggerError } from '@/helpers/logger';
 import { createAndShowToast } from '@/utils/uiHelpers';
-
+import { hideInButton, showInButton } from '../loader';
 document.addEventListener('DOMContentLoaded', function () {
   const avatarUploader = {
     // Configuration
@@ -31,7 +32,7 @@ document.addEventListener('DOMContentLoaded', function () {
       this.fileNameElement = document.getElementById(this.fileNameId);
 
       if (!this.fileInput) {
-        console.error('Avatar file input not found');
+        loggerError('Avatar file input not found');
         return;
       }
 
@@ -42,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function () {
       // Initialize event listeners
       this.initEventListeners();
 
-      console.log('Avatar uploader initialized');
+      logger('Avatar uploader initialized');
     },
 
     // Set up event listeners
@@ -76,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Upload the file to the server
     uploadFile: async function (file) {
       if (!this.uploadButton) return;
-
+      this.uploadButton.disabled = true;
       try {
         // Show loading state
         this.showLoadingState();
@@ -124,23 +125,24 @@ document.addEventListener('DOMContentLoaded', function () {
       } finally {
         // Reset loading state
         this.resetLoadingState();
+        this.uploadButton.disabled = false;
       }
     },
 
     // Show loading state on the upload button
     showLoadingState: function () {
       if (!this.uploadButton) return;
-
-      this.uploadButton.classList.add(this.loadingClass);
-      this.uploadButton.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Uploading...`;
+      showInButton(this.uploadButton, '_dark');
+      // this.uploadButton.classList.add(this.loadingClass);
+      // this.uploadButton.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Uploading...`;
     },
 
     // Reset loading state on the upload button
     resetLoadingState: function () {
       if (!this.uploadButton || !this.originalLabel) return;
-
-      this.uploadButton.classList.remove(this.loadingClass);
-      this.uploadButton.innerHTML = this.originalLabel;
+      hideInButton(this.uploadButton);
+      // this.uploadButton.classList.remove(this.loadingClass);
+      // this.uploadButton.innerHTML = this.originalLabel;
     },
 
     // Handle successful upload

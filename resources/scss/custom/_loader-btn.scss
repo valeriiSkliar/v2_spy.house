@@ -1,43 +1,42 @@
 .loader-btn {
-    width: 22px;
-    padding: 3px;
-    aspect-ratio: 1;
-    border-radius: 50%;
-    background: #fff;
-    -webkit-mask: conic-gradient(rgba(0, 0, 0, 0) 20%, #000),
-        -webkit-gradient(linear, left top, left bottom, color-stop(0, #000)) content-box;
-    -webkit-mask: conic-gradient(rgba(0, 0, 0, 0) 20%, #000),
-        linear-gradient(#000 0) content-box;
-    mask: conic-gradient(rgba(0, 0, 0, 0) 20%, #000),
-        -webkit-gradient(linear, left top, left bottom, color-stop(0, #000)) content-box;
-    mask: conic-gradient(rgba(0, 0, 0, 0) 20%, #000),
-        linear-gradient(#000 0) content-box;
-    -webkit-mask-composite: source-out;
-    mask-composite: subtract;
-    -webkit-animation: l3 0.7s infinite linear;
-    animation: l3 0.7s infinite linear;
+  margin-right: 10px;
+  width: 22px;
+  padding: 3px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #fff;
+  -webkit-mask: conic-gradient(rgba(0, 0, 0, 0) 20%, #000),
+    -webkit-gradient(linear, left top, left bottom, color-stop(0, #000)) content-box;
+  -webkit-mask: conic-gradient(rgba(0, 0, 0, 0) 20%, #000), linear-gradient(#000 0) content-box;
+  mask: conic-gradient(rgba(0, 0, 0, 0) 20%, #000),
+    -webkit-gradient(linear, left top, left bottom, color-stop(0, #000)) content-box;
+  mask: conic-gradient(rgba(0, 0, 0, 0) 20%, #000), linear-gradient(#000 0) content-box;
+  -webkit-mask-composite: source-out;
+  mask-composite: subtract;
+  -webkit-animation: l3 0.7s infinite linear;
+  animation: l3 0.7s infinite linear;
 }
 .loader-btn._dark {
-    background: #3b4a51;
+  background: #3b4a51;
 }
 .loader-btn._green {
-    background: #3dc98a;
+  background: #3dc98a;
 }
 .loader-btn._size-16 {
-    width: 16px;
-    padding: 2px;
+  width: 16px;
+  padding: 2px;
 }
 
 @-webkit-keyframes l3 {
-    to {
-        -webkit-transform: rotate(1turn);
-        transform: rotate(1turn);
-    }
+  to {
+    -webkit-transform: rotate(1turn);
+    transform: rotate(1turn);
+  }
 }
 
 @keyframes l3 {
-    to {
-        -webkit-transform: rotate(1turn);
-        transform: rotate(1turn);
-    }
+  to {
+    -webkit-transform: rotate(1turn);
+    transform: rotate(1turn);
+  }
 }

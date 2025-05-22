@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (messengerContactInput) {
           // Get the current value after it's been updated by the messenger field component
           const currentValue = messengerContactInput.value.trim();
-          
+
           // Only validate if there's a value (not required to have a value immediately after type change)
           if (currentValue) {
             validateMessengerContact(messengerContactInput, messengerType);
@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Clear any previous errors if field is empty
             clearError(messengerContactInput);
           }
-          
+
           updateFormValidity();
         }
       });
@@ -212,17 +212,13 @@ document.addEventListener('DOMContentLoaded', function () {
           formError.remove();
         }, 5000);
       } else if (submitButton) {
-        // Disable button and show loading state
+        // Disable button
         submitButton.disabled = true;
-        const originalButtonText = submitButton.innerHTML;
-        submitButton.innerHTML =
-          '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Сохранение...';
 
         // Re-enable button after timeout (in case of network issues)
         setTimeout(() => {
           if (submitButton.disabled) {
             submitButton.disabled = false;
-            submitButton.innerHTML = originalButtonText;
           }
         }, 10000);
       }
