@@ -12,6 +12,20 @@ const initSocialMessengerField = () => {
         viber: "+1 (999) 999-99-99",
         whatsapp: "+1 (999) 999-99-99",
     };
+    
+    // Store saved values for each messenger type
+    const savedValues = {
+        telegram: "",
+        viber: "",
+        whatsapp: ""
+    };
+    
+    // Initialize the saved value for the current type
+    const initialType = profileFormElements.messengerType.val();
+    const initialValue = profileFormElements.messengerContact.val();
+    if (initialType && initialValue) {
+        savedValues[initialType] = initialValue;
+    }
 
     // Function to validate messenger values
     function validateMessengerValue(type, value) {
@@ -44,6 +58,13 @@ const initSocialMessengerField = () => {
     profileFormElements.profileMessangerSelectOptions.off("click").on("click", function () {
         const selectedOption = $(this);
         const selectedType = selectedOption.data("value");
+        const currentType = profileFormElements.messengerType.val();
+        const currentValue = profileFormElements.messengerContact.val();
+        
+        // If changing type, save current value for current type
+        if (currentType && currentType !== selectedType) {
+            savedValues[currentType] = currentValue;
+        }
 
         // Update selected class
         profileFormElements.profileMessangerSelectOptions.removeClass("is-selected");
@@ -65,6 +86,18 @@ const initSocialMessengerField = () => {
 
         // Update placeholder based on selected type
         profileFormElements.messengerContact.attr("placeholder", placeholders[selectedType] || "@username");
+        
+        // Restore saved value for selected type or clear field
+        profileFormElements.messengerContact.val(savedValues[selectedType] || "");
+        
+        // Trigger input event to validate the restored/cleared value
+        profileFormElements.messengerContact.trigger("input");
+        
+        // Dispatch custom event for validation
+        const event = new CustomEvent("baseSelect:change", {
+            detail: { value: selectedType }
+        });
+        profileFormElements.profileMessangerSelect[0].dispatchEvent(event);
 
         // Close dropdown
         profileFormElements.profileMessangerSelect

@@ -155,7 +155,17 @@ document.addEventListener('DOMContentLoaded', function () {
       messengerTypeSelect.addEventListener('baseSelect:change', function (e) {
         const messengerType = e.detail.value;
         if (messengerContactInput) {
-          validateMessengerContact(messengerContactInput, messengerType);
+          // Get the current value after it's been updated by the messenger field component
+          const currentValue = messengerContactInput.value.trim();
+          
+          // Only validate if there's a value (not required to have a value immediately after type change)
+          if (currentValue) {
+            validateMessengerContact(messengerContactInput, messengerType);
+          } else {
+            // Clear any previous errors if field is empty
+            clearError(messengerContactInput);
+          }
+          
           updateFormValidity();
         }
       });

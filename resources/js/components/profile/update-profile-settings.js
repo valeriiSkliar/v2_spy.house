@@ -52,6 +52,10 @@ async function submitFormHandler(e) {
             if (formContainer && response.user) {
                 // Update messenger field values
                 if (response.user.messenger_type !== undefined && response.user.messenger_contact !== undefined) {
+                    // Trigger a reset of the messenger field to clear saved values
+                    initSocialMessengerField();
+                    
+                    // Update values in form
                     profileFormElements.messengerType.val(response.user.messenger_type);
                     profileFormElements.messengerContact.val(response.user.messenger_contact);
                     
@@ -74,6 +78,9 @@ async function submitFormHandler(e) {
                             <span class="base-select__arrow"></span>
                         `);
                     }
+                    
+                    // Trigger input event to validate the value
+                    profileFormElements.messengerContact.trigger("input");
                 }
 
                 // Update other form fields
