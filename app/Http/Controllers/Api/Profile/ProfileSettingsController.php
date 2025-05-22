@@ -24,6 +24,7 @@ use App\Services\Notification\NotificationDispatcher;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use PragmaRX\Google2FALaravel\Facade as Google2FAFacade;
+use App\Http\Requests\Profile\UpdateIpRestrictionRequest;
 
 class ProfileSettingsController extends BaseProfileController
 {
@@ -489,21 +490,15 @@ class ProfileSettingsController extends BaseProfileController
         }
     }
 
-
     /**
      * Update IP restrictions via API
      *
-     * @param Request $request
+     * @param UpdateIpRestrictionRequest $request
      * @return JsonResponse
      */
-    public function updateIpRestrictionApi(Request $request): JsonResponse
+    public function updateIpRestrictionApi(UpdateIpRestrictionRequest $request): JsonResponse
     {
         try {
-            $request->validate([
-                'ip_restrictions' => ['nullable', 'string'],
-                'password' => ['required', 'current_password'],
-            ]);
-
             $user = $request->user();
 
             // Get current IP list
@@ -511,17 +506,6 @@ class ProfileSettingsController extends BaseProfileController
 
             // Get new IPs from form
             $newIps = array_filter(array_map('trim', explode("\n", $request->input('ip_restrictions', ''))));
-
-            // Validate each IP
-            foreach ($newIps as $ip) {
-                if (!filter_var($ip, FILTER_VALIDATE_IP) && !$this->isValidIpRange($ip)) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => __('validation.ip', ['attribute' => 'IP address']),
-                        'errors' => ['ip_restrictions' => [__('validation.ip', ['attribute' => 'IP address'])]]
-                    ], 422);
-                }
-            }
 
             // Merge and remove duplicates
             $user->ip_restrictions = array_unique(array_merge($currentIps, $newIps));
@@ -546,29 +530,6 @@ class ProfileSettingsController extends BaseProfileController
                 'message' => __('profile.messages.error_occurred'),
             ], 500);
         }
-    }
-
-    /**
-     * Check if the IP range is valid
-     *
-     * @param string $ip
-     * @return bool
-     */
-    private function isValidIpRange(string $ip): bool
-    {
-        // Check CIDR format (e.g., 192.168.1.0/24)
-        if (preg_match('/^(\d{1,3}\.){3}\d{1,3}\/\d{1,2}$/', $ip)) {
-            list($ip, $mask) = explode('/', $ip);
-            return filter_var($ip, FILTER_VALIDATE_IP) && $mask >= 0 && $mask <= 32;
-        }
-
-        // Check range format (e.g., 192.168.1.1-192.168.1.255)
-        if (preg_match('/^(\d{1,3}\.){3}\d{1,3}-(\d{1,3}\.){3}\d{1,3}$/', $ip)) {
-            list($start, $end) = explode('-', $ip);
-            return filter_var($start, FILTER_VALIDATE_IP) && filter_var($end, FILTER_VALIDATE_IP);
-        }
-
-        return false;
     }
 
     public function updatePasswordApi(ChangePasswordApiRequest $request): JsonResponse
