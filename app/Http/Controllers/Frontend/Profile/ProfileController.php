@@ -503,7 +503,7 @@ class ProfileController extends BaseProfileController
                 'timestamp' => now()->toIso8601String()
             ]);
             Toast::error(__('profile.2fa.error_decrypting_secret'));
-            return redirect()->route('profile.disable-2fa')
+            return redirect()->route('profile.disable-2fa', ['tab' => 'security'])
                 ->withErrors(['verification_code' => 'Ошибка расшифровки секретного ключа. Пожалуйста, обратитесь в поддержку.']);
         }
 
