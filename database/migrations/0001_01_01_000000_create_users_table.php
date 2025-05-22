@@ -38,6 +38,9 @@ return new class extends Migration
             $table->json('user_avatar_metadata')->nullable()->comment('User avatar metadata (size, file_type, proportions)');
             $table->rememberToken();
             $table->timestamps();
+
+            // Add unique constraint for messenger_type + messenger_contact combination
+            $table->unique(['messenger_type', 'messenger_contact']);
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

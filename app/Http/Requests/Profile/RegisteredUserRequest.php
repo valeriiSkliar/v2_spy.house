@@ -29,30 +29,37 @@ class RegisteredUserRequest extends BaseRequest
         return [
             'login' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z0-9_]+$/', Rule::unique('users', 'login')],
             'messenger_type' => ['required', 'string', Rule::in(['whatsapp', 'viber', 'telegram'])],
-            'messenger_contact' => ['required', 'string', function ($attribute, $value, $fail) {
-                $messengerType = $this->input('messenger_type');
-                
-                switch ($messengerType) {
-                    case 'telegram':
-                        if ($value && !$this->validation_telegram_login($value)) {
-                            $fail('Invalid Telegram username format. Must start with @ and contain 5-32 characters (letters, numbers, underscore).');
-                        }
-                        break;
-                    case 'viber':
-                        if ($value && !$this->validation_viber_identifier($value)) {
-                            $fail('Invalid Viber phone number format. Must contain 10-15 digits.');
-                        }
-                        break;
-                    case 'whatsapp':
-                        if ($value && !$this->validation_whatsapp_identifier($value)) {
-                            $fail('Invalid WhatsApp phone number format. Must contain 10-15 digits.');
-                        }
-                        break;
-                    default:
-                        $fail('Invalid messenger type. Must be one of: telegram, viber, whatsapp.');
-                        break;
+            'messenger_contact' => [
+                'required',
+                'string',
+                Rule::unique('users')->where(function ($query) {
+                    return $query->where('messenger_type', $this->input('messenger_type'));
+                }),
+                function ($attribute, $value, $fail) {
+                    $messengerType = $this->input('messenger_type');
+
+                    switch ($messengerType) {
+                        case 'telegram':
+                            if ($value && !$this->validation_telegram_login($value)) {
+                                $fail('Invalid Telegram username format. Must start with @ and contain 5-32 characters (letters, numbers, underscore).');
+                            }
+                            break;
+                        case 'viber':
+                            if ($value && !$this->validation_viber_identifier($value)) {
+                                $fail('Invalid Viber phone number format. Must contain 10-15 digits.');
+                            }
+                            break;
+                        case 'whatsapp':
+                            if ($value && !$this->validation_whatsapp_identifier($value)) {
+                                $fail('Invalid WhatsApp phone number format. Must contain 10-15 digits.');
+                            }
+                            break;
+                        default:
+                            $fail('Invalid messenger type. Must be one of: telegram, viber, whatsapp.');
+                            break;
+                    }
                 }
-            }],
+            ],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'password' => ['required', 'confirmed', Password::defaults()],
             // Use values instead of names for validation - the dropdown sends value not enum name
@@ -90,7 +97,7 @@ class RegisteredUserRequest extends BaseRequest
     {
         return trim($input);
     }
-    
+
     /**
      * Get the error messages for the defined validation rules.
      *
@@ -109,6 +116,7 @@ class RegisteredUserRequest extends BaseRequest
             'messenger_type.in' => 'Выбран недопустимый тип мессенджера',
             'messenger_contact.required' => 'Контакт мессенджера обязателен',
             'messenger_contact.string' => 'Контакт мессенджера должен быть строкой',
+            'messenger_contact.unique' => 'Этот контакт уже зарегистрирован с указанным типом мессенджера',
             'email.required' => 'Email обязателен',
             'email.string' => 'Email должен быть строкой',
             'email.lowercase' => 'Email должен быть в нижнем регистре',
