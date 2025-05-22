@@ -2,11 +2,13 @@ import { createAndShowToast } from '@/utils';
 import { config } from '../../config';
 import { checkNotifications } from '../../helpers/notification-checker';
 import { ajaxFetcher } from '../fetcher/ajax-fetcher';
-import loader from '../loader';
+import { hideInElement, showInElement } from '../loader';
 
 const cancelEmailUpdate = async () => {
+  const form = $('#change-email-form');
+  let loader = null;
   try {
-    loader.show();
+    loader = showInElement(form[0]);
     const response = await ajaxFetcher.get(config.apiProfileEmailCancelEndpoint, null, {});
 
     if (response.success) {
@@ -15,7 +17,7 @@ const cancelEmailUpdate = async () => {
 
       // Use the server-provided HTML form
       if (response.initialFormHtml) {
-        $('#change-email-form').replaceWith(response.initialFormHtml);
+        form.replaceWith(response.initialFormHtml);
 
         // Reinitialize form handlers
         changeEmail();
@@ -27,14 +29,16 @@ const cancelEmailUpdate = async () => {
     console.error('Error cancelling email update:', error);
     createAndShowToast('Error cancelling email update. Please try again.', 'error');
   } finally {
-    loader.hide();
+    hideInElement(loader);
     checkNotifications();
   }
 };
 
 const confirmEmailUpdate = async formData => {
+  let loader = null;
+  const form = $('#change-email-form');
   try {
-    loader.show();
+    loader = showInElement(form[0]);
     const response = await ajaxFetcher.form(config.apiProfileEmailUpdateConfirmEndpoint, formData);
 
     if (response.success) {
@@ -43,36 +47,132 @@ const confirmEmailUpdate = async formData => {
 
       // Replace form with success message or original form
       if (response.successFormHtml) {
-        $('#change-email-form').replaceWith(response.successFormHtml);
+        form.replaceWith(response.successFormHtml);
         checkNotifications();
         // Add success message if available
         if (response.successMessage) {
-          $('#change-email-form').prepend(response.successMessage);
+          form.prepend(response.successMessage);
         }
       } else if (response.initialFormHtml) {
-        $('#change-email-form').replaceWith(response.initialFormHtml);
+        form.replaceWith(response.initialFormHtml);
         checkNotifications();
       }
       changeEmail();
     } else {
       // Show error message for invalid code
       $('input[name="verification_code"]').addClass('error').focus();
+
+      // Handle server validation errors
+      handleServerValidationErrors(response);
     }
   } catch (error) {
     console.error('Error confirming email update:', error);
     createAndShowToast('Error confirming email update. Please try again.', 'error');
   } finally {
-    loader.hide();
+    hideInElement(loader);
     checkNotifications();
   }
 };
 
+// Handle server validation errors
+const handleServerValidationErrors = response => {
+  console.log(response);
+  if (response.errors) {
+    // Clear previous errors
+    $('input').removeClass('error');
+
+    // Add errors for each field
+    Object.keys(response.errors).forEach(field => {
+      const input = $(`input[name="${field}"]`);
+      input.addClass('error');
+    });
+
+    // Show toast with the main error message
+    if (response.message) {
+      createAndShowToast(response.message, 'error');
+    }
+  }
+};
+
+const initFormValidation = form => {
+  if (!form.length || !$.validator) return;
+
+  form.validate({
+    errorClass: 'error',
+    errorElement: 'div',
+    errorPlacement: function (error, element) {
+      error.addClass('error-message text-danger mt-1');
+      error.insertAfter(element);
+    },
+    highlight: function (element) {
+      $(element).addClass('error');
+    },
+    unhighlight: function (element) {
+      $(element).removeClass('error');
+      // $(element).next('.error-message').remove();
+    },
+    rules: {
+      new_email: {
+        required: true,
+        email: true,
+        notEqualTo: 'input[name="current_email"]',
+      },
+      password: {
+        required: true,
+        minlength: 6,
+      },
+      verification_code: {
+        required: true,
+        digits: true,
+        minlength: 6,
+        maxlength: 6,
+      },
+    },
+    messages: {
+      new_email: {
+        required: '',
+        email: '',
+        notEqualTo: '',
+      },
+      password: {
+        required: '',
+        minlength: '',
+      },
+      verification_code: {
+        required: '',
+        digits: '',
+        minlength: '',
+        maxlength: '',
+      },
+    },
+  });
+
+  // Add custom validation method for comparing emails
+  $.validator.addMethod(
+    'notEqualTo',
+    function (value, element, param) {
+      return this.optional(element) || value !== $(param).val();
+    },
+    'Новый email должен отличаться от текущего'
+  );
+};
+
 const changeEmail = () => {
+  let loader = null;
   const form = $('#change-email-form');
   if (form.length) {
+    // Initialize form validation
+    initFormValidation(form);
+
     form.on('submit', async function (e) {
-      loader.show();
       e.preventDefault();
+
+      // Check if form is valid
+      if (!form.valid()) {
+        return;
+      }
+
+      loader = showInElement(form[0]);
       const formData = new FormData(this);
 
       // Determine if this is a confirmation form or initial form
@@ -111,6 +211,9 @@ const changeEmail = () => {
 
             return;
           } else {
+            // Handle server validation errors
+            handleServerValidationErrors(response);
+
             createAndShowToast(
               response.message || 'Error updating email. Please try again.',
               'error'
@@ -118,10 +221,16 @@ const changeEmail = () => {
           }
         } catch (error) {
           console.error('Error updating email:', error);
-          createAndShowToast('Error updating email. Please try again.', 'error');
+
+          // Обработка ошибки 422 (Unprocessable Content)
+          if (error.status === 422 && error.responseJSON) {
+            handleServerValidationErrors(error.responseJSON);
+          } else {
+            createAndShowToast('Error updating email. Please try again.', 'error');
+          }
         } finally {
           checkNotifications();
-          loader.hide();
+          hideInElement(loader);
         }
       }
     });

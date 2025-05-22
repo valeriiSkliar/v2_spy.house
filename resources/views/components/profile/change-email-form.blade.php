@@ -7,15 +7,15 @@
     <div class="col _offset20 mb-10">
         <div class="col-12 col-md-6 col-lg-6">
             <input type="hidden" name="current_email" value="{{ $user->email }}">
-            <x-profile.form-field name="current_email" autocomplete="off" type="email" :value="$user->email"
+            <x-profile.form-field name="current_email" autocomplete="nope" type="email" :value="$user->email"
                 :disabled="true" :label="__('profile.security_settings.current_email_label')" />
         </div>
         <div class="col-12 col-md-6 col-lg-6">
-            <x-profile.form-field autocomplete="new-email" name="new_email" type="email"
+            <x-profile.form-field autocomplete="nope" name="new_email" type="email"
                 :label="__('profile.security_settings.new_email_label')" />
         </div>
         <div class="col-12 col-md-6 col-lg-6">
-            <x-profile.form-field autocomplete="pass-word" name="password" type="password"
+            <x-profile.form-field autocomplete="nope" name="password" type="password"
                 :label="__('profile.security_settings.password_label')" />
         </div>
         <div data-confirmation-method="{{ $confirmationMethod }}" class="col-12 col-md-6 col-lg-6">
@@ -51,16 +51,3 @@
     @endif
     <x-profile.success-message status="email-updated" :message="__('profile.security_settings.email_updated')" />
 </form>
-
-<style>
-    .btn._border-red {
-        color: #C93D3D;
-        background: transparent;
-        border: 1px solid #C93D3D;
-    }
-
-    .btn._border-red:hover {
-        background: #C93D3D;
-        color: #fff;
-    }
-</style>

@@ -8,7 +8,8 @@
             class="popover-icon icon-i ml-2"></span>
         @endif</label>
     <input autocomplete="{{ $autocomplete }}" {{ $disabled ? 'disabled' : '' }} type="{{ $type }}" name="{{ $name }}"
-        class="input-h-57 input-h-57-lg" value="{{ old($name, $value ?? '') }}">
+        class="input-h-57 input-h-57-lg" value="{{ old($name, $value ?? '') }}" @if(!$disabled && ($type=='email' ||
+        $type=='password' )) readonly onfocus="this.removeAttribute('readonly');" @endif>
     @error($name)
     <span class="text-danger">{{ $message }}</span>
     @enderror
