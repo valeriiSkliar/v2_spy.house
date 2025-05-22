@@ -39,54 +39,13 @@ document.addEventListener('DOMContentLoaded', function () {
       const ajaxUrl = servicesContainer?.getAttribute('data-services-ajax-url');
 
       if (servicesContainer && ajaxUrl) {
-        // Show loading state
-        const loader = showInElement(servicesContainer);
-
-        // Reset all select components to default state
-        resetFilters();
-
-        // Fetch default services list
-        fetch(ajaxUrl, {
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-          },
-        })
-          .then(response => {
-            if (!response.ok) {
-              throw new Error('Network response was not ok');
-            }
-            return response.json();
-          })
-          .then(data => {
-            // Update content
-            servicesContainer.innerHTML = data.html;
-
-            // Update pagination container
-            const paginationContainer = document.getElementById('services-pagination-container');
-            if (paginationContainer) {
-              // If pagination data exists, show it
-              if (data.hasPagination && data.pagination) {
-                paginationContainer.innerHTML = data.pagination;
-                paginationContainer.style.display = 'block';
-              } else {
-                // Otherwise hide the pagination container
-                paginationContainer.innerHTML = '';
-                paginationContainer.style.display = 'none';
-              }
-            }
-
-            // Scroll to top of services container
-            // servicesContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-            console.log('Filters reset, services reloaded');
-          })
-          .catch(error => {
-            console.error('Error resetting services:', error);
-          })
-          .finally(() => {
-            // Remove loading state
-            hideInElement(loader);
-          });
+        // Reset all select components to default state without triggering extra renders
+        resetFilters(false); // Pass false to indicate no need to update browser URL (already done above)
+        
+        // Use the existing reload function (avoids duplicating code and logic)
+        reloadServicesContent(servicesContainer, ajaxUrl);
+        
+        console.log('Filters reset, services reloading...');
       }
     });
   }
@@ -241,8 +200,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
   /**
    * Reset all filter components to their default state
+   * @param {boolean} updateUrl - Whether to update the browser URL (default: true)
    */
-  function resetFilters() {
+  function resetFilters(updateUrl = true) {
     // Get filter selectors
     const filterSelectors = [
       '#sort-by',
@@ -295,18 +255,19 @@ document.addEventListener('DOMContentLoaded', function () {
         // Remove warning class if any
         searchInput.classList.remove('min-chars-warning');
 
-        // Trigger the search event to update results
-        const searchEvent = new Event('search');
-        searchInput.dispatchEvent(searchEvent);
+        // Don't trigger search event here - avoid redundant requests
+        // searchEvent is handled by reloadServicesContent call after reset
       }
     }
 
     // Clear URL parameters by replacing current URL with base URL (without parameters)
-    const currentUrl = window.location.href;
-    const baseUrl = window.location.pathname;
-    if (currentUrl !== baseUrl) {
-      // Создаем пустой объект параметров, что приведет к очистке всех существующих параметров
-      updateBrowserUrl({});
+    if (updateUrl) {
+      const currentUrl = window.location.href;
+      const baseUrl = window.location.pathname;
+      if (currentUrl !== baseUrl) {
+        // Создаем пустой объект параметров, что приведет к очистке всех существующих параметров
+        updateBrowserUrl({});
+      }
     }
   }
 
@@ -381,6 +342,9 @@ document.addEventListener('DOMContentLoaded', function () {
       queryParams.search = null; // Будет удален в updateBrowserUrl
     }
 
+    // Сбрасываем параметр страницы при изменении поискового запроса
+    queryParams.page = null; // Будет удален в updateBrowserUrl
+
     // Update the browser URL
     updateBrowserUrl(queryParams);
 
@@ -392,6 +356,9 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!useAjax) return;
 
     console.log('Filter change detected', { event, data });
+
+    // Сбрасываем номер страницы на 1 при изменении фильтров
+    updateBrowserUrl({ page: null }); // Используем хелпер для удаления параметра страницы
 
     // Use the generic reload function
     reloadServicesContent(servicesContainer, ajaxUrl, true);
