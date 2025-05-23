@@ -3,20 +3,16 @@
 namespace App\Http\Controllers\Frontend\Profile;
 
 use App\Enums\Frontend\NotificationType;
-use App\Enums\Frontend\UserExperience;
-use App\Enums\Frontend\UserScopeOfActivity;
-use App\Http\Controllers\FrontendController;
 use App\Http\Requests\Profile\ProfileUpdateRequest;
-use App\Http\Requests\Profile\ProfileSettingsUpdateRequest;
 use App\Http\Requests\Profile\UpdateEmailRequest;
+use App\Http\Requests\Profile\UpdateIpRestrictionRequest;
 use App\Http\Requests\Profile\UpdateNotificationSettingsRequest;
 use App\Http\Requests\Profile\UpdatePersonalGreetingSettingsRequest;
 use App\Notifications\Profile\EmailUpdateConfirmationNotification;
 use App\Notifications\Profile\EmailUpdatedNotification;
 use App\Notifications\Profile\PasswordUpdateConfirmationNotification;
 use App\Notifications\Profile\PersonalGreetingUpdateConfirmationNotification;
-use App\Services\Api\TokenService;
-use App\Services\App\ImageService;
+use App\Services\Frontend\Toast;
 use App\Services\Notification\NotificationDispatcher;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,13 +24,11 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 use PragmaRX\Google2FALaravel\Facade as Google2FAFacade;
-use App\Http\Controllers\Frontend\Profile\BaseProfileController;
-use App\Services\Frontend\Toast;
-use App\Http\Requests\Profile\UpdateIpRestrictionRequest;
 
 class ProfileController extends BaseProfileController
 {
     protected $settingsView = 'pages.profile.settings';
+
     /**
      * Display the user's profile form.
      */
@@ -61,8 +55,6 @@ class ProfileController extends BaseProfileController
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
 
-
-
     /**
      * Delete the user's account.
      */
@@ -87,30 +79,32 @@ class ProfileController extends BaseProfileController
     public function settings(Request $request): View
     {
         $activeTab = $request->query('tab', 'personal');
+
         return $this->renderSettingsView($request, $activeTab);
     }
 
     public function changePassword(Request $request): View
     {
         $user = $request->user();
-        $pendingUpdate = Cache::get('password_update_code:' . $user->id);
+        $pendingUpdate = Cache::get('password_update_code:'.$user->id);
         $confirmationMethod = $user->google_2fa_enabled ? 'authenticator' : 'email';
+
         return view('pages.profile.change-password', [
             'user' => $user,
             'passwordUpdatePending' => $pendingUpdate ? true : false,
-            'confirmationMethod' => $confirmationMethod
+            'confirmationMethod' => $confirmationMethod,
         ]);
     }
 
     public function changeEmail(Request $request): View
     {
         $user = $request->user();
-        $pendingUpdate = Cache::get('email_update_code:' . $user->id);
+        $pendingUpdate = Cache::get('email_update_code:'.$user->id);
 
         return view('pages.profile.change-email', [
             'user' => $user,
             'emailUpdatePending' => $pendingUpdate ? true : false,
-            'confirmationMethod' => $pendingUpdate['method'] ?? null
+            'confirmationMethod' => $pendingUpdate['method'] ?? null,
         ]);
     }
 
@@ -122,13 +116,13 @@ class ProfileController extends BaseProfileController
             'request' => $request->all(),
             'user_id' => $request->user()->id,
             'new_email' => $request->input('new_email'),
-            'confirmation_method' => $request->input('confirmation_method')
+            'confirmation_method' => $request->input('confirmation_method'),
         ]);
         $user = $request->user();
         $newEmail = $request->input('new_email');
         $method = $request->input('confirmation_method');
 
-        if ($method === 'authenticator' && !$user->google_2fa_enabled) {
+        if ($method === 'authenticator' && ! $user->google_2fa_enabled) {
             return back()->withErrors(['confirmation_method' => __('profile.security_settings.2fa_not_enabled')]);
         }
 
@@ -137,10 +131,10 @@ class ProfileController extends BaseProfileController
             // $user->google_2fa_secret = Crypt::encryptString($secret);
             // $user->save();
 
-            Cache::put('email_update_code:' . $user->id, [
+            Cache::put('email_update_code:'.$user->id, [
                 'new_email' => $newEmail,
                 'method' => 'authenticator',
-                'expires_at' => now()->addMinutes(15)
+                'expires_at' => now()->addMinutes(15),
             ], now()->addMinutes(15));
 
             return redirect()->route('profile.change-email')
@@ -148,11 +142,11 @@ class ProfileController extends BaseProfileController
         }
 
         $verificationCode = random_int(100000, 999999);
-        Cache::put('email_update_code:' . $user->id, [
+        Cache::put('email_update_code:'.$user->id, [
             'new_email' => $newEmail,
             'code' => $verificationCode,
             'method' => 'email',
-            'expires_at' => now()->addMinutes(15)
+            'expires_at' => now()->addMinutes(15),
         ], now()->addMinutes(15));
 
         // Отправляем уведомление о коде подтверждения через диспетчер
@@ -169,25 +163,27 @@ class ProfileController extends BaseProfileController
     public function confirmEmailUpdate(Request $request): RedirectResponse
     {
         $request->validate([
-            'verification_code' => 'required|string|digits:6'
+            'verification_code' => 'required|string|digits:6',
         ]);
 
         $user = $request->user();
-        $pendingUpdate = Cache::get('email_update_code:' . $user->id);
+        $pendingUpdate = Cache::get('email_update_code:'.$user->id);
 
-        if (!$pendingUpdate) {
+        if (! $pendingUpdate) {
             Log::warning('Email update confirmation failed: no pending update found', [
-                'user_id' => $user->id
+                'user_id' => $user->id,
             ]);
+
             return back()->withErrors(['verification_code' => __('profile.security_settings.update_request_expired')]);
         }
 
         if (now()->isAfter($pendingUpdate['expires_at'])) {
             Log::warning('Email update confirmation failed: request expired', [
                 'user_id' => $user->id,
-                'expires_at' => $pendingUpdate['expires_at']
+                'expires_at' => $pendingUpdate['expires_at'],
             ]);
-            Cache::forget('email_update_code:' . $user->id);
+            Cache::forget('email_update_code:'.$user->id);
+
             return back()->withErrors(['verification_code' => __('profile.security_settings.update_request_expired')]);
         }
 
@@ -196,15 +192,16 @@ class ProfileController extends BaseProfileController
             $secret = Crypt::decryptString($user->google_2fa_secret);
             $isValid = Google2FAFacade::verifyKey($secret, $request->input('verification_code'));
         } else {
-            $isValid = $request->input('verification_code') === (string)$pendingUpdate['code'];
+            $isValid = $request->input('verification_code') === (string) $pendingUpdate['code'];
         }
 
-        if (!$isValid) {
+        if (! $isValid) {
             Log::warning('Email update confirmation failed: invalid code', [
                 'user_id' => $user->id,
                 'method' => $pendingUpdate['method'],
-                'provided_code' => $request->input('verification_code')
+                'provided_code' => $request->input('verification_code'),
             ]);
+
             return back()->withErrors(['verification_code' => __('profile.security_settings.invalid_verification_code')]);
         }
 
@@ -213,12 +210,12 @@ class ProfileController extends BaseProfileController
         $user->email_verified_at = null;
         $user->save();
 
-        Cache::forget('email_update_code:' . $user->id);
+        Cache::forget('email_update_code:'.$user->id);
 
         Log::info('Email updated successfully', [
             'user_id' => $user->id,
             'old_email' => $oldEmail,
-            'new_email' => $pendingUpdate['new_email']
+            'new_email' => $pendingUpdate['new_email'],
         ]);
 
         // Используем метод quickSend для отправки уведомления на старый email
@@ -232,7 +229,7 @@ class ProfileController extends BaseProfileController
             __('profile.email_updated'),
             __('profile.email_updated_message', [
                 'old_email' => $oldEmail,
-                'new_email' => $pendingUpdate['new_email']
+                'new_email' => $pendingUpdate['new_email'],
             ])
         );
 
@@ -252,14 +249,14 @@ class ProfileController extends BaseProfileController
     public function cancelEmailUpdate(Request $request): RedirectResponse
     {
         $user = $request->user();
-        $pendingUpdate = Cache::get('email_update_code:' . $user->id);
+        $pendingUpdate = Cache::get('email_update_code:'.$user->id);
 
         if ($pendingUpdate) {
             Log::info('Email update cancelled by user', [
                 'user_id' => $user->id,
-                'new_email' => $pendingUpdate['new_email']
+                'new_email' => $pendingUpdate['new_email'],
             ]);
-            Cache::forget('email_update_code:' . $user->id);
+            Cache::forget('email_update_code:'.$user->id);
         }
 
         $activeTab = $request->query('tab', 'security');
@@ -270,8 +267,6 @@ class ProfileController extends BaseProfileController
 
     /**
      * Update the user's notification settings.
-     * @param UpdateNotificationSettingsRequest $request
-     * @return RedirectResponse
      */
     public function updateNotifications(UpdateNotificationSettingsRequest $request): RedirectResponse
     {
@@ -294,7 +289,7 @@ class ProfileController extends BaseProfileController
         $google2fa = app('pragmarx.google2fa');
 
         // Generate a new secret only if one doesn't exist or 2FA is not enabled
-        if (empty($user->google_2fa_secret) || !$user->google_2fa_enabled) {
+        if (empty($user->google_2fa_secret) || ! $user->google_2fa_enabled) {
             $secret = $google2fa->generateSecretKey();
             $request->session()->put('google_2fa_secret_temp', $secret);
             Log::debug('New 2FA secret generated', ['user_id' => $user->id, 'secret_length' => strlen($secret)]);
@@ -337,9 +332,10 @@ class ProfileController extends BaseProfileController
         Log::debug('2FA setup step 2 initiated', ['user_id' => $user->id]);
 
         // Проверяем, есть ли временный секрет в сессии
-        if (!$request->session()->has('google_2fa_secret_temp')) {
+        if (! $request->session()->has('google_2fa_secret_temp')) {
             Log::warning('No temp 2FA secret found in session', ['user_id' => $user->id]);
             Toast::error(__('profile.2fa.secret_not_found'));
+
             return redirect()->route('profile.connect-2fa')
                 ->withErrors(['error' => 'Необходимо начать процесс активации с первого шага']);
         }
@@ -363,16 +359,17 @@ class ProfileController extends BaseProfileController
         Log::debug('2FA verification attempt', [
             'user_id' => $user->id,
             'otp_length' => strlen($otp),
-            'otp_masked' => substr($otp, 0, 2) . '****'
+            'otp_masked' => substr($otp, 0, 2).'****',
         ]);
 
         $google2fa = app('pragmarx.google2fa');
 
         $secret = $request->session()->get('google_2fa_secret_temp');
 
-        if (!$secret) {
+        if (! $secret) {
             Log::error('No temp 2FA secret found in session during verification', ['user_id' => $user->id]);
             Toast::error(__('profile.2fa.secret_not_found'));
+
             return Redirect::route('profile.connect-2fa')
                 ->withErrors(['verification_code' => __('profile.2fa.secret_not_found')]);
         }
@@ -395,14 +392,16 @@ class ProfileController extends BaseProfileController
             Log::debug('Temp 2FA secret removed from session', ['user_id' => $user->id]);
 
             Toast::success(__('profile.2fa.enabled'));
+
             return Redirect::route('profile.settings', ['tab' => 'security'])->with('status', '2fa-enabled');
         } else {
             // Pass the secret back to the view so the same QR code can be shown
             Log::warning('Invalid 2FA verification code provided', [
                 'user_id' => $user->id,
-                'otp_masked' => substr($otp, 0, 2) . '****'
+                'otp_masked' => substr($otp, 0, 2).'****',
             ]);
             Toast::error(__('profile.2fa.invalid_code'));
+
             return Redirect::route('profile.connect-2fa-step2')
                 ->withInput()
                 ->withErrors(['verification_code' => __('profile.2fa.invalid_code')]);
@@ -418,17 +417,18 @@ class ProfileController extends BaseProfileController
             'user_agent' => $request->userAgent(),
             'timestamp' => now()->toIso8601String(),
             'is_2fa_enabled' => $user->google_2fa_enabled,
-            'has_2fa_secret' => !empty($user->google_2fa_secret)
+            'has_2fa_secret' => ! empty($user->google_2fa_secret),
         ]);
 
         // Проверяем, что 2FA действительно включен у пользователя
-        if (!$user->google_2fa_enabled) {
+        if (! $user->google_2fa_enabled) {
             Log::warning('Attempt to disable 2FA for user without 2FA enabled', [
                 'user_id' => $user->id,
                 'ip' => $request->ip(),
-                'timestamp' => now()->toIso8601String()
+                'timestamp' => now()->toIso8601String(),
             ]);
             Toast::error(__('profile.2fa.already_disabled'));
+
             return redirect()->route('profile.settings', ['tab' => 'security'])
                 ->withErrors(['error' => 'Двухфакторная аутентификация уже отключена']);
         }
@@ -437,8 +437,9 @@ class ProfileController extends BaseProfileController
             'user_id' => $user->id,
             'route' => $request->route()->getName(),
             'session_id' => $request->session()->getId(),
-            'timestamp' => now()->toIso8601String()
+            'timestamp' => now()->toIso8601String(),
         ]);
+
         return view('pages.profile.disable_2fa', [
             'user' => $user,
         ]);
@@ -461,22 +462,23 @@ class ProfileController extends BaseProfileController
             'ip' => $request->ip(),
             'user_agent' => $request->userAgent(),
             'otp_length' => strlen($otp),
-            'otp_masked' => $otp ? substr($otp, 0, 2) . '****' : 'null',
+            'otp_masked' => $otp ? substr($otp, 0, 2).'****' : 'null',
             'request_all' => $request->all(),
             'timestamp' => now()->toIso8601String(),
-            'session_id' => $request->session()->getId()
+            'session_id' => $request->session()->getId(),
         ]);
 
         // Проверяем, что 2FA включен у пользователя
-        if (!$user->google_2fa_enabled || !$user->google_2fa_secret) {
+        if (! $user->google_2fa_enabled || ! $user->google_2fa_secret) {
             Log::warning('Attempt to disable 2FA for user without 2FA enabled', [
                 'user_id' => $user->id,
                 'ip' => $request->ip(),
                 'has_2fa_enabled' => $user->google_2fa_enabled,
-                'has_2fa_secret' => !empty($user->google_2fa_secret),
-                'timestamp' => now()->toIso8601String()
+                'has_2fa_secret' => ! empty($user->google_2fa_secret),
+                'timestamp' => now()->toIso8601String(),
             ]);
             Toast::error(__('profile.2fa.already_disabled'));
+
             return redirect()->route('profile.settings', ['tab' => 'security'])
                 ->withErrors(['error' => 'Двухфакторная аутентификация уже отключена']);
         }
@@ -484,7 +486,7 @@ class ProfileController extends BaseProfileController
         $google2fa = app('pragmarx.google2fa');
         Log::debug('Google2FA instance created', [
             'user_id' => $user->id,
-            'timestamp' => now()->toIso8601String()
+            'timestamp' => now()->toIso8601String(),
         ]);
 
         try {
@@ -493,7 +495,7 @@ class ProfileController extends BaseProfileController
                 'user_id' => $user->id,
                 'secret_length' => strlen($secret),
                 'secret_hash' => md5($secret), // Хеш для отладки без раскрытия самого секрета
-                'timestamp' => now()->toIso8601String()
+                'timestamp' => now()->toIso8601String(),
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to decrypt 2FA secret', [
@@ -501,9 +503,10 @@ class ProfileController extends BaseProfileController
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'ip' => $request->ip(),
-                'timestamp' => now()->toIso8601String()
+                'timestamp' => now()->toIso8601String(),
             ]);
             Toast::error(__('profile.2fa.error_decrypting_secret'));
+
             return redirect()->route('profile.disable-2fa', ['tab' => 'security'])
                 ->withErrors(['verification_code' => 'Ошибка расшифровки секретного ключа. Пожалуйста, обратитесь в поддержку.']);
         }
@@ -511,9 +514,9 @@ class ProfileController extends BaseProfileController
         // Проверяем одноразовый пароль
         Log::debug('About to verify OTP', [
             'user_id' => $user->id,
-            'otp_masked' => substr($otp, 0, 2) . '****',
+            'otp_masked' => substr($otp, 0, 2).'****',
             'secret_hash' => md5($secret),
-            'timestamp' => now()->toIso8601String()
+            'timestamp' => now()->toIso8601String(),
         ]);
 
         $valid = $google2fa->verifyKey($secret, $otp);
@@ -522,7 +525,7 @@ class ProfileController extends BaseProfileController
             'is_valid' => $valid,
             'ip' => $request->ip(),
             'timestamp' => now()->toIso8601String(),
-            'verification_time_ms' => microtime(true) - LARAVEL_START
+            'verification_time_ms' => microtime(true) - LARAVEL_START,
         ]);
 
         if ($valid) {
@@ -530,7 +533,7 @@ class ProfileController extends BaseProfileController
             Log::info('About to disable 2FA for user', [
                 'user_id' => $user->id,
                 'ip' => $request->ip(),
-                'timestamp' => now()->toIso8601String()
+                'timestamp' => now()->toIso8601String(),
             ]);
 
             $user->google_2fa_enabled = false;
@@ -541,7 +544,7 @@ class ProfileController extends BaseProfileController
                 'user_id' => $user->id,
                 'ip' => $request->ip(),
                 'timestamp' => now()->toIso8601String(),
-                'db_update_success' => true
+                'db_update_success' => true,
             ]);
 
             Toast::success(__('profile.2fa.disabled'));
@@ -551,7 +554,7 @@ class ProfileController extends BaseProfileController
                 'user_id' => $user->id,
                 'redirect_to' => 'profile.settings',
                 'tab' => $activeTab,
-                'timestamp' => now()->toIso8601String()
+                'timestamp' => now()->toIso8601String(),
             ]);
 
             return redirect()->route('profile.settings', ['tab' => $activeTab])
@@ -560,17 +563,17 @@ class ProfileController extends BaseProfileController
             Toast::error(__('profile.2fa.invalid_code'));
             Log::warning('Invalid 2FA code provided for disabling 2FA', [
                 'user_id' => $user->id,
-                'otp_masked' => substr($otp, 0, 2) . '****',
+                'otp_masked' => substr($otp, 0, 2).'****',
                 'ip' => $request->ip(),
                 'attempt_time' => now()->toIso8601String(),
                 'user_agent' => $request->userAgent(),
-                'failed_verification' => true
+                'failed_verification' => true,
             ]);
 
             Log::debug('Redirecting after failed 2FA disable attempt', [
                 'user_id' => $user->id,
                 'redirect_to' => 'profile.disable-2fa',
-                'timestamp' => now()->toIso8601String()
+                'timestamp' => now()->toIso8601String(),
             ]);
 
             return redirect()->route('profile.disable-2fa')
@@ -584,7 +587,7 @@ class ProfileController extends BaseProfileController
     public function personalGreeting(Request $request): View
     {
         $user = $request->user();
-        $pendingUpdate = Cache::get('personal_greeting_update_code:' . $user->id);
+        $pendingUpdate = Cache::get('personal_greeting_update_code:'.$user->id);
 
         return view('pages.profile.personal-greeting', [
             'user' => $user,
@@ -605,41 +608,42 @@ class ProfileController extends BaseProfileController
         $request->validate([
             'confirmation_method' => ['required', 'string', \Illuminate\Validation\Rule::in(['email', 'authenticator'])],
             // Add password confirmation if required for initiating changes, similar to UpdateEmailRequest
-            // 'password' => ['required', 'string', 'current_password'], 
+            // 'password' => ['required', 'string', 'current_password'],
         ]);
 
         $user = $request->user();
         $newPersonalGreeting = $request->input('personal_greeting');
         $method = $request->input('confirmation_method');
 
-        if ($method === 'authenticator' && !$user->google_2fa_enabled) {
+        if ($method === 'authenticator' && ! $user->google_2fa_enabled) {
             return back()->withErrors(['confirmation_method' => __('profile.security_settings.2fa_not_enabled')])->withInput();
         }
 
         // Clear any previous expired attempts
-        if (Cache::has('personal_greeting_update_code:' . $user->id)) {
-            Cache::forget('personal_greeting_update_code:' . $user->id);
+        if (Cache::has('personal_greeting_update_code:'.$user->id)) {
+            Cache::forget('personal_greeting_update_code:'.$user->id);
         }
 
         if ($method === 'authenticator') {
-            Cache::put('personal_greeting_update_code:' . $user->id, [
+            Cache::put('personal_greeting_update_code:'.$user->id, [
                 'personal_greeting' => $newPersonalGreeting,
                 'method' => 'authenticator',
-                'expires_at' => now()->addMinutes(15)
+                'expires_at' => now()->addMinutes(15),
             ], now()->addMinutes(15));
 
             Log::info('Personal greeting update initiated via authenticator.', ['user_id' => $user->id]);
+
             return redirect()->route('profile.personal-greeting')
                 ->with('status', 'authenticator-required-for-greeting');
         }
 
         // Email confirmation
         $verificationCode = random_int(100000, 999999);
-        Cache::put('personal_greeting_update_code:' . $user->id, [
+        Cache::put('personal_greeting_update_code:'.$user->id, [
             'personal_greeting' => $newPersonalGreeting,
             'code' => $verificationCode,
             'method' => 'email',
-            'expires_at' => now()->addMinutes(15)
+            'expires_at' => now()->addMinutes(15),
         ], now()->addMinutes(15));
 
         // Используем метод sendNotification
@@ -650,6 +654,7 @@ class ProfileController extends BaseProfileController
         );
 
         Log::info('Personal greeting update initiated via email.', ['user_id' => $user->id, 'email' => $user->email]);
+
         return redirect()->route('profile.personal-greeting')
             ->with('status', 'greeting-code-sent');
     }
@@ -660,51 +665,55 @@ class ProfileController extends BaseProfileController
     public function confirmPersonalGreetingUpdate(Request $request): RedirectResponse
     {
         $request->validate([
-            'verification_code' => 'required|string|digits:6'
+            'verification_code' => 'required|string|digits:6',
         ]);
 
         $user = $request->user();
-        $pendingUpdate = Cache::get('personal_greeting_update_code:' . $user->id);
+        $pendingUpdate = Cache::get('personal_greeting_update_code:'.$user->id);
 
-        if (!$pendingUpdate) {
+        if (! $pendingUpdate) {
             Log::warning('Personal greeting update confirmation failed: no pending update found', ['user_id' => $user->id]);
+
             return redirect()->route('profile.personal-greeting')->withErrors(['verification_code' => __('profile.security_settings.update_request_expired')]);
         }
 
         if (now()->isAfter($pendingUpdate['expires_at'])) {
             Log::warning('Personal greeting update confirmation failed: request expired', [
                 'user_id' => $user->id,
-                'expires_at' => $pendingUpdate['expires_at']
+                'expires_at' => $pendingUpdate['expires_at'],
             ]);
-            Cache::forget('personal_greeting_update_code:' . $user->id);
+            Cache::forget('personal_greeting_update_code:'.$user->id);
+
             return redirect()->route('profile.personal-greeting')->withErrors(['verification_code' => __('profile.security_settings.update_request_expired')]);
         }
 
         $isValid = false;
         if ($pendingUpdate['method'] === 'authenticator') {
-            if (!$user->google_2fa_secret) {
+            if (! $user->google_2fa_secret) {
                 Log::error('Personal greeting 2FA confirmation failed: 2FA secret not found for user.', ['user_id' => $user->id]);
+
                 return redirect()->route('profile.personal-greeting')->withErrors(['verification_code' => __('profile.2fa.error_verifying_code')]); // Generic error
             }
             $secret = Crypt::decryptString($user->google_2fa_secret);
             $isValid = Google2FAFacade::verifyKey($secret, $request->input('verification_code'));
         } else { // Email
-            $isValid = $request->input('verification_code') === (string)$pendingUpdate['code'];
+            $isValid = $request->input('verification_code') === (string) $pendingUpdate['code'];
         }
 
-        if (!$isValid) {
+        if (! $isValid) {
             Log::warning('Personal greeting update confirmation failed: invalid code', [
                 'user_id' => $user->id,
                 'method' => $pendingUpdate['method'],
-                'provided_code' => $request->input('verification_code')
+                'provided_code' => $request->input('verification_code'),
             ]);
+
             return back()->withErrors(['verification_code' => __('profile.security_settings.invalid_verification_code')]);
         }
 
         $user->personal_greeting = $pendingUpdate['personal_greeting'];
         $user->save();
 
-        Cache::forget('personal_greeting_update_code:' . $user->id);
+        Cache::forget('personal_greeting_update_code:'.$user->id);
 
         Log::info('Personal greeting updated successfully.', ['user_id' => $user->id]);
 
@@ -731,11 +740,11 @@ class ProfileController extends BaseProfileController
     public function cancelPersonalGreetingUpdate(Request $request): RedirectResponse
     {
         $user = $request->user();
-        $pendingUpdate = Cache::get('personal_greeting_update_code:' . $user->id);
+        $pendingUpdate = Cache::get('personal_greeting_update_code:'.$user->id);
 
         if ($pendingUpdate) {
             Log::info('Personal greeting update cancelled by user', ['user_id' => $user->id]);
-            Cache::forget('personal_greeting_update_code:' . $user->id);
+            Cache::forget('personal_greeting_update_code:'.$user->id);
         }
 
         $activeTab = $request->query('tab', 'personal');
@@ -744,11 +753,10 @@ class ProfileController extends BaseProfileController
             ->with('status', 'personal-greeting-update-cancelled');
     }
 
-
-
     public function ipRestriction(Request $request): View
     {
         $user = $request->user();
+
         return view('pages.profile.ip-restriction', [
             'user' => $user,
             'ip_restrictions' => $user->ip_restrictions ?? [],
@@ -777,21 +785,21 @@ class ProfileController extends BaseProfileController
         $request->validate([
             'current_password' => 'required|current_password',
             'password' => 'required|string|min:8|confirmed',
-            'confirmation_method' => 'required|in:authenticator,email'
+            'confirmation_method' => 'required|in:authenticator,email',
         ]);
 
         $user = $request->user();
         $method = $request->input('confirmation_method');
 
-        if ($method === 'authenticator' && !$user->google_2fa_enabled) {
+        if ($method === 'authenticator' && ! $user->google_2fa_enabled) {
             return back()->withErrors(['confirmation_method' => __('profile.security_settings.2fa_not_enabled')]);
         }
 
         if ($method === 'authenticator') {
-            Cache::put('password_update_code:' . $user->id, [
+            Cache::put('password_update_code:'.$user->id, [
                 'password' => $request->input('password'),
                 'method' => 'authenticator',
-                'expires_at' => now()->addMinutes(15)
+                'expires_at' => now()->addMinutes(15),
             ], now()->addMinutes(15));
 
             return redirect()->route('profile.change-password')
@@ -799,11 +807,11 @@ class ProfileController extends BaseProfileController
         }
 
         $verificationCode = random_int(100000, 999999);
-        Cache::put('password_update_code:' . $user->id, [
+        Cache::put('password_update_code:'.$user->id, [
             'password' => $request->input('password'),
             'code' => $verificationCode,
             'method' => 'email',
-            'expires_at' => now()->addMinutes(15)
+            'expires_at' => now()->addMinutes(15),
         ], now()->addMinutes(15));
 
         // Используем метод sendNotification для отправки уведомления о смене пароля
@@ -820,25 +828,27 @@ class ProfileController extends BaseProfileController
     public function confirmPasswordUpdate(Request $request): RedirectResponse
     {
         $request->validate([
-            'verification_code' => 'required|string|digits:6'
+            'verification_code' => 'required|string|digits:6',
         ]);
 
         $user = $request->user();
-        $pendingUpdate = Cache::get('password_update_code:' . $user->id);
+        $pendingUpdate = Cache::get('password_update_code:'.$user->id);
 
-        if (!$pendingUpdate) {
+        if (! $pendingUpdate) {
             Log::warning('Password update confirmation failed: no pending update found', [
-                'user_id' => $user->id
+                'user_id' => $user->id,
             ]);
+
             return back()->withErrors(['verification_code' => __('profile.security_settings.update_request_expired')]);
         }
 
         if (now()->isAfter($pendingUpdate['expires_at'])) {
             Log::warning('Password update confirmation failed: request expired', [
                 'user_id' => $user->id,
-                'expires_at' => $pendingUpdate['expires_at']
+                'expires_at' => $pendingUpdate['expires_at'],
             ]);
-            Cache::forget('password_update_code:' . $user->id);
+            Cache::forget('password_update_code:'.$user->id);
+
             return back()->withErrors(['verification_code' => __('profile.security_settings.update_request_expired')]);
         }
 
@@ -847,25 +857,26 @@ class ProfileController extends BaseProfileController
             $secret = Crypt::decryptString($user->google_2fa_secret);
             $isValid = Google2FAFacade::verifyKey($secret, $request->input('verification_code'));
         } else {
-            $isValid = $request->input('verification_code') === (string)$pendingUpdate['code'];
+            $isValid = $request->input('verification_code') === (string) $pendingUpdate['code'];
         }
 
-        if (!$isValid) {
+        if (! $isValid) {
             Log::warning('Password update confirmation failed: invalid code', [
                 'user_id' => $user->id,
                 'method' => $pendingUpdate['method'],
-                'provided_code' => $request->input('verification_code')
+                'provided_code' => $request->input('verification_code'),
             ]);
+
             return back()->withErrors(['verification_code' => __('profile.security_settings.invalid_verification_code')]);
         }
 
         $user->password = Hash::make($pendingUpdate['password']);
         $user->save();
 
-        Cache::forget('password_update_code:' . $user->id);
+        Cache::forget('password_update_code:'.$user->id);
 
         Log::info('Password updated successfully', [
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ]);
 
         // Отправляем уведомление об успешном обновлении пароля
@@ -886,13 +897,13 @@ class ProfileController extends BaseProfileController
     public function cancelPasswordUpdate(Request $request): RedirectResponse
     {
         $user = $request->user();
-        $pendingUpdate = Cache::get('password_update_code:' . $user->id);
+        $pendingUpdate = Cache::get('password_update_code:'.$user->id);
 
         if ($pendingUpdate) {
             Log::info('Password update cancelled by user', [
-                'user_id' => $user->id
+                'user_id' => $user->id,
             ]);
-            Cache::forget('password_update_code:' . $user->id);
+            Cache::forget('password_update_code:'.$user->id);
         }
 
         $activeTab = $request->query('tab', 'security');

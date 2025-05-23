@@ -12,6 +12,7 @@ use Illuminate\View\View;
 class ProfileController extends Controller
 {
     private $settingsView = 'pages.profile.settings';
+
     /**
      * Display the user's profile form.
      */
