@@ -1,51 +1,22 @@
 /**
  * Social messenger field component for profile settings
  * Handles the selection and validation of different messenger types (Telegram, Viber, WhatsApp)
+ * Refactored to use unified validation and state management
  */
 
 import { profileFormElements } from './profile-form-elements';
+import { MessengerStateManager } from './messenger-state-manager.js';
+import { ValidationMethods } from '../../validation/validation-constants.js';
+
+let messengerManager = null;
 
 const initSocialMessengerField = () => {
-  // Object with placeholders for each messenger type
-  const placeholders = {
-    telegram: '@username',
-    viber: '+1 (999) 999-99-99',
-    whatsapp: '+1 (999) 999-99-99',
-  };
-
-  // Store saved values for each messenger type
-  const savedValues = {
-    telegram: '',
-    viber: '',
-    whatsapp: '',
-  };
-
-  // Initialize the saved value for the current type
-  const initialType = profileFormElements.messengerType.val();
-  const initialValue = profileFormElements.messengerContact.val();
-  if (initialType && initialValue) {
-    savedValues[initialType] = initialValue;
-  }
-
-  // Function to validate messenger values
-  function validateMessengerValue(type, value) {
-    if (!value) return true;
-
-    switch (type) {
-      case 'telegram':
-        return /^@[A-Za-z0-9_]{5,32}$/.test(value);
-      case 'viber':
-      case 'whatsapp':
-        const cleanValue = value.replace(/[^0-9+]/g, '');
-        return /^\+?[0-9]{10,15}$/.test(cleanValue);
-      default:
-        return false;
-    }
-  }
-
-  if (!profileFormElements.profileMessangerSelect.length) {
+  if (!profileFormElements.profileMessangerSelect?.length) {
     return;
   }
+
+  // Initialize the messenger state manager
+  messengerManager = new MessengerStateManager(profileFormElements);
 
   // Toggle dropdown on trigger click
   profileFormElements.profileMessangerSelectTrigger.off('click').on('click', function () {
@@ -56,63 +27,23 @@ const initSocialMessengerField = () => {
   profileFormElements.profileMessangerSelectOptions.off('click').on('click', function () {
     const selectedOption = $(this);
     const selectedType = selectedOption.data('value');
-    const currentType = profileFormElements.messengerType.val();
-    const currentValue = profileFormElements.messengerContact.val();
 
-    // If changing type, save current value for current type
-    if (currentType && currentType !== selectedType) {
-      savedValues[currentType] = currentValue;
-    }
-
-    // Update selected class
-    profileFormElements.profileMessangerSelectOptions.removeClass('is-selected');
-    selectedOption.addClass('is-selected');
-
-    // Update trigger image
-    const imgSrc = selectedOption.find('img').attr('src');
-    profileFormElements.profileMessangerSelectTrigger.html(`
-            <span class="base-select__value">
-                <span class="base-select__img">
-                    <img src="${imgSrc}" alt="${selectedType}">
-                </span>
-            </span>
-            <span class="base-select__arrow"></span>
-        `);
-
-    // Update messenger type hidden input
-    profileFormElements.messengerType.val(selectedType);
-
-    // Update placeholder based on selected type
-    profileFormElements.messengerContact.attr(
-      'placeholder',
-      placeholders[selectedType] || '@username'
-    );
-
-    // Restore saved value for selected type or clear field
-    profileFormElements.messengerContact.val(savedValues[selectedType] || '');
-
-    // Trigger input event to validate the restored/cleared value
-    profileFormElements.messengerContact.trigger('input');
-
-    // Dispatch custom event for validation
-    const event = new CustomEvent('baseSelect:change', {
-      detail: { value: selectedType },
-    });
-    profileFormElements.profileMessangerSelect[0].dispatchEvent(event);
+    // Use the unified state manager to handle the selection
+    messengerManager.updateSelectedMessenger(selectedType, this);
 
     // Close dropdown
-    profileFormElements.profileMessangerSelect.find('.base-select__dropdown').slideUp(200);
+    messengerManager.closeDropdown();
   });
 
-  // Handle input validation
+  // Handle input validation using unified validation methods
   profileFormElements.messengerContact.off('input').on('input', function () {
     const value = $(this).val();
     const type = profileFormElements.messengerType.val();
 
-    if (!validateMessengerValue(type, value)) {
-      $(this).addClass('error');
+    if (ValidationMethods.validateMessengerContact(type, value)) {
+      $(this).removeClass('error').addClass('valid');
     } else {
-      $(this).removeClass('error');
+      $(this).removeClass('valid').addClass('error');
     }
   });
 
@@ -124,9 +55,9 @@ const initSocialMessengerField = () => {
         !profileFormElements.profileMessangerSelect.is(e.target) &&
         profileFormElements.profileMessangerSelect.has(e.target).length === 0
       ) {
-        profileFormElements.profileMessangerSelect.find('.base-select__dropdown').slideUp(200);
+        messengerManager.closeDropdown();
       }
     });
 };
 
-export { initSocialMessengerField };
+export { initSocialMessengerField, messengerManager };

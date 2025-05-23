@@ -4,31 +4,8 @@ import { createAndShowToast } from '../../utils/uiHelpers';
 import { ajaxFetcher } from '../fetcher/ajax-fetcher';
 import { hideInButton, hideInElement, showInButton, showInElement } from '../loader';
 import { initProfileFormElements, profileFormElements } from './profile-form-elements';
-import { initSocialMessengerField } from './social-messenger-field';
 import { initProfileSettingsValidation } from './profile-settings-form-validation';
-// Function to update selected messenger state
-const updateSelectedMessengerState = (type, value) => {
-  const selectedOption = profileFormElements.profileMessangerSelectOptions.filter(
-    `[data-value="${type}"]`
-  );
-
-  if (selectedOption.length) {
-    // Update selected class
-    profileFormElements.profileMessangerSelectOptions.removeClass('is-selected');
-    selectedOption.addClass('is-selected');
-
-    // Update trigger image and structure
-    const imgSrc = selectedOption.find('img').attr('src');
-    profileFormElements.profileMessangerSelectTrigger.html(`
-            <span class="base-select__value">
-                <span class="base-select__img">
-                    <img src="${imgSrc}" alt="${type}">
-                </span>
-            </span>
-            <span class="base-select__arrow"></span>
-        `);
-  }
-};
+import { initSocialMessengerField, messengerManager } from './social-messenger-field';
 
 async function submitFormHandler(e) {
   let loader = null;
@@ -56,37 +33,21 @@ async function submitFormHandler(e) {
       // Update form fields with new values from server
       const formContainer = profileFormElements.form;
       if (formContainer && response.user) {
-        // Update messenger field values
+        // Update messenger field values using unified state manager
         if (
           response.user.messenger_type !== undefined &&
           response.user.messenger_contact !== undefined
         ) {
-          // Trigger a reset of the messenger field to clear saved values
-          initSocialMessengerField();
-
-          // Update values in form
-          profileFormElements.messengerType.val(response.user.messenger_type);
-          profileFormElements.messengerContact.val(response.user.messenger_contact);
-
-          // Update selected messenger in dropdown
-          profileFormElements.profileMessangerSelectOptions.removeClass('is-selected');
-          const selectedOption = profileFormElements.profileMessangerSelectOptions.filter(
-            `[data-value="${response.user.messenger_type}"]`
-          );
-
-          if (selectedOption.length) {
-            selectedOption.addClass('is-selected');
-
-            // Update trigger image
-            const imgSrc = selectedOption.find('img').attr('src');
-            profileFormElements.profileMessangerSelectTrigger.html(`
-                            <span class="base-select__value">
-                                <span class="base-select__img">
-                                    <img src="${imgSrc}" alt="${response.user.messenger_type}">
-                                </span>
-                            </span>
-                            <span class="base-select__arrow"></span>
-                        `);
+          // Use the messenger manager to update from server response
+          if (messengerManager) {
+            messengerManager.updateFromServer(
+              response.user.messenger_type,
+              response.user.messenger_contact
+            );
+          } else {
+            // Fallback if manager not available
+            profileFormElements.messengerType.val(response.user.messenger_type);
+            profileFormElements.messengerContact.val(response.user.messenger_contact);
           }
 
           // Trigger input event to validate the value
@@ -120,7 +81,29 @@ async function submitFormHandler(e) {
     }
   } catch (error) {
     loggerError('Error updating profile settings:', error);
-    createAndShowToast('Error updating profile settings', 'error');
+
+    // Handle different types of errors
+    if (error.status === 422 && error.responseJSON) {
+      // Validation errors
+      const errorData = error.responseJSON;
+      if (errorData.errors) {
+        // Display validation errors
+        const errorMessages = Object.values(errorData.errors).flat().join(', ');
+        createAndShowToast(errorMessages, 'error');
+      } else if (errorData.message) {
+        createAndShowToast(errorData.message, 'error');
+      } else {
+        createAndShowToast('Validation errors occurred', 'error');
+      }
+    } else if (error.status === 401) {
+      createAndShowToast('Unauthorized. Please log in again.', 'error');
+    } else if (error.status === 403) {
+      createAndShowToast('Forbidden. You do not have permission to perform this action.', 'error');
+    } else if (error.status >= 500) {
+      createAndShowToast('Server error. Please try again later.', 'error');
+    } else {
+      createAndShowToast('Error updating profile settings. Please try again.', 'error');
+    }
   } finally {
     hideInButton(profileFormElements.submitButton);
     hideInElement(loader);
@@ -131,18 +114,37 @@ const updateProfileSettings = () => {
   if (profileFormElements.form.length) {
     // Remove previous event handlers to avoid duplicates
     profileFormElements.form.off('submit');
-    
-    // Initialize jQuery Validation
+
+    // Destroy existing validator if present
+    if (profileFormElements.form.data('validator')) {
+      profileFormElements.form.removeData('validator');
+    }
+
+    // Initialize jQuery Validation with custom submitHandler
     const validator = initProfileSettingsValidation(profileFormElements.form);
-    
-    // Override the submitHandler to use our custom logic
+
+    // Ensure the validator is created and override submitHandler
     if (validator) {
-      validator.settings.submitHandler = submitFormHandler;
+      // Remove the default form submission behavior
+      profileFormElements.form.off('submit.validate');
+
+      // Set our custom submit handler
+      profileFormElements.form.on('submit', function (e) {
+        e.preventDefault();
+
+        // Validate the form first
+        if (validator.form()) {
+          // If validation passes, call our custom handler
+          submitFormHandler.call(this, e);
+        }
+
+        return false;
+      });
     } else {
       // Fallback for forms without validation
       profileFormElements.form.on('submit', submitFormHandler);
     }
-    
+
     // Initialize social messenger field
     initSocialMessengerField();
   }
