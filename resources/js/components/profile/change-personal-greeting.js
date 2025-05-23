@@ -1,6 +1,6 @@
 import { logger, loggerError } from '@/helpers/logger';
 import { checkNotifications } from '@/helpers/notification-checker';
-import { createAndShowToast } from '@/utils/uiHelpers';
+import { createAndShowToast } from '@/utils';
 import { config } from '../../config';
 import { ajaxFetcher } from '../fetcher/ajax-fetcher';
 import { hideInElement, showInElement } from '../loader';
@@ -133,6 +133,16 @@ const confirmPersonalGreetingUpdate = async formData => {
 };
 
 /**
+ * Initialize cancel button event listener
+ */
+const initCancelButton = () => {
+  $('[data-action="cancel-personal-greeting"]').off('click').on('click', function (e) {
+    e.preventDefault();
+    cancelPersonalGreetingUpdate();
+  });
+};
+
+/**
  * Main form handler for personal greeting changes
  */
 const changePersonalGreeting = () => {
@@ -168,7 +178,8 @@ const changePersonalGreeting = () => {
         { error },
         { debug: true }
       );
-      return;
+      // Continue without validation, but with warning
+      validator = null;
     }
 
     // Form submission handler
@@ -223,11 +234,8 @@ const changePersonalGreeting = () => {
               $form.replaceWith(confirmationFormHtml);
               // Reinitialize form handlers for the new confirmation form
               changePersonalGreeting();
-              // Add event listener for cancel button
-              $('.btn._border-red._big').on('click', function (e) {
-                e.preventDefault();
-                cancelPersonalGreetingUpdate();
-              });
+              // Reinitialize cancel button
+              initCancelButton();
             } else {
               createAndShowToast('Error loading confirmation form', 'error');
             }
@@ -257,11 +265,8 @@ const changePersonalGreeting = () => {
     });
   }
 
-  // Add event listener for cancel button if it exists
-  $('.btn._border-red._big').on('click', function (e) {
-    e.preventDefault();
-    cancelPersonalGreetingUpdate();
-  });
+  // Initialize cancel button
+  initCancelButton();
 };
 
 /**
