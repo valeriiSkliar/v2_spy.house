@@ -9,7 +9,7 @@ export default defineConfig({
         'resources/scss/app.scss',
         'resources/js/app.js',
         'resources/js/services.js',
-        'resources/js/pages/disable-2fa.js',
+        'resources/js/pages/profile/disable-2fa.js',
         'resources/img/telegram.svg',
         'resources/img/viber.svg',
         'resources/img/whatsapp.svg',

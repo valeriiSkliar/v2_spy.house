@@ -24,6 +24,7 @@ Route::middleware(['web', 'auth', 'auth:sanctum'])->group(function () {
     Route::post('/profile/connect-pin', [ProfileController::class, 'storePin'])->name('profile.store-pin');
     Route::put('/profile/update-notifications', [ProfileController::class, 'updateNotifications'])->name('profile.update-notifications');
     Route::get('/profile/2fa/disable', [ProfileController::class, 'disable2fa'])->name('profile.disable-2fa');
+    Route::get('/profile/2fa/load-disable-form', [ProfileController::class, 'load2faDisableForm'])->name('profile.load-2fa-disable-form');
     Route::post('/profile/2fa/confirm-disable', [ProfileController::class, 'confirmDisable2fa'])->name('profile.confirm-disable-2fa');
 
     Route::get('/profile/personal-greeting', [ProfileController::class, 'personalGreeting'])->name('profile.personal-greeting');

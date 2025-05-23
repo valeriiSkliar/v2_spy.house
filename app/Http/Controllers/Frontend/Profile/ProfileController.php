@@ -433,22 +433,61 @@ class ProfileController extends BaseProfileController
                 ->withErrors(['error' => 'Двухфакторная аутентификация уже отключена']);
         }
 
-        Log::debug('Displaying 2FA disable form', [
+        Log::debug('Displaying 2FA disable warning', [
             'user_id' => $user->id,
             'route' => $request->route()->getName(),
             'session_id' => $request->session()->getId(),
             'timestamp' => now()->toIso8601String(),
         ]);
 
-        return view('pages.profile.disable_2fa', [
+        return view('pages.profile.disable_2fa-notification', [
             'user' => $user,
+        ]);
+    }
+
+    /**
+     * Load the 2FA disable password form via AJAX
+     */
+    public function load2faDisableForm(Request $request)
+    {
+        $user = $request->user();
+
+        Log::debug('2FA disable form requested via AJAX', [
+            'user_id' => $user->id,
+            'ip' => $request->ip(),
+            'timestamp' => now()->toIso8601String(),
+        ]);
+
+        // Проверяем, что 2FA действительно включен у пользователя
+        if (! $user->google_2fa_enabled) {
+            Log::warning('Attempt to load 2FA disable form for user without 2FA enabled', [
+                'user_id' => $user->id,
+                'ip' => $request->ip(),
+                'timestamp' => now()->toIso8601String(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => __('profile.2fa.already_disabled'),
+                'redirect' => route('profile.settings', ['tab' => 'security']),
+            ], 400);
+        }
+
+        // Возвращаем отрендеренную форму
+        $formHtml = view('pages.profile.disable_2fa', [
+            'user' => $user,
+        ])->render();
+
+        return response()->json([
+            'success' => true,
+            'html' => $formHtml,
         ]);
     }
 
     /**
      * Подтверждение и отключение 2FA после проверки одноразового пароля
      */
-    public function confirmDisable2fa(Request $request): RedirectResponse
+    public function confirmDisable2fa(Request $request)
     {
         $request->validate([
             'verification_code' => 'required|string|digits:6',
@@ -477,6 +516,16 @@ class ProfileController extends BaseProfileController
                 'has_2fa_secret' => ! empty($user->google_2fa_secret),
                 'timestamp' => now()->toIso8601String(),
             ]);
+
+            // Return JSON response for AJAX requests
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('profile.2fa.already_disabled'),
+                    'redirect' => route('profile.settings', ['tab' => 'security']),
+                ], 400);
+            }
+
             Toast::error(__('profile.2fa.already_disabled'));
 
             return redirect()->route('profile.settings', ['tab' => 'security'])
@@ -505,6 +554,18 @@ class ProfileController extends BaseProfileController
                 'ip' => $request->ip(),
                 'timestamp' => now()->toIso8601String(),
             ]);
+
+            // Return JSON response for AJAX requests
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('profile.2fa.error_decrypting_secret'),
+                    'errors' => [
+                        'verification_code' => ['Ошибка расшифровки секретного ключа. Пожалуйста, обратитесь в поддержку.'],
+                    ],
+                ], 500);
+            }
+
             Toast::error(__('profile.2fa.error_decrypting_secret'));
 
             return redirect()->route('profile.disable-2fa', ['tab' => 'security'])
@@ -547,20 +608,30 @@ class ProfileController extends BaseProfileController
                 'db_update_success' => true,
             ]);
 
-            Toast::success(__('profile.2fa.disabled'));
             $activeTab = $request->query('tab', 'security');
 
-            Log::debug('Redirecting after successful 2FA disable', [
+            Log::debug('Responding after successful 2FA disable', [
                 'user_id' => $user->id,
                 'redirect_to' => 'profile.settings',
                 'tab' => $activeTab,
                 'timestamp' => now()->toIso8601String(),
+                'is_ajax' => $request->ajax(),
             ]);
+
+            // Return JSON response for AJAX requests
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => __('profile.2fa.disabled'),
+                    'redirect' => route('profile.settings', ['tab' => $activeTab]),
+                ]);
+            }
+
+            Toast::success(__('profile.2fa.disabled'));
 
             return redirect()->route('profile.settings', ['tab' => $activeTab])
                 ->with('status', 'authenticator-disabled');
         } else {
-            Toast::error(__('profile.2fa.invalid_code'));
             Log::warning('Invalid 2FA code provided for disabling 2FA', [
                 'user_id' => $user->id,
                 'otp_masked' => substr($otp, 0, 2).'****',
@@ -570,11 +641,24 @@ class ProfileController extends BaseProfileController
                 'failed_verification' => true,
             ]);
 
-            Log::debug('Redirecting after failed 2FA disable attempt', [
+            Log::debug('Responding after failed 2FA disable attempt', [
                 'user_id' => $user->id,
-                'redirect_to' => 'profile.disable-2fa',
                 'timestamp' => now()->toIso8601String(),
+                'is_ajax' => $request->ajax(),
             ]);
+
+            // Return JSON response for AJAX requests
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('profile.2fa.invalid_code'),
+                    'errors' => [
+                        'verification_code' => [__('profile.2fa.invalid_code')],
+                    ],
+                ], 422);
+            }
+
+            Toast::error(__('profile.2fa.invalid_code'));
 
             return redirect()->route('profile.disable-2fa')
                 ->withErrors(['verification_code' => __('profile.2fa.invalid_code')]);
