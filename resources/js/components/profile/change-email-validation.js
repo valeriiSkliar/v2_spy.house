@@ -59,11 +59,13 @@ function initChangeEmailValidation($form, isConfirmationStep) {
         required: '',
         minlength: '',
       },
-      verification_code: {
-        required: '',
-        digits: '',
-        exactLength: '',
-      },
+      ...(isConfirmationStep && {
+        verification_code: {
+          required: '',
+          digits: '',
+          exactLength: '',
+        },
+      }),
     },
     errorElement: 'div',
     errorClass: 'validation-error',
@@ -119,7 +121,9 @@ function addCustomValidationMethods() {
     function (value, element, length) {
       return this.optional(element) || value.length === length;
     },
-    `Please enter exactly ${VERIFICATION_CODE_CONFIG.length} digits.`
+    function (params, element) {
+      return `Please enter exactly ${params} digits.`;
+    }
   );
 }
 

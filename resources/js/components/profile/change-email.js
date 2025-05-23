@@ -159,14 +159,8 @@ const changeEmail = () => {
         { debug: true }
       );
 
-      // Check verification code only on confirmation step
-      if (isConfirmationStep && !formData.has('verification_code')) {
-        logger('[DEBUG] Change Email - Missing verification code on confirmation step', {
-          debug: true,
-        });
-        createAndShowToast('Verification code is required', 'error');
-        return false;
-      }
+      // Validation should have already caught missing verification code
+      // If we reach here, the form data should be valid
 
       if (isConfirmationStep) {
         // Handle confirmation submission
@@ -185,10 +179,15 @@ const changeEmail = () => {
             const message = response.message;
             const confirmationFormHtml = response.confirmation_form_html;
 
+            // // Show success message if provided
+            // if (message) {
+            //   createAndShowToast(message, 'success');
+            // }
+
             // Replace form with confirmation form
             if (confirmationFormHtml) {
               $form.replaceWith(confirmationFormHtml);
-              // Reinitialize form handlers
+              // Reinitialize form handlers for the new confirmation form
               changeEmail();
               // Add event listener for cancel button
               $('.btn._border-red._big').on('click', function (e) {
