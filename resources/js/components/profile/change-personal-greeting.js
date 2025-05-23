@@ -1,43 +1,36 @@
 import { logger, loggerError } from '@/helpers/logger';
 import { checkNotifications } from '@/helpers/notification-checker';
 import { createAndShowToast } from '@/utils/uiHelpers';
-import $ from 'jquery';
-import 'jquery-validation';
 import { config } from '../../config';
 import { ajaxFetcher } from '../fetcher/ajax-fetcher';
 import { hideInElement, showInElement } from '../loader';
+import {
+  handleChangePersonalGreetingValidationErrors,
+  initChangePersonalGreetingValidation,
+} from './change-personal-greeting-validation';
 
 /**
  * Cancel personal greeting update process
  */
-const cancelPersonalGreetingUpdate = async cancelButton => {
-  const form = $('#personal-greeting-form');
+const cancelPersonalGreetingUpdate = async () => {
+  const $formContainer = $('#personal-greeting-form-container');
+  const $form = $formContainer.find('#personal-greeting-form');
   let loader = null;
-
-  // Disable the cancel button
-  if (cancelButton) {
-    $(cancelButton).prop('disabled', true);
-    // Remove click handler immediately
-    $(cancelButton).off('click');
-  }
 
   logger('[DEBUG] Personal Greeting - Cancel update requested');
 
   try {
-    loader = showInElement(form[0]);
-
+    loader = showInElement($formContainer[0]);
     const response = await ajaxFetcher.get(
       config.apiProfilePersonalGreetingCancelEndpoint,
       null,
       {}
     );
 
-    logger('[DEBUG] Personal Greeting - Cancel response:', response);
-
     if (response.success) {
       // Use the server-provided HTML form
       if (response.initialFormHtml) {
-        form.replaceWith(response.initialFormHtml);
+        $form.replaceWith(response.initialFormHtml);
         // Reinitialize form handlers
         changePersonalGreeting();
       } else {
@@ -47,10 +40,6 @@ const cancelPersonalGreetingUpdate = async cancelButton => {
       }
     } else {
       createAndShowToast(response.message || 'Error cancelling personal greeting update', 'error');
-      // Re-enable the button on error
-      if (cancelButton) {
-        $(cancelButton).prop('disabled', false);
-      }
     }
   } catch (error) {
     loggerError('[ERROR] Personal Greeting - Error cancelling update:', error);
@@ -63,10 +52,6 @@ const cancelPersonalGreetingUpdate = async cancelButton => {
     }
 
     createAndShowToast(errorMessage, 'error');
-    // Re-enable the button on error
-    if (cancelButton) {
-      $(cancelButton).prop('disabled', false);
-    }
   } finally {
     if (loader) {
       hideInElement(loader);
@@ -80,206 +65,65 @@ const cancelPersonalGreetingUpdate = async cancelButton => {
  */
 const confirmPersonalGreetingUpdate = async formData => {
   let loader = null;
-  const submitButton = $('#personal-greeting-form button[type="submit"]');
-  const personalGreetingForm = $('#personal-greeting-form');
+  const $formContainer = $('#personal-greeting-form-container');
+  const $form = $formContainer.find('#personal-greeting-form');
 
   logger('[DEBUG] Personal Greeting - Confirm update started');
 
-  // Check if form exists
-  if (!personalGreetingForm.length) {
-    loggerError('[ERROR] Personal Greeting - Form not found');
-    createAndShowToast('Form not found. Please refresh the page.', 'error');
-    return;
-  }
-
-  // Check if request is already in progress
-  if (submitButton.prop('disabled')) {
-    logger('[DEBUG] Personal Greeting - Request already in progress');
-    return;
-  }
-
-  // Disable button
-  submitButton.prop('disabled', true);
-
   try {
-    loader = showInElement(personalGreetingForm[0]);
+    loader = showInElement($formContainer[0]);
 
     const response = await ajaxFetcher.form(
       config.apiProfilePersonalGreetingUpdateConfirmEndpoint,
       formData
     );
 
-    logger('[DEBUG] Personal Greeting - Confirm response:', response);
-
     if (response.success) {
-      // Show success message
       createAndShowToast(response.message || 'Personal greeting updated successfully', 'success');
 
-      // Replace form with success form or original form
+      // Replace form with success message or original form
       if (response.successFormHtml) {
-        personalGreetingForm.replaceWith(response.successFormHtml);
-        // Reinitialize form handlers
-        changePersonalGreeting();
+        $form.replaceWith(response.successFormHtml);
       } else if (response.initialFormHtml) {
-        personalGreetingForm.replaceWith(response.initialFormHtml);
-        changePersonalGreeting();
+        $form.replaceWith(response.initialFormHtml);
       } else {
         // Fallback: reload page
         setTimeout(() => {
           window.location.reload();
         }, 1500);
       }
+
+      checkNotifications();
+      changePersonalGreeting();
     } else {
-      // Handle error response
-      let errorMessage = response.message || 'Invalid confirmation code';
+      // Handle server validation errors
+      handleChangePersonalGreetingValidationErrors(response, $form);
+      createAndShowToast(response.message || 'Error confirming personal greeting update', 'error');
 
-      // Use specific error message if available
-      if (response.errors && response.errors.verification_code) {
-        errorMessage = Array.isArray(response.errors.verification_code)
-          ? response.errors.verification_code[0]
-          : response.errors.verification_code;
-      }
-
-      createAndShowToast(errorMessage, 'error');
-
-      // Clear and focus verification code field
-      const verificationField = $('input[name="verification_code"]');
-      if (verificationField.length) {
-        verificationField.addClass('error').focus().val('');
+      // Focus verification code field if it exists
+      const $verificationCodeField = $form.find('input[name="verification_code"]');
+      if ($verificationCodeField.length) {
+        $verificationCodeField.val('').focus();
       }
     }
   } catch (error) {
     loggerError('[ERROR] Personal Greeting - Error confirming update:', error);
 
-    // Handle different types of errors
-    let errorMessage = 'Error confirming personal greeting update. Please try again.';
+    // Handle validation errors from server
+    if (error.status === 422) {
+      const response = error.responseJSON || {};
+      handleChangePersonalGreetingValidationErrors(response, $form);
 
-    if (error.status === 422 && error.responseJSON) {
-      // Validation error
-      const errorData = error.responseJSON;
-
-      if (errorData.errors && errorData.errors.verification_code) {
-        errorMessage = Array.isArray(errorData.errors.verification_code)
-          ? errorData.errors.verification_code[0]
-          : errorData.errors.verification_code;
-      } else if (errorData.message) {
-        errorMessage = errorData.message;
+      // Clear and focus verification code field
+      const $verificationCodeField = $form.find('input[name="verification_code"]');
+      if ($verificationCodeField.length) {
+        $verificationCodeField.val('').focus();
       }
-    } else if (error.status === 500 && error.responseJSON && error.responseJSON.message) {
-      // Server error
-      errorMessage = error.responseJSON.message;
-    } else if (error.responseJSON && error.responseJSON.message) {
-      // Other error
-      errorMessage = error.responseJSON.message;
-    }
 
-    createAndShowToast(errorMessage, 'error');
-
-    // Clear and focus verification code field
-    const verificationField = $('input[name="verification_code"]');
-    if (verificationField.length) {
-      verificationField.addClass('error').focus().val('');
-    }
-  } finally {
-    if (loader) {
-      hideInElement(loader);
-    }
-
-    // Re-enable button after delay
-    setTimeout(() => {
-      if (submitButton.length) {
-        submitButton.prop('disabled', false);
-      }
-    }, 1000);
-
-    checkNotifications();
-  }
-};
-
-/**
- * Handle initial personal greeting update request
- */
-const initiatePersonalGreetingUpdate = async (form, formData) => {
-  let loader = null;
-
-  logger('[DEBUG] Personal Greeting - Initiate update started');
-
-  try {
-    loader = showInElement(form[0]);
-
-    const response = await ajaxFetcher.form(
-      config.apiProfilePersonalGreetingUpdateInitiateEndpoint,
-      formData
-    );
-
-    logger('[DEBUG] Personal Greeting - Initiate response:', response);
-
-    if (response.success) {
-      const confirmationFormHtml = response.confirmation_form_html;
-
-      // Replace form with confirmation form
-      if (confirmationFormHtml) {
-        $(form).replaceWith(confirmationFormHtml);
-        // Reinitialize form handlers
-        changePersonalGreeting();
-
-        // Add event listener for cancel button
-        $('.btn._border-red._big, .btn._gray').on('click', function (e) {
-          e.preventDefault();
-          cancelPersonalGreetingUpdate(this);
-        });
-      } else {
-        createAndShowToast('Error loading confirmation form', 'error');
-      }
+      createAndShowToast(response.message || 'Invalid verification code', 'error');
     } else {
-      // Handle error response
-      let errorMessage = response.message || 'Error updating personal greeting. Please try again.';
-
-      // Handle validation errors
-      if (response.errors) {
-        const errorMessages = Object.values(response.errors)
-          .flat()
-          .filter(msg => msg && msg.trim() !== '')
-          .join(', ');
-
-        if (errorMessages) {
-          errorMessage = errorMessages;
-        }
-      }
-
-      createAndShowToast(errorMessage, 'error');
+      createAndShowToast('Error confirming personal greeting update. Please try again.', 'error');
     }
-  } catch (error) {
-    loggerError('[ERROR] Personal Greeting - Error initiating update:', error);
-
-    // Handle different types of errors
-    let errorMessage = 'Error updating personal greeting. Please try again.';
-
-    if (error.status === 422 && error.responseJSON) {
-      // Validation error
-      const errorData = error.responseJSON;
-
-      if (errorData.errors) {
-        const errorMessages = Object.values(errorData.errors)
-          .flat()
-          .filter(msg => msg && msg.trim() !== '')
-          .join(', ');
-
-        if (errorMessages) {
-          errorMessage = errorMessages;
-        }
-      } else if (errorData.message) {
-        errorMessage = errorData.message;
-      }
-    } else if (error.status === 500 && error.responseJSON && error.responseJSON.message) {
-      // Server error
-      errorMessage = error.responseJSON.message;
-    } else if (error.responseJSON && error.responseJSON.message) {
-      // Other error
-      errorMessage = error.responseJSON.message;
-    }
-
-    createAndShowToast(errorMessage, 'error');
   } finally {
     if (loader) {
       hideInElement(loader);
@@ -289,151 +133,142 @@ const initiatePersonalGreetingUpdate = async (form, formData) => {
 };
 
 /**
- * Main form handler initialization
+ * Main form handler for personal greeting changes
  */
 const changePersonalGreeting = () => {
-  const form = $('#personal-greeting-form');
+  let loader = null;
+  const $formContainer = $('#personal-greeting-form-container');
+  const $form = $formContainer.find('#personal-greeting-form');
 
-  if (!form.length) {
-    logger('[DEBUG] Personal Greeting - Form not found, skipping initialization');
-    return;
-  }
+  logger('[DEBUG] Personal Greeting - Form found', { debug: true });
 
-  logger('[DEBUG] Personal Greeting - Initializing form handlers');
+  if ($form.length) {
+    // Remove previous event handlers
+    $form.off('submit');
 
-  // Remove all existing event handlers
-  $('.btn._border-red._big, .btn._gray').off();
+    // Determine current form step
+    const isConfirmationStep = $form.find('input[name="verification_code"]').length > 0;
 
-  // Add single event handler for cancel buttons
-  $('.btn._border-red._big, .btn._gray').on('click', function (e) {
-    e.preventDefault();
-    e.stopPropagation();
-    // Pass the button element to the cancel function
-    cancelPersonalGreetingUpdate(this);
-  });
+    // Initialize form validation
+    let validator = null;
+    try {
+      validator = initChangePersonalGreetingValidation($form, isConfirmationStep);
+      logger(
+        '[DEBUG] Personal Greeting - Validator initialized',
+        {
+          validatorExists: !!validator,
+          rules: validator?.settings?.rules,
+          isConfirmationStep,
+        },
+        { debug: true }
+      );
+    } catch (error) {
+      logger(
+        '[DEBUG] Personal Greeting - Validator initialization failed',
+        { error },
+        { debug: true }
+      );
+      return;
+    }
 
-  // Track touched fields for validation
-  const touchedFields = new Set();
+    // Form submission handler
+    $form.on('submit', async function (e) {
+      logger('[DEBUG] Personal Greeting - Form submit triggered', { debug: true });
+      e.preventDefault();
 
-  // Initialize jQuery validation
-  form.validate({
-    rules: {
-      personal_greeting: {
-        required: true,
-        minlength: 3,
-        maxlength: 100,
-      },
-      verification_code: {
-        required: true,
-        digits: true,
-        minlength: 6,
-        maxlength: 6,
-      },
-    },
-    messages: {
-      personal_greeting: {
-        required: '',
-        minlength: '',
-        maxlength: '',
-      },
-      verification_code: {
-        required: '',
-        digits: '',
-        minlength: '',
-        maxlength: '',
-      },
-    },
-    // Disable automatic validation
-    onfocusout: false,
-    onkeyup: false,
-    onclick: false,
-    // Run validation only on form submission
-    invalidHandler: function (event, validator) {
-      // Mark all fields as touched when form submission is attempted
-      form.find('input, select, textarea').each(function () {
-        const fieldName = $(this).attr('name');
-        if (fieldName) {
-          touchedFields.add(fieldName);
+      // Check if form is valid
+      if (validator) {
+        const isValid = validator.form();
+        logger('[DEBUG] Personal Greeting - Form validation result', { isValid }, { debug: true });
+
+        if (!isValid) {
+          return false;
         }
-      });
-      validateAndToggleButton();
-    },
-  });
+      }
 
-  // Function to validate and toggle submit button
-  const validateAndToggleButton = () => {
-    let isValid = true;
+      // Get form data
+      const formData = new FormData(this);
 
-    // Check each field with validation rules
-    $.each(form.validate().settings.rules, function (fieldName, _) {
-      const field = form.find(`[name="${fieldName}"]`);
+      // Log form data for debugging
+      logger(
+        '[DEBUG] Personal Greeting - Form data',
+        {
+          hasVerificationCode: formData.has('verification_code'),
+          verificationCode: formData.get('verification_code'),
+          personalGreeting: formData.get('personal_greeting'),
+          formFields: Array.from(formData.entries()).map(([key, value]) => key),
+          isConfirmationStep,
+        },
+        { debug: true }
+      );
 
-      // Only validate touched fields
-      if (touchedFields.has(fieldName)) {
-        if (!field.valid()) {
-          isValid = false;
+      if (isConfirmationStep) {
+        // Handle confirmation submission
+        await confirmPersonalGreetingUpdate(formData);
+      } else {
+        // Handle initial personal greeting update request
+        loader = showInElement($formContainer[0]);
+
+        try {
+          const response = await ajaxFetcher.form(
+            config.apiProfilePersonalGreetingUpdateInitiateEndpoint,
+            formData
+          );
+
+          if (response.success) {
+            const confirmationFormHtml = response.confirmation_form_html;
+
+            // Replace form with confirmation form
+            if (confirmationFormHtml) {
+              $form.replaceWith(confirmationFormHtml);
+              // Reinitialize form handlers for the new confirmation form
+              changePersonalGreeting();
+              // Add event listener for cancel button
+              $('.btn._border-red._big').on('click', function (e) {
+                e.preventDefault();
+                cancelPersonalGreetingUpdate();
+              });
+            } else {
+              createAndShowToast('Error loading confirmation form', 'error');
+            }
+          } else {
+            handleChangePersonalGreetingValidationErrors(response, $form);
+            createAndShowToast(
+              response.message || 'Error updating personal greeting. Please try again.',
+              'error'
+            );
+          }
+        } catch (error) {
+          loggerError('[ERROR] Personal Greeting - Error updating:', error);
+
+          if (error.status === 422 && error.responseJSON) {
+            handleChangePersonalGreetingValidationErrors(error.responseJSON, $form);
+            createAndShowToast(error.responseJSON.message || 'Validation errors occurred', 'error');
+          } else {
+            createAndShowToast('Error updating personal greeting. Please try again.', 'error');
+          }
+        } finally {
+          if (loader) {
+            hideInElement(loader);
+          }
+          checkNotifications();
         }
       }
     });
+  }
 
-    const submitButton = form.find('button[type="submit"]');
-    if (submitButton.length) {
-      submitButton.prop('disabled', !isValid);
-    }
-  };
-
-  // Track field focus for touched state
-  form.find('input, select, textarea').on('focus', function () {
-    const fieldName = $(this).attr('name');
-    if (fieldName) {
-      touchedFields.add(fieldName);
-    }
-  });
-
-  // Validate touched fields on input/change
-  form.find('input, select, textarea').on('input change blur', function () {
-    const fieldName = $(this).attr('name');
-    if (fieldName && touchedFields.has(fieldName)) {
-      validateAndToggleButton();
-    }
-  });
-
-  // Handle form submission
-  form.on('submit', async function (e) {
+  // Add event listener for cancel button if it exists
+  $('.btn._border-red._big').on('click', function (e) {
     e.preventDefault();
-
-    logger('[DEBUG] Personal Greeting - Form submitted');
-
-    // Validate form before submission
-    if (!form.valid()) {
-      logger('[DEBUG] Personal Greeting - Form validation failed');
-      return false;
-    }
-
-    const formData = new FormData(this);
-
-    // Determine if this is a confirmation form or initial form
-    const isConfirmationForm =
-      $(this).find('input[name="verification_code"]').length > 0 ||
-      $(this).attr('action').includes('confirm');
-
-    if (isConfirmationForm) {
-      logger('[DEBUG] Personal Greeting - Handling confirmation form');
-      await confirmPersonalGreetingUpdate(formData);
-    } else {
-      logger('[DEBUG] Personal Greeting - Handling initiation form');
-      await initiatePersonalGreetingUpdate(this, formData);
-    }
+    cancelPersonalGreetingUpdate();
   });
-
-  logger('[DEBUG] Personal Greeting - Form handlers initialized successfully');
 };
 
 /**
  * Initialize personal greeting form handling
  */
 const initChangePersonalGreeting = () => {
-  logger('[DEBUG] Personal Greeting - Initializing');
+  logger('[DEBUG] Personal Greeting - Initializing', { debug: true });
   changePersonalGreeting();
 };
 
