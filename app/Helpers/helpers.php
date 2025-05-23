@@ -4,25 +4,23 @@ namespace App\Helpers;
 
 use voku\helper\AntiXSS;
 
-if (!function_exists('App\Helpers\sanitize_input')) {
+if (! function_exists('App\Helpers\sanitize_input')) {
     /**
      * Sanitize input to prevent XSS attacks.
-     *
-     * @param string $input
-     * @return string
      */
     function sanitize_input(string $input): string
     {
-        $antiXss = new AntiXSS();
+        $antiXss = new AntiXSS;
+
         return $antiXss->xss_clean($input);
     }
 }
 
-if (!function_exists('sanitize_url')) {
+if (! function_exists('sanitize_url')) {
     /**
      * Sanitize a URL by removing potentially dangerous characters and normalizing the format
      *
-     * @param string $url The URL to sanitize
+     * @param  string  $url  The URL to sanitize
      * @return string The sanitized URL
      */
     function sanitize_url(string $url): string
@@ -37,8 +35,8 @@ if (!function_exists('sanitize_url')) {
         $url = preg_replace('#(?<!:)//+#', '/', $url);
 
         // Ensure protocol exists, default to https if not present
-        if (!preg_match('~^(?:f|ht)tps?://~i', $url)) {
-            $url = 'https://' . $url;
+        if (! preg_match('~^(?:f|ht)tps?://~i', $url)) {
+            $url = 'https://'.$url;
         }
 
         // Convert protocol to lowercase

@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Frontend\Profile;
 
-use App\Http\Controllers\FrontendController;
 use App\Enums\Frontend\UserExperience;
 use App\Enums\Frontend\UserScopeOfActivity;
+use App\Http\Controllers\FrontendController;
 use App\Services\Api\TokenService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -13,6 +13,7 @@ use Illuminate\View\View;
 class BaseProfileController extends FrontendController
 {
     protected $user;
+
     protected $settingsView = 'pages.profile.settings';
 
     public function __construct()
@@ -69,38 +70,40 @@ class BaseProfileController extends FrontendController
 
     protected function renderChangePasswordForm($confirmationMethod = null): View
     {
-        $pendingUpdate = Cache::get('password_update_code:' . $this->user->id);
+        $pendingUpdate = Cache::get('password_update_code:'.$this->user->id);
 
-        if (!$confirmationMethod) {
+        if (! $confirmationMethod) {
             $confirmationMethod = $this->user->google_2fa_enabled ? 'authenticator' : 'email';
         }
+
         return view('components.profile.change-password-form', [
             'user' => $this->user,
             'passwordUpdatePending' => $pendingUpdate ? true : false,
-            'confirmationMethod' => $confirmationMethod
+            'confirmationMethod' => $confirmationMethod,
         ]);
     }
 
     protected function renderChangeEmailForm($confirmationMethod = null): View
     {
-        $pendingUpdate = Cache::get('email_update_code:' . $this->user->id);
+        $pendingUpdate = Cache::get('email_update_code:'.$this->user->id);
 
-        if (!$confirmationMethod) {
+        if (! $confirmationMethod) {
             $confirmationMethod = $this->user->google_2fa_enabled ? 'authenticator' : 'email';
         }
+
         return view('components.profile.change-email-form', [
             'user' => $this->user,
             'emailUpdatePending' => $pendingUpdate ? true : false,
             'confirmationMethod' => $confirmationMethod,
-            'authenticatorEnabled' => $this->user->google_2fa_enabled
+            'authenticatorEnabled' => $this->user->google_2fa_enabled,
         ]);
     }
 
     protected function renderPersonalGreetingForm($confirmationMethod = null, $step = 'initiation'): View
     {
-        $pendingUpdate = Cache::get('personal_greeting_update_code:' . $this->user->id);
+        $pendingUpdate = Cache::get('personal_greeting_update_code:'.$this->user->id);
 
-        if (!$confirmationMethod) {
+        if (! $confirmationMethod) {
             $confirmationMethod = $this->user->google_2fa_enabled ? 'authenticator' : 'email';
         }
 
@@ -109,7 +112,7 @@ class BaseProfileController extends FrontendController
                 'user' => $this->user,
                 'personalGreetingUpdatePending' => true,
                 'confirmationMethod' => $pendingUpdate['method'] ?? $confirmationMethod,
-                'authenticatorEnabled' => $this->user->google_2fa_enabled
+                'authenticatorEnabled' => $this->user->google_2fa_enabled,
             ]);
         }
 
@@ -117,7 +120,7 @@ class BaseProfileController extends FrontendController
             'user' => $this->user,
             'personalGreetingUpdatePending' => false,
             'confirmationMethod' => $confirmationMethod,
-            'authenticatorEnabled' => $this->user->google_2fa_enabled
+            'authenticatorEnabled' => $this->user->google_2fa_enabled,
         ]);
     }
 
@@ -125,19 +128,17 @@ class BaseProfileController extends FrontendController
     {
         return view('components.profile.ip-restriction-form', [
             'user' => $this->user,
-            'ip_restrictions' => $this->user->ip_restrictions ?? []
+            'ip_restrictions' => $this->user->ip_restrictions ?? [],
         ]);
     }
 
     /**
      * Render notification settings form
-     *
-     * @return \Illuminate\View\View
      */
     protected function renderNotificationsForm(): View
     {
         return view('components.profile.notifications-tab', [
-            'user' => $this->user
+            'user' => $this->user,
         ]);
     }
 }

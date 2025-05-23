@@ -5,12 +5,12 @@ namespace App\Http\Controllers;
 use App\Enums\Frontend\CommentStatus;
 use App\Models\Frontend\Blog\BlogComment;
 use App\Models\Frontend\Blog\BlogPost;
-use function App\Helpers\sanitize_input;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Inertia\Inertia;
+use Illuminate\Support\Facades\Validator;
+
+use function App\Helpers\sanitize_input;
 
 class BlogCommentController extends Controller
 {
@@ -27,7 +27,7 @@ class BlogCommentController extends Controller
                 ->whereNull('parent_id')
                 ->where('status', CommentStatus::APPROVED)
                 ->orderBy($sortField, $sortDirection)
-                ->get()
+                ->get(),
         ]);
     }
 
@@ -35,20 +35,20 @@ class BlogCommentController extends Controller
     {
         $user = $request->user();
 
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return response()->json([
-                'message' => __('blog.you_must_be_logged_in_to_submit_a_comment')
+                'message' => __('blog.you_must_be_logged_in_to_submit_a_comment'),
             ], 401);
         }
 
         $validator = Validator::make($request->all(), [
             'content' => 'required|string|max:1000',
-            'parent_id' => 'nullable|exists:blog_comments,id'
+            'parent_id' => 'nullable|exists:blog_comments,id',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -62,13 +62,13 @@ class BlogCommentController extends Controller
         $comment->status = CommentStatus::PENDING;
         $comment->save();
 
-        if (!$comment->parent_id) {
+        if (! $comment->parent_id) {
             $comment->load('replies');
         }
 
         return response()->json([
             'message' => 'Comment submitted successfully and is awaiting moderation.',
-            'comment' => $comment
+            'comment' => $comment,
         ], 201);
     }
 
@@ -82,7 +82,7 @@ class BlogCommentController extends Controller
 
         return response()->json([
             'message' => 'Comment approved successfully',
-            'comment' => $comment
+            'comment' => $comment,
         ]);
     }
 
@@ -93,7 +93,7 @@ class BlogCommentController extends Controller
         $comment->delete();
 
         return response()->json([
-            'message' => 'Comment deleted successfully'
+            'message' => 'Comment deleted successfully',
         ]);
     }
 }

@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Enums\Frontend\NotificationType;
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
 class NotificationsSeeder extends Seeder
@@ -26,7 +25,7 @@ class NotificationsSeeder extends Seeder
                 'data' => [
                     'title' => 'System Update',
                     'message' => 'New features have been added to the platform',
-                    'version' => '2.0.0'
+                    'version' => '2.0.0',
                 ],
             ]);
 
@@ -35,7 +34,7 @@ class NotificationsSeeder extends Seeder
                 'type' => NotificationType::WELCOME->value,
                 'data' => [
                     'title' => 'Welcome to Our Platform',
-                    'message' => 'Thank you for joining our platform!'
+                    'message' => 'Thank you for joining our platform!',
                 ],
                 'read_at' => now(),
             ]);
@@ -50,7 +49,7 @@ class NotificationsSeeder extends Seeder
                 'title' => 'Security Alert',
                 'message' => 'New login detected from unknown device',
                 'ip' => '192.168.1.1',
-                'device' => 'Chrome on Windows'
+                'device' => 'Chrome on Windows',
             ],
         ]);
 
@@ -62,7 +61,7 @@ class NotificationsSeeder extends Seeder
                 'title' => 'Payment Received',
                 'message' => 'Your payment of $99.99 has been received',
                 'amount' => 99.99,
-                'currency' => 'USD'
+                'currency' => 'USD',
             ],
             'read_at' => now(),
         ]);

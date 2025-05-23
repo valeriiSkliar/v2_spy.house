@@ -22,13 +22,13 @@ class AuthorFactory extends Factory
         return [
             'name' => [
                 'en' => $this->faker->name,
-                'ru' => $this->faker->name
+                'ru' => $this->faker->name,
             ],
             'avatar' => 'https://picsum.photos/200/200',
             'bio' => [
                 'en' => $this->faker->paragraphs(2, true),
-                'ru' => $this->faker->paragraphs(2, true)
-            ]
+                'ru' => $this->faker->paragraphs(2, true),
+            ],
         ];
     }
 }

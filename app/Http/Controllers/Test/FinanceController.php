@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Test;
 
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 
 class FinanceController extends Controller
 {
@@ -24,7 +24,7 @@ class FinanceController extends Controller
         // Валидация
         $request->validate([
             'amount' => 'required|numeric|min:1',
-            'payment_method' => 'required|string'
+            'payment_method' => 'required|string',
         ]);
 
         // Логика создания депозита

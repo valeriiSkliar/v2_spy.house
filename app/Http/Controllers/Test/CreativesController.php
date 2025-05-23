@@ -3,16 +3,13 @@
 namespace App\Http\Controllers\Test;
 
 use App\Http\Controllers\Controller;
-
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 
 class CreativesController extends Controller
 {
     /**
      * Display the creatives page with different layouts based on the type
      *
-     * @param Request $request
      * @return \Illuminate\View\View
      */
     public function index(Request $request)
@@ -20,7 +17,7 @@ class CreativesController extends Controller
         $activeTab = $request->get('type', 'push');
 
         // Validate that the tab is one of the allowed values
-        if (!in_array($activeTab, ['push', 'facebook', 'tiktok', 'inpage'])) {
+        if (! in_array($activeTab, ['push', 'facebook', 'tiktok', 'inpage'])) {
             $activeTab = 'push';
         }
 
@@ -40,15 +37,13 @@ class CreativesController extends Controller
             'activeTab' => $activeTab,
             'counts' => $counts,
             'creatives' => $creatives, // Pass creatives data to the view
-            'type' => $activeTab // Pass type for social partial
+            'type' => $activeTab, // Pass type for social partial
         ]);
     }
 
     /**
      * Generate mock data for different creative types.
      * In a real application, this data would come from a database or service.
-     *
-     * @return array
      */
     private function getMockCreativesData(): array
     {

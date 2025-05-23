@@ -4,12 +4,11 @@ namespace App\Http\Controllers;
 
 use function App\Helpers\sanitize_input;
 
-
 class FrontendController extends Controller
 {
     protected function sanitizeInput(string $input): string
     {
-        if (!$input) {
+        if (! $input) {
             return '';
         }
         $input = trim($input);
@@ -28,6 +27,7 @@ class FrontendController extends Controller
         $response->header('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->header('Permissions-Policy', 'geolocation=(self)');
         $response->header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+
         return $response;
     }
 }

@@ -2,16 +2,15 @@
 
 namespace App\Models\Frontend\Service;
 
-use App\Models\Frontend\Service\Service;
+use Database\Factories\Frontend\Service\ServiceCategoriesFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
-use Database\Factories\Frontend\Service\ServiceCategoriesFactory;
 
 class ServiceCategories extends Model
 {
-    use HasTranslations;
     use HasFactory;
+    use HasTranslations;
 
     /**
      * Create a new factory instance for the model.
@@ -33,12 +32,12 @@ class ServiceCategories extends Model
         'slug',
         'group_name',
         'image',
-        'status'
+        'status',
     ];
 
     protected $casts = [
         'name' => 'array',
-        'description' => 'array'
+        'description' => 'array',
     ];
 
     public function services()

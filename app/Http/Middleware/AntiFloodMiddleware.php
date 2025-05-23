@@ -11,15 +11,11 @@ class AntiFloodMiddleware
 {
     /**
      * The AntiFloodService instance.
-     *
-     * @var AntiFloodService
      */
     protected AntiFloodService $antiFloodService;
 
     /**
      * Create a new middleware instance.
-     *
-     * @param AntiFloodService $antiFloodService
      */
     public function __construct(AntiFloodService $antiFloodService)
     {
@@ -29,18 +25,13 @@ class AntiFloodMiddleware
     /**
      * Handle an incoming request.
      *
-     * @param Request $request
-     * @param Closure $next
-     * @param string $action
-     * @param int|null $limit
-     * @param int|null $window
      * @return mixed
      */
     public function handle(Request $request, Closure $next, string $action = 'default', ?int $limit = null, ?int $window = null)
     {
         $userId = Auth::id() ?? $request->ip();
 
-        if (!$this->antiFloodService->check($userId, $action, $limit, $window)) {
+        if (! $this->antiFloodService->check($userId, $action, $limit, $window)) {
             $currentUsage = $this->antiFloodService->getRecord($userId, $action) ?? 0;
             $actualLimit = $limit ?? $this->antiFloodService->defaultLimit;
             $actualWindow = $window ?? $this->antiFloodService->defaultWindow;

@@ -2,11 +2,11 @@
 
 namespace App\Services\Common\Landings;
 
-use Symfony\Component\Process\Process;
-use Symfony\Component\Process\Exception\ProcessFailedException;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
+use Symfony\Component\Process\Exception\ProcessFailedException;
+use Symfony\Component\Process\Process;
 
 class WebHTTrackService
 {
@@ -14,6 +14,7 @@ class WebHTTrackService
      * Default timeout in seconds
      */
     private const DEFAULT_TIMEOUT = 3600;
+
     private static $timerWrapper;
 
     /**
@@ -39,21 +40,21 @@ class WebHTTrackService
     /**
      * Download a website using HTTrack
      *
-     * @param string $url The URL to download
-     * @param string $outputPath The path where to save the downloaded files
-     * @param array $options Additional HTTrack options
-     * @return Process
+     * @param  string  $url  The URL to download
+     * @param  string  $outputPath  The path where to save the downloaded files
+     * @param  array  $options  Additional HTTrack options
+     *
      * @throws ProcessFailedException
      * @throws \InvalidArgumentException
      */
     public function downloadSite(string $url, string $outputPath, array $options = []): Process
     {
-        if (!$this->validateUrl($url)) {
+        if (! $this->validateUrl($url)) {
             throw new \InvalidArgumentException('Invalid URL provided');
         }
 
         // Create directory in private storage
-        $directory = 'private/website-downloads/' . basename($outputPath);
+        $directory = 'private/website-downloads/'.basename($outputPath);
         Storage::makeDirectory($directory, 0750);
         $fullPath = Storage::path($directory);
 
@@ -77,7 +78,7 @@ class WebHTTrackService
             'storage_path' => $directory,
             'full_path' => $fullPath,
             'original_url' => $url,
-            'processed_url' => $processedUrl
+            'processed_url' => $processedUrl,
         ]);
 
         $process = new Process($command);
@@ -88,10 +89,10 @@ class WebHTTrackService
 
         // Wait for the process to finish
         $process->wait(function ($type, $buffer) use ($process) {
-            if (Process::ERR === $type) {
-                Log::warning('HTTrack Error: ' . $buffer);
+            if ($type === Process::ERR) {
+                Log::warning('HTTrack Error: '.$buffer);
             } else {
-                Log::info('HTTrack Output: ' . $buffer);
+                Log::info('HTTrack Output: '.$buffer);
                 // Check for the specific message indicating time limit reached
                 if (strpos($buffer, 'Time limit of 3 minutes reached. Stopping mirror gracefully.') !== false) {
                     // Stop the process gracefully
@@ -101,24 +102,23 @@ class WebHTTrackService
             }
         });
 
-        if (!$process->isSuccessful()) {
+        if (! $process->isSuccessful()) {
             throw new ProcessFailedException($process);
         }
 
         Log::info('Website download completed successfully', [
             'url' => $url,
             'storage_path' => $directory,
-            'full_path' => $fullPath
+            'full_path' => $fullPath,
         ]);
 
         return $process;
     }
 
-
     /**
      * Get the download progress
      *
-     * @param string $outputPath Path to the download directory
+     * @param  string  $outputPath  Path to the download directory
      * @return int Progress percentage (0-100)
      */
     public function getDownloadProgress(string $outputPath): int

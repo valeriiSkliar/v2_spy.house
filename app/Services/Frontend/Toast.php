@@ -9,9 +9,9 @@ class Toast
     /**
      * Add a toast message to the session.
      *
-     * @param string $message The toast message
-     * @param string $type The type of toast (e.g., success, error, info)
-     * @param array $options Additional options (e.g., duration)
+     * @param  string  $message  The toast message
+     * @param  string  $type  The type of toast (e.g., success, error, info)
+     * @param  array  $options  Additional options (e.g., duration)
      */
     public static function add(string $message, string $type = 'info', array $options = [])
     {
@@ -19,7 +19,7 @@ class Toast
         $toasts[] = [
             'message' => $message,
             'type' => $type,
-            'options' => $options
+            'options' => $options,
         ];
         Session::flash('toasts', $toasts);
     }
@@ -27,7 +27,7 @@ class Toast
     /**
      * Add a success toast.
      *
-     * @param string $message The success message
+     * @param  string  $message  The success message
      */
     public static function success(string $message)
     {
@@ -37,7 +37,7 @@ class Toast
     /**
      * Add an error toast.
      *
-     * @param string $message The error message
+     * @param  string  $message  The error message
      */
     public static function error(string $message)
     {
@@ -47,7 +47,7 @@ class Toast
     /**
      * Add an info toast.
      *
-     * @param string $message The info message
+     * @param  string  $message  The info message
      */
     public static function info(string $message)
     {
@@ -57,7 +57,7 @@ class Toast
     /**
      * Add a warning toast.
      *
-     * @param string $message The warning message
+     * @param  string  $message  The warning message
      */
     public static function warning(string $message)
     {

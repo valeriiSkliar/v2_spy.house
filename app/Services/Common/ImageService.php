@@ -9,10 +9,7 @@ class ImageService
     /**
      * Upload an image to the specified directory on the given disk.
      *
-     * @param \Illuminate\Http\UploadedFile $image
-     * @param string $directory
-     * @param string $disk
-     * @return string|null
+     * @param  \Illuminate\Http\UploadedFile  $image
      */
     public function upload($image, string $directory, string $disk = 'public'): ?string
     {
@@ -23,14 +20,10 @@ class ImageService
 
     /**
      * Delete an image from the specified disk.
-     *
-     * @param string|null $imagePath
-     * @param string $disk
-     * @return bool
      */
     public function delete(?string $imagePath, string $disk = 'public'): bool
     {
-        if (!$imagePath) {
+        if (! $imagePath) {
             return false;
         }
 
@@ -45,11 +38,7 @@ class ImageService
     /**
      * Replace an existing image with a new one.
      *
-     * @param \Illuminate\Http\UploadedFile $newImage
-     * @param string|null $existingImagePath
-     * @param string $directory
-     * @param string $disk
-     * @return string|null
+     * @param  \Illuminate\Http\UploadedFile  $newImage
      */
     public function replace($newImage, ?string $existingImagePath, string $directory, string $disk = 'public'): ?string
     {
@@ -64,10 +53,6 @@ class ImageService
 
     /**
      * Check if an image exists in the storage.
-     *
-     * @param string $imagePath
-     * @param string $disk
-     * @return bool
      */
     public function exists(string $imagePath, string $disk = 'public'): bool
     {

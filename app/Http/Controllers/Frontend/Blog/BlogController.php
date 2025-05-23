@@ -26,7 +26,7 @@ class BlogController extends BaseBlogController
 
         if ($search) {
             $search = $this->sanitizeInput($search);
-            $query->where('title', 'like', '%' . $search . '%');
+            $query->where('title', 'like', '%'.$search.'%');
         }
 
         return view($this->indexView, [
@@ -37,7 +37,7 @@ class BlogController extends BaseBlogController
             'currentCategory' => null,
             'filters' => $request->only(['search', 'category', 'sort']),
             'currentPage' => $request->get('page', 1),
-            'totalPages' => ceil($query->count() / 12)
+            'totalPages' => ceil($query->count() / 12),
         ]);
     }
 
@@ -132,7 +132,6 @@ class BlogController extends BaseBlogController
         ]);
     }
 
-
     private function getSidebarData(): array
     {
         $locale = app()->getLocale();
@@ -147,6 +146,7 @@ class BlogController extends BaseBlogController
             ->map(function ($category) use ($locale) {
                 $translatedName = $category->getTranslation('name', $locale);
                 $category->name = $translatedName;
+
                 return $category;
             });
 
@@ -159,14 +159,14 @@ class BlogController extends BaseBlogController
 
         return [
             'categories' => $categories,
-            'popularPosts' => $popularPosts
+            'popularPosts' => $popularPosts,
         ];
     }
 
     public function search(Request $request)
     {
         $query = $request->input('q');
-        if (!$query) {
+        if (! $query) {
             return redirect()->route('blog.index');
         }
         $search = $this->sanitizeInput($query);
@@ -187,7 +187,6 @@ class BlogController extends BaseBlogController
             ],
         ]);
     }
-
 
     private function getSearchResults(string $query)
     {
@@ -215,17 +214,18 @@ class BlogController extends BaseBlogController
         // Get user ID or IP for guests
         $userId = Auth::id() ?? $request->ip();
 
-        // --- Anti-Flood Check --- 
+        // --- Anti-Flood Check ---
         $action = 'store_comment';
         $limit = 1; // 1 comment
         $window = 60; // per 60 seconds (1 minute)
 
-        if (!$this->checkAntiFlood($userId, $action, $limit, $window)) {
+        if (! $this->checkAntiFlood($userId, $action, $limit, $window)) {
             $errorMessage = 'You can only post one comment per minute. Please wait.';
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => $errorMessage], 429); // 429 Too Many Requests
             }
             Toast::error($errorMessage);
+
             return redirect()->back()->withInput();
         }
         // --- Anti-Flood Check End ---
@@ -269,6 +269,7 @@ class BlogController extends BaseBlogController
 
         return redirect()->route('blog.show', $post->slug);
     }
+
     public function paginateComments(Request $request, $slug)
     {
         $page = $request->get('page', 1);
@@ -302,7 +303,7 @@ class BlogController extends BaseBlogController
             foreach ($comments as $comment) {
                 $commentsHtml .= view('components.blog.comment.comment', [
                     'comment' => $comment,
-                    'slug' => $slug
+                    'slug' => $slug,
                 ])->render();
             }
         }
@@ -337,7 +338,7 @@ class BlogController extends BaseBlogController
 
         $paginationHtml = view('components.blog.comment.async-pagination', [
             'paginator' => $comments,
-            'elements' => $elements
+            'elements' => $elements,
         ])->render();
 
         return response()->json([
@@ -346,7 +347,7 @@ class BlogController extends BaseBlogController
             'paginationHtml' => $paginationHtml,
             'currentPage' => $comments->currentPage(),
             'lastPage' => $comments->lastPage(),
-            'total' => $comments->total()
+            'total' => $comments->total(),
         ]);
     }
 
@@ -356,7 +357,7 @@ class BlogController extends BaseBlogController
             'rating' => 'required|integer|min:1|max:5',
         ]);
 
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return response()->json([
                 'success' => false,
                 'message' => 'You must be logged in to rate articles.',
@@ -413,7 +414,7 @@ class BlogController extends BaseBlogController
                 $categoryData = $category->toArray();
                 $children = $this->buildCategoryTree($categories, $category->id);
 
-                if (!empty($children)) {
+                if (! empty($children)) {
                     $categoryData['children'] = $children;
                 }
 

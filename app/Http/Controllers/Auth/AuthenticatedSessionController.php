@@ -45,7 +45,7 @@ class AuthenticatedSessionController extends Controller
             })
             ->exists();
 
-        if (!$hasValidToken) {
+        if (! $hasValidToken) {
             // Get the token service to create a basic token with refresh token
             $tokenService = app(TokenService::class);
             $tokenData = $tokenService->createBasicToken($user);

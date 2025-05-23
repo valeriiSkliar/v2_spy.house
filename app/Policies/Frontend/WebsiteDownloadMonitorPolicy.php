@@ -2,8 +2,8 @@
 
 namespace App\Policies\Frontend;
 
-use App\Models\User;
 use App\Models\Frontend\Landings\WebsiteDownloadMonitor;
+use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class WebsiteDownloadMonitorPolicy

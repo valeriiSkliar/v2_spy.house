@@ -1,8 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\Landing\LandingsPageApiController;
 use App\Http\Controllers\App\WebsiteDownloadController;
 use App\Http\Controllers\Frontend\Landing\LandingsPageController;
-use App\Http\Controllers\Api\Landing\LandingsPageApiController;
 use Illuminate\Support\Facades\Route;
 
 // Web Routes
@@ -14,7 +14,6 @@ Route::middleware(['web', 'auth'])
         Route::delete('/{landing}', [LandingsPageController::class, 'destroy'])->name('destroy');
         Route::get('/{landing}/download', [LandingsPageController::class, 'download'])->name('download');
     });
-
 
 // API Routes
 Route::middleware(['auth:sanctum', 'web'])
@@ -28,9 +27,6 @@ Route::middleware(['auth:sanctum', 'web'])
         Route::delete('{landing}', [LandingsPageApiController::class, 'ajaxDestroy'])->name('destroy.ajax');
         Route::get('{landing}/download', [LandingsPageApiController::class, 'ajaxDownload'])->name('download.ajax');
     });
-
-
-
 
 Route::get('/website-downloads', [WebsiteDownloadController::class, 'index'])->name('website-downloads.index');
 Route::post('/website-downloads', [WebsiteDownloadController::class, 'store'])->name('website-downloads.store');

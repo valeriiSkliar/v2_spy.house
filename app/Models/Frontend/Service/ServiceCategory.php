@@ -2,7 +2,6 @@
 
 namespace App\Models\Frontend\Service;
 
-use App\Models\Frontend\Service\Service;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -12,6 +11,7 @@ class ServiceCategory extends Model
 {
     use HasFactory;
     use HasTranslations;
+
     protected $fillable = ['slug'];
 
     public $translatable = ['name', 'description'];
@@ -29,6 +29,7 @@ class ServiceCategory extends Model
     public function translate(?string $languageCode = null): ?ServiceCategoryTranslation
     {
         $languageCode = $languageCode ?? app()->getLocale();
+
         return $this->translations()->where('language_code', $languageCode)->first();
     }
 }

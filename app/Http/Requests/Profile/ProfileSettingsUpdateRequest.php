@@ -9,7 +9,6 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
-
 class ProfileSettingsUpdateRequest extends BaseRequest
 {
     public function authorize(): bool
@@ -23,29 +22,29 @@ class ProfileSettingsUpdateRequest extends BaseRequest
 
         return [
             'login' => [
-                'required', 
-                'string', 
-                'max:255', 
-                'regex:/^[a-zA-Z0-9_]+$/', 
+                'required',
+                'string',
+                'max:255',
+                'regex:/^[a-zA-Z0-9_]+$/',
                 Rule::unique('users', 'login')->ignore($user->id),
             ],
             'messenger_type' => ['required', 'string', Rule::in(['whatsapp', 'viber', 'telegram'])],
             'messenger_contact' => ['required', 'string', function ($attribute, $value, $fail) {
                 $messengerType = $this->input('messenger_type');
-                
+
                 switch ($messengerType) {
                     case 'telegram':
-                        if ($value && !$this->validation_telegram_login($value)) {
+                        if ($value && ! $this->validation_telegram_login($value)) {
                             $fail('Неверный формат имени пользователя Telegram. Должен начинаться с @ и содержать 5-32 символа (буквы, цифры, подчеркивание).');
                         }
                         break;
                     case 'viber':
-                        if ($value && !$this->validation_viber_identifier($value)) {
+                        if ($value && ! $this->validation_viber_identifier($value)) {
                             $fail('Неверный формат номера телефона Viber. Должен содержать 10-15 цифр.');
                         }
                         break;
                     case 'whatsapp':
-                        if ($value && !$this->validation_whatsapp_identifier($value)) {
+                        if ($value && ! $this->validation_whatsapp_identifier($value)) {
                             $fail('Неверный формат номера телефона WhatsApp. Должен содержать 10-15 цифр.');
                         }
                         break;
@@ -55,9 +54,9 @@ class ProfileSettingsUpdateRequest extends BaseRequest
                 }
             }],
             // Use values instead of names for validation - the dropdown sends value not enum name
-            'experience' => ['nullable', 'string', 'in:' . implode(',', UserExperience::names())],
+            'experience' => ['nullable', 'string', 'in:'.implode(',', UserExperience::names())],
             // Use values instead of names for validation
-            'scope_of_activity' => ['nullable', 'string', 'in:' . implode(',', UserScopeOfActivity::names())],
+            'scope_of_activity' => ['nullable', 'string', 'in:'.implode(',', UserScopeOfActivity::names())],
         ];
     }
 
@@ -126,6 +125,4 @@ class ProfileSettingsUpdateRequest extends BaseRequest
             $this->merge(['messenger_contact' => $this->sanitizeInput($this->input('messenger_contact'))]);
         }
     }
-
-
 }

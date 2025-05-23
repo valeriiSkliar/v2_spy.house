@@ -37,7 +37,7 @@ class ServiceCategoriesFactory extends Factory
             'group_name' => $this->faker->word(),
             'image' => null,
             'order' => $this->faker->numberBetween(1, 10),
-            'status' => 'Active'
+            'status' => 'Active',
         ];
     }
 }

@@ -16,7 +16,6 @@ class AuthController extends Controller
     /**
      * Login user and create token with refresh token
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function login(Request $request)
@@ -64,7 +63,6 @@ class AuthController extends Controller
     /**
      * Logout user (revoke the token and its refresh token)
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function logout(Request $request)
@@ -82,13 +80,13 @@ class AuthController extends Controller
 
         // Clear refresh token cookie
         $response = response()->json(['message' => 'Successfully logged out']);
+
         return $response->withCookie(cookie()->forget('refresh_token'));
     }
 
     /**
      * Get the authenticated user
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function user(Request $request)
@@ -99,8 +97,6 @@ class AuthController extends Controller
     /**
      * Refresh the access token using a refresh token.
      *
-     * @param Request $request
-     * @return JsonResponse
      * @throws ValidationException
      */
     public function refreshToken(Request $request): JsonResponse
@@ -113,7 +109,7 @@ class AuthController extends Controller
             'content_type' => $request->header('Content-Type'),
             'request_ip' => $request->ip(),
             'request_method' => $request->method(),
-            'user_agent' => $request->userAgent()
+            'user_agent' => $request->userAgent(),
         ]);
 
         // Get refresh token from cookie
@@ -122,26 +118,26 @@ class AuthController extends Controller
         // Log cookie info (careful not to log full token)
         if ($refreshToken) {
             \Illuminate\Support\Facades\Log::debug('Found refresh token in cookie', [
-                'token_prefix' => substr($refreshToken, 0, 5) . '...',
-                'token_length' => strlen($refreshToken)
+                'token_prefix' => substr($refreshToken, 0, 5).'...',
+                'token_length' => strlen($refreshToken),
             ]);
         } else {
             \Illuminate\Support\Facades\Log::debug('No refresh token in cookie, checking request body');
         }
 
         // If no refresh token in cookie, check the request body (for clients that don't support cookies)
-        if (!$refreshToken) {
+        if (! $refreshToken) {
             // Validate request when token is supplied via body
             $request->validate([
-                'refresh_token' => 'sometimes|string'
+                'refresh_token' => 'sometimes|string',
             ]);
 
             // Check if request has token in body
             if ($request->has('refresh_token')) {
                 $refreshToken = $request->input('refresh_token');
                 \Illuminate\Support\Facades\Log::debug('Found refresh token in request body parameter', [
-                    'token_prefix' => $refreshToken ? substr($refreshToken, 0, 5) . '...' : 'null',
-                    'token_length' => $refreshToken ? strlen($refreshToken) : 0
+                    'token_prefix' => $refreshToken ? substr($refreshToken, 0, 5).'...' : 'null',
+                    'token_length' => $refreshToken ? strlen($refreshToken) : 0,
                 ]);
             } else {
                 // Check if token is in JSON request body
@@ -149,17 +145,18 @@ class AuthController extends Controller
                 if (isset($jsonData['refresh_token'])) {
                     $refreshToken = $jsonData['refresh_token'];
                     \Illuminate\Support\Facades\Log::debug('Found refresh token in JSON body', [
-                        'token_prefix' => $refreshToken ? substr($refreshToken, 0, 5) . '...' : 'null',
+                        'token_prefix' => $refreshToken ? substr($refreshToken, 0, 5).'...' : 'null',
                         'token_length' => $refreshToken ? strlen($refreshToken) : 0,
-                        'json_keys' => array_keys($jsonData)
+                        'json_keys' => array_keys($jsonData),
                     ]);
                 }
             }
         }
 
         // If no refresh token found, return error
-        if (!$refreshToken) {
+        if (! $refreshToken) {
             \Illuminate\Support\Facades\Log::warning('No refresh token found in request');
+
             return response()->json([
                 'message' => 'Refresh token not provided',
             ], 400);
@@ -183,7 +180,7 @@ class AuthController extends Controller
         }
 
         // If no user found, return error
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'message' => 'User not found for this refresh token',
             ], 401);
@@ -193,7 +190,7 @@ class AuthController extends Controller
         $tokenService = app(TokenService::class);
         $tokenData = $tokenService->refreshToken($user, $refreshToken);
 
-        if (!$tokenData) {
+        if (! $tokenData) {
             throw ValidationException::withMessages([
                 'refresh_token' => ['The refresh token is invalid or expired.'],
             ]);
@@ -223,10 +220,6 @@ class AuthController extends Controller
 
     /**
      * Set the refresh token cookie on the response.
-     *
-     * @param JsonResponse $response
-     * @param string $refreshToken
-     * @return JsonResponse
      */
     protected function setRefreshTokenCookie(JsonResponse $response, string $refreshToken): JsonResponse
     {

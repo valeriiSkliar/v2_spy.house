@@ -153,7 +153,7 @@ return [
         'verification_code_label' => 'Your verification code is',
         'verification_expires' => 'This code will expire in :minutes minutes. If you did not request this change, please ignore this email.',
         'success_title' => 'Personal Greeting Updated',
-        'success_message' => 'Your personal greeting has been successfully updated.'
+        'success_message' => 'Your personal greeting has been successfully updated.',
     ],
     'confirm_button' => 'Confirm',
     'cancel_button' => 'Cancel',

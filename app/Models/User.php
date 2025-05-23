@@ -3,14 +3,13 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\Frontend\NotificationType;
+use App\Models\Frontend\Rating;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use App\Models\Frontend\Rating;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Enums\Frontend\NotificationType;
-use App\Models\RefreshToken;
 
 class User extends Authenticatable
 {
@@ -110,11 +109,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Rating::class);
     }
-    
+
     /**
      * Get the refresh tokens for the user.
-     *
-     * @return HasMany
      */
     public function refreshTokens(): HasMany
     {
@@ -131,8 +128,9 @@ class User extends Authenticatable
     public function getFullPhoneNumber(): ?string
     {
         if ($this->phone_country_code && $this->phone) {
-            return '+' . $this->phone_country_code . $this->phone;
+            return '+'.$this->phone_country_code.$this->phone;
         }
+
         return null;
     }
 
@@ -146,6 +144,7 @@ class User extends Authenticatable
         if (empty($this->ip_restrictions)) {
             return true; // No restrictions means IP is allowed
         }
+
         return in_array($ip, $this->ip_restrictions);
     }
 
@@ -163,8 +162,7 @@ class User extends Authenticatable
     /**
      * Проверяет, включены ли уведомления определенного типа
      *
-     * @param NotificationType|string $type
-     * @return bool
+     * @param  NotificationType|string  $type
      */
     public function hasNotificationEnabled($type): bool
     {
@@ -175,7 +173,7 @@ class User extends Authenticatable
         $settings = $this->notification_settings ?? [];
 
         // Если настроек для этого типа нет, считаем, что уведомления включены
-        if (!isset($settings[$type])) {
+        if (! isset($settings[$type])) {
             return true;
         }
 
@@ -186,7 +184,7 @@ class User extends Authenticatable
 
         // Если настройка - массив каналов, проверяем, не пустой ли он
         if (is_array($settings[$type])) {
-            return !empty($settings[$type]);
+            return ! empty($settings[$type]);
         }
 
         // По умолчанию считаем, что уведомления включены
@@ -196,9 +194,7 @@ class User extends Authenticatable
     /**
      * Проверяет, включен ли указанный канал для определенного типа уведомлений
      *
-     * @param NotificationType|string $type
-     * @param string $channel
-     * @return bool
+     * @param  NotificationType|string  $type
      */
     public function hasNotificationChannelEnabled($type, string $channel): bool
     {
@@ -213,7 +209,7 @@ class User extends Authenticatable
         $defaultChannels = $notificationType ? $notificationType->default_channels : ['mail'];
 
         // Если настроек для этого типа нет, проверяем каналы по умолчанию
-        if (!isset($settings[$type])) {
+        if (! isset($settings[$type])) {
             return in_array($channel, $defaultChannels);
         }
 
@@ -234,9 +230,7 @@ class User extends Authenticatable
     /**
      * Включает или отключает уведомления определенного типа
      *
-     * @param NotificationType|string $type
-     * @param bool $enabled
-     * @return void
+     * @param  NotificationType|string  $type
      */
     public function setNotificationEnabled($type, bool $enabled): void
     {
@@ -260,9 +254,7 @@ class User extends Authenticatable
     /**
      * Устанавливает каналы для определенного типа уведомлений
      *
-     * @param NotificationType|string $type
-     * @param array $channels
-     * @return void
+     * @param  NotificationType|string  $type
      */
     public function setNotificationChannels($type, array $channels): void
     {

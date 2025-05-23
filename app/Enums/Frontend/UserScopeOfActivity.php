@@ -39,8 +39,6 @@ enum UserScopeOfActivity: string
 
     /**
      * Get a human-readable label for the enum case.
-     *
-     * @return string
      */
     public function label(): string
     {
@@ -49,12 +47,10 @@ enum UserScopeOfActivity: string
 
     /**
      * Get a human-readable translated label for the enum case.
-     *
-     * @return string
      */
     public function translatedLabel(): string
     {
-        return __('enums.UserScopeOfActivity.' . $this->name);
+        return __('enums.UserScopeOfActivity.'.$this->name);
     }
 
     /**
@@ -65,7 +61,7 @@ enum UserScopeOfActivity: string
     public static function getTranslatedList(): array
     {
         return collect(self::cases())
-            ->mapWithKeys(fn(self $case) => [$case->name => $case->translatedLabel()])
+            ->mapWithKeys(fn (self $case) => [$case->name => $case->translatedLabel()])
             ->all();
     }
 }

@@ -3,21 +3,23 @@
 namespace App\Http\Controllers\Frontend\Landing;
 
 use App\Http\Controllers\FrontendController;
+use App\Models\Frontend\Landings\WebsiteDownloadMonitor;
 use App\Services\Common\AntiFloodService;
 use App\Services\Common\Landings\LandingDownloadService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
-use App\Models\Frontend\Landings\WebsiteDownloadMonitor;
 use Illuminate\Support\Facades\Log;
 
 class BaseLandingsPageController extends FrontendController
 {
     protected $indexView = 'pages.landings.index';
+
     protected $statusIcons = [
         'pending' => 'pending',
         'completed' => 'completed',
         'failed' => 'failed',
     ];
+
     protected $statusLabels = [
         'pending' => 'landings.table.status.pending',
         'completed' => 'landings.table.status.completed',
@@ -43,8 +45,8 @@ class BaseLandingsPageController extends FrontendController
 
     use AuthorizesRequests;
 
-
     protected LandingDownloadService $downloadService;
+
     protected AntiFloodService $antiFloodService;
 
     public function __construct(
@@ -97,9 +99,8 @@ class BaseLandingsPageController extends FrontendController
             'sort_field' => $sortField,
             'sort_direction' => $sortDirection,
             'per_page' => $perPage,
-            'request_params' => $request->all()
+            'request_params' => $request->all(),
         ]);
-
 
         $userId = $request->user()->id;
 
@@ -151,6 +152,7 @@ class BaseLandingsPageController extends FrontendController
     protected function renderContentWrapperView(array $data): string
     {
         $viewConfig = $this->getViewConfig();
+
         return view('pages.landings._content_wrapper', [
             'landings' => $data['landings'],
             'sortOptions' => $data['sortOptions'],

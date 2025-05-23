@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Frontend\Service;
 
 use App\Http\Controllers\FrontendController;
 use App\Models\Frontend\Service\Service;
-use Illuminate\Http\Request;
 
 class ServiceRedirectController extends FrontendController
 {

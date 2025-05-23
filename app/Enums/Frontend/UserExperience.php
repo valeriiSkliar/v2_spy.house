@@ -6,7 +6,6 @@ use App\Traits\Enum\EnumTrait;
 
 enum UserExperience: string
 {
-
     use EnumTrait;
     case NO_EXPERIENCE = 'No Experience';
     case BEGINNER = 'Beginner';
@@ -26,8 +25,6 @@ enum UserExperience: string
 
     /**
      * Get a human-readable label for the enum case.
-     *
-     * @return string
      */
     public function label(): string
     {
@@ -38,12 +35,10 @@ enum UserExperience: string
 
     /**
      * Get a human-readable translated label for the enum case.
-     *
-     * @return string
      */
     public function translatedLabel(): string
     {
-        return __('enums.UserExperience.' . $this->name);
+        return __('enums.UserExperience.'.$this->name);
     }
 
     /**
@@ -54,7 +49,7 @@ enum UserExperience: string
     public static function getTranslatedList(): array
     {
         return collect(self::cases())
-            ->mapWithKeys(fn(self $case) => [$case->name => $case->translatedLabel()])
+            ->mapWithKeys(fn (self $case) => [$case->name => $case->translatedLabel()])
             ->all();
     }
 }

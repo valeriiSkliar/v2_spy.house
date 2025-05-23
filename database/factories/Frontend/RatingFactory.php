@@ -4,7 +4,6 @@ namespace Database\Factories\Frontend;
 
 use App\Models\Frontend\Rating;
 use App\Models\User;
-use App\Models\Frontend\Blog\BlogPost;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class RatingFactory extends Factory
@@ -42,7 +41,6 @@ class RatingFactory extends Factory
     /**
      * Indicate that the rating is for a specific blog post.
      *
-     * @param  int  $blogId
      * @return \Illuminate\Database\Eloquent\Factories\Factory
      */
     public function forBlog(int $blogId)

@@ -10,7 +10,7 @@ use Illuminate\Notifications\Notification;
 
 abstract class BaseNotification extends Notification implements ShouldQueue
 {
-    use Queueable, HasNotificationType;
+    use HasNotificationType, Queueable;
 
     /**
      * Create a new notification instance.
@@ -54,6 +54,7 @@ abstract class BaseNotification extends Notification implements ShouldQueue
     protected function getTitle(object $notifiable): string
     {
         $typeModel = $this->getNotificationTypeModel();
+
         return $typeModel ? $typeModel->name : 'Notification';
     }
 
@@ -64,6 +65,7 @@ abstract class BaseNotification extends Notification implements ShouldQueue
     protected function getMessage(object $notifiable): string
     {
         $typeModel = $this->getNotificationTypeModel();
+
         return $typeModel ? $typeModel->description : 'You have a new notification';
     }
 

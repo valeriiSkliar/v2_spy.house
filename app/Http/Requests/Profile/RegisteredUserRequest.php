@@ -40,17 +40,17 @@ class RegisteredUserRequest extends BaseRequest
 
                     switch ($messengerType) {
                         case 'telegram':
-                            if ($value && !$this->validation_telegram_login($value)) {
+                            if ($value && ! $this->validation_telegram_login($value)) {
                                 $fail('Invalid Telegram username format. Must start with @ and contain 5-32 characters (letters, numbers, underscore).');
                             }
                             break;
                         case 'viber':
-                            if ($value && !$this->validation_viber_identifier($value)) {
+                            if ($value && ! $this->validation_viber_identifier($value)) {
                                 $fail('Invalid Viber phone number format. Must contain 10-15 digits.');
                             }
                             break;
                         case 'whatsapp':
-                            if ($value && !$this->validation_whatsapp_identifier($value)) {
+                            if ($value && ! $this->validation_whatsapp_identifier($value)) {
                                 $fail('Invalid WhatsApp phone number format. Must contain 10-15 digits.');
                             }
                             break;
@@ -58,14 +58,14 @@ class RegisteredUserRequest extends BaseRequest
                             $fail('Invalid messenger type. Must be one of: telegram, viber, whatsapp.');
                             break;
                     }
-                }
+                },
             ],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Password::defaults()],
             // Use values instead of names for validation - the dropdown sends value not enum name
-            'experience' => ['required', 'string', 'in:' . implode(',', UserExperience::names())],
+            'experience' => ['required', 'string', 'in:'.implode(',', UserExperience::names())],
             // Use values instead of names for validation
-            'scope_of_activity' => ['required', 'string', 'in:' . implode(',', UserScopeOfActivity::names())],
+            'scope_of_activity' => ['required', 'string', 'in:'.implode(',', UserScopeOfActivity::names())],
         ];
     }
 
@@ -91,11 +91,11 @@ class RegisteredUserRequest extends BaseRequest
         if ($this->has('password') && $this->input('password') !== null) {
             $this->merge(['password' => $this->sanitizeInput($this->input('password'))]);
         }
-        
+
         if ($this->has('experience') && $this->input('experience') !== null) {
             $this->merge(['experience' => $this->sanitizeInput($this->input('experience'))]);
         }
-        
+
         if ($this->has('scope_of_activity') && $this->input('scope_of_activity') !== null) {
             $this->merge(['scope_of_activity' => $this->sanitizeInput($this->input('scope_of_activity'))]);
         }

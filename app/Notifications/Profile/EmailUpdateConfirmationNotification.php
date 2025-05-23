@@ -24,14 +24,14 @@ class EmailUpdateConfirmationNotification extends BaseNotification
         $mailMessage = (new MailMessage)
             ->subject($this->getTitle($notifiable))
             ->line($this->getMessage($notifiable))
-            ->line(__('profile.email_update.verification_code_label') . ': ' . $this->code)
+            ->line(__('profile.email_update.verification_code_label').': '.$this->code)
             ->line(__('profile.email_update.verification_expires'));
 
         Log::info('Mail content', [
             'subject' => $this->getTitle($notifiable),
             'message' => $this->getMessage($notifiable),
             'code' => $this->code,
-            'expires' => __('profile.email_update.verification_expires')
+            'expires' => __('profile.email_update.verification_expires'),
         ]);
 
         return $mailMessage;

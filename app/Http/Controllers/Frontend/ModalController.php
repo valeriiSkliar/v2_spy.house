@@ -10,7 +10,6 @@ class ModalController extends Controller
     /**
      * Load a modal content via AJAX
      *
-     * @param Request $request
      * @return \Illuminate\Http\Response
      */
     public function loadModal(Request $request)
@@ -26,15 +25,16 @@ class ModalController extends Controller
                         [
                             'name' => 'Maksim',
                             'telegram' => '@Max_spy_house',
-                            'photo' => '/img/manager-1.png'
+                            'photo' => '/img/manager-1.png',
                         ],
                         [
                             'name' => 'Telegram chat',
                             'telegram' => '@spy_house_chat',
-                            'photo' => '/img/manager-2.svg'
-                        ]
-                    ]
+                            'photo' => '/img/manager-2.svg',
+                        ],
+                    ],
                 ];
+
                 return view('modals.contact', $data);
 
             case 'delete-confirmation':
@@ -45,7 +45,7 @@ class ModalController extends Controller
                 return view('modals.delete-confirmation', [
                     'itemId' => $itemId,
                     'itemType' => $itemType,
-                    'deleteUrl' => $deleteUrl
+                    'deleteUrl' => $deleteUrl,
                 ]);
 
             case 'service-details':
@@ -54,7 +54,7 @@ class ModalController extends Controller
                 $service = [
                     'id' => $serviceId,
                     'name' => 'Service Demo',
-                    'description' => 'Full service description loaded via AJAX'
+                    'description' => 'Full service description loaded via AJAX',
                 ];
 
                 return view('modals.service-details', ['service' => $service]);

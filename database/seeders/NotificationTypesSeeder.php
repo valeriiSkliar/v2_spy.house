@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Enums\Frontend\NotificationType as NotificationTypeEnum;
 use App\Models\NotificationType;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class NotificationTypesSeeder extends Seeder

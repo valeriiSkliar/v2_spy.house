@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers\Test;
 
-use Illuminate\Http\Request;
-use App\Models\Service;
-use App\Models\Category;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
+use App\Models\Service;
+use Illuminate\Http\Request;
 
 class ServicesController extends Controller
 {
@@ -56,7 +54,7 @@ class ServicesController extends Controller
 
         return view('services.index', [
             'services' => $services,
-            'categories' => $categories
+            'categories' => $categories,
         ]);
     }
 
@@ -67,7 +65,7 @@ class ServicesController extends Controller
     {
         $service = collect($this->getServices())->firstWhere('id', $id);
 
-        if (!$service) {
+        if (! $service) {
             abort(404);
         }
 
@@ -82,7 +80,7 @@ class ServicesController extends Controller
 
         return view('services.show', [
             'service' => $service,
-            'relatedServices' => $relatedServices
+            'relatedServices' => $relatedServices,
         ]);
     }
 
@@ -92,7 +90,7 @@ class ServicesController extends Controller
     public function rate(Request $request, $id)
     {
         $request->validate([
-            'rating' => 'required|numeric|min:1|max:5'
+            'rating' => 'required|numeric|min:1|max:5',
         ]);
 
         // In a real app, you would save the rating in the database
@@ -100,7 +98,7 @@ class ServicesController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Rating saved successfully',
-            'rating' => $request->rating
+            'rating' => $request->rating,
         ]);
     }
 
@@ -123,7 +121,7 @@ class ServicesController extends Controller
                 'category_id' => 1,
                 'views' => 12500,
                 'transitions' => 1400,
-                'rating' => 4.7
+                'rating' => 4.7,
             ],
             [
                 'id' => 2,
@@ -138,7 +136,7 @@ class ServicesController extends Controller
                 'category_id' => 1,
                 'views' => 9800,
                 'transitions' => 950,
-                'rating' => 4.5
+                'rating' => 4.5,
             ],
             [
                 'id' => 3,
@@ -153,7 +151,7 @@ class ServicesController extends Controller
                 'category_id' => 2,
                 'views' => 7500,
                 'transitions' => 890,
-                'rating' => 4.6
+                'rating' => 4.6,
             ],
             [
                 'id' => 4,
@@ -168,7 +166,7 @@ class ServicesController extends Controller
                 'category_id' => 1,
                 'views' => 12500,
                 'transitions' => 1400,
-                'rating' => 4.7
+                'rating' => 4.7,
             ],
             [
                 'id' => 5,
@@ -183,7 +181,7 @@ class ServicesController extends Controller
                 'category_id' => 3,
                 'views' => 8900,
                 'transitions' => 1200,
-                'rating' => 4.4
+                'rating' => 4.4,
             ],
             [
                 'id' => 6,
@@ -198,7 +196,7 @@ class ServicesController extends Controller
                 'category_id' => 1,
                 'views' => 10200,
                 'transitions' => 990,
-                'rating' => 4.5
+                'rating' => 4.5,
             ],
             [
                 'id' => 7,
@@ -213,7 +211,7 @@ class ServicesController extends Controller
                 'category_id' => 1,
                 'views' => 7600,
                 'transitions' => 820,
-                'rating' => 4.3
+                'rating' => 4.3,
             ],
             [
                 'id' => 8,
@@ -228,7 +226,7 @@ class ServicesController extends Controller
                 'category_id' => 2,
                 'views' => 8300,
                 'transitions' => 950,
-                'rating' => 4.4
+                'rating' => 4.4,
             ],
             [
                 'id' => 9,
@@ -243,7 +241,7 @@ class ServicesController extends Controller
                 'category_id' => 3,
                 'views' => 9100,
                 'transitions' => 1100,
-                'rating' => 4.6
+                'rating' => 4.6,
             ],
             [
                 'id' => 10,
@@ -258,8 +256,8 @@ class ServicesController extends Controller
                 'category_id' => 1,
                 'views' => 6800,
                 'transitions' => 730,
-                'rating' => 4.2
-            ]
+                'rating' => 4.2,
+            ],
         ];
     }
 
@@ -272,68 +270,68 @@ class ServicesController extends Controller
             [
                 'id' => 1,
                 'name' => 'Advertising Networks',
-                'slug' => 'advertising-networks'
+                'slug' => 'advertising-networks',
             ],
             [
                 'id' => 2,
                 'name' => 'Affiliate Programs',
-                'slug' => 'affiliate-programs'
+                'slug' => 'affiliate-programs',
             ],
             [
                 'id' => 3,
                 'name' => 'Trackers',
-                'slug' => 'trackers'
+                'slug' => 'trackers',
             ],
             [
                 'id' => 4,
                 'name' => 'Hosting',
-                'slug' => 'hosting'
+                'slug' => 'hosting',
             ],
             [
                 'id' => 5,
                 'name' => 'Domain Registrars',
-                'slug' => 'domain-registrars'
+                'slug' => 'domain-registrars',
             ],
             [
                 'id' => 6,
                 'name' => 'SPY Services',
-                'slug' => 'spy-services'
+                'slug' => 'spy-services',
             ],
             [
                 'id' => 7,
                 'name' => 'Proxy and VPN Services',
-                'slug' => 'proxy-vpn-services'
+                'slug' => 'proxy-vpn-services',
             ],
             [
                 'id' => 8,
                 'name' => 'Anti-detection Browsers',
-                'slug' => 'anti-detection-browsers'
+                'slug' => 'anti-detection-browsers',
             ],
             [
                 'id' => 9,
                 'name' => 'Account Purchase and Rental',
-                'slug' => 'account-purchase-rental'
+                'slug' => 'account-purchase-rental',
             ],
             [
                 'id' => 10,
                 'name' => 'Purchase and Rental of Applications',
-                'slug' => 'application-purchase-rental'
+                'slug' => 'application-purchase-rental',
             ],
             [
                 'id' => 11,
                 'name' => 'Notification and Newsletter Services',
-                'slug' => 'notification-newsletter-services'
+                'slug' => 'notification-newsletter-services',
             ],
             [
                 'id' => 12,
                 'name' => 'Payment Services',
-                'slug' => 'payment-services'
+                'slug' => 'payment-services',
             ],
             [
                 'id' => 13,
                 'name' => 'Other Services and Utilities',
-                'slug' => 'other-services-utilities'
-            ]
+                'slug' => 'other-services-utilities',
+            ],
         ];
     }
 }

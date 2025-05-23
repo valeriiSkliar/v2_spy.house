@@ -10,7 +10,7 @@ return [
     'it_will_also_be_interesting' => 'También será interesante',
     'no_results' => [
         'title' => 'No se encontraron resultados para ":query"',
-        'description' => 'Intenta con palabras clave diferentes o consulta nuestras categorías a continuación.'
+        'description' => 'Intenta con palabras clave diferentes o consulta nuestras categorías a continuación.',
     ],
     'comments' => [
         'title' => 'Comentarios',
@@ -34,5 +34,5 @@ return [
         'you_rated_this_article' => 'Has calificado este artículo',
         'stars' => 'estrellas',
         'average_rating' => 'Calificación promedio',
-    ]
+    ],
 ];

@@ -28,7 +28,7 @@ class PersonalGreetingUpdateConfirmationNotification extends BaseNotification
         return (new MailMessage)
             ->subject($this->getTitle($notifiable))
             ->line($this->getMessage($notifiable))
-            ->line(Lang::get('profile.personal_greeting_update.verification_code_label') . ': ' . $this->code)
+            ->line(Lang::get('profile.personal_greeting_update.verification_code_label').': '.$this->code)
             ->line(Lang::get('profile.personal_greeting_update.verification_expires', ['minutes' => 15]));
     }
 

@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use Laravel\Sanctum\PersonalAccessToken;
 use App\Models\RefreshToken;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class PruneExpiredTokens extends Command
 {
@@ -32,15 +32,15 @@ class PruneExpiredTokens extends Command
     {
         $cutoffHours = $this->option('hours');
         $cutoff = Carbon::now()->subHours($cutoffHours);
-        
+
         // Prune expired access tokens
         $accessTokens = PersonalAccessToken::where('expires_at', '<', $cutoff)->delete();
         $this->info("Deleted {$accessTokens} expired access tokens");
-        
+
         // Prune expired refresh tokens
         $refreshTokens = RefreshToken::where('expires_at', '<', $cutoff)->delete();
         $this->info("Deleted {$refreshTokens} expired refresh tokens");
-        
+
         return Command::SUCCESS;
     }
 }

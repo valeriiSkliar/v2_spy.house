@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Frontend\Service;
 
 use App\Http\Controllers\FrontendController;
+use App\Models\Frontend\Rating;
 use App\Models\Frontend\Service\Service;
 use App\Models\Frontend\Service\ServiceCategory;
-use App\Models\Frontend\Rating;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
@@ -13,7 +13,9 @@ use Illuminate\Support\Facades\Auth;
 class ServicesController extends FrontendController
 {
     private $indexView = 'pages.services.index';
+
     private $showView = 'pages.services.show';
+
     public function index(Request $request)
     {
         $locale = app()->getLocale();
@@ -64,7 +66,7 @@ class ServicesController extends FrontendController
             if ($selectedBonuses === 'with_discount') {
                 $pinnedQuery->where('code', '!=', '');
                 $unpinnedQuery->where('code', '!=', '');
-            } else if ($selectedBonuses === 'without_discount') {
+            } elseif ($selectedBonuses === 'without_discount') {
                 $pinnedQuery->where(function ($query) {
                     $query->where('code', '')
                         ->orWhereNull('code');
@@ -91,8 +93,8 @@ class ServicesController extends FrontendController
         $pinnedCount = $pinnedServices->count();
 
         // Подготовка переменных пагинации
-        $perPage = max((int)$request->input('perPage', 12), 12);
-        $currentPage = max((int)$request->input('page', 1), 1);
+        $perPage = max((int) $request->input('perPage', 12), 12);
+        $currentPage = max((int) $request->input('page', 1), 1);
 
         // Общее количество не закреплённых
         $totalUnpinned = $unpinnedQuery->count();
@@ -118,20 +120,20 @@ class ServicesController extends FrontendController
         // Преобразование сервисов под нужный формат
         $transformedServices = $allServices->map(function ($service) use ($locale) {
             return [
-                'id'                => $service->id,
-                'name'              => $service->getTranslation('name', $locale),
-                'description'       => $service->getTranslation('description', $locale),
-                'code'              => $service->code,
-                'code_description'  => $service->getTranslation('code_description', $locale),
-                'category'          => $service->category,
-                'transitions'       => $service->transitions,
-                'rating'            => $service->rating,
-                'views'             => $service->views,
-                'url'               => $service->url,
-                'redirect_url'      => $service->redirect_url,
-                'logo'              => $service->logo,
-                'is_active_code'    => $service->is_active_code,
-                'is_pinned'         => $service->pinned_until && $service->pinned_until > now(),
+                'id' => $service->id,
+                'name' => $service->getTranslation('name', $locale),
+                'description' => $service->getTranslation('description', $locale),
+                'code' => $service->code,
+                'code_description' => $service->getTranslation('code_description', $locale),
+                'category' => $service->category,
+                'transitions' => $service->transitions,
+                'rating' => $service->rating,
+                'views' => $service->views,
+                'url' => $service->url,
+                'redirect_url' => $service->redirect_url,
+                'logo' => $service->logo,
+                'is_active_code' => $service->is_active_code,
+                'is_pinned' => $service->pinned_until && $service->pinned_until > now(),
             ];
         });
 
@@ -149,8 +151,8 @@ class ServicesController extends FrontendController
         $categories = ServiceCategory::all()
             ->map(function ($category) use ($locale) {
                 return [
-                    'id'   => $category->id,
-                    'name' => $category->getTranslation('name', $locale)
+                    'id' => $category->id,
+                    'name' => $category->getTranslation('name', $locale),
                 ];
             });
 
@@ -170,8 +172,6 @@ class ServicesController extends FrontendController
             ['value' => 96, 'label' => '96', 'order' => ''],
         ];
 
-
-
         $bonusesOptions = [
             ['value' => 'all', 'label' => 'All Bonuses', 'order' => ''],
             ['value' => 'with_discount', 'label' => 'With Discount', 'order' => ''],
@@ -181,13 +181,13 @@ class ServicesController extends FrontendController
         $categoriesOptions = ServiceCategory::all()
             ->map(function ($category) use ($locale) {
                 return [
-                    'value'   => $category->id,
+                    'value' => $category->id,
                     'label' => $category->getTranslation('name', $locale),
-                    'order' => ''
+                    'order' => '',
                 ];
             });
         $categoriesOptions = $categoriesOptions->merge([
-            ['value' => 'all', 'label' => 'All Categories', 'order' => '']
+            ['value' => 'all', 'label' => 'All Categories', 'order' => ''],
         ]);
 
         // Ensure 'All Categories' is always first
@@ -214,9 +214,9 @@ class ServicesController extends FrontendController
         $selectedPerPage = collect($perPageOptions)->firstWhere('value', $perPage) ?? $perPageOptions[0];
 
         return view($this->indexView, [
-            'services'   => $paginator,
+            'services' => $paginator,
             'categories' => $categories,
-            'filters'    => $filters,
+            'filters' => $filters,
             'currentPage' => $currentPage,
             'totalPages' => ceil($totalServices / $perPage),
             'sortOptions' => $sortOptions,
@@ -265,7 +265,6 @@ class ServicesController extends FrontendController
             'userRating' => $userRating,
         ];
 
-
         $relatedServices = Service::where('status', 'Active')
             ->where('id', '!=', $service->id)
             ->take(5)
@@ -297,14 +296,13 @@ class ServicesController extends FrontendController
     /**
      * Rate a service
      *
-     * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
      * @return \Illuminate\Http\JsonResponse
      */
     public function rate(Request $request, $id, $rating)
     {
         // Validate the rating value
-        if (!in_array($rating, [1, 2, 3, 4, 5])) {
+        if (! in_array($rating, [1, 2, 3, 4, 5])) {
             return response()->json(['error' => 'Invalid rating value.'], 400);
         }
 
@@ -321,13 +319,12 @@ class ServicesController extends FrontendController
             return response()->json(['error' => 'You have already rated this service.'], 409); // 409 Conflict
         }
 
-
         // Create a new rating
         $newRating = new Rating([
             'service_id' => $service->id,
             'user_id' => $userId, // Use the authenticated user's ID
             'rating' => $rating,
-            'comment' => $request->input('comment', '') // Optionally get comment from request
+            'comment' => $request->input('comment', ''), // Optionally get comment from request
         ]);
 
         $newRating->save();
@@ -338,13 +335,13 @@ class ServicesController extends FrontendController
         $averageRating = $service->averageRating();
         $service->update([
             'rating' => $averageRating,
-            'reviews_count' => $reviewsCount
+            'reviews_count' => $reviewsCount,
         ]);
 
         $formattedRating = number_format($averageRating, 1);
         $ratedHtml = view('components.services.show.rated-rating', [
             'userRating' => $newRating->rating ?? 0,
-            'formattedRating' => $formattedRating
+            'formattedRating' => $formattedRating,
         ])->render();
 
         return response()->json([
@@ -354,7 +351,7 @@ class ServicesController extends FrontendController
             'user_rating' => $rating,
             'average_rating' => number_format($averageRating, 1),
             'reviews_count' => $reviewsCount,
-            'ratedHtml' => $ratedHtml
+            'ratedHtml' => $ratedHtml,
         ]);
     }
 
@@ -363,18 +360,16 @@ class ServicesController extends FrontendController
         $service = Service::findOrFail($id);
         $rating = $service->ratings()->where('user_id', Auth::id())->first();
 
-
         return response()->json([
             'rating' => $rating->rating ?? 0,
             'averageRating' => $service?->rating ?? 0,
-            'hasRated' => $rating ? true : false
+            'hasRated' => $rating ? true : false,
         ]);
     }
 
     /**
      * AJAX endpoint for loading services list
      *
-     * @param Request $request
      * @return \Illuminate\Http\Response
      */
     public function ajaxList(Request $request)
@@ -391,7 +386,7 @@ class ServicesController extends FrontendController
 
             // Render services list
             $servicesHtml = view('components.services.index.list.services-list', [
-                'services' => $services
+                'services' => $services,
             ])->render();
 
             // Check if pagination should be shown
@@ -403,7 +398,7 @@ class ServicesController extends FrontendController
                 // Make sure we pass all necessary data for the pagination component
                 $paginationHtml = view('components.pagination', [
                     'currentPage' => $currentPage,
-                    'totalPages' => $totalPages
+                    'totalPages' => $totalPages,
                 ])->render();
             }
 
@@ -418,7 +413,7 @@ class ServicesController extends FrontendController
                 'hasPagination' => $hasPagination,
                 'currentPage' => $currentPage,
                 'totalPages' => $totalPages,
-                'count' => $services->count()
+                'count' => $services->count(),
             ]);
         }
 

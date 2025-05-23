@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Test;
 
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
 class NotificationController extends Controller
 {
     public $indexView = 'pages.notifications.index';
+
     /**
      * Display a listing of the notifications.
      */
@@ -36,15 +36,15 @@ class NotificationController extends Controller
                 'date' => '08.05.23 (16:45)',
                 'title' => 'Приветствуем на Pay2House!',
                 'content' => 'Для уведомлений будет использоваться e-mail, указанный в Вашем профиле. (<strong>vadfart@gmail.com</strong>)',
-                'hasButton' => true
+                'hasButton' => true,
             ],
             [
                 'id' => 2,
                 'read' => true,
                 'date' => '08.05.23 (16:45)',
                 'title' => 'Приветствуем на Pay2House!',
-                'content' => 'Для уведомлений будет использоваться e-mail, указанный в Вашем профиле. (<strong>vadfart@gmail.com</strong>)'
-            ]
+                'content' => 'Для уведомлений будет использоваться e-mail, указанный в Вашем профиле. (<strong>vadfart@gmail.com</strong>)',
+            ],
         ];
     }
 

@@ -4,8 +4,8 @@ namespace Database\Factories\Frontend\Service;
 
 use App\Models\Frontend\Service\Service;
 use App\Models\Frontend\Service\ServiceCategories;
-use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Service\Service>
@@ -35,9 +35,9 @@ class ServiceFactory extends Factory
                 'en' => $this->faker->paragraph(10),
                 'ru' => $this->faker->paragraph(10),
             ],
-            'logo' => '/storage/assets/images/services/' . $this->faker->numberBetween(1, 73) . '.jpeg',
-            'url' => 'https://example.com/' . Str::slug($this->faker->unique()->words(3, true)),
-            'redirect_url' => '/services/redirect/' . $this->faker->unique()->numberBetween(1, 1000),
+            'logo' => '/storage/assets/images/services/'.$this->faker->numberBetween(1, 73).'.jpeg',
+            'url' => 'https://example.com/'.Str::slug($this->faker->unique()->words(3, true)),
+            'redirect_url' => '/services/redirect/'.$this->faker->unique()->numberBetween(1, 1000),
             'status' => 'Active',
             'category_id' => function () {
                 return ServiceCategories::factory()->create()->id;

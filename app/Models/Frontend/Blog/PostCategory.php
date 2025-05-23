@@ -13,10 +13,11 @@ use Spatie\Translatable\HasTranslations;
 class PostCategory extends Model
 {
     use HasFactory;
-    use NodeTrait;
     use HasTranslations;
+    use NodeTrait;
 
     public $translatable = ['name'];
+
     protected $fillable = ['name', 'slug', 'parent_id', 'posts_count'];
 
     protected $casts = [

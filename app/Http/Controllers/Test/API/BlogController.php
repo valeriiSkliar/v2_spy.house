@@ -1,11 +1,12 @@
 <?php
+
 // Add to app/Http/Controllers/Api/BlogController.php
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Test\BlogController as BlogControllerTest;
-
+use Illuminate\Http\Request;
 
 class BlogController extends Controller
 {
@@ -15,7 +16,7 @@ class BlogController extends Controller
         $limit = $request->get('limit', 5);
 
         // Reuse the existing getArticles method from BlogController
-        $blogController = new BlogControllerTest();
+        $blogController = new BlogControllerTest;
         $articles = $blogController->getArticles();
 
         // Filter articles by search query
@@ -37,14 +38,14 @@ class BlogController extends Controller
                 'views' => $article['views'],
                 'rating' => $article['rating'],
                 'category' => $article['category'],
-                'comments_count' => count($article['comments'])
+                'comments_count' => count($article['comments']),
             ];
         });
 
         return response()->json([
             'success' => true,
             'total' => $filtered->count(),
-            'articles' => $results
+            'articles' => $results,
         ]);
     }
 }

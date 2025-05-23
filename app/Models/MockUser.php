@@ -26,8 +26,8 @@ class MockUser extends GenericUser
             'features' => [
                 'Unlimited clicks',
                 'Protection from bots',
-                'Priority support'
-            ]
+                'Priority support',
+            ],
         ];
     }
 }

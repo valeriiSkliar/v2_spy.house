@@ -8,6 +8,8 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 class BaseBlogController extends FrontendController
 {
     use AuthorizesRequests;
+
     protected $indexView = 'pages.blog.index';
+
     protected $showView = 'pages.blog.show';
 }

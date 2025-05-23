@@ -5,8 +5,8 @@ namespace App\Jobs\Landings;
 use App\Models\Frontend\Landings\WebsiteDownloadMonitor;
 use App\Notifications\Landings\WebsiteDownloadStatus;
 use App\Services\Common\Landings\WebHTTrackService;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -49,12 +49,13 @@ class DownloadWebsiteJob implements ShouldQueue
         $outputPath = "private/website-downloads/{$this->uuid}";
         $monitor = WebsiteDownloadMonitor::where('output_path', $outputPath)->first();
 
-        if (!$monitor) {
+        if (! $monitor) {
             Log::error('Monitor not found for download', [
                 'url' => $this->url,
                 'output_path' => $outputPath,
                 'user_id' => $this->userId,
             ]);
+
             return;
         }
 
@@ -81,8 +82,8 @@ class DownloadWebsiteJob implements ShouldQueue
                 sleep(5); // Wait 5 seconds before next check
             }
 
-            if (!$process->isSuccessful()) {
-                throw new \RuntimeException('Download process failed: ' . $process->getErrorOutput());
+            if (! $process->isSuccessful()) {
+                throw new \RuntimeException('Download process failed: '.$process->getErrorOutput());
             }
 
             // Check for the presence of index.html or similar files
@@ -91,33 +92,33 @@ class DownloadWebsiteJob implements ShouldQueue
             $downloadPath = Storage::path($outputPath);
 
             foreach ($indexFiles as $indexFile) {
-                if (file_exists($downloadPath . '/' . $indexFile)) {
+                if (file_exists($downloadPath.'/'.$indexFile)) {
                     $indexFound = true;
                     break;
                 }
             }
 
-            if (!$indexFound) {
+            if (! $indexFound) {
                 throw new \RuntimeException('Download incomplete: No index HTML file found in the downloaded content.');
             }
 
             // Verify the index file has content
             $foundIndexFile = null;
             foreach ($indexFiles as $indexFile) {
-                $filePath = $downloadPath . '/' . $indexFile;
+                $filePath = $downloadPath.'/'.$indexFile;
                 if (file_exists($filePath) && filesize($filePath) > 0) {
                     $foundIndexFile = $filePath;
                     break;
                 }
             }
 
-            if (!$foundIndexFile) {
+            if (! $foundIndexFile) {
                 throw new \RuntimeException('Download incomplete: Index HTML file is empty.');
             }
 
             // Check if the index file contains basic HTML structure
             $indexContent = file_get_contents($foundIndexFile);
-            if (!preg_match('/<html.*>.*<\/html>/is', $indexContent)) {
+            if (! preg_match('/<html.*>.*<\/html>/is', $indexContent)) {
                 throw new \RuntimeException('Download incomplete: Index HTML file does not contain valid HTML structure.');
             }
 

@@ -10,7 +10,7 @@ class BaseRequest extends FormRequest
 {
     protected function sanitizeInput(string $input): string
     {
-        if (!$input) {
+        if (! $input) {
             return '';
         }
         $input = trim($input);
@@ -20,7 +20,7 @@ class BaseRequest extends FormRequest
 
     protected function validation_telegram_login(string $str): bool
     {
-        if (!str_starts_with($str, '@')) {
+        if (! str_starts_with($str, '@')) {
             return false;
         }
 
@@ -36,7 +36,7 @@ class BaseRequest extends FormRequest
 
     protected function validation_whatsapp_identifier(string $str): bool
     {
-        $clean_str  = preg_replace('/[^0-9+]/', '', $str);
+        $clean_str = preg_replace('/[^0-9+]/', '', $str);
         $identifier = str_starts_with($clean_str, '+') ? substr($clean_str, 1) : trim($clean_str);
 
         $length = strlen($identifier);
@@ -49,7 +49,7 @@ class BaseRequest extends FormRequest
 
     protected function validation_viber_identifier(string $str): bool
     {
-        $clean_str  = preg_replace('/[^0-9+]/', '', $str);
+        $clean_str = preg_replace('/[^0-9+]/', '', $str);
         $identifier = str_starts_with($clean_str, '+') ? substr($clean_str, 1) : trim($clean_str);
 
         $length = strlen($identifier);

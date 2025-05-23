@@ -35,36 +35,36 @@ class BlogPostSeeder extends Seeder
         $webmasterCategory = PostCategory::create([
             'name' => [
                 'en' => 'Webmaster',
-                'ru' => 'Вебмастеру'
+                'ru' => 'Вебмастеру',
             ],
             'slug' => 'webmaster',
-            'parent_id' => null
+            'parent_id' => null,
         ]);
 
         $arbitrageCategory = PostCategory::create([
             'name' => [
                 'en' => 'Arbitrage',
-                'ru' => 'Арбитражнику'
+                'ru' => 'Арбитражнику',
             ],
             'slug' => 'arbitrage',
-            'parent_id' => null
+            'parent_id' => null,
         ]);
 
         // Webmaster subcategories
         $webmasterSubcategories = [
             ['en' => 'Monetization', 'ru' => 'Монетизация', 'slug' => 'monetization'],
             ['en' => 'Webmaster Guides', 'ru' => 'Гайды для вебмастеров', 'slug' => 'webmaster-guides'],
-            ['en' => 'Useful for Webmaster', 'ru' => 'Полезное для вебмастера', 'slug' => 'useful-for-webmaster']
+            ['en' => 'Useful for Webmaster', 'ru' => 'Полезное для вебмастера', 'slug' => 'useful-for-webmaster'],
         ];
 
         foreach ($webmasterSubcategories as $subcategory) {
             PostCategory::create([
                 'name' => [
                     'en' => $subcategory['en'],
-                    'ru' => $subcategory['ru']
+                    'ru' => $subcategory['ru'],
                 ],
                 'slug' => $subcategory['slug'],
-                'parent_id' => $webmasterCategory->id
+                'parent_id' => $webmasterCategory->id,
             ]);
         }
 
@@ -76,17 +76,17 @@ class BlogPostSeeder extends Seeder
             ['en' => 'Training', 'ru' => 'Обучение', 'slug' => 'training'],
             ['en' => 'Cases', 'ru' => 'Кейсы', 'slug' => 'cases'],
             ['en' => 'Useful', 'ru' => 'Полезное', 'slug' => 'useful'],
-            ['en' => 'About Service', 'ru' => 'О сервисе', 'slug' => 'about-service']
+            ['en' => 'About Service', 'ru' => 'О сервисе', 'slug' => 'about-service'],
         ];
 
         foreach ($arbitrageSubcategories as $subcategory) {
             PostCategory::create([
                 'name' => [
                     'en' => $subcategory['en'],
-                    'ru' => $subcategory['ru']
+                    'ru' => $subcategory['ru'],
                 ],
                 'slug' => $subcategory['slug'],
-                'parent_id' => $arbitrageCategory->id
+                'parent_id' => $arbitrageCategory->id,
             ]);
         }
 
@@ -133,7 +133,7 @@ class BlogPostSeeder extends Seeder
         // Update posts count in categories (moved after post processing)
         PostCategory::all()->each(function ($category) {
             $category->update([
-                'posts_count' => $category->posts()->count()
+                'posts_count' => $category->posts()->count(),
             ]);
         });
     }

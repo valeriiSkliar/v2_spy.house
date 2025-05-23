@@ -6,7 +6,6 @@ use App\Http\Controllers\Api\Profile\ProfileAvatarController;
 use App\Http\Controllers\Api\Profile\ProfileSettingsController;
 use App\Http\Controllers\Api\TokenController;
 use App\Http\Controllers\Test\API\BaseTokenController;
-use App\Services\Api\TokenService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 

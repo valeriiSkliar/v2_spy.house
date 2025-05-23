@@ -24,7 +24,7 @@ class WebsiteDownloadStatus extends BaseNotification
             'failed' => NotificationType::WEBSITE_DOWNLOAD_FAILED,
             default => NotificationType::WEBSITE_DOWNLOAD_STARTED,
         };
-        
+
         parent::__construct($type);
     }
 
@@ -36,22 +36,22 @@ class WebsiteDownloadStatus extends BaseNotification
         $mailMessage = (new MailMessage)
             ->subject($this->getTitle($notifiable))
             ->line($this->getMessage($notifiable));
-        
+
         if ($this->error && $this->status === 'failed') {
-            $mailMessage->line(Lang::get('landings.download.error_details') . ': ' . $this->error);
+            $mailMessage->line(Lang::get('landings.download.error_details').': '.$this->error);
         }
-        
+
         return $mailMessage;
     }
 
     protected function getTitle(object $notifiable): string
     {
-        return Lang::get('landings.download.status.' . $this->status . '.title', ['url' => $this->url]);
+        return Lang::get('landings.download.status.'.$this->status.'.title', ['url' => $this->url]);
     }
 
     protected function getMessage(object $notifiable): string
     {
-        return Lang::get('landings.download.status.' . $this->status . '.message', ['url' => $this->url]);
+        return Lang::get('landings.download.status.'.$this->status.'.message', ['url' => $this->url]);
     }
 
     protected function getIcon(): string
@@ -70,11 +70,11 @@ class WebsiteDownloadStatus extends BaseNotification
             'url' => $this->url,
             'status' => $this->status,
         ];
-        
+
         if ($this->error) {
             $data['error'] = $this->error;
         }
-        
+
         return $data;
     }
 }

@@ -16,6 +16,7 @@ class AuthServiceProvider extends ServiceProvider
     protected $policies = [
         WebsiteDownloadMonitor::class => WebsiteDownloadMonitorPolicy::class,
     ];
+
     public function boot(): void
     {
         $this->registerPolicies();

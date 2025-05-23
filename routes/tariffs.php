@@ -1,7 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Test\TariffController;
+use Illuminate\Support\Facades\Route;
+
 // Тарифы
 Route::middleware('auth')->group(function () {
     Route::get('/tariffs', [TariffController::class, 'index'])->name('tariffs.index');

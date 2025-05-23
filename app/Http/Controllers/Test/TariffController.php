@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Test;
 
-use Illuminate\Http\Request;
-use App\Models\Tariff;
-use App\Models\Payment;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
+use App\Models\Payment;
+use App\Models\Tariff;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class TariffController extends Controller
 {
@@ -21,15 +21,13 @@ class TariffController extends Controller
         // Get user's current tariff
         $currentTariff = Auth::user()->currentTariff();
 
-
-
         // Get user's payment history
         $payments = $this->getPaymentHistory();
 
         return view('tariffs.index', [
             'tariffs' => $tariffs,
             'currentTariff' => $currentTariff,
-            'payments' => $payments
+            'payments' => $payments,
         ]);
     }
 
@@ -40,7 +38,7 @@ class TariffController extends Controller
     {
         $tariff = collect($this->getTariffs())->firstWhere('slug', $slug);
 
-        if (!$tariff) {
+        if (! $tariff) {
             abort(404);
         }
 
@@ -49,7 +47,7 @@ class TariffController extends Controller
 
         return view('tariffs.payment', [
             'tariff' => $tariff,
-            'paymentMethods' => $paymentMethods
+            'paymentMethods' => $paymentMethods,
         ]);
     }
 
@@ -61,7 +59,7 @@ class TariffController extends Controller
         $request->validate([
             'tariff_id' => 'required|string',
             'payment_method' => 'required|string',
-            'promo_code' => 'nullable|string'
+            'promo_code' => 'nullable|string',
         ]);
 
         // In a real app, you would process the payment here
@@ -103,8 +101,8 @@ class TariffController extends Controller
                     'Browser filtering',
                     'Blacklist filtering',
                     'Support for all traffic sources',
-                    'Support service'
-                ]
+                    'Support service',
+                ],
             ],
             [
                 'id' => 2,
@@ -132,8 +130,8 @@ class TariffController extends Controller
                     'Browser filtering',
                     'Blacklist filtering',
                     'Support for all traffic sources',
-                    'Support service'
-                ]
+                    'Support service',
+                ],
             ],
             [
                 'id' => 3,
@@ -161,8 +159,8 @@ class TariffController extends Controller
                     'Browser filtering',
                     'Blacklist filtering',
                     'Support for all traffic sources',
-                    'Priority support service'
-                ]
+                    'Priority support service',
+                ],
             ],
             [
                 'id' => 4,
@@ -190,9 +188,9 @@ class TariffController extends Controller
                     'Browser filtering',
                     'Blacklist filtering',
                     'Support for all traffic sources',
-                    'Priority support service'
-                ]
-            ]
+                    'Priority support service',
+                ],
+            ],
         ];
     }
 
@@ -211,7 +209,7 @@ class TariffController extends Controller
                 'payment_method' => 'WebMoney (WMZ)',
                 'amount' => 60,
                 'status' => 'Активный',
-                'status_class' => 'successful'
+                'status_class' => 'successful',
             ],
             [
                 'id' => 2,
@@ -222,7 +220,7 @@ class TariffController extends Controller
                 'payment_method' => 'WebMoney (WMZ)',
                 'amount' => 60,
                 'status' => 'Завершен',
-                'status_class' => 'rejected'
+                'status_class' => 'rejected',
             ],
             [
                 'id' => 3,
@@ -233,7 +231,7 @@ class TariffController extends Controller
                 'payment_method' => 'WebMoney (WMZ)',
                 'amount' => 60,
                 'status' => 'Завершен',
-                'status_class' => 'rejected'
+                'status_class' => 'rejected',
             ],
             [
                 'id' => 4,
@@ -244,8 +242,8 @@ class TariffController extends Controller
                 'payment_method' => 'WebMoney (WMZ)',
                 'amount' => 60,
                 'status' => 'Завершен',
-                'status_class' => 'rejected'
-            ]
+                'status_class' => 'rejected',
+            ],
         ];
     }
 

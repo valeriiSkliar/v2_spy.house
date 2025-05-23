@@ -5,16 +5,14 @@ namespace App\Http\Controllers\Frontend\Landing;
 use App\Models\Frontend\Landings\WebsiteDownloadMonitor;
 use App\Services\Frontend\Toast;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Illuminate\Http\JsonResponse;
 
 class LandingsPageController extends BaseLandingsPageController
 {
-
-
     public function index(Request $request): View
     {
         $data = $this->getData($request);
@@ -72,21 +70,17 @@ class LandingsPageController extends BaseLandingsPageController
 
         return redirect()->route('landings.index', [
             'page' => $targetPage,
-            'per_page' => $perPage
+            'per_page' => $perPage,
         ])->with('message', [
             'title' => 'landingsPage.deleted.title',
             'type' => 'success',
             'description' => 'landingsPage.deleted.description',
-            'duration' => 3000
+            'duration' => 3000,
         ]);
     }
 
     /**
      * Download the landing page archive.
-     *
-     * @param WebsiteDownloadMonitor $landing
-     * @param Request $request
-     * @return StreamedResponse|JsonResponse|RedirectResponse
      */
     public function download(WebsiteDownloadMonitor $landing, Request $request): StreamedResponse|JsonResponse|RedirectResponse
     {
@@ -100,6 +94,7 @@ class LandingsPageController extends BaseLandingsPageController
             if ($response instanceof JsonResponse && $response->getStatusCode() !== 200) {
                 $errorData = $response->getData(true);
                 Toast::error($errorData['message']);
+
                 return redirect()->route('landings.index');
             }
 
@@ -110,11 +105,12 @@ class LandingsPageController extends BaseLandingsPageController
             $landing->update([
                 'status' => 'failed',
                 'error' => $e->getMessage() ?? 'Download failed',
-                'completed_at' => now()
+                'completed_at' => now(),
             ]);
 
             // Редирект с сообщением об ошибке (используем ключ для локализации)
             Toast::error('landings.downloadException.description');
+
             return redirect()->route('landings.index');
         }
     }
@@ -122,7 +118,6 @@ class LandingsPageController extends BaseLandingsPageController
     // Renamed method and updated options
     // private function getFilterOptions()
     // {
-
 
     //     $sortOptionsPlaceholder = 'Sort by — ';
     //     $perPageOptionsPlaceholder = 'On page — ';

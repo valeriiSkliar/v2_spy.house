@@ -3,12 +3,13 @@
 namespace App\Console\Commands\Queues;
 
 use Illuminate\Console\Command;
-use VladimirYuldashev\LaravelQueueRabbitMQ\Queue\RabbitMQQueue;
 use Illuminate\Queue\QueueManager;
+use VladimirYuldashev\LaravelQueueRabbitMQ\Queue\RabbitMQQueue;
 
 class CreateQueuesCommand extends Command
 {
     protected $signature = 'queues:create';
+
     protected $description = 'Create RabbitMQ queues';
 
     public function handle(QueueManager $queueManager)
@@ -17,7 +18,6 @@ class CreateQueuesCommand extends Command
         $queue = $queueManager->connection('rabbitmq');
         $channel = $queue->getChannel();
         $queues = array_keys(config('queue.connections.rabbitmq.queues'));
-
 
         foreach ($queues as $queueName) {
             $channel->queue_declare(

@@ -2,13 +2,13 @@
 
 namespace App\Services\Common\Landings;
 
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
+use App\Models\Frontend\Landings\WebsiteDownloadMonitor;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use ZipArchive;
-use Illuminate\Support\Str;
-use App\Models\Frontend\Landings\WebsiteDownloadMonitor;
 
 class LandingDownloadService
 {
@@ -16,46 +16,47 @@ class LandingDownloadService
     {
         $tempDir = null;
         try {
-            $folderPath = 'private/website-downloads/' . basename($landing->output_path);
+            $folderPath = 'private/website-downloads/'.basename($landing->output_path);
 
             Log::info('Starting download process for landing', [
                 'landing_id' => $landing->id,
                 'folder_path' => $folderPath,
                 'storage_path' => Storage::path($folderPath),
-                'disk' => config('filesystems.default')
+                'disk' => config('filesystems.default'),
             ]);
 
-            if (!Storage::exists($folderPath)) {
+            if (! Storage::exists($folderPath)) {
                 Log::warning('Source folder not found', [
                     'landing_id' => $landing->id,
-                    'folder_path' => $folderPath
+                    'folder_path' => $folderPath,
                 ]);
                 $landing->update([
                     'status' => 'failed',
-                    'error' => 'Source folder not found. The download may have failed or the folder was deleted.'
+                    'error' => 'Source folder not found. The download may have failed or the folder was deleted.',
                 ]);
+
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'landings.sourceFolderNotFound.description'
+                    'message' => 'landings.sourceFolderNotFound.description',
                 ], 404);
             }
 
             // Создаём временную директорию
             $tempDir = storage_path('app/temp');
-            if (!file_exists($tempDir)) {
+            if (! file_exists($tempDir)) {
                 mkdir($tempDir, 0755, true);
             }
-            $tempSubDir = $tempDir . '/' . Str::random(40);
+            $tempSubDir = $tempDir.'/'.Str::random(40);
             mkdir($tempSubDir, 0755, true);
 
             // Генерируем имя ZIP-файла и его путь
-            $zipFileName = Str::random(40) . '.zip';
-            $zipPath = $tempSubDir . '/' . $zipFileName;
+            $zipFileName = Str::random(40).'.zip';
+            $zipPath = $tempSubDir.'/'.$zipFileName;
 
             // Создаём ZIP-архив
-            $zip = new ZipArchive();
+            $zip = new ZipArchive;
             if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-                throw new \Exception('Unable to create ZIP archive at: ' . $zipPath);
+                throw new \Exception('Unable to create ZIP archive at: '.$zipPath);
             }
 
             // Получаем файлы и директории
@@ -64,7 +65,7 @@ class LandingDownloadService
 
             if (empty($files) && empty($directories)) {
                 Log::warning('No files or directories found in folder', [
-                    'folder_path' => $folderPath
+                    'folder_path' => $folderPath,
                 ]);
                 throw new \Exception('No files found in the source folder');
             }
@@ -85,7 +86,7 @@ class LandingDownloadService
 
             Log::info('Successfully created ZIP file', [
                 'zip_size' => filesize($zipPath),
-                'file_count' => count($files)
+                'file_count' => count($files),
             ]);
 
             // Регистрируем shutdown-функцию для очистки временных файлов
@@ -108,7 +109,7 @@ class LandingDownloadService
                 200,
                 [
                     'Content-Type' => 'application/zip',
-                    'Content-Disposition' => 'attachment; filename="landing-' . $landing->id . '.zip"',
+                    'Content-Disposition' => 'attachment; filename="landing-'.$landing->id.'.zip"',
                 ]
             );
         } catch (\Exception $e) {
@@ -119,12 +120,12 @@ class LandingDownloadService
                 'landing_id' => $landing->id,
                 'error_message' => $e->getMessage(),
                 'error_trace' => $e->getTraceAsString(),
-                'folder_path' => $folderPath ?? null
+                'folder_path' => $folderPath ?? null,
             ]);
 
             return response()->json([
-                'message' => 'An error occurred while preparing your download: ' . $e->getMessage(),
-                'status' => 'error'
+                'message' => 'An error occurred while preparing your download: '.$e->getMessage(),
+                'status' => 'error',
             ], 500);
         }
     }
@@ -134,13 +135,13 @@ class LandingDownloadService
      */
     private function removeDirectory(string $dir): void
     {
-        if (!file_exists($dir)) {
+        if (! file_exists($dir)) {
             return;
         }
 
         $files = array_diff(scandir($dir), ['.', '..']);
         foreach ($files as $file) {
-            $path = $dir . '/' . $file;
+            $path = $dir.'/'.$file;
             is_dir($path) ? $this->removeDirectory($path) : unlink($path);
         }
         rmdir($dir);
@@ -149,10 +150,6 @@ class LandingDownloadService
     /**
      * Create and dispatch a new landing download request
      *
-     * @param int $userId
-     * @param string $url
-     * @param array $options
-     * @return WebsiteDownloadMonitor
      * @throws \InvalidArgumentException
      */
     public function createAndDispatch(int $userId, string $url, array $options = []): WebsiteDownloadMonitor
@@ -161,7 +158,7 @@ class LandingDownloadService
             throw new \InvalidArgumentException('URL is required');
         }
 
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        if (! filter_var($url, FILTER_VALIDATE_URL)) {
             throw new \InvalidArgumentException('Invalid URL format');
         }
 

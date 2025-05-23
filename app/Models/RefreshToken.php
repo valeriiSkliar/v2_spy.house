@@ -34,8 +34,6 @@ class RefreshToken extends Model
 
     /**
      * Get the user that owns the refresh token.
-     *
-     * @return BelongsTo
      */
     public function user(): BelongsTo
     {
@@ -44,8 +42,6 @@ class RefreshToken extends Model
 
     /**
      * Get the access token that this refresh token can refresh.
-     *
-     * @return BelongsTo
      */
     public function accessToken(): BelongsTo
     {
@@ -55,7 +51,7 @@ class RefreshToken extends Model
     /**
      * Scope a query to only include unexpired tokens.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeValid($query)

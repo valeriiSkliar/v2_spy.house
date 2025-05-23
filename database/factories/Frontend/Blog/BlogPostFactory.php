@@ -27,15 +27,15 @@ class BlogPostFactory extends Factory
         return [
             'title' => [
                 'en' => $titleEn,
-                'ru' => $titleRu
+                'ru' => $titleRu,
             ],
             'summary' => [
                 'en' => $this->faker->paragraph(2),
-                'ru' => $this->faker->paragraph(2)
+                'ru' => $this->faker->paragraph(2),
             ],
             'content' => [
                 'en' => $this->faker->paragraphs(5, true),
-                'ru' => $this->faker->paragraphs(5, true)
+                'ru' => $this->faker->paragraphs(5, true),
             ],
             'slug' => Str::slug($titleEn),
             'views_count' => $this->faker->numberBetween(0, 10000),

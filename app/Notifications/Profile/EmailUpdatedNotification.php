@@ -9,6 +9,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 class EmailUpdatedNotification extends BaseNotification
 {
     private string $oldEmail;
+
     private string $newEmail;
 
     public function __construct(string $oldEmail, string $newEmail)
@@ -34,7 +35,7 @@ class EmailUpdatedNotification extends BaseNotification
     {
         return __('profile.email_updated_message', [
             'old_email' => $this->oldEmail,
-            'new_email' => $this->newEmail
+            'new_email' => $this->newEmail,
         ]);
     }
 

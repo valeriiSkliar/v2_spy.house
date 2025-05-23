@@ -26,13 +26,14 @@ class UserFactory extends Factory
     public function definition(): array
     {
         $messengerType = $this->faker->randomElement(['whatsapp', 'viber', 'telegram']);
+
         return [
             'name' => fake()->name(),
             'email' => 'test@test.com',
             'email_verified_at' => now(),
             'login' => fake()->unique()->safeEmail(),
             'messenger_type' => $messengerType,
-            'messenger_contact' => $messengerType === 'telegram' ? "@" . $this->faker->userName : $this->faker->e164PhoneNumber(),
+            'messenger_contact' => $messengerType === 'telegram' ? '@'.$this->faker->userName : $this->faker->e164PhoneNumber(),
             'scope_of_activity' => $this->faker->randomElement(UserScopeOfActivity::names()),
             'experience' => $this->faker->randomElement(UserExperience::names()),
             'password' => static::$password ??= Hash::make('password'),
@@ -45,7 +46,7 @@ class UserFactory extends Factory
      */
     public function unverified(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
         ]);
     }

@@ -18,10 +18,10 @@ class ForceJsonResponse
     {
         // Force Accept header to JSON for API routes
         $request->headers->set('Accept', 'application/json');
-        
+
         try {
             $response = $next($request);
-            
+
             // If this is a redirect response due to auth failure, convert to JSON error
             if ($response->getStatusCode() === 302 && $request->expectsJson()) {
                 return response()->json([
@@ -29,7 +29,7 @@ class ForceJsonResponse
                     'message' => 'Unauthenticated or session expired',
                 ], 401);
             }
-            
+
             return $response;
         } catch (AuthenticationException $e) {
             // Return JSON response for auth exceptions

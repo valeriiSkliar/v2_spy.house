@@ -8,7 +8,9 @@ use Illuminate\Notifications\Messages\MailMessage;
 class CustomNotification extends BaseNotification
 {
     private array $data;
+
     private ?string $customTitle;
+
     private ?string $customMessage;
 
     public function __construct(NotificationType $type, array $data = [], ?string $title = null, ?string $message = null)

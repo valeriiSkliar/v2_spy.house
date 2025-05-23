@@ -16,8 +16,6 @@ trait HasNotificationType
 
     /**
      * Получить тип уведомления для данного класса
-     * 
-     * @return NotificationType
      */
     public function getNotificationType(): NotificationType
     {
@@ -26,8 +24,6 @@ trait HasNotificationType
 
     /**
      * Получить ключ типа уведомления для данного класса
-     * 
-     * @return string
      */
     public function getNotificationTypeKey(): string
     {
@@ -36,12 +32,10 @@ trait HasNotificationType
 
     /**
      * Получить модель типа уведомления из кэша или базы данных
-     * 
-     * @return NotificationTypeModel|null
      */
     public function getNotificationTypeModel(): ?NotificationTypeModel
     {
-        $key = 'notification_type_' . $this->getNotificationTypeKey();
+        $key = 'notification_type_'.$this->getNotificationTypeKey();
 
         return Cache::remember($key, 3600, function () {
             return NotificationTypeModel::where('key', $this->getNotificationTypeKey())->first();
@@ -50,8 +44,6 @@ trait HasNotificationType
 
     /**
      * Проверить, может ли пользователь настраивать этот тип уведомлений
-     * 
-     * @return bool
      */
     public function isUserConfigurable(): bool
     {
@@ -62,8 +54,6 @@ trait HasNotificationType
 
     /**
      * Получить каналы по умолчанию для доставки уведомления
-     * 
-     * @return array
      */
     public function getDefaultChannels(): array
     {
@@ -75,16 +65,13 @@ trait HasNotificationType
     /**
      * Определить, через какие каналы следует отправлять уведомление.
      * Учитывает настройки пользователя и каналы по умолчанию.
-     *
-     * @param object $notifiable
-     * @return array
      */
     public function resolveChannels(object $notifiable): array
     {
         $defaultChannels = $this->getDefaultChannels();
 
         // Если это не пользователь или уведомление не настраиваемое, просто возвращаем каналы по умолчанию
-        if (!($notifiable instanceof User) || !$this->isUserConfigurable()) {
+        if (! ($notifiable instanceof User) || ! $this->isUserConfigurable()) {
             return $defaultChannels;
         }
 
@@ -93,7 +80,7 @@ trait HasNotificationType
         $typeKey = $this->getNotificationTypeKey();
 
         // Если настройки для этого типа уведомлений не указаны, используем каналы по умолчанию
-        if (!isset($userSettings[$typeKey])) {
+        if (! isset($userSettings[$typeKey])) {
             return $defaultChannels;
         }
 
@@ -113,9 +100,6 @@ trait HasNotificationType
 
     /**
      * Стандартный метод toDatabase, который можно переопределить в конкретных классах
-     * 
-     * @param object $notifiable
-     * @return array
      */
     public function toDatabase(object $notifiable): array
     {
@@ -132,9 +116,6 @@ trait HasNotificationType
 
     /**
      * Получить дополнительные данные для уведомления, которые будут сохранены в JSON
-     * 
-     * @param object $notifiable
-     * @return array
      */
     protected function getAdditionalData(object $notifiable): array
     {
@@ -143,8 +124,6 @@ trait HasNotificationType
 
     /**
      * Получить иконку по умолчанию для этого типа уведомлений
-     * 
-     * @return string
      */
     protected function getDefaultIcon(): string
     {

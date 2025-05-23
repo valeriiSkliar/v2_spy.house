@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers\Api\Blog;
 
-use Illuminate\Http\Request;
-use App\Http\Controllers\Frontend\Blog\BlogController;
 use App\Enums\Frontend\CommentStatus;
 use App\Http\Controllers\Frontend\Blog\BaseBlogController;
+use App\Http\Controllers\Frontend\Blog\BlogController;
 use App\Models\Frontend\Blog\BlogComment;
 use App\Models\Frontend\Blog\BlogPost;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Auth;
 
 class ApiBlogController extends BaseBlogController
 {
@@ -40,7 +40,7 @@ class ApiBlogController extends BaseBlogController
         $html = view('partials.blog.search-results', [
             'articles' => $results,
             'total' => $totalResults,
-            'query' => $query
+            'query' => $query,
         ])->render();
 
         // Restore locale if it was changed, though typically not needed if middleware handles it
@@ -52,16 +52,15 @@ class ApiBlogController extends BaseBlogController
             'data' => [
                 'html' => $html,
                 'total' => $totalResults,
-                'query' => $query
-            ]
+                'query' => $query,
+            ],
         ]);
     }
 
     /**
      * Store a new comment for a blog post
-     * 
-     * @param Request $request
-     * @param string $slug
+     *
+     * @param  string  $slug
      * @return \Illuminate\Http\JsonResponse
      */
     public function storeComment(Request $request, $slug)
@@ -93,10 +92,9 @@ class ApiBlogController extends BaseBlogController
 
     /**
      * Get reply form for a specific comment
-     * 
-     * @param Request $request
-     * @param string $slug
-     * @param int $comment_id
+     *
+     * @param  string  $slug
+     * @param  int  $comment_id
      * @return \Illuminate\Http\JsonResponse
      */
     public function getReplyForm(Request $request, $slug, $comment_id)
@@ -129,9 +127,8 @@ class ApiBlogController extends BaseBlogController
 
     /**
      * Store a reply to an existing comment
-     * 
-     * @param Request $request
-     * @param string $slug
+     *
+     * @param  string  $slug
      * @return \Illuminate\Http\JsonResponse
      */
     public function storeReply(Request $request, $slug)
@@ -151,7 +148,7 @@ class ApiBlogController extends BaseBlogController
         if ($parentComment->post_id != $post->id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid parent comment'
+                'message' => 'Invalid parent comment',
             ], 422);
         }
 
@@ -200,7 +197,7 @@ class ApiBlogController extends BaseBlogController
             foreach ($comments as $comment) {
                 $commentsHtml .= view('components.blog.comment.comment', [
                     'comment' => $comment,
-                    'slug' => $slug
+                    'slug' => $slug,
                 ])->render();
             }
         }
@@ -235,7 +232,7 @@ class ApiBlogController extends BaseBlogController
 
         $paginationHtml = view('components.blog.comment.async-pagination', [
             'paginator' => $comments,
-            'elements' => $elements
+            'elements' => $elements,
         ])->render();
 
         return response()->json([
@@ -244,20 +241,21 @@ class ApiBlogController extends BaseBlogController
             'paginationHtml' => $paginationHtml,
             'currentPage' => $comments->currentPage(),
             'lastPage' => $comments->lastPage(),
-            'total' => $comments->total()
+            'total' => $comments->total(),
         ]);
     }
 
     /**
      * Helper method to refresh comments after adding a new one
-     * 
-     * @param string $slug
+     *
+     * @param  string  $slug
      * @return \Illuminate\Http\JsonResponse
      */
     private function refreshComments($slug)
     {
-        $request = new Request();
+        $request = new Request;
         $request->merge(['page' => 1]);
+
         return $this->paginateComments($request, $slug);
     }
 }

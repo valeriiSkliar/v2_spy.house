@@ -3,7 +3,6 @@
 namespace App\Models\Frontend\Service;
 
 use App\Models\Frontend\Rating;
-use App\Models\Frontend\Service\ServiceCategories;
 use Database\Factories\Frontend\Service\ServiceFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -46,7 +45,7 @@ class Service extends Model
         'code_valid_until',
         'is_active_code',
         'is_pinned',
-        'pinned_until'
+        'pinned_until',
     ];
 
     protected $casts = [
@@ -59,7 +58,7 @@ class Service extends Model
         'code_valid_from' => 'datetime',
         'code_valid_until' => 'datetime',
         'is_pinned' => 'boolean',
-        'pinned_until' => 'datetime'
+        'pinned_until' => 'datetime',
     ];
 
     protected static function boot()
@@ -67,12 +66,12 @@ class Service extends Model
         parent::boot();
 
         static::creating(function ($service) {
-            $service->redirect_url = URL::to('/services/redirect/' . ($service->id ?? 0));
+            $service->redirect_url = URL::to('/services/redirect/'.($service->id ?? 0));
         });
 
         static::created(function ($service) {
             // Update the redirect_url with the actual ID after creation
-            $service->redirect_url = URL::to('/services/redirect/' . $service->id);
+            $service->redirect_url = URL::to('/services/redirect/'.$service->id);
             $service->save();
         });
     }

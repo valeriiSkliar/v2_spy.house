@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Http\Controllers\Test;
 
 use App\Http\Controllers\Controller;
@@ -9,8 +8,6 @@ use Illuminate\Support\Facades\Auth;
 
 class BlogController extends Controller
 {
-
-
     /**
      * Моковые данные для статей
      */
@@ -51,14 +48,14 @@ class BlogController extends Controller
                     'id' => 1,
                     'name' => 'Push traffic',
                     'slug' => 'push-traffic',
-                    'color' => '#CD4F51'
+                    'color' => '#CD4F51',
                 ],
                 'table_of_contents' => [
                     ['title' => 'Tired of seeing your battery in red?', 'link' => '#'],
                     ['title' => 'Want to be proud of another Elon?', 'link' => '#'],
                     ['title' => 'Time to pump it up!', 'link' => '#'],
                     ['title' => 'We\'re releasing chargers - updated call rates', 'link' => '#'],
-                    ['title' => 'AdCombo offers', 'link' => '#']
+                    ['title' => 'AdCombo offers', 'link' => '#'],
                 ],
                 'comments' => [
                     [
@@ -66,7 +63,7 @@ class BlogController extends Controller
                         'author' => 'Guillermo Emmerich',
                         'date' => '02.01.2025',
                         'content' => 'Illo praesentium qui labore suscipit hic laborum maiores. Eveniet sunt accusantium rerum totam et qui. Molestias dolores velit dolores.',
-                        'replies' => []
+                        'replies' => [],
                     ],
                     [
                         'id' => 2,
@@ -78,23 +75,23 @@ class BlogController extends Controller
                                 'id' => 3,
                                 'author' => 'Tania Blick',
                                 'date' => '02.01.2025',
-                                'content' => 'Voluptas et dolores quis aut veniam. Alias quae quae ullam ratione. Sint qui earum culpa minus accusantium nam aperiam. Fuga architecto rem veritatis deleniti molestias eligendi harum rerum.'
+                                'content' => 'Voluptas et dolores quis aut veniam. Alias quae quae ullam ratione. Sint qui earum culpa minus accusantium nam aperiam. Fuga architecto rem veritatis deleniti molestias eligendi harum rerum.',
                             ],
                             [
                                 'id' => 4,
                                 'author' => 'Ms. Vanessa Botsford',
                                 'date' => '02.01.2025',
-                                'content' => 'Impedit error autem consectetur necessitatibus voluptatem. Rerum quam et et in.'
+                                'content' => 'Impedit error autem consectetur necessitatibus voluptatem. Rerum quam et et in.',
                             ],
                             [
                                 'id' => 5,
                                 'author' => 'Julia Wintheiser',
                                 'date' => '02.01.2025',
-                                'content' => 'Aut qui vero eaque ut tempora consectetur recusandae aperiam. Repellendus iure omnis occaecati sit sint. Quaerat voluptatem inventore et adipisci dolores. Beatae et tempore delectus ut maiores.'
-                            ]
-                        ]
-                    ]
-                ]
+                                'content' => 'Aut qui vero eaque ut tempora consectetur recusandae aperiam. Repellendus iure omnis occaecati sit sint. Quaerat voluptatem inventore et adipisci dolores. Beatae et tempore delectus ut maiores.',
+                            ],
+                        ],
+                    ],
+                ],
             ],
             [
                 'id' => 2,
@@ -112,9 +109,9 @@ class BlogController extends Controller
                     'id' => 2,
                     'name' => 'Арбитражнику',
                     'slug' => 'arbitrazhniku',
-                    'color' => '#694fcd'
+                    'color' => '#694fcd',
                 ],
-                'comments' => []
+                'comments' => [],
             ],
             [
                 'id' => 3,
@@ -132,10 +129,10 @@ class BlogController extends Controller
                     'id' => 3,
                     'name' => 'Полезное',
                     'slug' => 'poleznoe',
-                    'color' => '#33b485'
+                    'color' => '#33b485',
                 ],
-                'comments' => []
-            ]
+                'comments' => [],
+            ],
         ];
     }
 
@@ -150,29 +147,29 @@ class BlogController extends Controller
                 'name' => 'Push traffic',
                 'slug' => 'push-traffic',
                 'color' => '#CD4F51',
-                'count' => 12
+                'count' => 12,
             ],
             [
                 'id' => 2,
                 'name' => 'Teaser networks',
                 'slug' => 'teaser-networks',
                 'color' => '#4F98CD',
-                'count' => 66
+                'count' => 66,
             ],
             [
                 'id' => 3,
                 'name' => 'CPA networks',
                 'slug' => 'cpa-networks',
                 'color' => '#33b485',
-                'count' => 23
+                'count' => 23,
             ],
             [
                 'id' => 4,
                 'name' => 'Social networks',
                 'slug' => 'social-networks',
                 'color' => '#694fcd',
-                'count' => 56
-            ]
+                'count' => 56,
+            ],
         ];
     }
 
@@ -213,7 +210,7 @@ class BlogController extends Controller
             'articles' => $articles,
             'categories' => $categories,
             'currentPage' => $currentPage,
-            'totalPages' => $totalPages
+            'totalPages' => $totalPages,
         ]);
     }
 
@@ -225,7 +222,7 @@ class BlogController extends Controller
         $articles = $this->getArticles();
         $article = collect($articles)->firstWhere('slug', $slug);
 
-        if (!$article) {
+        if (! $article) {
             abort(404);
         }
 
@@ -239,7 +236,7 @@ class BlogController extends Controller
             ['title' => 'Blog', 'url' => route('blog.index')],
             ['title' => 'Arbitrage', 'url' => '#'],
             ['title' => 'Social networks', 'url' => '#'],
-            ['title' => $article['title']]
+            ['title' => $article['title']],
         ];
 
         return view('blog.show', [
@@ -247,21 +244,19 @@ class BlogController extends Controller
             'relatedArticles' => $relatedArticles,
             'breadcrumbs' => $breadcrumbs,
             'commentsPages' => 1,
-            'currentPage' => 1
+            'currentPage' => 1,
         ]);
     }
-
-
 
     public function rateArticle(Request $request, $slug)
     {
         $request->validate([
-            'rating' => 'required|numeric|min:1|max:5'
+            'rating' => 'required|numeric|min:1|max:5',
         ]);
 
         $article = collect($this->getArticles())->firstWhere('slug', $slug);
 
-        if (!$article) {
+        if (! $article) {
             return response()->json(['success' => false, 'message' => 'Article not found'], 404);
         }
 
@@ -270,7 +265,7 @@ class BlogController extends Controller
         return response()->json([
             'success' => true,
             'rating' => $request->rating,
-            'message' => 'Rating saved successfully'
+            'message' => 'Rating saved successfully',
         ]);
     }
 
@@ -280,7 +275,7 @@ class BlogController extends Controller
         $categories = $this->getCategories();
         $category = collect($categories)->firstWhere('slug', $slug);
 
-        if (!$category) {
+        if (! $category) {
             abort(404);
         }
 
@@ -309,7 +304,7 @@ class BlogController extends Controller
             'categories' => $categories,
             'currentCategory' => $category,
             'currentPage' => $currentPage,
-            'totalPages' => $totalPages
+            'totalPages' => $totalPages,
         ]);
     }
 
@@ -345,7 +340,7 @@ class BlogController extends Controller
             'query' => $query,
             'currentPage' => $currentPage,
             'totalPages' => $totalPages,
-            'totalResults' => $totalArticles
+            'totalResults' => $totalArticles,
         ]);
     }
 
@@ -353,7 +348,7 @@ class BlogController extends Controller
     public function storeComment(Request $request, $slug)
     {
         $request->validate([
-            'content' => 'required|min:5'
+            'content' => 'required|min:5',
         ]);
 
         // In a real application, here you would save the comment to the database
@@ -363,19 +358,19 @@ class BlogController extends Controller
             'author' => Auth::user()->name,
             'date' => date('d.m.Y'),
             'content' => $request->content,
-            'replies' => []
+            'replies' => [],
         ];
 
         if ($request->ajax()) {
             $html = view('components.comment', [
                 'comment' => $comment,
-                'slug' => $slug
+                'slug' => $slug,
             ])->render();
 
             return response()->json([
                 'success' => true,
                 'html' => $html,
-                'message' => 'Comment added successfully'
+                'message' => 'Comment added successfully',
             ]);
         }
 
@@ -387,7 +382,7 @@ class BlogController extends Controller
     {
         $request->validate([
             'content' => 'required|min:5',
-            'parent_id' => 'required|numeric'
+            'parent_id' => 'required|numeric',
         ]);
 
         // In a real application, here you would save the reply to the database
@@ -396,19 +391,19 @@ class BlogController extends Controller
             'id' => rand(100, 999),
             'author' => Auth::user()->name,
             'date' => date('d.m.Y'),
-            'content' => $request->content
+            'content' => $request->content,
         ];
 
         if ($request->ajax()) {
             $html = view('components.comment-reply', [
                 'reply' => $reply,
-                'slug' => $slug
+                'slug' => $slug,
             ])->render();
 
             return response()->json([
                 'success' => true,
                 'html' => $html,
-                'message' => 'Reply added successfully'
+                'message' => 'Reply added successfully',
             ]);
         }
 
@@ -420,7 +415,7 @@ class BlogController extends Controller
     {
         $article = collect($this->getArticles())->firstWhere('slug', $slug);
 
-        if (!$article) {
+        if (! $article) {
             abort(404);
         }
 
@@ -432,7 +427,7 @@ class BlogController extends Controller
                 break;
             }
 
-            if (!empty($articleComment['replies'])) {
+            if (! empty($articleComment['replies'])) {
                 foreach ($articleComment['replies'] as $reply) {
                     if ($reply['id'] == $comment_id) {
                         $comment = $reply;
@@ -442,7 +437,7 @@ class BlogController extends Controller
             }
         }
 
-        if (!$comment) {
+        if (! $comment) {
             abort(404);
         }
 
@@ -452,14 +447,14 @@ class BlogController extends Controller
                 'html' => view('components.comment-reply-form', [
                     'slug' => $slug,
                     'comment_id' => $comment_id,
-                    'author' => $comment['author']
-                ])->render()
+                    'author' => $comment['author'],
+                ])->render(),
             ]);
         }
 
         return redirect()->route('blog.show', $slug)->with('reply_to', [
             'id' => $comment_id,
-            'author' => $comment['author']
+            'author' => $comment['author'],
         ]);
     }
 }

@@ -3,13 +3,14 @@
 namespace App\Console\Commands\Queues;
 
 use Illuminate\Console\Command;
-use VladimirYuldashev\LaravelQueueRabbitMQ\Queue\RabbitMQQueue;
 use Illuminate\Queue\QueueManager;
 use PhpAmqpLib\Exception\AMQPIOException;
+use VladimirYuldashev\LaravelQueueRabbitMQ\Queue\RabbitMQQueue;
 
 class ListQueuesCommand extends Command
 {
     protected $signature = 'queues:list';
+
     protected $description = 'List all RabbitMQ queues and their message counts';
 
     public function handle(QueueManager $queueManager)
@@ -21,6 +22,7 @@ class ListQueuesCommand extends Command
         } catch (AMQPIOException $e) {
             $this->error('Could not connect to RabbitMQ.');
             $this->error($e->getMessage());
+
             return Command::FAILURE;
         }
 

@@ -3,12 +3,13 @@
 namespace App\Console\Commands\Queues;
 
 use Illuminate\Console\Command;
-use VladimirYuldashev\LaravelQueueRabbitMQ\Queue\RabbitMQQueue;
 use Illuminate\Queue\QueueManager;
+use VladimirYuldashev\LaravelQueueRabbitMQ\Queue\RabbitMQQueue;
 
 class DeleteQueuesCommand extends Command
 {
     protected $signature = 'queues:delete';
+
     protected $description = 'Delete RabbitMQ queues';
 
     public function handle(QueueManager $queueManager)
@@ -31,7 +32,7 @@ class DeleteQueuesCommand extends Command
                 $channel->queue_delete($queueName);
                 $this->info("Queue '$queueName' deleted successfully");
             } catch (\Exception $e) {
-                $this->error("Failed to delete queue '$queueName': " . $e->getMessage());
+                $this->error("Failed to delete queue '$queueName': ".$e->getMessage());
             }
         }
 

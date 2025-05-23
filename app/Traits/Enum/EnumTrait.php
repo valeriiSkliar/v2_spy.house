@@ -16,7 +16,7 @@ trait EnumTrait
 
     public static function valuesWithoutOnClick(): array
     {
-        return array_filter(self::values(), fn($value) => $value !== 'onclick');
+        return array_filter(self::values(), fn ($value) => $value !== 'onclick');
     }
 
     public static function values(): array

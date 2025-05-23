@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('token', 100)->unique();
             $table->timestamp('expires_at');
             $table->timestamps();
-            
+
             // Indexes for faster lookups
             $table->index(['user_id', 'token']);
             $table->index('expires_at');

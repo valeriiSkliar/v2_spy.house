@@ -2,16 +2,15 @@
 
 namespace App\Http\Controllers\Frontend\Notification;
 
-use App\Models\NotificationType;
 use App\Http\Controllers\FrontendController;
+use App\Models\NotificationType;
 use Illuminate\Http\Request;
 
 class BaseNotificationController extends FrontendController
 {
     public $emptyView = 'pages.notifications.empty';
+
     public $indexView = 'pages.notifications.index';
-
-
 
     protected function renderIndexView(Request $request)
     {
@@ -23,13 +22,14 @@ class BaseNotificationController extends FrontendController
         if (count($notificationsData['items']) === 0) {
             return view($this->emptyView);
         }
+
         // dd($notificationsData);
         return view($this->indexView, [
             'notifications' => $notificationsData,
             'unreadCount' => $unreadCount,
             'selectedPerPage' => $notificationsData['selectedPerPage'],
             'perPageOptions' => $notificationsData['perPageOptions'],
-            'perPageOptionsPlaceholder' => __('notifications.per_page', ['count' => $notificationsData['perPage']])
+            'perPageOptionsPlaceholder' => __('notifications.per_page', ['count' => $notificationsData['perPage']]),
         ]);
     }
 
@@ -47,7 +47,7 @@ class BaseNotificationController extends FrontendController
 
             $notifications[] = [
                 'id' => $notification->id,
-                'read' => !is_null($notification->read_at),
+                'read' => ! is_null($notification->read_at),
                 'date' => $notification->created_at->format('d.m.y (H:i)'),
                 'title' => $data['title'] ?? ($notificationType ? $notificationType->name : 'Notification'),
                 'content' => $data['message'] ?? ($notificationType ? $notificationType->description : 'You have a new notification'),
@@ -60,7 +60,7 @@ class BaseNotificationController extends FrontendController
             ['label' => '12', 'value' => '12', 'order' => 1],
             ['label' => '24', 'value' => '24', 'order' => 2],
             ['label' => '48', 'value' => '48', 'order' => 3],
-            ['label' => '96', 'value' => '96', 'order' => 4]
+            ['label' => '96', 'value' => '96', 'order' => 4],
         ];
 
         $selectedPerPage = null;
@@ -70,7 +70,7 @@ class BaseNotificationController extends FrontendController
                 break;
             }
         }
-        if (!$selectedPerPage && count($perPageOptions) > 0) {
+        if (! $selectedPerPage && count($perPageOptions) > 0) {
             $selectedPerPage = $perPageOptions[0];
         }
 
@@ -90,7 +90,7 @@ class BaseNotificationController extends FrontendController
 
         return response()->json([
             'id' => $notification->id,
-            'read' => $notification->isRead()
+            'read' => $notification->isRead(),
         ]);
     }
 }

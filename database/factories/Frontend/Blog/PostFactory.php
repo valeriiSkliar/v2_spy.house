@@ -3,10 +3,10 @@
 namespace Database\Factories\Frontend\Blog;
 
 use App\Enums\Frontend\PostStatus;
-use App\Models\Frontend\Blog\PostCategory;
-use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Enums\Frontend\PostType;
+use App\Models\Frontend\Blog\PostCategory;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Frontend\Blog\Post>
@@ -21,6 +21,7 @@ class PostFactory extends Factory
     public function definition(): array
     {
         $postType = $this->faker->randomElement(PostType::getAllValues());
+
         return [
             'name' => $this->faker->sentence(10),
             'slug' => $this->faker->slug,

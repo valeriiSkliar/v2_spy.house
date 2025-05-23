@@ -46,7 +46,7 @@ return [
             'throw' => false,
             'report' => false,
         ],
-        
+
         'landings' => [
             'driver' => 'local',
             'root' => storage_path('app'),

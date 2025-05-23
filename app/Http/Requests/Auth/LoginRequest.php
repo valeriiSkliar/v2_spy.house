@@ -47,7 +47,7 @@ class LoginRequest extends FormRequest
         $this->ensureIsNotRateLimited();
 
         // First verify credentials without 2FA
-        if (!Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -60,7 +60,7 @@ class LoginRequest extends FormRequest
 
         if ($user->google_2fa_enabled) {
             // If 2FA is enabled but no code provided, logout and throw an error
-            if (!$this->input('code')) {
+            if (! $this->input('code')) {
                 Auth::logout();
                 throw ValidationException::withMessages([
                     'code' => trans('auth.2fa_required'),
@@ -70,7 +70,7 @@ class LoginRequest extends FormRequest
             // Verify 2FA code
             $valid = $this->verify2FACode($user, $this->input('code'));
 
-            if (!$valid) {
+            if (! $valid) {
                 Auth::logout();
                 RateLimiter::hit($this->throttleKey('2fa'));
 
@@ -88,7 +88,7 @@ class LoginRequest extends FormRequest
      */
     protected function verify2FACode($user, $code): bool
     {
-        if (empty($code) || strlen($code) !== 6 || !is_numeric($code)) {
+        if (empty($code) || strlen($code) !== 6 || ! is_numeric($code)) {
             return false;
         }
 
@@ -99,11 +99,12 @@ class LoginRequest extends FormRequest
                 'user_id' => $user->id,
                 'email' => $user->email,
             ]);
+
             return false;
         }
 
         try {
-            $google2fa = new Google2FA();
+            $google2fa = new Google2FA;
             // Расшифровываем секретный ключ перед проверкой
             $secret = Crypt::decryptString($user->google_2fa_secret);
 
@@ -119,6 +120,7 @@ class LoginRequest extends FormRequest
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         } catch (\Exception $e) {
             // Добавляем обработку ошибок расшифровки
@@ -126,6 +128,7 @@ class LoginRequest extends FormRequest
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -137,7 +140,7 @@ class LoginRequest extends FormRequest
      */
     public function ensureIsNotRateLimited(): void
     {
-        if (!RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
             return;
         }
 
@@ -159,9 +162,9 @@ class LoginRequest extends FormRequest
     public function throttleKey(string $type = 'login'): string
     {
         if ($type === '2fa') {
-            return Str::transliterate(Str::lower($this->input('email')) . '|2fa|' . $this->ip());
+            return Str::transliterate(Str::lower($this->input('email')).'|2fa|'.$this->ip());
         }
 
-        return Str::transliterate(Str::lower($this->input('email')) . '|' . $this->ip());
+        return Str::transliterate(Str::lower($this->input('email')).'|'.$this->ip());
     }
 }

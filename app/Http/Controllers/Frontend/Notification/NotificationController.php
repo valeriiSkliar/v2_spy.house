@@ -2,14 +2,12 @@
 
 namespace App\Http\Controllers\Frontend\Notification;
 
-use App\Http\Controllers\Controller;
-use App\Models\NotificationType;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends BaseNotificationController
 {
     public $indexView = 'pages.notifications.index';
+
     public $emptyView = 'pages.notifications.empty';
 
     /**
@@ -27,10 +25,10 @@ class NotificationController extends BaseNotificationController
     {
         $notification = $request->user()->notifications()->where('id', $id)->first();
 
-        if (!$notification) {
+        if (! $notification) {
             return response()->json([
                 'success' => false,
-                'message' => __('notifications.not_found_or_already_read')
+                'message' => __('notifications.not_found_or_already_read'),
             ], 404);
         }
 
@@ -39,7 +37,7 @@ class NotificationController extends BaseNotificationController
         return response()->json([
             'success' => true,
             'id' => $id,
-            'read' => true
+            'read' => true,
         ]);
     }
 
@@ -56,7 +54,7 @@ class NotificationController extends BaseNotificationController
 
         if ($request->wantsJson()) {
             return response()->json([
-                'success' => true
+                'success' => true,
             ]);
         }
 
@@ -72,7 +70,7 @@ class NotificationController extends BaseNotificationController
 
         return response()->json([
             'success' => true,
-            'count' => $unreadCount
+            'count' => $unreadCount,
         ]);
     }
 }

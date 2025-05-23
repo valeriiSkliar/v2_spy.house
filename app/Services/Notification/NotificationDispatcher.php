@@ -4,7 +4,6 @@ namespace App\Services\Notification;
 
 use App\Enums\Frontend\NotificationType;
 use App\Models\User;
-use App\Notifications\BaseNotification;
 use App\Notifications\CustomNotification;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
@@ -13,10 +12,9 @@ class NotificationDispatcher
 {
     /**
      * Отправляет уведомление пользователю через все доступные каналы
-     * 
-     * @param User $user Пользователь, которому отправляется уведомление
-     * @param Notification $notification Экземпляр уведомления
-     * @return void
+     *
+     * @param  User  $user  Пользователь, которому отправляется уведомление
+     * @param  Notification  $notification  Экземпляр уведомления
      */
     public static function send(User $user, Notification $notification): void
     {
@@ -25,11 +23,10 @@ class NotificationDispatcher
 
     /**
      * Создает и отправляет уведомление указанного класса пользователю
-     * 
-     * @param User $user Пользователь, которому отправляется уведомление
-     * @param string $notificationClass Класс уведомления для создания
-     * @param array $constructorParams Дополнительные параметры конструктора
-     * @return void
+     *
+     * @param  User  $user  Пользователь, которому отправляется уведомление
+     * @param  string  $notificationClass  Класс уведомления для создания
+     * @param  array  $constructorParams  Дополнительные параметры конструктора
      */
     public static function sendNotification(User $user, string $notificationClass, array $constructorParams = []): void
     {
@@ -39,13 +36,12 @@ class NotificationDispatcher
 
     /**
      * Быстрое создание и отправка уведомления без создания отдельного класса
-     * 
-     * @param User $user Пользователь, которому отправляется уведомление
-     * @param NotificationType $type Тип уведомления
-     * @param array $data Дополнительные данные для уведомления
-     * @param string|null $title Пользовательский заголовок (опционально)
-     * @param string|null $message Пользовательское сообщение (опционально)
-     * @return void
+     *
+     * @param  User  $user  Пользователь, которому отправляется уведомление
+     * @param  NotificationType  $type  Тип уведомления
+     * @param  array  $data  Дополнительные данные для уведомления
+     * @param  string|null  $title  Пользовательский заголовок (опционально)
+     * @param  string|null  $message  Пользовательское сообщение (опционально)
      */
     public static function quickSend(
         User $user,
@@ -60,11 +56,10 @@ class NotificationDispatcher
 
     /**
      * Отправляет уведомление анонимному получателю (например, на email)
-     * 
-     * @param string $channel Канал отправки (mail, slack и т.д.)
-     * @param string $recipient Адрес получателя (email, webhook url и т.д.)
-     * @param Notification $notification Экземпляр уведомления
-     * @return void
+     *
+     * @param  string  $channel  Канал отправки (mail, slack и т.д.)
+     * @param  string  $recipient  Адрес получателя (email, webhook url и т.д.)
+     * @param  Notification  $notification  Экземпляр уведомления
      */
     public static function sendTo(string $channel, string $recipient, Notification $notification): void
     {
@@ -73,11 +68,10 @@ class NotificationDispatcher
 
     /**
      * Отправляет уведомление и пользователю, и на указанный адрес
-     * 
-     * @param User $user Пользователь, которому отправляется уведомление
-     * @param string $email Email для отправки копии
-     * @param Notification $notification Экземпляр уведомления
-     * @return void
+     *
+     * @param  User  $user  Пользователь, которому отправляется уведомление
+     * @param  string  $email  Email для отправки копии
+     * @param  Notification  $notification  Экземпляр уведомления
      */
     public static function sendWithCopy(User $user, string $email, Notification $notification): void
     {
@@ -90,10 +84,9 @@ class NotificationDispatcher
 
     /**
      * Отправляет уведомление на несколько адресов электронной почты
-     * 
-     * @param array $emails Массив адресов электронной почты
-     * @param Notification $notification Экземпляр уведомления 
-     * @return void
+     *
+     * @param  array  $emails  Массив адресов электронной почты
+     * @param  Notification  $notification  Экземпляр уведомления
      */
     public static function sendToEmails(array $emails, Notification $notification): void
     {

@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models\Service;
+
 use Illuminate\Database\Eloquent\Model;
 
 class Language extends Model

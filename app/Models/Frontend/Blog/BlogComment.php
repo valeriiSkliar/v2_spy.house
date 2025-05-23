@@ -22,13 +22,13 @@ class BlogComment extends Model
         'content',
         'rating',
         'is_spam',
-        'status'
+        'status',
     ];
 
     protected $casts = [
         'is_spam' => 'boolean',
         'status' => CommentStatus::class,
-        'rating' => 'integer'
+        'rating' => 'integer',
     ];
 
     protected $with = ['replies'];

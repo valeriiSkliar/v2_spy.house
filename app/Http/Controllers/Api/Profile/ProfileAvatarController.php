@@ -13,9 +13,6 @@ class ProfileAvatarController extends Controller
 {
     /**
      * Upload a new user avatar asynchronously
-     * 
-     * @param Request $request
-     * @return JsonResponse
      */
     public function upload(Request $request): JsonResponse
     {
@@ -34,7 +31,7 @@ class ProfileAvatarController extends Controller
         try {
             $user = $request->user();
             $imageService = app(ImageService::class);
-            
+
             // Process the avatar image
             $avatarFile = $request->file('avatar');
             $avatarPath = $imageService->replace(
@@ -51,9 +48,9 @@ class ProfileAvatarController extends Controller
                 'file_type' => $avatarFile->getClientMimeType(),
                 'dimensions' => [
                     'width' => $image[0] ?? 0,
-                    'height' => $image[1] ?? 0
+                    'height' => $image[1] ?? 0,
                 ],
-                'proportions' => $image[0] && $image[1] ? round($image[0] / $image[1], 2) : 0
+                'proportions' => $image[0] && $image[1] ? round($image[0] / $image[1], 2) : 0,
             ];
 
             // Save the user avatar path and metadata
@@ -66,16 +63,16 @@ class ProfileAvatarController extends Controller
                 'success' => true,
                 'message' => __('profile.personal_info.photo_updated'),
                 'avatar' => [
-                    'url' => asset('storage/' . $avatarPath),
-                    'metadata' => $avatarMetadata
-                ]
+                    'url' => asset('storage/'.$avatarPath),
+                    'metadata' => $avatarMetadata,
+                ],
             ]);
         } catch (\Exception $e) {
-            Log::error('Error uploading avatar: ' . $e->getMessage(), [
+            Log::error('Error uploading avatar: '.$e->getMessage(), [
                 'user_id' => $request->user()->id ?? null,
-                'exception' => $e
+                'exception' => $e,
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => __('profile.personal_info.photo_update_error'),

@@ -9,22 +9,16 @@ class StatusIcon extends Component
 {
     /**
      * The status type (completed, failed, pending).
-     *
-     * @var string
      */
     public string $status;
 
     /**
      * The desired width of the icon.
-     *
-     * @var string|int
      */
     public string|int $width;
 
     /**
      * The desired height of the icon.
-     *
-     * @var string|int
      */
     public string|int $height;
 
@@ -32,33 +26,27 @@ class StatusIcon extends Component
      * The color for the icon elements (stroke or fill).
      * Defaults to 'currentColor' for better theme integration,
      * except for pending which often has a specific loading color.
-     *
-     * @var string
      */
     public string $color;
 
     /**
      * Calculated color based on status if default is used.
-     *
-     * @var string
      */
     public string $finalColor;
 
     /**
      * Additional CSS classes.
-     *
-     * @var string
      */
     public string $class;
 
     /**
      * Create a new component instance.
      *
-     * @param string $status The status (completed, failed, pending)
-     * @param string|int $width Default '24'
-     * @param string|int $height Default '24'
-     * @param string $color Default depends on status ('currentColor' or '#9EA7AB')
-     * @param string $class Additional CSS classes
+     * @param  string  $status  The status (completed, failed, pending)
+     * @param  string|int  $width  Default '24'
+     * @param  string|int  $height  Default '24'
+     * @param  string  $color  Default depends on status ('currentColor' or '#9EA7AB')
+     * @param  string  $class  Additional CSS classes
      * @return void
      */
     public function __construct(

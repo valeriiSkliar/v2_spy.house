@@ -4,7 +4,6 @@ namespace App\Http\Requests\Api\Profile;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
 
 class ChangePasswordApiRequest extends FormRequest
 {

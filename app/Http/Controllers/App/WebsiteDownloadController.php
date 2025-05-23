@@ -12,8 +12,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 // Import helper functions
@@ -48,10 +48,10 @@ class WebsiteDownloadController extends Controller
                         // Replace template variables with dummy values for validation
                         $processedUrl = preg_replace('/\{[^}]+\}/', 'dummy', $sanitizedUrl);
 
-                        if (!filter_var($processedUrl, FILTER_VALIDATE_URL)) {
+                        if (! filter_var($processedUrl, FILTER_VALIDATE_URL)) {
                             $fail(__('validation.url', ['attribute' => $attribute]));
                         }
-                    }
+                    },
                 ],
             ]);
 
@@ -63,7 +63,7 @@ class WebsiteDownloadController extends Controller
                 ->where(function ($query) use ($sanitizedUrl) {
                     // Check both exact URL and transformed URL
                     $query->where('url', $sanitizedUrl)
-                        ->orWhere('url', 'like', '%' . parse_url($sanitizedUrl, PHP_URL_HOST) . '%');
+                        ->orWhere('url', 'like', '%'.parse_url($sanitizedUrl, PHP_URL_HOST).'%');
                 })
                 ->whereIn('status', ['pending', 'in_progress', 'completed'])
                 ->first();
@@ -75,6 +75,7 @@ class WebsiteDownloadController extends Controller
                     default => 'landings.duplicateDownload.description',
                 };
                 Toast::error(__($descriptionKey));
+
                 return redirect()->back()->withInput();
             }
 
@@ -82,14 +83,16 @@ class WebsiteDownloadController extends Controller
             try {
                 $this->checkWebsiteAvailability($sanitizedUrl);
             } catch (\Exception $e) {
-                Log::error('Failed to check website availability: ' . $e->getMessage(), ['url' => $sanitizedUrl]);
+                Log::error('Failed to check website availability: '.$e->getMessage(), ['url' => $sanitizedUrl]);
                 Toast::error(__('landings.downloadFailedUrlDisabled.description'));
+
                 return redirect()->back()->withInput();
             }
 
-            if (!$this->antiFloodService->check($request->user()->id, 'website-download', 2, 3600)) {
-                Log::error('Limit reached for user ' . $request->user()->id);
+            if (! $this->antiFloodService->check($request->user()->id, 'website-download', 2, 3600)) {
+                Log::error('Limit reached for user '.$request->user()->id);
                 Toast::error(__('landings.antiFlood.description'));
+
                 return redirect()->back()->withInput();
             }
 
@@ -97,7 +100,7 @@ class WebsiteDownloadController extends Controller
             $uuid = Str::uuid();
             $monitor = WebsiteDownloadMonitor::create([
                 'url' => $sanitizedUrl,
-                'output_path' => 'private/website-downloads/' . $uuid,
+                'output_path' => 'private/website-downloads/'.$uuid,
                 'user_id' => Auth::id(),
                 'status' => 'pending',
                 'progress' => 0,
@@ -111,12 +114,14 @@ class WebsiteDownloadController extends Controller
             )->onQueue('website-downloads');
 
             Toast::success(__('landings.downloadStarted.description'));
+
             return redirect()->back();
         } catch (ValidationException $e) {
             Log::error('URL validation failed', [
                 'url' => $request->input('url'),
                 'errors' => $e->errors(),
             ]);
+
             return redirect()->back()
                 ->withErrors($e->validator)
                 ->withInput();
@@ -126,10 +131,10 @@ class WebsiteDownloadController extends Controller
                 'error' => $e->getMessage(),
             ]);
             Toast::error(__('landings.generalError.description'));
+
             return redirect()->back()->withInput();
         }
     }
-
 
     /**
      * Get the status of a specific download
@@ -140,7 +145,6 @@ class WebsiteDownloadController extends Controller
         // dd($monitor->url);
 
         // $this->authorize('checkStatus', $monitor);t
-
 
         return response()->json([
             'status' => $monitor->status,
@@ -162,7 +166,7 @@ class WebsiteDownloadController extends Controller
             $monitor->update([
                 'status' => 'cancelled',
                 'completed_at' => now(),
-                'error' => __('landings.downloadCancelledByUser.description')
+                'error' => __('landings.downloadCancelledByUser.description'),
             ]);
 
             if ($monitor->output_path) {
@@ -182,7 +186,8 @@ class WebsiteDownloadController extends Controller
     /**
      * Check if a website is available and responding
      *
-     * @param string $url The URL to check
+     * @param  string  $url  The URL to check
+     *
      * @throws \Exception if the website is not available
      */
     protected function checkWebsiteAvailability(string $url): void
@@ -192,22 +197,22 @@ class WebsiteDownloadController extends Controller
                 ->withoutVerifying()
                 ->head($url);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 $response = Http::timeout(10)->withoutVerifying()->get($url);
-                if (!$response->successful()) {
-                    throw new \Exception("Website returned status code: " . $response->status());
+                if (! $response->successful()) {
+                    throw new \Exception('Website returned status code: '.$response->status());
                 }
             }
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
             Log::error('Website availability check failed (Connection)', [
                 'url' => $url,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
-            throw new \Exception("Failed to connect to website: " . $e->getMessage());
+            throw new \Exception('Failed to connect to website: '.$e->getMessage());
         } catch (\Exception $e) {
             Log::error('Website availability check failed (General)', [
                 'url' => $url,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             throw $e;
         }

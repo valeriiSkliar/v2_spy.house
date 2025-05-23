@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Landings;
 
 use App\Http\Requests\BaseRequest;
-use Illuminate\Validation\Rule;
+
 use function App\Helpers\sanitize_url;
 
 class StoreLandingRequest extends BaseRequest
@@ -31,10 +31,10 @@ class StoreLandingRequest extends BaseRequest
                 function ($attribute, $value, $fail) {
                     $sanitizedUrl = sanitize_url($value);
                     $processedUrl = preg_replace('/\\{[^}]+\\}/', 'dummy', $sanitizedUrl);
-                    if (!filter_var($processedUrl, FILTER_VALIDATE_URL)) {
+                    if (! filter_var($processedUrl, FILTER_VALIDATE_URL)) {
                         $fail(__('validation.url', ['attribute' => $attribute]));
                     }
-                }
+                },
             ],
         ];
     }
@@ -53,8 +53,6 @@ class StoreLandingRequest extends BaseRequest
 
     /**
      * Get custom messages for validator errors.
-     *
-     * @return array
      */
     public function messages(): array
     {

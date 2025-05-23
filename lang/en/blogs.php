@@ -15,7 +15,7 @@ return [
     'it_will_also_be_interesting' => 'It will also be interesting',
     'no_results' => [
         'title' => 'No results found for ":query"',
-        'description' => 'Try different keywords or check out our categories below.'
+        'description' => 'Try different keywords or check out our categories below.',
     ],
     'comments' => [
         'title' => 'Comments',
@@ -40,5 +40,5 @@ return [
         'you_rated_this_article' => 'You rated this article',
         'stars' => 'stars',
         'average_rating' => 'Average rating',
-    ]
+    ],
 ];

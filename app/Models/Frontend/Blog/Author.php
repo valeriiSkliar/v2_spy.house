@@ -11,12 +11,15 @@ class Author extends Model
 {
     /** @use HasFactory<\Database\Factories\Blog\AuthorFactory> */
     use HasFactory;
+
     use HasTranslations;
 
     public $translatable = ['name', 'bio'];
+
     protected $fillable = ['name', 'avatar', 'bio', 'is_default'];
+
     protected $casts = [
-        'is_default' => 'boolean'
+        'is_default' => 'boolean',
     ];
 
     public function posts(): HasMany

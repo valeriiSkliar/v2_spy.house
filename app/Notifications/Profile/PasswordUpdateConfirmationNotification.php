@@ -19,7 +19,7 @@ class PasswordUpdateConfirmationNotification extends BaseNotification
         return (new MailMessage)
             ->subject($this->getTitle($notifiable))
             ->line($this->getMessage($notifiable))
-            ->line(__('profile.security_settings.verification_code') . ': ' . $this->verificationCode)
+            ->line(__('profile.security_settings.verification_code').': '.$this->verificationCode)
             ->line(__('profile.security_settings.code_expires_in', ['minutes' => 15]))
             ->line(__('profile.security_settings.if_you_did_not_request'));
     }

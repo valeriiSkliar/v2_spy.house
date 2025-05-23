@@ -2,6 +2,7 @@
 
 namespace App\Models\Frontend\Blog;
 
+use App\Models\Frontend\Rating;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,13 +10,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Translatable\HasTranslations;
-use App\Models\Frontend\Rating;
 
 class BlogPost extends Model
 {
     /** @use HasFactory<\Database\Factories\Blog\BlogPostFactory> */
     use HasFactory;
+
     use HasTranslations;
+
     protected $fillable = [
         'title',
         'content',
@@ -25,7 +27,7 @@ class BlogPost extends Model
         'author_id',
         'featured_image',
         'is_published',
-        'average_rating'
+        'average_rating',
     ];
 
     public $translatable = [
@@ -33,14 +35,14 @@ class BlogPost extends Model
         'content',
         'summary',
         'is_published' => 'boolean',
-        'average_rating' => 'float'
+        'average_rating' => 'float',
     ];
 
     protected $casts = [
         'title' => 'json',
         'content' => 'json',
         'summary' => 'json',
-        'is_published' => 'boolean'
+        'is_published' => 'boolean',
     ];
 
     /**

@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Profile;
 
+use App\Enums\Frontend\UserExperience;
+use App\Enums\Frontend\UserScopeOfActivity;
 use App\Http\Requests\BaseRequest;
 use App\Models\User;
 use Illuminate\Contracts\Validation\Validator;
@@ -34,8 +36,8 @@ class ProfileUpdateRequest extends BaseRequest
                 'regex:/^[a-zA-Z0-9_]+$/',
                 Rule::unique('users', 'login')->ignore($userId),
             ],
-            'experience' => 'nullable|string|in:beginner,intermediate,advanced,expert',
-            'scope_of_activity' => 'nullable|string|in:personal,business,enterprise',
+            'experience' => 'nullable|string|in:'.implode(',', UserExperience::names()),
+            'scope_of_activity' => 'nullable|string|in:'.implode(',', UserScopeOfActivity::names()),
             'messenger_type' => 'nullable|string|in:telegram,viber,whatsapp',
             'messenger_contact' => [
                 'nullable',
