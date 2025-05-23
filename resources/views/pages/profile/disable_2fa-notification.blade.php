@@ -18,9 +18,9 @@
 
         <div id="warning-section">
             <div class="confirm-operation__btn">
-                <a href="{{ route('profile.settings', ['tab' => 'security']) }}" class="btn _flex _big _gray">
+                {{-- <a href="{{ route('profile.settings', ['tab' => 'security']) }}" class="btn _flex _big _gray">
                     <span class="font-weight-500">Отмена</span>
-                </a>
+                </a> --}}
                 <button type="button" id="disableBtn" class="btn _flex _big _red">
                     <span class="font-weight-500">Отключить 2FA</span>
                 </button>

@@ -28,11 +28,11 @@ document.addEventListener('DOMContentLoaded', function () {
   disableBtn.addEventListener('click', async function () {
     logger('[DEBUG] 2FA Disable - Disable button clicked');
     let loader = null;
+    loader = showInElement(disable2faSection);
     try {
-      loader = showInElement(disable2faSection);
       // Показываем состояние загрузки
       disableBtn.disabled = true;
-      disableBtn.innerHTML = '<span class="font-weight-500">Загрузка...</span>';
+      // disableBtn.innerHTML = '<span class="font-weight-500">Загрузка...</span>';
 
       // Отправляем запрос на загрузку формы
       const response = await fetch('/profile/2fa/load-disable-form', {
@@ -76,9 +76,11 @@ document.addEventListener('DOMContentLoaded', function () {
     } finally {
       // Восстанавливаем состояние кнопки
       disableBtn.disabled = false;
-      disableBtn.innerHTML = '<span class="font-weight-500">Отключить 2FA</span>';
+      // disableBtn.innerHTML = '<span class="font-weight-500">Отключить 2FA</span>';
       if (loader) {
-        hideInElement(loader);
+        setTimeout(() => {
+          hideInElement(loader);
+        }, 1500);
       }
     }
   });
@@ -148,6 +150,8 @@ document.addEventListener('DOMContentLoaded', function () {
       // Предотвращаем стандартную отправку формы
       e.preventDefault();
 
+      const disable2faSection = document.getElementById('disable-2fa-section');
+
       // Обновляем код перед отправкой
       updateVerificationCode();
 
@@ -162,13 +166,13 @@ document.addEventListener('DOMContentLoaded', function () {
         '[DEBUG] 2FA Disable - Form submission with code, length:',
         verificationCodeField.value.length
       );
-
+      let loader = null;
       const submitBtn = form.querySelector('button[type="submit"]');
       const originalText = submitBtn.innerHTML;
+      loader = showInElement(disable2faSection);
       try {
         // Показываем состояние загрузки
         submitBtn.disabled = true;
-        submitBtn.innerHTML = 'Отключение...';
 
         // Отправляем AJAX запрос
         const formData = new FormData(form);
@@ -226,7 +230,9 @@ document.addEventListener('DOMContentLoaded', function () {
         // Восстанавливаем состояние кнопки
         const submitBtn = form.querySelector('button[type="submit"]');
         submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
+        if (loader) {
+          hideInElement(loader);
+        }
       }
     });
 

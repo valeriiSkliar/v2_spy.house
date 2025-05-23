@@ -184,11 +184,14 @@ const updateIpRestriction = () => {
     if (!form.valid()) {
       return;
     }
-
-    const formLoader = showInElement('#ip-restriction-form');
+    const profileSettingsSection = form.closest('.profile-settings');
     const formData = new FormData(this);
+    let formLoader = null;
 
     try {
+      if (profileSettingsSection.length) {
+        formLoader = showInElement(profileSettingsSection[0]);
+      }
       const response = await ajaxFetcher.form(
         config.apiProfileIpRestrictionUpdateEndpoint,
         formData
@@ -230,7 +233,9 @@ const updateIpRestriction = () => {
         createAndShowToast('Error updating IP restrictions. Please try again.', 'error');
       }
     } finally {
-      hideInElement(formLoader);
+      if (formLoader) {
+        hideInElement(formLoader);
+      }
     }
   });
 };

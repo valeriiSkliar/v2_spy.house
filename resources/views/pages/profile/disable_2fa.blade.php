@@ -17,12 +17,12 @@
     <form method="POST" action="{{ route('profile.confirm-disable-2fa') }}" id="disableTwoFactorForm">
         @csrf
         <div class="confirm-operation__code mb-20">
-            <input type="text" inputmode="numeric" class="input-h-57" maxlength="1" data-code-input required>
-            <input type="text" inputmode="numeric" class="input-h-57" maxlength="1" data-code-input required>
-            <input type="text" inputmode="numeric" class="input-h-57" maxlength="1" data-code-input required>
-            <input type="text" inputmode="numeric" class="input-h-57" maxlength="1" data-code-input required>
-            <input type="text" inputmode="numeric" class="input-h-57" maxlength="1" data-code-input required>
-            <input type="text" inputmode="numeric" class="input-h-57" maxlength="1" data-code-input required>
+            <input type="text" inputmode="numeric" class="input-h-57" data-code-input>
+            <input type="text" inputmode="numeric" class="input-h-57" data-code-input>
+            <input type="text" inputmode="numeric" class="input-h-57" data-code-input>
+            <input type="text" inputmode="numeric" class="input-h-57" data-code-input>
+            <input type="text" inputmode="numeric" class="input-h-57" data-code-input>
+            <input type="text" inputmode="numeric" class="input-h-57" data-code-input>
             <input type="hidden" name="verification_code" id="verificationCodeField">
         </div>
 

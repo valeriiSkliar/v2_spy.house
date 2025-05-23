@@ -229,7 +229,7 @@ const changePassword = () => {
                 e.preventDefault();
                 cancelPasswordUpdate();
               });
-              createAndShowToast(message, 'success');
+              // createAndShowToast(message, 'success');
             }
 
             return;

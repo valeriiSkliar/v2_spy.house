@@ -21,7 +21,7 @@
 
             <form method="POST" action="{{ route('profile.store-2fa') }}" class="mt-3" id="twoFactorForm">
                 @csrf
-                <div class="row _offset20 mb-20 pt-4">
+                <div class="row _offset20 mb-20 ">
                     <div class="col-12 col-md-6 col-lg-6">
                         <x-profile.authenticator-code />
                     </div>

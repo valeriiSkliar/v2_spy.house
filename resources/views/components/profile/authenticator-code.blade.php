@@ -1,6 +1,5 @@
 <div class="form-item mb-20">
-    <label class="d-block mb-15">{{ __('profile.authenticator_code.code_from_the') }} <span class="font-weight-500">{{
-            __('profile.authenticator_code.Authenticator') }}</span> {{ __('profile.authenticator_code.app') }}</label>
+    <label class="d-block mb-15">Code from the <span class="font-weight-500">Authenticator</span> app</label>
 
     <div class="form-code-authenticator">
         <img src="/img/google-authenticator.svg" alt="">

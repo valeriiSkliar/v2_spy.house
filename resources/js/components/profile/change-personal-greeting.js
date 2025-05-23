@@ -76,7 +76,7 @@ const confirmPersonalGreetingUpdate = async formData => {
     console.error('Error confirming personal greeting update:', error);
     createAndShowToast('Error confirming personal greeting update. Please try again.', 'error');
   } finally {
-    loader.hide();
+    hideInElement(loader);
     checkNotifications();
   }
 };
@@ -199,7 +199,7 @@ const changePersonalGreeting = () => {
                 cancelPersonalGreetingUpdate();
               });
             }
-            createAndShowToast(message, 'success');
+            // createAndShowToast(message, 'success');
 
             return false;
           } else {
@@ -246,18 +246,7 @@ const changePersonalGreeting = () => {
   });
 };
 
-// const initPersonalGreetingFieldValidation = () => {
-//   const form = $('#personal-greeting-form');
-//   const fields = form.find('input, select, textarea');
-//   fields.each(function () {
-//     $(this).attr('autocomplete', 'off');
-//     $(this).attr('required', true);
-//     $(this);
-//   });
-// };
-
 const initChangePersonalGreeting = () => {
-  // initPersonalGreetingFieldValidation();
   changePersonalGreeting();
 };
 

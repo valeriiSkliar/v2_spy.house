@@ -3,7 +3,7 @@
 <form id="personal-greeting-form" action="{{ route('api.profile.confirm-personal-greeting-update') }}" method="POST"
     class="pt-3">
     @csrf
-    <div class="row _offset20 mb-20 pt-4">
+    <div class="row _offset20 mb-20 ">
         @if($confirmationMethod === 'authenticator')
         <div class="col-12 col-md-6 col-lg-4">
             <x-profile.authenticator-code />
