@@ -133,6 +133,16 @@ async function submitFormHandler(e) {
       // Clear previous errors
       $('input, select').removeClass('error valid');
 
+      // Handle validation errors from both formats
+      if (errorData.errors) {
+        Object.keys(errorData.errors).forEach(field => {
+          const $field = $(`[name="${field}"]`);
+          if ($field.length) {
+            $field.addClass('error');
+          }
+        });
+      }
+
       // Handle field statuses from error response
       if (errorData.field_statuses) {
         Object.entries(errorData.field_statuses).forEach(([field, status]) => {
@@ -146,41 +156,6 @@ async function submitFormHandler(e) {
             }
           }
         });
-
-        // Scroll to first error
-        const firstErrorField = Object.keys(errorData.field_statuses).find(
-          field => errorData.field_statuses[field].status === 'error'
-        );
-        if (firstErrorField) {
-          const $firstError = $(`[name="${firstErrorField}"]`);
-          if ($firstError.length) {
-            $('html, body').animate(
-              {
-                scrollTop: $firstError.offset().top - 100,
-              },
-              500
-            );
-          }
-        }
-      } else if (errorData.error_details) {
-        // Fallback for error_details structure
-        Object.keys(errorData.error_details).forEach(field => {
-          const $field = $(`[name="${field}"]`);
-          if ($field.length) {
-            $field.addClass('error');
-          }
-        });
-
-        // Scroll to first error
-        const $firstError = $('.error').first();
-        if ($firstError.length) {
-          $('html, body').animate(
-            {
-              scrollTop: $firstError.offset().top - 100,
-            },
-            500
-          );
-        }
       }
 
       // Show toast message

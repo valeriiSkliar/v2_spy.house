@@ -1,8 +1,7 @@
 import $ from 'jquery';
 import 'jquery-validation';
 import { debounce } from '../../helpers/custom-debounce';
-import { createAndShowToast } from '../../utils/uiHelpers';
-import { ValidationMethods, VALIDATION_PATTERNS } from '../../validation/validation-constants.js';
+import { VALIDATION_PATTERNS, ValidationMethods } from '../../validation/validation-constants.js';
 
 /**
  * Enhanced validation for profile settings form using jQuery Validation
@@ -23,28 +22,6 @@ function initProfileSettingsValidation($form) {
         required: true,
         maxlength: 255,
         pattern: VALIDATION_PATTERNS.login,
-        remote: {
-          url: '/api/validate-login-unique',
-          type: 'POST',
-          data: {
-            login: function () {
-              return $('input[name="login"]').val();
-            },
-            _token: function () {
-              return $('meta[name="csrf-token"]').attr('content');
-            },
-          },
-          dataFilter: function (data) {
-            const json = JSON.parse(data);
-            if (!json.valid) {
-              createAndShowToast(json.message, 'error');
-            }
-            return json.valid ? 'true' : 'false';
-          },
-          beforeSend: debounce(function () {
-            return true;
-          }, 500),
-        },
       },
       messenger_contact: {
         messengerContactValidation: true,
@@ -167,6 +144,4 @@ function updateMessengerPlaceholder($input, messengerType) {
 }
 
 // Export for use in other modules
-export {
-  initProfileSettingsValidation,
-};
+export { initProfileSettingsValidation };
