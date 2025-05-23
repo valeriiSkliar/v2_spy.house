@@ -6,7 +6,7 @@
     <input type="hidden" name="confirmation_method" value="{{ old('confirmation_method', $confirmationMethod) }}">
     <div class="row _offset20 mb-10">
         <div class="col-12 col-md-6">
-            <x-profile.form-field :popover="true" :popoverText="__('profile.personal_greeting_popover_text')"
+            <x-profile.form-field :popover="false" :popoverText="__('profile.personal_greeting_popover_text')"
                 name="personal_greeting" type="text" :label="__('profile.personal_greeting_label')"
                 :value="old('personal_greeting', $user->personal_greeting)" />
         </div>

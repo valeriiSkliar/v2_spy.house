@@ -80,19 +80,28 @@ class ProfileSettingsController extends BaseProfileController
                 'request_data' => $request->except(['password', 'current_password'])
             ]);
 
+            // Determine which field caused the unique constraint violation
+            $field = 'login'; // default
+            $message = __('validation.login_taken');
+
+            // Check if the error is related to messenger contact
+            if (str_contains($e->getMessage(), 'messenger_contact')) {
+                $field = 'messenger_contact';
+                $message = __('validation.messenger_contact_taken');
+            }
+
             return response()->json([
                 'success' => false,
-                'message' => __('profile.settings.login_taken'),
-                'error_details' => [
-                    'login' => [__('validation.login_taken')]
+                'message' => $message,
+                'errors' => [
+                    $field => [$message]
                 ],
-                'error_type' => get_class($e),
                 'field_statuses' => [
-                    'login' => ['status' => 'error', 'message' => __('validation.login_taken')],
+                    'login' => ['status' => $field === 'login' ? 'error' : 'success'],
                     'experience' => ['status' => 'success'],
                     'scope_of_activity' => ['status' => 'success'],
                     'messenger_type' => ['status' => 'success'],
-                    'messenger_contact' => ['status' => 'success'],
+                    'messenger_contact' => ['status' => $field === 'messenger_contact' ? 'error' : 'success'],
                 ]
             ], 422);
         } catch (\Exception $e) {
@@ -347,14 +356,28 @@ class ProfileSettingsController extends BaseProfileController
     public function initiatePersonalGreetingUpdateApi(UpdatePersonalGreetingSettingsRequest $request): JsonResponse
     {
         try {
+            // Validate confirmation_method
+            $request->validate([
+                'confirmation_method' => ['required', 'string', \Illuminate\Validation\Rule::in(['email', 'authenticator'])],
+            ]);
+
             $user = $request->user();
             $newPersonalGreeting = $request->input('personal_greeting');
             $confirmationMethod = $request->input('confirmation_method');
+
+            Log::debug('Personal greeting update initiated via API', [
+                'user_id' => $user->id,
+                'method' => $confirmationMethod,
+                'greeting_length' => strlen($newPersonalGreeting),
+            ]);
 
             if ($confirmationMethod === 'authenticator' && !$user->google_2fa_enabled) {
                 return response()->json([
                     'success' => false,
                     'message' => __('profile.security_settings.2fa_not_enabled'),
+                    'errors' => [
+                        'confirmation_method' => [__('profile.security_settings.2fa_not_enabled')]
+                    ]
                 ], 422);
             }
 
@@ -406,10 +429,22 @@ class ProfileSettingsController extends BaseProfileController
                 'confirmation_method' => 'email',
                 'confirmation_form_html' => $this->renderPersonalGreetingForm('email', 'confirmation')->render(),
             ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::warning('Personal greeting update validation failed', [
+                'user_id' => $request->user()->id ?? null,
+                'errors' => $e->errors(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
         } catch (\Exception $e) {
             Log::error('Error initiating personal greeting update: ' . $e->getMessage(), [
                 'user_id' => $request->user()->id ?? null,
-                'exception' => $e
+                'exception' => $e,
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
@@ -431,6 +466,11 @@ class ProfileSettingsController extends BaseProfileController
             $user = $request->user();
             $pendingUpdate = Cache::get('personal_greeting_update_code:' . $user->id);
 
+            Log::debug('Personal greeting update cancellation requested', [
+                'user_id' => $user->id,
+                'has_pending_update' => !empty($pendingUpdate),
+            ]);
+
             if ($pendingUpdate) {
                 Cache::forget('personal_greeting_update_code:' . $user->id);
                 Log::info('Personal greeting update cancelled by user (API)', ['user_id' => $user->id]);
@@ -443,11 +483,13 @@ class ProfileSettingsController extends BaseProfileController
                 'message' => __('profile.security_settings.personal_greeting_update_cancelled'),
                 'personalGreetingUpdatePending' => false,
                 'initialFormHtml' => $this->renderPersonalGreetingForm($confirmationMethod)->render(),
+                'showToast' => true
             ]);
         } catch (\Exception $e) {
             Log::error('Error cancelling personal greeting update: ' . $e->getMessage(), [
                 'user_id' => $request->user()->id ?? null,
-                'exception' => $e
+                'exception' => $e,
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
@@ -471,20 +513,43 @@ class ProfileSettingsController extends BaseProfileController
             ]);
 
             $user = $request->user();
+            $otp = $request->input('verification_code');
             $pendingUpdate = Cache::get('personal_greeting_update_code:' . $user->id);
 
-            if (!$pendingUpdate || !isset($pendingUpdate['status']) || $pendingUpdate['status'] !== 'pending') {
+            Log::debug('Personal greeting update confirmation attempt', [
+                'user_id' => $user->id,
+                'otp_length' => strlen($otp),
+                'otp_masked' => $otp ? substr($otp, 0, 2) . '****' : 'null',
+                'has_pending_update' => !empty($pendingUpdate),
+            ]);
+
+            if (!$pendingUpdate) {
+                Log::warning('Personal greeting update confirmation failed: no pending update found', [
+                    'user_id' => $user->id,
+                ]);
+
                 return response()->json([
                     'success' => false,
                     'message' => __('profile.security_settings.update_request_expired'),
+                    'errors' => [
+                        'verification_code' => [__('profile.security_settings.update_request_expired')]
+                    ]
                 ], 422);
             }
 
             if (now()->isAfter($pendingUpdate['expires_at'])) {
+                Log::warning('Personal greeting update confirmation failed: request expired', [
+                    'user_id' => $user->id,
+                    'expires_at' => $pendingUpdate['expires_at'],
+                ]);
                 Cache::forget('personal_greeting_update_code:' . $user->id);
+
                 return response()->json([
                     'success' => false,
                     'message' => __('profile.security_settings.update_request_expired'),
+                    'errors' => [
+                        'verification_code' => [__('profile.security_settings.update_request_expired')]
+                    ]
                 ], 422);
             }
 
@@ -494,19 +559,47 @@ class ProfileSettingsController extends BaseProfileController
                     Log::error('Personal greeting 2FA confirmation failed (API): 2FA secret not found for user.', ['user_id' => $user->id]);
                     return response()->json([
                         'success' => false,
-                        'message' => __('profile.2fa.error_verifying_code')
+                        'message' => __('profile.2fa.error_verifying_code'),
+                        'errors' => [
+                            'verification_code' => [__('profile.2fa.error_verifying_code')]
+                        ]
                     ], 422);
                 }
-                $secret = Crypt::decryptString($user->google_2fa_secret);
-                $isValid = Google2FAFacade::verifyKey($secret, $request->input('verification_code'));
+
+                try {
+                    $secret = Crypt::decryptString($user->google_2fa_secret);
+                    $isValid = Google2FAFacade::verifyKey($secret, $otp);
+                } catch (\Exception $e) {
+                    Log::error('Failed to decrypt 2FA secret for personal greeting confirmation', [
+                        'user_id' => $user->id,
+                        'error' => $e->getMessage(),
+                    ]);
+
+                    return response()->json([
+                        'success' => false,
+                        'message' => __('profile.2fa.error_decrypting_secret'),
+                        'errors' => [
+                            'verification_code' => [__('profile.2fa.error_decrypting_secret')]
+                        ]
+                    ], 500);
+                }
             } else {
-                $isValid = $request->input('verification_code') === (string)$pendingUpdate['code'];
+                $isValid = $otp === (string)$pendingUpdate['code'];
             }
 
             if (!$isValid) {
+                Log::warning('Personal greeting update confirmation failed: invalid code', [
+                    'user_id' => $user->id,
+                    'method' => $pendingUpdate['method'],
+                    'otp_masked' => substr($otp, 0, 2) . '****',
+                ]);
+
                 return response()->json([
                     'success' => false,
                     'message' => __('profile.security_settings.invalid_verification_code'),
+                    'errors' => [
+                        'verification_code' => [__('profile.security_settings.invalid_verification_code')]
+                    ]
                 ], 422);
             }
 
@@ -531,10 +624,22 @@ class ProfileSettingsController extends BaseProfileController
                 'message' => __('profile.personal_greeting_update.success_message'),
                 'successFormHtml' => $this->renderPersonalGreetingForm()->render(),
             ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::warning('Personal greeting confirmation validation failed', [
+                'user_id' => $request->user()->id ?? null,
+                'errors' => $e->errors(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
         } catch (\Exception $e) {
             Log::error('Error confirming personal greeting update: ' . $e->getMessage(), [
                 'user_id' => $request->user()->id ?? null,
-                'exception' => $e
+                'exception' => $e,
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
