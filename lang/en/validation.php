@@ -194,4 +194,14 @@ return [
 
     'attributes' => [],
 
+    // Custom validation messages
+    'login_taken' => 'This login is already taken.',
+    'login_format' => 'Login can only contain letters, numbers, and underscores.',
+    'telegram_format' => 'Please enter a valid Telegram username (starting with @).',
+    'phone_format' => 'Please enter a valid phone number.',
+    'messenger_contact_taken' => 'This contact is already registered for this messenger type.',
+    'messenger_type_invalid' => 'Please select a valid messenger type.',
+    'experience_invalid' => 'Please select a valid experience level.',
+    'scope_of_activity_invalid' => 'Please select a valid scope of activity.',
+
 ];

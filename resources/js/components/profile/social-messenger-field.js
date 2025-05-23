@@ -40,10 +40,16 @@ const initSocialMessengerField = () => {
     const value = $(this).val();
     const type = profileFormElements.messengerType.val();
 
-    if (ValidationMethods.validateMessengerContact(type, value)) {
-      $(this).removeClass('error').addClass('valid');
-    } else {
-      $(this).removeClass('valid').addClass('error');
+    // Clear previous classes
+    $(this).removeClass('error valid');
+    
+    // Only add classes if there's a value to validate
+    if (value.trim()) {
+      if (ValidationMethods.validateMessengerContact(type, value)) {
+        $(this).addClass('valid');
+      } else {
+        $(this).addClass('error');
+      }
     }
   });
 

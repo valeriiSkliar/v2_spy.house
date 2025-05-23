@@ -12,14 +12,12 @@ async function submitFormHandler(e) {
   try {
     e.preventDefault();
 
-    // Проверяем наличие DOM-элемента перед показом лоадера
     if (
       profileFormElements.profileSettingsTabContent &&
       profileFormElements.profileSettingsTabContent.length > 0
     ) {
       loader = showInElement(profileFormElements.profileSettingsTabContent[0]);
     } else {
-      // Альтернативный вариант - показываем лоадер в контейнере формы
       if (profileFormElements.form && profileFormElements.form.length > 0) {
         loader = showInElement(profileFormElements.form[0]);
       }
@@ -29,32 +27,27 @@ async function submitFormHandler(e) {
 
     showInButton(profileFormElements.submitButton);
     const response = await ajaxFetcher.form(config.apiProfileSettingsEndpoint, formData, 'PUT');
+
     if (response.success) {
-      // Update form fields with new values from server
       const formContainer = profileFormElements.form;
       if (formContainer && response.user) {
-        // Update messenger field values using unified state manager
         if (
           response.user.messenger_type !== undefined &&
           response.user.messenger_contact !== undefined
         ) {
-          // Use the messenger manager to update from server response
           if (messengerManager) {
             messengerManager.updateFromServer(
               response.user.messenger_type,
               response.user.messenger_contact
             );
           } else {
-            // Fallback if manager not available
             profileFormElements.messengerType.val(response.user.messenger_type);
             profileFormElements.messengerContact.val(response.user.messenger_contact);
           }
 
-          // Trigger input event to validate the value
           profileFormElements.messengerContact.trigger('input');
         }
 
-        // Update other form fields
         if (response.user.login !== undefined) {
           profileFormElements.login.val(response.user.login);
           if (profileFormElements.userPreviewName.length) {
@@ -68,7 +61,24 @@ async function submitFormHandler(e) {
           profileFormElements.scopeOfActivity.val(response.user.scope_of_activity);
         }
 
-        // If the server still returns HTML, use it as a fallback
+        // Update field statuses - only visual highlighting, no error messages
+        if (response.field_statuses) {
+          Object.entries(response.field_statuses).forEach(([field, status]) => {
+            const $field = $(`[name="${field}"]`);
+            if ($field.length) {
+              // Clear previous status classes
+              $field.removeClass('error valid');
+
+              // Apply new status class
+              if (status.status === 'error') {
+                $field.addClass('error');
+              } else if (status.status === 'success') {
+                $field.addClass('valid');
+              }
+            }
+          });
+        }
+
         if (response.settingsFormHtml) {
           formContainer.html(response.settingsFormHtml);
           initProfileFormElements();
@@ -77,24 +87,104 @@ async function submitFormHandler(e) {
       }
       createAndShowToast(response.message, 'success');
     } else {
+      // Handle validation errors using new response structure
+      if (response.field_statuses) {
+        // Clear previous error states
+        $('input, select').removeClass('error valid');
+
+        Object.entries(response.field_statuses).forEach(([field, status]) => {
+          const $field = $(`[name="${field}"]`);
+          if ($field.length) {
+            // Apply visual highlighting only - no error messages under fields
+            if (status.status === 'error') {
+              $field.addClass('error');
+            } else if (status.status === 'success') {
+              $field.addClass('valid');
+            }
+          }
+        });
+
+        // Scroll to first error field
+        const firstErrorField = Object.keys(response.field_statuses).find(
+          field => response.field_statuses[field].status === 'error'
+        );
+        if (firstErrorField) {
+          const $firstError = $(`[name="${firstErrorField}"]`);
+          // if ($firstError.length) {
+          //   $('html, body').animate(
+          //     {
+          //       scrollTop: $firstError.offset().top - 100,
+          //     },
+          //     500
+          //   );
+          // }
+        }
+      }
+
+      // Show toast message for errors
       createAndShowToast(response.message, 'error');
     }
   } catch (error) {
     loggerError('Error updating profile settings:', error);
 
-    // Handle different types of errors
     if (error.status === 422 && error.responseJSON) {
-      // Validation errors
       const errorData = error.responseJSON;
-      if (errorData.errors) {
-        // Display validation errors
-        const errorMessages = Object.values(errorData.errors).flat().join(', ');
-        createAndShowToast(errorMessages, 'error');
-      } else if (errorData.message) {
-        createAndShowToast(errorData.message, 'error');
-      } else {
-        createAndShowToast('Validation errors occurred', 'error');
+
+      // Clear previous errors
+      $('input, select').removeClass('error valid');
+
+      // Handle field statuses from error response
+      if (errorData.field_statuses) {
+        Object.entries(errorData.field_statuses).forEach(([field, status]) => {
+          const $field = $(`[name="${field}"]`);
+          if ($field.length) {
+            // Apply visual highlighting only - no error messages under fields
+            if (status.status === 'error') {
+              $field.addClass('error');
+            } else if (status.status === 'success') {
+              $field.addClass('valid');
+            }
+          }
+        });
+
+        // Scroll to first error
+        const firstErrorField = Object.keys(errorData.field_statuses).find(
+          field => errorData.field_statuses[field].status === 'error'
+        );
+        if (firstErrorField) {
+          const $firstError = $(`[name="${firstErrorField}"]`);
+          if ($firstError.length) {
+            $('html, body').animate(
+              {
+                scrollTop: $firstError.offset().top - 100,
+              },
+              500
+            );
+          }
+        }
+      } else if (errorData.error_details) {
+        // Fallback for error_details structure
+        Object.keys(errorData.error_details).forEach(field => {
+          const $field = $(`[name="${field}"]`);
+          if ($field.length) {
+            $field.addClass('error');
+          }
+        });
+
+        // Scroll to first error
+        const $firstError = $('.error').first();
+        if ($firstError.length) {
+          $('html, body').animate(
+            {
+              scrollTop: $firstError.offset().top - 100,
+            },
+            500
+          );
+        }
       }
+
+      // Show toast message
+      createAndShowToast(errorData.message || 'Validation errors occurred', 'error');
     } else if (error.status === 401) {
       createAndShowToast('Unauthorized. Please log in again.', 'error');
     } else if (error.status === 403) {

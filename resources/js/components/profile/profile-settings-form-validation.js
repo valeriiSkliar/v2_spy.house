@@ -65,10 +65,10 @@ function initProfileSettingsValidation($form) {
     errorClass: 'validation-error',
     validClass: 'valid',
 
-    // Custom error placement
+    // No error placement - we only want visual highlighting
     errorPlacement: function (error, element) {
-      error.addClass('validation-error');
-      element.closest('.form-group, .input-group').append(error);
+      // Don't display error messages under fields
+      return false;
     },
 
     // Highlight invalid fields
@@ -88,7 +88,7 @@ function initProfileSettingsValidation($form) {
         const $firstError = $(validator.errorList[0].element);
         $('html, body').animate(
           {
-            // scrollTop: $firstError.offset().top - 100,
+            scrollTop: $firstError.offset().top - 100,
           },
           500
         );
