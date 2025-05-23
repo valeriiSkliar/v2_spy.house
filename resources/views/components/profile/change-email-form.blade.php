@@ -1,5 +1,6 @@
 @props(['user', 'confirmationMethod', 'emailUpdatePending', 'authenticatorEnabled'])
 <form autocomplete="off" id="change-email-form" method="POST"
+    data-action="{{ $emailUpdatePending ? route('api.profile.confirm-email-update') : route('api.profile.initiate-email-update') }}"
     action="{{ $emailUpdatePending ? route('api.profile.confirm-email-update') : route('api.profile.initiate-email-update') }}"
     class="profile-form">
     @csrf

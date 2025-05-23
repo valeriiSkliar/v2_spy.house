@@ -7,7 +7,9 @@ export const VALIDATION_PATTERNS = {
     telegram: /^@[a-zA-Z0-9_]{5,32}$/,
     viber: /^\d{10,15}$/,
     whatsapp: /^\d{10,15}$/,
-    login: /^[a-zA-Z0-9_]+$/
+    login: /^[a-zA-Z0-9_]+$/,
+    email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    verificationCode: /^\d{6}$/
 };
 
 export const MESSENGER_CONFIG = {
@@ -32,6 +34,19 @@ export const MESSENGER_CONFIG = {
         pattern: VALIDATION_PATTERNS.whatsapp,
         errorMessage: 'Please enter a valid phone number (10-15 digits)'
     }
+};
+
+export const EMAIL_CONFIG = {
+    minLength: 3,
+    maxLength: 254,
+    pattern: VALIDATION_PATTERNS.email,
+    errorMessage: 'Please enter a valid email address'
+};
+
+export const VERIFICATION_CODE_CONFIG = {
+    length: 6,
+    pattern: VALIDATION_PATTERNS.verificationCode,
+    errorMessage: 'Please enter a valid 6-digit verification code'
 };
 
 /**
@@ -117,5 +132,47 @@ export const ValidationMethods = {
      */
     getMessengerPlaceholder(type) {
         return MESSENGER_CONFIG[type]?.placeholder || '@username';
+    },
+
+    /**
+     * Validate email address
+     * @param {string} value - The value to validate
+     * @returns {boolean} - True if valid
+     */
+    validateEmail(value) {
+        if (!value || !value.trim()) return false; // Required field
+        return VALIDATION_PATTERNS.email.test(value.trim());
+    },
+
+    /**
+     * Validate verification code
+     * @param {string} value - The value to validate
+     * @returns {boolean} - True if valid
+     */
+    validateVerificationCode(value) {
+        if (!value || !value.trim()) return false; // Required field
+        return VALIDATION_PATTERNS.verificationCode.test(value.trim());
+    },
+
+    /**
+     * Check if email is different from current email
+     * @param {string} newEmail - The new email to validate
+     * @param {string} currentEmail - The current email to compare against
+     * @returns {boolean} - True if different
+     */
+    validateEmailNotEqual(newEmail, currentEmail) {
+        if (!newEmail || !newEmail.trim()) return false;
+        return newEmail.trim().toLowerCase() !== currentEmail.trim().toLowerCase();
+    },
+
+    /**
+     * Validate password minimum length
+     * @param {string} value - The value to validate
+     * @param {number} minLength - Minimum length (default 6)
+     * @returns {boolean} - True if valid
+     */
+    validatePassword(value, minLength = 6) {
+        if (!value || !value.trim()) return false; // Required field
+        return value.length >= minLength;
     }
 };
