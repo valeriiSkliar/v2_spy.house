@@ -108,15 +108,19 @@ const changeEmail = () => {
     // Remove previous event handlers
     $form.off('submit');
 
+    // Determine current form step
+    const isConfirmationStep = $form.find('input[name="verification_code"]').length > 0;
+
     // Initialize form validation
     let validator = null;
     try {
-      validator = initChangeEmailValidation($form);
+      validator = initChangeEmailValidation($form, isConfirmationStep);
       logger(
         '[DEBUG] Change Email - Validator initialized',
         {
           validatorExists: !!validator,
           rules: validator?.settings?.rules,
+          isConfirmationStep,
         },
         { debug: true }
       );
@@ -150,27 +154,27 @@ const changeEmail = () => {
           hasVerificationCode: formData.has('verification_code'),
           verificationCode: formData.get('verification_code'),
           formFields: Array.from(formData.entries()).map(([key, value]) => key),
+          isConfirmationStep,
         },
         { debug: true }
       );
 
-      // Check if we have required data
-      if (!formData.has('verification_code')) {
-        logger('[DEBUG] Change Email - Missing verification code', { debug: true });
+      // Check verification code only on confirmation step
+      if (isConfirmationStep && !formData.has('verification_code')) {
+        logger('[DEBUG] Change Email - Missing verification code on confirmation step', {
+          debug: true,
+        });
         createAndShowToast('Verification code is required', 'error');
         return false;
       }
 
-      // Determine if this is a confirmation form or initial form
-      const isConfirmationForm = true; // Since we're in confirmation step
-
-      if (isConfirmationForm) {
-        // Handle confirmation submission - confirmEmailUpdate manages its own loader
+      if (isConfirmationStep) {
+        // Handle confirmation submission
         await confirmEmailUpdate(formData);
       } else {
         // Handle initial email update request
         loader = showInElement($formContainer[0]);
-        
+
         try {
           const response = await ajaxFetcher.form(
             config.apiProfileEmailUpdateInitiateEndpoint,
