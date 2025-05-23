@@ -22,10 +22,10 @@
             <form method="POST" action="{{ route('profile.store-2fa') }}" class="mt-3" id="twoFactorForm">
                 @csrf
                 <div class="row _offset20 mb-20 ">
-                    <div class="col-12 col-md-6 col-lg-6">
+                    <div class="col-12 col-md-6 col-lg-4">
                         <x-profile.authenticator-code />
                     </div>
-                    <div class="col-12 col-md-6 col-lg-6">
+                    <div class="col-12 col-md-6 col-lg-4">
                         <x-profile.info-message :title="__('profile.2fa.info_message_title_authenticator')"
                             :description="__('profile.2fa.info_message_description_authenticator')" />
                     </div>
