@@ -161,15 +161,16 @@ const changeEmail = () => {
         return false;
       }
 
-      loader = showInElement($formContainer[0]);
-
       // Determine if this is a confirmation form or initial form
       const isConfirmationForm = true; // Since we're in confirmation step
 
       if (isConfirmationForm) {
-        // Handle confirmation submission
+        // Handle confirmation submission - confirmEmailUpdate manages its own loader
         await confirmEmailUpdate(formData);
       } else {
+        // Handle initial email update request
+        loader = showInElement($formContainer[0]);
+        
         try {
           const response = await ajaxFetcher.form(
             config.apiProfileEmailUpdateInitiateEndpoint,
@@ -191,7 +192,6 @@ const changeEmail = () => {
                 cancelEmailUpdate();
               });
             }
-            return;
           } else {
             handleChangeEmailValidationErrors(response, $form);
             createAndShowToast(
