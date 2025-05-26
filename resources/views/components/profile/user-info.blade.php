@@ -14,17 +14,7 @@
                 <span class="icon-blog mr-2 font-16"></span>{{ __('profile.personal_info.change_photo_button') }}
             </label>
             <div class="user-info__photo-metadata">
-                @if($user->user_avatar && isset($user->user_avatar_metadata))
-                <span id="selected-file-name">PNG (600x600) 200kb
-                    {{--
-                    {{ strtoupper(pathinfo($user->user_avatar, PATHINFO_EXTENSION)) }}
-                    ({{ $user->user_avatar_metadata['dimensions']['width'] ?? 0 }}x{{
-                    $user->user_avatar_metadata['dimensions']['height'] ?? 0 }})
-                    {{ $user->user_avatar_metadata['size'] ?? '0' }}kb --}}
-                </span>
-                @else
                 <span id="selected-file-name">{{ __('profile.personal_info.photo_hint') }}</span>
-                @endif
             </div>
         </div>
         <div id="avatar-upload-error" class="text-danger d-none"></div>

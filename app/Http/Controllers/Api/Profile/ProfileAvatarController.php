@@ -70,7 +70,6 @@ class ProfileAvatarController extends Controller
 
             // Save the user avatar path and metadata
             $user->user_avatar = $avatarPath;
-            $user->user_avatar_metadata = $avatarMetadata;
             $user->save();
 
             // Return success response with avatar details
@@ -79,7 +78,6 @@ class ProfileAvatarController extends Controller
                 'message' => __('profile.personal_info.photo_updated'),
                 'avatar' => [
                     'url' => asset('storage/' . $avatarPath),
-                    'metadata' => $avatarMetadata,
                 ],
             ]);
         } catch (\Exception $e) {

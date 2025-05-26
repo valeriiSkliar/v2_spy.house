@@ -42,7 +42,6 @@ class User extends Authenticatable
         'google_2fa_enabled',
         'google_2fa_secret',
         'user_avatar',
-        'user_avatar_metadata',
     ];
 
     /**
@@ -69,7 +68,6 @@ class User extends Authenticatable
             'notification_settings' => 'array',
             'ip_restrictions' => 'array',
             'google_2fa_enabled' => 'boolean',
-            'user_avatar_metadata' => 'array',
         ];
     }
 
@@ -128,7 +126,7 @@ class User extends Authenticatable
     public function getFullPhoneNumber(): ?string
     {
         if ($this->phone_country_code && $this->phone) {
-            return '+'.$this->phone_country_code.$this->phone;
+            return '+' . $this->phone_country_code . $this->phone;
         }
 
         return null;
