@@ -1,4 +1,4 @@
-async function regenerate2faSecret() {
+export async function regenerate2faSecret() {
   const regenerateButton = document.querySelector('.js-regenerate-2fa-secret');
 
   if (!regenerateButton) return;
