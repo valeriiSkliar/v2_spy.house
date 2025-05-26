@@ -212,22 +212,24 @@ function initStep2Handlers() {
         if (data.success) {
           // Успешное подтверждение - редирект
           if (data.redirect) {
-            window.location.href = data.redirect;
+            setTimeout(() => {
+              window.location.href = data.redirect;
+            }, 3000);
           }
         } else {
           // Показываем ошибку
           showStep2Error(data.message || 'Неверный код подтверждения');
         }
       } catch (error) {
-        console.error('Ошибка при подтверждении 2FA:', error);
-        createAndShowToast('Произошла ошибка при подтверждении. Попробуйте еще раз.', 'error');
-      } finally {
         hideInElement(loader);
         submitButton.disabled = false;
         if (submitButton.textContent === 'Проверяю...') {
           submitButton.textContent =
             submitButton.getAttribute('data-original-text') || 'Подтвердить';
         }
+        console.error('Ошибка при подтверждении 2FA:', error);
+        createAndShowToast('Произошла ошибка при подтверждении. Попробуйте еще раз.', 'error');
+      } finally {
       }
     });
   }

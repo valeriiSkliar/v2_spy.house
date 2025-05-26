@@ -218,21 +218,21 @@ document.addEventListener('DOMContentLoaded', function () {
           if (data.redirect) {
             setTimeout(() => {
               window.location.href = data.redirect;
-            }, 2000);
+            }, 3000);
           }
         }
       } catch (error) {
+        const submitBtn = form.querySelector('button[type="submit"]');
+        submitBtn.disabled = false;
+        if (loader) {
+          hideInElement(loader);
+        }
         loggerError('[ERROR] 2FA Disable - Error submitting form:', error);
         createAndShowToast('Ошибка отправки формы', 'error');
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalText;
       } finally {
         // Восстанавливаем состояние кнопки
-        const submitBtn = form.querySelector('button[type="submit"]');
-        submitBtn.disabled = false;
-        if (loader) {
-          hideInElement(loader);
-        }
       }
     });
 
