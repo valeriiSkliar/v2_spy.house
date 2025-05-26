@@ -34,11 +34,26 @@ class ProfileAvatarController extends Controller
 
             // Process the avatar image
             $avatarFile = $request->file('avatar');
+
+            // Log old avatar path for debugging
+            if ($user->user_avatar) {
+                Log::info('Replacing existing avatar', [
+                    'user_id' => $user->id,
+                    'old_avatar_path' => $user->user_avatar
+                ]);
+            }
+
             $avatarPath = $imageService->replace(
                 $avatarFile,
                 $user->user_avatar,
                 'avatars'
             );
+
+            // Log successful replacement
+            Log::info('Avatar successfully replaced', [
+                'user_id' => $user->id,
+                'new_avatar_path' => $avatarPath
+            ]);
 
             // Get image metadata
             $image = getimagesize($avatarFile);

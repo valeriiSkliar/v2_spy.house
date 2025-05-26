@@ -2,6 +2,7 @@
 
 namespace App\Services\Common;
 
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class ImageService
@@ -27,10 +28,43 @@ class ImageService
             return false;
         }
 
-        $relativePath = str_replace('/storage/', '', $imagePath);
-        if (Storage::disk($disk)->exists($relativePath)) {
-            return Storage::disk($disk)->delete($relativePath);
+        // Normalize the path - remove domain, /storage/ prefix if present
+        $relativePath = $imagePath;
+
+        // Remove full URL if present
+        if (str_contains($imagePath, '://')) {
+            $urlParts = parse_url($imagePath);
+            $relativePath = $urlParts['path'] ?? '';
         }
+
+        // Remove /storage/ prefix if present
+        $relativePath = str_replace('/storage/', '', $relativePath);
+
+        if (Storage::disk($disk)->exists($relativePath)) {
+            $deleted = Storage::disk($disk)->delete($relativePath);
+
+            if ($deleted) {
+                Log::info('Image successfully deleted', [
+                    'original_path' => $imagePath,
+                    'normalized_path' => $relativePath,
+                    'disk' => $disk
+                ]);
+            } else {
+                Log::warning('Failed to delete existing image', [
+                    'original_path' => $imagePath,
+                    'normalized_path' => $relativePath,
+                    'disk' => $disk
+                ]);
+            }
+
+            return $deleted;
+        }
+
+        Log::warning('Image file not found for deletion', [
+            'original_path' => $imagePath,
+            'normalized_path' => $relativePath,
+            'disk' => $disk
+        ]);
 
         return false;
     }
