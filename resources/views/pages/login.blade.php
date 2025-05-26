@@ -66,6 +66,9 @@
                             <!-- 2FA component will be inserted here -->
                         </div>
 
+                        <!-- reCAPTCHA -->
+                        <x-recaptcha-custom />
+
                         <div class="form-item mb-30">
                             <button id="login-submit-button" type="submit" class="btn _flex _green _big w-100">{{
                                 __('Log In') }}</button>
@@ -129,3 +132,7 @@
 </div>
 
 @endsection
+
+@push('scripts')
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+@endpush

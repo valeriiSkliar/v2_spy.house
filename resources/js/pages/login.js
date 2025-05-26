@@ -31,6 +31,13 @@ const handleLoginSubmit = async function (e) {
     return;
   }
 
+  // Валидация reCAPTCHA
+  const recaptchaResponse = window.grecaptcha?.getResponse();
+  if (!recaptchaResponse) {
+    createAndShowToast('Пожалуйста, подтвердите, что вы не робот', 'error');
+    return;
+  }
+
   // Устанавливаем флаг и показываем состояние загрузки
   isLoginInProgress = true;
   submitButton.prop('disabled', true);
@@ -50,6 +57,11 @@ const handleLoginSubmit = async function (e) {
 
     if (twoFactorCode) {
       formData.append('code', twoFactorCode);
+    }
+
+    // Добавляем reCAPTCHA токен
+    if (recaptchaResponse) {
+      formData.append('g-recaptcha-response', recaptchaResponse);
     }
 
     // Отправляем AJAX запрос
@@ -105,6 +117,11 @@ const handleLoginSubmit = async function (e) {
     } else {
       createAndShowToast('Произошла ошибка при входе. Попробуйте еще раз.', 'error');
     }
+
+    // Сбрасываем reCAPTCHA при ошибке
+    if (window.grecaptcha) {
+      window.grecaptcha.reset();
+    }
   } finally {
     // Сбрасываем флаг и восстанавливаем кнопку только если не было успешного входа
     if (!window.location.href.includes('/profile/settings')) {
@@ -121,6 +138,11 @@ const handleLoginError = (data, form) => {
   // Показываем основное сообщение об ошибке
   if (data.message) {
     createAndShowToast(data.message, 'error');
+  }
+
+  // Сбрасываем reCAPTCHA при ошибке
+  if (window.grecaptcha) {
+    window.grecaptcha.reset();
   }
 
   // Обрабатываем специфичные ошибки полей

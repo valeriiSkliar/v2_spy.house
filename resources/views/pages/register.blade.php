@@ -125,9 +125,16 @@
                             </div>
                         </div>
 
+                        <!-- reCAPTCHA -->
                         <div class="form-item mb-25 pt-2 d-flex justify-content-center">
-                            <img src="{{ asset('img/re.png') }}" alt="">
+                            <div id="recaptcha-register" class="g-recaptcha"
+                                data-sitekey="{{ config('captcha.sitekey') }}"></div>
                         </div>
+                        @error('g-recaptcha-response')
+                        <div class="form-item mb-3">
+                            <span class="error-message">{{ $message }}</span>
+                        </div>
+                        @enderror
 
                         <div class="form-item mb-30">
                             <button type="submit" class="btn _flex _green _big w-100">{{ __('Registration') }}</button>
@@ -189,4 +196,5 @@
 
 @push('scripts')
 @vite(['resources/js/pages/register.js'])
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 @endpush

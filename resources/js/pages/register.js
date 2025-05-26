@@ -126,11 +126,21 @@ class RegistrationForm {
     // Hide loader
     hideInButton(this.submitButton);
 
+    // Reset reCAPTCHA
+    if (window.grecaptcha) {
+      window.grecaptcha.reset();
+    }
+
     // Show general error toast
     createAndShowToast(error.message || 'Произошла ошибка при регистрации', 'error');
   }
 
   handleValidationErrors(errors) {
+    // Reset reCAPTCHA on validation errors
+    if (window.grecaptcha) {
+      window.grecaptcha.reset();
+    }
+
     Object.keys(errors).forEach(fieldName => {
       const input = this.form.querySelector(`[name="${fieldName}"]`);
 
@@ -174,6 +184,13 @@ class RegistrationForm {
         isValid = false;
       }
     });
+
+    // Validate reCAPTCHA
+    const recaptchaResponse = window.grecaptcha?.getResponse();
+    if (!recaptchaResponse) {
+      createAndShowToast('Пожалуйста, подтвердите, что вы не робот', 'error', 4000);
+      isValid = false;
+    }
 
     return isValid;
   }

@@ -6,6 +6,7 @@ use App\Enums\Frontend\UserExperience;
 use App\Enums\Frontend\UserScopeOfActivity;
 use App\Http\Requests\BaseRequest;
 use App\Models\User;
+use App\Rules\Recaptcha;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
@@ -60,12 +61,13 @@ class RegisteredUserRequest extends BaseRequest
                     }
                 },
             ],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'password' => ['required', 'confirmed', Password::defaults()],
             // Use values instead of names for validation - the dropdown sends value not enum name
-            'experience' => ['required', 'string', 'in:'.implode(',', UserExperience::names())],
+            'experience' => ['required', 'string', 'in:' . implode(',', UserExperience::names())],
             // Use values instead of names for validation
-            'scope_of_activity' => ['required', 'string', 'in:'.implode(',', UserScopeOfActivity::names())],
+            'scope_of_activity' => ['required', 'string', 'in:' . implode(',', UserScopeOfActivity::names())],
+            'g-recaptcha-response' => ['required', new Recaptcha()],
         ];
     }
 
@@ -139,6 +141,7 @@ class RegisteredUserRequest extends BaseRequest
             'scope_of_activity.required' => 'Сфера деятельности обязательна',
             'scope_of_activity.string' => 'Сфера деятельности должна быть строкой',
             'scope_of_activity.in' => 'Выбрано недопустимое значение сферы деятельности',
+            'g-recaptcha-response.required' => 'Пожалуйста, подтвердите, что вы не робот',
         ];
     }
 }
