@@ -3,11 +3,31 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 use function App\Helpers\sanitize_input;
 
 class BaseRequest extends FormRequest
 {
+    /**
+     * Handle a failed validation attempt for AJAX requests.
+     */
+    protected function failedValidation(Validator $validator)
+    {
+        if ($this->expectsJson() || $this->ajax()) {
+            throw new HttpResponseException(
+                response()->json([
+                    'status' => 'error',
+                    'message' => __('Validation failed'),
+                    'errors' => $validator->errors()->toArray()
+                ], 422)
+            );
+        }
+
+        parent::failedValidation($validator);
+    }
+
     protected function sanitizeInput(string $input): string
     {
         if (! $input) {

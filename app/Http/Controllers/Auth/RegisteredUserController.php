@@ -27,7 +27,7 @@ class RegisteredUserController extends Controller
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function store(RegisteredUserRequest $request): RedirectResponse
+    public function store(RegisteredUserRequest $request)
     {
         $data = $request->validated();
 
@@ -50,6 +50,15 @@ class RegisteredUserController extends Controller
         $token = $user->createToken('basic-access', ['read:profile', 'read:public', 'read:base-token'])->plainTextToken;
         // Optionally store this token for the user's reference
         session()->flash('api_token', $token);
+
+        // Handle AJAX requests
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => __('Registration successful'),
+                'redirect_url' => route('profile.settings', absolute: false)
+            ]);
+        }
 
         return redirect(route('profile.settings', absolute: false));
     }
