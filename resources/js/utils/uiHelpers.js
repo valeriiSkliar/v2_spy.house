@@ -1,4 +1,3 @@
-// src/js/uiHelpers.js
 import { Modal, Toast } from "bootstrap";
 import $ from "jquery";
 
@@ -52,8 +51,8 @@ export function showToast(toastId, options = {}) {
  * Требует наличия контейнера для тостов в HTML, например:
  * <div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
  * @param {string} message - Текст сообщения.
- * @param {'success'|'error'|'warning'|'info'} type - Тип тоста для стилизации (добавьте соответствующие CSS классы).
- * @param {number} [delay=5000] - Задержка перед автоматическим скрытием.
+ * @param {'success'|'error'|'warning'|'info'} type - Тип тоста для стилизации.
+ * @param {number} [delay=5000] - Задержка перед автоматическим скрытием (мс).
  */
 export function createAndShowToast(message, type = "info", delay = 5000) {
     const toastContainer = document.querySelector(".toast-container");
@@ -81,8 +80,8 @@ export function createAndShowToast(message, type = "info", delay = 5000) {
                 <div class="toast-body">
                     ${message}
                 </div>
-                <button type="button" class="btn-close ms-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
+            <div class="toast-progress" style="animation-duration: ${delay}ms;"></div>
         </div>
     `;
     toastContainer.insertAdjacentHTML("beforeend", toastHTML);

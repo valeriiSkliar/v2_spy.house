@@ -1,10 +1,12 @@
+/* Стили для тостов */
 .toast {
     min-width: 300px;
     border-radius: 8px;
-    /* opacity: 0; */
     transition: opacity 0.3s ease-in-out;
     background: #fff !important;
     opacity: 1 !important;
+    position: relative;
+    overflow: hidden;
 }
 
 .toast.show {
@@ -15,80 +17,83 @@
     font-size: 1.25rem;
 }
 
-.toast-success .toast-icon {
-    color: $main;
-}
-
-.toast-error .toast-icon {
-    color: $red;
-}
-
-.toast-warning .toast-icon {
-    color: #ffc107;
-}
-
-.toast-info .toast-icon {
-    color: $gray;
-}
-
 .toast-body {
     font-size: 0.9rem;
-    color: $gray;
 }
 
-.btn-close {
-    opacity: 0.5;
-    transition: opacity 0.2s ease-in-out;
+/* Полоса таймаута */
+.toast-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 4px;
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.5);
+    animation: progress linear forwards;
 }
 
-.btn-close:hover {
-    opacity: 1;
+@keyframes progress {
+    from { width: 100%; }
+    to { width: 0; }
 }
 
-.toast.toast-success {
+/* Стили для типов тостов */
+.toast-success {
     background-color: $main !important;
     color: #fff !important;
     opacity: 0.75 !important;
 }
 
-.toast.toast-error {
+.toast-success .toast-body,
+.toast-success .toast-icon {
+    color: #fff !important;
+}
+
+.toast-success .toast-progress {
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+.toast-error {
     background-color: $red !important;
     color: #fff !important;
     opacity: 0.75 !important;
 }
 
-.toast.toast-info {
+.toast-error .toast-body,
+.toast-error .toast-icon {
+    color: #fff !important;
+}
+
+.toast-error .toast-progress {
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+.toast-info {
     background-color: #17a2b8 !important;
     color: #fff !important;
     opacity: 0.75 !important;
 }
 
-.toast.toast-warning {
+.toast-info .toast-body,
+.toast-info .toast-icon {
+    color: #fff !important;
+}
+
+.toast-info .toast-progress {
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+.toast-warning {
     background-color: #ffc107 !important;
     color: #212529 !important;
     opacity: 0.75 !important;
 }
 
-.toast.toast-success .toast-body,
-.toast.toast-success .toast-icon,
-.toast.toast-error .toast-body,
-.toast.toast-error .toast-icon,
-.toast.toast-info .toast-body,
-.toast.toast-info .toast-icon {
-    color: #fff !important;
-}
-
-.toast.toast-warning .toast-body,
-.toast.toast-warning .toast-icon {
+.toast-warning .toast-body,
+.toast-warning .toast-icon {
     color: #212529 !important;
 }
 
-.toast.toast-success .btn-close,
-.toast.toast-error .btn-close,
-.toast.toast-info .btn-close {
-    filter: invert(1);
-}
-
-.toast.toast-warning .btn-close {
-    filter: none;
+.toast-warning .toast-progress {
+    background-color: rgba(0, 0, 0, 0.5);
 }
