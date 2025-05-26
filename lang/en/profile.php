@@ -159,7 +159,7 @@ return [
     'cancel_button' => 'Cancel',
     'ip_restriction' => [
         'page_title' => 'IP Restriction Settings',
-        'info1' => 'Enter the IP addresses or ranges that are allowed to access your account.',
+        'info1' => 'Enter the IP addresses that are allowed to access your account.',
         'info2' => 'Each IP address should be on a new line.',
         'allowed_ip_addresses_label' => 'Allowed IP Addresses',
         'allowed_ip_addresses_placeholder' => 'Enter IP addresses (one per line)',

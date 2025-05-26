@@ -57,59 +57,23 @@ const initFormValidation = form => {
         const ipv4Regex = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
         const ipv4Match = ip.match(ipv4Regex);
 
-        // Check for CIDR notation (e.g., 192.168.1.0/24)
-        const cidrRegex = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})\/(\d{1,2})$/;
-        const cidrMatch = ip.match(cidrRegex);
-
-        // Check for IP range (e.g., 192.168.1.1-192.168.1.255)
-        const rangeRegex =
-          /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})-(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
-        const rangeMatch = ip.match(rangeRegex);
-
-        // If it's not any valid format, return false
-        if (!ipv4Match && !cidrMatch && !rangeMatch) {
+        // If it's not a valid IP format, return false
+        if (!ipv4Match) {
           return false;
         }
 
-        // For simple IP addresses, validate each octet
-        if (ipv4Match) {
-          for (let i = 1; i <= 4; i++) {
-            const octet = parseInt(ipv4Match[i], 10);
-            if (octet < 0 || octet > 255) {
-              return false;
-            }
-          }
-        }
-
-        // For CIDR notation, validate the IP part and the mask
-        if (cidrMatch) {
-          for (let i = 1; i <= 4; i++) {
-            const octet = parseInt(cidrMatch[i], 10);
-            if (octet < 0 || octet > 255) {
-              return false;
-            }
-          }
-
-          const mask = parseInt(cidrMatch[5], 10);
-          if (mask < 0 || mask > 32) {
+        // Validate each octet
+        for (let i = 1; i <= 4; i++) {
+          const octet = parseInt(ipv4Match[i], 10);
+          if (octet < 0 || octet > 255) {
             return false;
-          }
-        }
-
-        // For IP ranges, validate both start and end IPs
-        if (rangeMatch) {
-          for (let i = 1; i <= 8; i++) {
-            const octet = parseInt(rangeMatch[i], 10);
-            if (octet < 0 || octet > 255) {
-              return false;
-            }
           }
         }
       }
 
       return true;
     },
-    'Please enter valid IP addresses, IP ranges (e.g., 192.168.1.1-192.168.1.255), or CIDR notation (e.g., 192.168.1.0/24)'
+    'Please enter valid IP addresses (one per line)'
   );
 
   form.validate({
@@ -167,7 +131,6 @@ const updateIpRestriction = () => {
 
   const textareas = document.querySelectorAll('.auto-resize');
   textareas.forEach(textarea => {
-    adjustHeight(textarea);
     textarea.addEventListener('input', function () {
       adjustHeight(this);
     });

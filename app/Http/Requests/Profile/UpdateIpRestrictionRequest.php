@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Profile;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseRequest;
 
-class UpdateIpRestrictionRequest extends FormRequest
+class UpdateIpRestrictionRequest extends BaseRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -40,7 +40,10 @@ class UpdateIpRestrictionRequest extends FormRequest
         $validator->after(function ($validator) {
             $ipRestrictions = $this->input('ip_restrictions');
             if (! empty($ipRestrictions)) {
-                $ips = array_filter(array_map('trim', explode("\n", $ipRestrictions)));
+                $ips = array_filter(array_map(function ($ip) {
+                    return $this->sanitizeInput($ip);
+                }, explode("\n", $ipRestrictions)));
+
                 foreach ($ips as $ip) {
                     if (! $this->isValidIp($ip)) {
                         $validator->errors()->add('ip_restrictions', __('validation.ip', ['attribute' => 'IP address']));
@@ -52,30 +55,12 @@ class UpdateIpRestrictionRequest extends FormRequest
     }
 
     /**
-     * Check if the IP address or range is valid
+     * Check if the IP address is valid
      */
     protected function isValidIp(string $ip): bool
     {
         // Проверка одиночного IP-адреса
-        if (filter_var($ip, FILTER_VALIDATE_IP)) {
-            return true;
-        }
-
-        // Проверка CIDR формата (например, 192.168.1.0/24)
-        if (preg_match('/^(\d{1,3}\.){3}\d{1,3}\/\d{1,2}$/', $ip)) {
-            [$ipPart, $mask] = explode('/', $ip);
-
-            return filter_var($ipPart, FILTER_VALIDATE_IP) && $mask >= 0 && $mask <= 32;
-        }
-
-        // Проверка диапазона (например, 192.168.1.1-192.168.1.255)
-        if (preg_match('/^(\d{1,3}\.){3}\d{1,3}-(\d{1,3}\.){3}\d{1,3}$/', $ip)) {
-            [$start, $end] = explode('-', $ip);
-
-            return filter_var($start, FILTER_VALIDATE_IP) && filter_var($end, FILTER_VALIDATE_IP);
-        }
-
-        return false;
+        return filter_var($ip, FILTER_VALIDATE_IP);
     }
 
     /**
