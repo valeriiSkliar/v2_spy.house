@@ -362,6 +362,18 @@ const changePassword = () => {
     onfocusout: false,
     onkeyup: false,
     onclick: false,
+    errorClass: 'error',
+    validClass: 'valid',
+    errorPlacement: function (error, element) {
+      // Don't display error messages under fields
+      return false;
+    },
+    highlight: function (element, errorClass, validClass) {
+      $(element).addClass('error').removeClass(validClass);
+    },
+    unhighlight: function (element, errorClass, validClass) {
+      $(element).removeClass('error').addClass(validClass);
+    },
     // Run validation only on form submission
     invalidHandler: function (event, validator) {
       // Mark all fields as touched when form submission is attempted
