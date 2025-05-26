@@ -1,5 +1,9 @@
+@import 'global';
 @import 'mixins.scss';
+@import 'header.scss';
+
 @import 'fonts.scss';
+@import 'icons';
 @import 'bootstrap/scss/bootstrap.scss';
 @import 'lib/bootstrap-select.css';
 @import 'lib/bootstrap-select-overwrite.scss';
@@ -18,7 +22,6 @@
 @import 'wrapper.scss';
 @import 'leftSide.scss';
 @import 'rightSide.scss';
-@import 'header.scss';
 @import 'footer.scss';
 @import 'new/style.scss';
 @import 'components/write-telegram.scss';
@@ -50,6 +53,8 @@
 
 @import 'pages/blogSite.scss';
 @import 'pages/creatives.scss';
+
+@import 'pages/verify-account.scss';
 
 // from dev
 @import 'from-dev/BaseSelect-BMEJFstU.css';

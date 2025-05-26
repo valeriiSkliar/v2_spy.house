@@ -5,7 +5,7 @@ use App\Http\Controllers\Api\Profile\ProfileSettingsController;
 use App\Http\Controllers\Frontend\Profile\ProfileController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['web', 'auth', 'auth:sanctum'])->group(function () {
+Route::middleware(['web', 'auth', 'auth:sanctum', 'verified:verification.notice'])->group(function () {
     Route::get('/profile/settings', [ProfileController::class, 'settings'])->name('profile.settings');
     Route::get('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.change-password');
     Route::post('/profile/initiate-password-update', [ProfileController::class, 'initiatePasswordUpdate'])->name('profile.initiate-password-update');

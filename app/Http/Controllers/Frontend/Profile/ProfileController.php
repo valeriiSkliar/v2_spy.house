@@ -1128,4 +1128,12 @@ class ProfileController extends BaseProfileController
             ], 422);
         }
     }
+    public function verifyYourAccount(Request $request): View
+    {
+        $user = $request->user();
+
+        return view('pages.profile.verify-your-account', [
+            'user' => $user,
+        ]);
+    }
 }
