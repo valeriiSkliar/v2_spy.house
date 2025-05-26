@@ -20,6 +20,7 @@ Route::middleware(['web', 'auth', 'auth:sanctum'])->group(function () {
     Route::get('/profile/connect-2fa', [ProfileController::class, 'connect2fa'])->name('profile.connect-2fa');
     Route::get('/profile/connect-2fa-step2', [ProfileController::class, 'connect2faStep2'])->name('profile.connect-2fa-step2');
     Route::post('/profile/connect-2fa', [ProfileController::class, 'store2fa'])->name('profile.store-2fa');
+    Route::post('/profile/regenerate-2fa-secret', [ProfileController::class, 'regenerate2faSecret'])->name('profile.regenerate-2fa-secret');
     Route::get('/profile/connect-pin', [ProfileController::class, 'connectPin'])->name('profile.connect-pin');
     Route::post('/profile/connect-pin', [ProfileController::class, 'storePin'])->name('profile.store-pin');
     Route::put('/profile/update-notifications', [ProfileController::class, 'updateNotifications'])->name('profile.update-notifications');

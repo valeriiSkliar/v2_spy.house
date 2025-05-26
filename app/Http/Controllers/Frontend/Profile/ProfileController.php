@@ -995,4 +995,33 @@ class ProfileController extends BaseProfileController
         return redirect()->route('profile.settings', ['tab' => $activeTab])
             ->with('status', 'password-update-cancelled');
     }
+
+    /**
+     * Regenerate 2FA secret key for the user (AJAX endpoint)
+     */
+    public function regenerate2faSecret(Request $request)
+    {
+        $user = $request->user();
+        Log::debug('2FA secret regeneration requested', ['user_id' => $user->id]);
+
+        $google2fa = app('pragmarx.google2fa');
+        $secret = $google2fa->generateSecretKey();
+
+        // Store new secret in session (temporary)
+        $request->session()->put('google_2fa_secret_temp', $secret);
+        Log::debug('New 2FA secret generated and stored in session', ['user_id' => $user->id, 'secret_length' => strlen($secret)]);
+
+        // Generate QR code
+        $qrCodeInline = $google2fa->getQRCodeInline(
+            config('app.name', 'Laravel'),
+            $user->email,
+            $secret
+        );
+
+        return response()->json([
+            'success' => true,
+            'secret' => $secret,
+            'qrCode' => $qrCodeInline,
+        ]);
+    }
 }
