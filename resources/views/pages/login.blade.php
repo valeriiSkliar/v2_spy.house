@@ -27,7 +27,8 @@
 
                         <div class="form-item mb-3">
                             <input type="email" name="email" class="input-h-57 @error('email') is-invalid @enderror"
-                                placeholder="{{ __('Email') }}" value="{{ old('email') }}" autofocus>
+                                placeholder="{{ __('Email') }}" value="{{ old('email') }}" readonly autocomplete="off"
+                                onfocus="this.removeAttribute('readonly');" autofocus>
                             {{-- @error('email')
                             <span class="invalid-feedback" role="alert">
                                 <strong>{{ $message }}</strong>
@@ -39,7 +40,8 @@
                             <div class="form-password">
                                 <input type="password" name="password"
                                     class="input-h-57 @error('password') is-invalid @enderror" data-pass="pass-1"
-                                    placeholder="{{ __('Password') }}" required>
+                                    placeholder="{{ __('Password') }}" readonly autocomplete="off"
+                                    onfocus="this.removeAttribute('readonly');">
                                 <button type="button" class="btn-icon switch-password" data-pass-switch="pass-1">
                                     <span class="icon-view-off"></span>
                                     <span class="icon-view-on"></span>
