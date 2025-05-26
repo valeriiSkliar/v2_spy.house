@@ -1,21 +1,25 @@
+import { hideInElement, showInElement } from '../../components/loader';
 import { createAndShowToast } from '../../utils';
 
 export async function regenerate2faSecret() {
   const regenerateButton = document.querySelector('.js-regenerate-2fa-secret');
-
+  const twoFactorContainer = document.querySelector('#two-factor-container');
   if (!regenerateButton) return;
   const secretElement = document.querySelector('.js-2fa-secret');
   const qrCodeContainer = document.querySelector('.js-qr-code-container');
+  let loader = null;
   try {
     // Показываем состояние загрузки
+    loader = showInElement(twoFactorContainer);
     regenerateButton.disabled = true;
-    regenerateButton.textContent = 'Генерирую...';
+    // regenerateButton.textContent = 'Генерирую...';
 
     const response = await fetch('/profile/regenerate-2fa-secret', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        'X-Requested-With': 'XMLHttpRequest',
       },
     });
 
@@ -42,8 +46,9 @@ export async function regenerate2faSecret() {
     }
   } catch (error) {
     console.error('Ошибка при регенерации 2FA секрета:', error);
-    alert('Произошла ошибка при генерации нового кода. Попробуйте еще раз.');
+    createAndShowToast('Произошла ошибка при генерации нового кода. Попробуйте еще раз.', 'error');
   } finally {
+    hideInElement(loader);
     regenerateButton.disabled = false;
     if (regenerateButton.textContent === 'Генерирую...') {
       regenerateButton.textContent = 'Сгенерировать другой';
@@ -53,11 +58,15 @@ export async function regenerate2faSecret() {
 
 // Переход на второй шаг
 async function goToStep2() {
+  const twoFactorContainer = document.querySelector('#two-factor-container');
+  let loader = null;
   try {
+    loader = showInElement(twoFactorContainer);
     const response = await fetch('/profile/connect-2fa-step2-content', {
       method: 'GET',
       headers: {
         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        'X-Requested-With': 'XMLHttpRequest',
       },
     });
 
@@ -85,17 +94,49 @@ async function goToStep2() {
       error.message || 'Произошла ошибка при переходе на второй шаг. Попробуйте еще раз.',
       'error'
     );
+  } finally {
+    hideInElement(loader);
   }
 }
 
 // Возврат на первый шаг
 function goBackToStep1() {
-  if (window.step1Html) {
-    const step2Container = document.querySelector('.step-2fa');
-    if (step2Container) {
-      step2Container.outerHTML = window.step1Html;
-      // Переинициализируем обработчики первого шага
-      initStep1Handlers();
+  // Проверяем наличие сохраненного HTML до показа loader'а
+  if (!window.step1Html) {
+    createAndShowToast('Не удалось вернуться на первый шаг. Перезагрузите страницу.', 'error');
+    return;
+  }
+
+  const step2Container = document.querySelector('.step-2fa');
+  if (!step2Container) {
+    createAndShowToast('Элемент формы не найден.', 'error');
+    return;
+  }
+
+  const twoFactorContainer = document.querySelector('#two-factor-container');
+  let loader = null;
+
+  try {
+    // Показываем loader только на время DOM операций
+    loader = showInElement(twoFactorContainer);
+
+    // Выполняем DOM операции в одном блоке для минимизации reflow
+    step2Container.outerHTML = window.step1Html;
+
+    // Скрываем loader сразу после DOM операций
+    hideInElement(loader);
+    loader = null;
+
+    // Инициализируем обработчики после скрытия loader'а
+    // Это не вызывает визуальных изменений, поэтому loader не нужен
+    initStep1Handlers();
+  } catch (error) {
+    console.error('Ошибка при возврате на первый шаг:', error);
+    createAndShowToast('Произошла ошибка при возврате на первый шаг. Попробуйте еще раз.', 'error');
+  } finally {
+    // Убеждаемся что loader скрыт в случае ошибки
+    if (loader) {
+      hideInElement(loader);
     }
   }
 }
@@ -144,12 +185,16 @@ function initStep2Handlers() {
       // Скрываем предыдущие ошибки
       hideStep2Error();
 
-      // Показываем состояние загрузки
-      submitButton.disabled = true;
-      const originalText = submitButton.textContent;
-      submitButton.textContent = 'Проверяю...';
+      const twoFactorContainer = document.querySelector('#two-factor-container');
+      let loader = null;
 
       try {
+        // Показываем состояние загрузки
+        loader = showInElement(twoFactorContainer);
+        submitButton.disabled = true;
+        const originalText = submitButton.textContent;
+        submitButton.textContent = 'Проверяю...';
+
         const formData = new FormData(form);
         const response = await fetch(form.dataset.ajaxUrl, {
           method: 'POST',
@@ -158,6 +203,7 @@ function initStep2Handlers() {
             'X-CSRF-TOKEN': document
               .querySelector('meta[name="csrf-token"]')
               .getAttribute('content'),
+            'X-Requested-With': 'XMLHttpRequest',
           },
         });
 
@@ -174,10 +220,14 @@ function initStep2Handlers() {
         }
       } catch (error) {
         console.error('Ошибка при подтверждении 2FA:', error);
-        showStep2Error('Произошла ошибка при подтверждении. Попробуйте еще раз.');
+        createAndShowToast('Произошла ошибка при подтверждении. Попробуйте еще раз.', 'error');
       } finally {
+        hideInElement(loader);
         submitButton.disabled = false;
-        submitButton.textContent = originalText;
+        if (submitButton.textContent === 'Проверяю...') {
+          submitButton.textContent =
+            submitButton.getAttribute('data-original-text') || 'Подтвердить';
+        }
       }
     });
   }
@@ -185,16 +235,7 @@ function initStep2Handlers() {
 
 // Показ ошибки на втором шаге
 function showStep2Error(message) {
-  const errorContainer = document.getElementById('step2-errors');
-  const errorText = document.getElementById('step2-error-text');
-
-  if (errorContainer && errorText) {
-    errorText.textContent = message;
-    errorContainer.classList.remove('d-none');
-
-    // Прокручиваем к ошибке
-    errorContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
+  createAndShowToast(message, 'error');
 }
 
 // Скрытие ошибки на втором шаге

@@ -6,7 +6,7 @@
 @if ($user->google_2fa_enabled)
 <x-profile.two-factor.status-enabled :user="$user" />
 @else
-<div class="section mb-20">
+<div id="two-factor-container" class="section mb-20">
     <x-profile.two-factor.status-messages />
     <div class="step-2fa">
         <x-profile.two-factor.step-header number="1" title="Google Authenticator" />

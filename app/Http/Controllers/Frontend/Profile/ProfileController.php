@@ -1060,6 +1060,13 @@ class ProfileController extends BaseProfileController
      */
     public function store2faAjax(Request $request)
     {
+        if (!$request->ajax()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid request',
+            ], 400);
+        }
+
         $request->validate([
             'verification_code' => 'required|string|digits:6',
         ]);
@@ -1103,7 +1110,8 @@ class ProfileController extends BaseProfileController
             return response()->json([
                 'success' => true,
                 'message' => __('profile.2fa.enabled'),
-                'redirect' => route('profile.settings', ['tab' => 'security'])
+                // 'redirect' => route('profile.settings', ['tab' => 'security'])
+                'redirect' => route('profile.disable-2fa')
             ]);
         } else {
             Log::warning('Invalid 2FA verification code provided via AJAX', [
