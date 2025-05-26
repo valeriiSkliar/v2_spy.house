@@ -18,7 +18,7 @@
         <div class="login-page__right">
             <div class="login-form">
                 <div class="login-form__content">
-                    <form method="POST" action="{{ route('register') }}">
+                    <form method="POST" action="{{ route('register') }}" novalidate>
                         @csrf
                         <div class="d-flex align-items-center justify-content-between mb-30">
                             <h1 class="mb-0 font-24">{{ __('Registration') }}</h1>
@@ -27,16 +27,18 @@
                         </div>
 
                         <div class="form-item mb-3">
-                            <input type="text" name="login" class="input-h-57 @error('login') error @enderror"
-                                placeholder="{{ __('Login') }}" value="{{ old('login') }}">
+                            <input type="text" name="login" class="input-h-57 @error('login') error @enderror" readonly
+                                onfocus="this.removeAttribute('readonly');" placeholder="{{ __('Login') }}"
+                                value="{{ old('login') }}">
                             @error('login')
                             <span class="error-message">{{ $message }}</span>
                             @enderror
                         </div>
 
                         <div class="form-item mb-3">
-                            <input type="email" name="email" class="input-h-57 @error('email') error @enderror"
-                                placeholder="{{ __('Email') }}" value="{{ old('email') }}">
+                            <input type="text" name="email" class="input-h-57 @error('email') error @enderror" readonly
+                                onfocus="this.removeAttribute('readonly');" placeholder="{{ __('Email') }}"
+                                value="{{ old('email') }}">
                             @error('email')
                             <span class="error-message">{{ $message }}</span>
                             @enderror
@@ -44,7 +46,8 @@
 
                         <div class="form-item mb-3">
                             <div class="form-password">
-                                <input type="password" name="password"
+                                <input type="password" name="password" readonly
+                                    onfocus="this.removeAttribute('readonly');"
                                     class="input-h-57 @error('password') error @enderror" data-pass="pass-1"
                                     placeholder="{{ __('Password') }}">
                                 <button type="button" class="btn-icon switch-password" data-pass-switch="pass-1">
@@ -59,8 +62,9 @@
 
                         <div class="form-item mb-3">
                             <div class="form-password">
-                                <input type="password" name="password_confirmation" class="input-h-57"
-                                    data-pass="pass-2" placeholder="{{ __('Confirm your password') }}">
+                                <input type="password" name="password_confirmation" readonly
+                                    onfocus="this.removeAttribute('readonly');" class="input-h-57" data-pass="pass-2"
+                                    placeholder="{{ __('Confirm your password') }}">
                                 <button type="button" class="btn-icon switch-password" data-pass-switch="pass-2">
                                     <span class="icon-view-off"></span>
                                     <span class="icon-view-on"></span>
@@ -70,7 +74,8 @@
 
                         <div class="form-item mb-3">
                             <div class="form-messenger">
-                                <input type="text" name="messenger_contact"
+                                <input readonly onfocus="this.removeAttribute('readonly');" type="text"
+                                    name="messenger_contact"
                                     class="input-h-57 @error('messenger_contact') error @enderror"
                                     value="{{ old('messenger_contact') }}" placeholder="@UserName">
                                 <input type="hidden" name="messenger_type" value="telegram">

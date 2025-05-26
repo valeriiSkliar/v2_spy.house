@@ -59,7 +59,7 @@ class RegistrationForm {
     }
 
     // Show loader on submit button
-    showInButton(this.submitButton, '_green');
+    showInButton(this.submitButton);
 
     try {
       const formData = new FormData(this.form);
@@ -153,7 +153,7 @@ class RegistrationForm {
   validateRequiredFields() {
     const requiredFields = [
       { name: 'login', label: 'Логин' },
-      //   { name: 'email', label: 'Email' },
+      { name: 'email', label: 'Email' },
       { name: 'password', label: 'Пароль' },
       { name: 'password_confirmation', label: 'Подтверждение пароля' },
       { name: 'messenger_contact', label: 'Контакт мессенджера' },
