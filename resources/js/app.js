@@ -22,6 +22,10 @@ import './components/modal';
 // Import the toast system
 import './components/toasts';
 
+// Import SweetAlert2 service
+import './services/sweetAlertExamples';
+import './services/sweetAlertService';
+
 // Import helpers
 import './helpers';
 

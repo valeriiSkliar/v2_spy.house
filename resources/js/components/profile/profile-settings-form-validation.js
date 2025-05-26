@@ -61,15 +61,15 @@ function initProfileSettingsValidation($form) {
     // Invalid form handler
     invalidHandler: function (event, validator) {
       // Scroll to first error
-      if (validator.numberOfInvalids() > 0) {
-        const $firstError = $(validator.errorList[0].element);
-        $('html, body').animate(
-          {
-            scrollTop: $firstError.offset().top - 100,
-          },
-          500
-        );
-      }
+      // if (validator.numberOfInvalids() > 0) {
+      //   const $firstError = $(validator.errorList[0].element);
+      //   $('html, body').animate(
+      //     {
+      //       scrollTop: $firstError.offset().top - 100,
+      //     },
+      //     500
+      //   );
+      // }
     },
   });
 

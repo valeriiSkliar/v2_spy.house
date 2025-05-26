@@ -1,0 +1,350 @@
+// SweetAlert2 Custom Styles
+// Стили для унифицированных модальных окон
+
+// Основной контейнер модального окна
+.swal-popup {
+  border-radius: 12px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
+  padding: 2rem !important;
+  font-family: inherit !important;
+
+  // Адаптивность для мобильных устройств
+  @media (max-width: 768px) {
+    margin: 1rem !important;
+    padding: 1.5rem !important;
+    border-radius: 8px !important;
+  }
+}
+
+// Заголовок модального окна
+.swal-title {
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  color: #2d3748 !important;
+  margin-bottom: 1rem !important;
+  line-height: 1.3 !important;
+
+  @media (max-width: 768px) {
+    font-size: 1.25rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+}
+
+// Контент модального окна
+.swal-content {
+  font-size: 1rem !important;
+  color: #4a5568 !important;
+  line-height: 1.5 !important;
+  margin-bottom: 1.5rem !important;
+
+  @media (max-width: 768px) {
+    font-size: 0.9rem !important;
+    margin-bottom: 1rem !important;
+  }
+}
+
+// Базовые стили для кнопок
+.swal-confirm-btn,
+.swal-cancel-btn {
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 6px !important;
+  font-weight: 500 !important;
+  font-size: 0.95rem !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  min-width: 100px !important;
+
+  @media (max-width: 768px) {
+    padding: 0.6rem 1.2rem !important;
+    font-size: 0.9rem !important;
+    min-width: 80px !important;
+  }
+
+  &:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  &:active {
+    transform: translateY(0) !important;
+  }
+}
+
+// Кнопка подтверждения (основная)
+.swal-confirm-btn.btn-primary {
+  background-color: #3182ce !important;
+  color: white !important;
+
+  &:hover {
+    background-color: #2c5aa0 !important;
+  }
+}
+
+// Кнопка успеха
+.swal-confirm-btn.btn-success {
+  background-color: #38a169 !important;
+  color: white !important;
+
+  &:hover {
+    background-color: #2f855a !important;
+  }
+}
+
+// Кнопка ошибки/опасности
+.swal-confirm-btn.btn-danger,
+.swal-cancel-btn.btn-danger {
+  background-color: #e53e3e !important;
+  color: white !important;
+
+  &:hover {
+    background-color: #c53030 !important;
+  }
+}
+
+// Кнопка предупреждения
+.swal-confirm-btn.btn-warning {
+  background-color: #dd6b20 !important;
+  color: white !important;
+
+  &:hover {
+    background-color: #c05621 !important;
+  }
+}
+
+// Кнопка информации
+.swal-confirm-btn.btn-info {
+  background-color: #3182ce !important;
+  color: white !important;
+
+  &:hover {
+    background-color: #2c5aa0 !important;
+  }
+}
+
+// Вторичная кнопка (отмена)
+.swal-cancel-btn.btn-secondary {
+  background-color: #718096 !important;
+  color: white !important;
+
+  &:hover {
+    background-color: #4a5568 !important;
+  }
+}
+
+// Поле ввода
+.swal-input {
+  border: 2px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+  padding: 0.75rem !important;
+  font-size: 1rem !important;
+  width: 100% !important;
+  margin: 1rem 0 !important;
+  transition: border-color 0.2s ease !important;
+
+  &:focus {
+    outline: none !important;
+    border-color: #3182ce !important;
+    box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1) !important;
+  }
+
+  &::placeholder {
+    color: #a0aec0 !important;
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.6rem !important;
+    font-size: 0.95rem !important;
+  }
+}
+
+// Селект для выбора из списка
+.swal-select {
+  border: 2px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+  padding: 0.75rem !important;
+  font-size: 1rem !important;
+  width: 100% !important;
+  margin: 1rem 0 !important;
+  background-color: white !important;
+  cursor: pointer !important;
+  transition: border-color 0.2s ease !important;
+
+  &:focus {
+    outline: none !important;
+    border-color: #3182ce !important;
+    box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1) !important;
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.6rem !important;
+    font-size: 0.95rem !important;
+  }
+}
+
+// Иконки модальных окон
+.swal2-icon {
+  margin: 1rem auto 1.5rem !important;
+
+  @media (max-width: 768px) {
+    margin: 0.75rem auto 1rem !important;
+  }
+
+  // Иконка успеха
+  &.swal2-success {
+    border-color: #38a169 !important;
+
+    .swal2-success-ring {
+      border-color: rgba(56, 161, 105, 0.3) !important;
+    }
+
+    .swal2-success-fix {
+      background-color: #38a169 !important;
+    }
+
+    [class^='swal2-success-line'] {
+      background-color: #38a169 !important;
+    }
+  }
+
+  // Иконка ошибки
+  &.swal2-error {
+    border-color: #e53e3e !important;
+
+    .swal2-x-mark {
+      .swal2-x-mark-line-left,
+      .swal2-x-mark-line-right {
+        background-color: #e53e3e !important;
+      }
+    }
+  }
+
+  // Иконка предупреждения
+  &.swal2-warning {
+    border-color: #dd6b20 !important;
+    color: #dd6b20 !important;
+  }
+
+  // Иконка информации
+  &.swal2-info {
+    border-color: #3182ce !important;
+    color: #3182ce !important;
+  }
+}
+
+// Прогресс-бар таймера
+.swal2-timer-progress-bar {
+  background-color: #3182ce !important;
+  height: 4px !important;
+}
+
+// Контейнер для кнопок
+.swal2-actions {
+  gap: 0.75rem !important;
+  margin-top: 1.5rem !important;
+
+  @media (max-width: 768px) {
+    gap: 0.5rem !important;
+    margin-top: 1rem !important;
+    flex-direction: column-reverse !important;
+
+    .swal-confirm-btn,
+    .swal-cancel-btn {
+      width: 100% !important;
+      margin: 0 !important;
+    }
+  }
+}
+
+// Сообщения валидации
+.swal2-validation-message {
+  background-color: #fed7d7 !important;
+  color: #c53030 !important;
+  border: 1px solid #feb2b2 !important;
+  border-radius: 4px !important;
+  padding: 0.5rem !important;
+  margin-top: 0.5rem !important;
+  font-size: 0.875rem !important;
+}
+
+// Анимации
+.swal2-popup.swal2-show {
+  animation: swal2-show 0.3s ease-out !important;
+}
+
+.swal2-popup.swal2-hide {
+  animation: swal2-hide 0.15s ease-in !important;
+}
+
+@keyframes swal2-show {
+  0% {
+    transform: scale(0.7) translateY(-20px);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes swal2-hide {
+  0% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.9) translateY(-10px);
+    opacity: 0;
+  }
+}
+
+// Темная тема (если используется)
+@media (prefers-color-scheme: dark) {
+  .swal-popup {
+    background-color: #2d3748 !important;
+    color: #e2e8f0 !important;
+  }
+
+  .swal-title {
+    color: #f7fafc !important;
+  }
+
+  .swal-content {
+    color: #cbd5e0 !important;
+  }
+
+  .swal-input,
+  .swal-select {
+    background-color: #4a5568 !important;
+    border-color: #718096 !important;
+    color: #e2e8f0 !important;
+
+    &::placeholder {
+      color: #a0aec0 !important;
+    }
+  }
+}
+
+// Дополнительные утилиты для кастомизации
+.swal-popup {
+  // Увеличенная ширина для больших экранов
+  &.swal-wide {
+    width: 600px !important;
+    max-width: 90vw !important;
+  }
+
+  // Компактный размер
+  &.swal-compact {
+    padding: 1.5rem !important;
+
+    .swal-title {
+      font-size: 1.25rem !important;
+      margin-bottom: 0.75rem !important;
+    }
+
+    .swal-content {
+      font-size: 0.9rem !important;
+      margin-bottom: 1rem !important;
+    }
+  }
+}
