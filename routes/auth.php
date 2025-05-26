@@ -22,6 +22,9 @@ Route::middleware('guest')->group(function () {
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
 
+    Route::post('login/ajax', [AuthenticatedSessionController::class, 'storeAjax'])
+        ->name('login.ajax');
+
     Route::post('login/2fa/check', [AuthenticatedSessionController::class, 'preLogin2FACheck'])
         ->name('login.2fa.check');
 

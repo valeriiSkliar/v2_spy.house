@@ -27,12 +27,12 @@
 
                         <div class="form-item mb-3">
                             <input type="email" name="email" class="input-h-57 @error('email') is-invalid @enderror"
-                                placeholder="{{ __('Email') }}" value="{{ old('email') }}" required autofocus>
-                            @error('email')
+                                placeholder="{{ __('Email') }}" value="{{ old('email') }}" autofocus>
+                            {{-- @error('email')
                             <span class="invalid-feedback" role="alert">
                                 <strong>{{ $message }}</strong>
                             </span>
-                            @enderror
+                            @enderror --}}
                         </div>
 
                         <div class="form-item mb-3">
@@ -44,11 +44,11 @@
                                     <span class="icon-view-off"></span>
                                     <span class="icon-view-on"></span>
                                 </button>
-                                @error('password')
+                                {{-- @error('password')
                                 <span class="invalid-feedback" role="alert">
                                     <strong>{{ $message }}</strong>
                                 </span>
-                                @enderror
+                                @enderror --}}
                             </div>
                         </div>
 
@@ -65,7 +65,8 @@
                         </div>
 
                         <div class="form-item mb-30">
-                            <button type="submit" class="btn _flex _green _big w-100">{{ __('Log In') }}</button>
+                            <button id="login-submit-button" type="submit" class="btn _flex _green _big w-100">{{
+                                __('Log In') }}</button>
                         </div>
 
                         <div class="form-item mb-30">
