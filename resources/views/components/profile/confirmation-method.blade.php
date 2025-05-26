@@ -10,7 +10,7 @@
 'buttonTextEnableKey' => 'profile.security_settings.connect_button',
 'buttonTextDisableKey' => 'profile.security_settings.disconnect_button',
 'buttonClassEnable' => 'btn _flex _border-green _medium',
-'buttonClassDisable' => 'btn _flex _border-red _medium',
+'buttonClassDisable' => 'btn _flex _red _medium',
 ])
 
 <div class="col-12 col-md-6 d-flex">

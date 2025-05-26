@@ -56,7 +56,7 @@
             :label="__('profile.security_settings.confirm_button')" />
         <div class="mb-20">
 
-            <a href="{{ route('api.profile.cancel-password-update') }}" class="btn _flex _border-red _big">
+            <a href="{{ route('api.profile.cancel-password-update') }}" class="btn _flex _red _big">
                 {{ __('profile.security_settings.cancel_button') }}
             </a>
         </div>
