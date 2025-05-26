@@ -1024,4 +1024,100 @@ class ProfileController extends BaseProfileController
             'qrCode' => $qrCodeInline,
         ]);
     }
+
+    /**
+     * Get HTML content for 2FA step 2 via AJAX
+     */
+    public function getConnect2faStep2Content(Request $request)
+    {
+        $user = $request->user();
+        Log::debug('2FA step 2 content requested via AJAX', ['user_id' => $user->id]);
+
+        // Проверяем, есть ли временный секрет в сессии
+        if (!$request->session()->has('google_2fa_secret_temp')) {
+            Log::warning('No temp 2FA secret found in session for AJAX request', ['user_id' => $user->id]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Необходимо начать процесс активации с первого шага',
+                'redirect' => route('profile.connect-2fa')
+            ], 400);
+        }
+
+        // Рендерим только контент второго шага
+        $htmlContent = view('components.profile.two-factor.step2-content', [
+            'user' => $user,
+        ])->render();
+
+        return response()->json([
+            'success' => true,
+            'html' => $htmlContent,
+        ]);
+    }
+
+    /**
+     * Store 2FA verification via AJAX
+     */
+    public function store2faAjax(Request $request)
+    {
+        $request->validate([
+            'verification_code' => 'required|string|digits:6',
+        ]);
+
+        $user = $request->user();
+        $otp = $request->input('verification_code');
+        Log::debug('2FA verification attempt via AJAX', [
+            'user_id' => $user->id,
+            'otp_length' => strlen($otp),
+            'otp_masked' => substr($otp, 0, 2) . '****',
+        ]);
+
+        $google2fa = app('pragmarx.google2fa');
+
+        $secret = $request->session()->get('google_2fa_secret_temp');
+
+        if (!$secret) {
+            Log::error('No temp 2FA secret found in session during AJAX verification', ['user_id' => $user->id]);
+
+            return response()->json([
+                'success' => false,
+                'message' => __('profile.2fa.secret_not_found'),
+                'redirect' => route('profile.connect-2fa')
+            ], 400);
+        }
+
+        Log::debug('Retrieved temp 2FA secret from session for AJAX verification', ['user_id' => $user->id, 'secret_length' => strlen($secret)]);
+
+        $valid = $google2fa->verifyKey($secret, $otp);
+        Log::debug('2FA AJAX verification result', ['user_id' => $user->id, 'is_valid' => $valid]);
+
+        if ($valid) {
+            $user->google_2fa_secret = Crypt::encryptString($secret);
+            $user->google_2fa_enabled = true;
+            $user->save();
+            Log::info('2FA successfully enabled for user via AJAX', ['user_id' => $user->id]);
+
+            $request->session()->forget('google_2fa_secret_temp');
+            Log::debug('Temp 2FA secret removed from session', ['user_id' => $user->id]);
+
+            return response()->json([
+                'success' => true,
+                'message' => __('profile.2fa.enabled'),
+                'redirect' => route('profile.settings', ['tab' => 'security'])
+            ]);
+        } else {
+            Log::warning('Invalid 2FA verification code provided via AJAX', [
+                'user_id' => $user->id,
+                'otp_masked' => substr($otp, 0, 2) . '****',
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => __('profile.2fa.invalid_code'),
+                'errors' => [
+                    'verification_code' => [__('profile.2fa.invalid_code')]
+                ]
+            ], 422);
+        }
+    }
 }
