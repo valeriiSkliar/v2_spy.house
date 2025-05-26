@@ -18,7 +18,7 @@ class ProfileAvatarController extends Controller
     {
         // Validate the uploaded file
         $validator = Validator::make($request->all(), [
-            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'avatar' => 'required|image|mimes:png|max:200',
         ]);
 
         if ($validator->fails()) {
@@ -63,12 +63,12 @@ class ProfileAvatarController extends Controller
                 'success' => true,
                 'message' => __('profile.personal_info.photo_updated'),
                 'avatar' => [
-                    'url' => asset('storage/'.$avatarPath),
+                    'url' => asset('storage/' . $avatarPath),
                     'metadata' => $avatarMetadata,
                 ],
             ]);
         } catch (\Exception $e) {
-            Log::error('Error uploading avatar: '.$e->getMessage(), [
+            Log::error('Error uploading avatar: ' . $e->getMessage(), [
                 'user_id' => $request->user()->id ?? null,
                 'exception' => $e,
             ]);

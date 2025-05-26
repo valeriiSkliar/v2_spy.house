@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const uploadButtonLabel = document.querySelector(`label[for="${this.fileInputId}"]`);
       this.uploadButton = uploadButtonLabel;
       this.avatarContainer = document.getElementById(this.avatarContainerId);
-      this.fileNameElement = document.getElementById(this.fileNameId);
+      // this.fileNameElement = document.getElementById(this.fileNameId);
 
       if (!this.fileInput) {
         loggerError('Avatar file input not found');
@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!file) return;
 
         // Display file info
-        this.showFileInfo(file);
+        // this.showFileInfo(file);
 
         // Upload the file automatically on selection
         this.uploadFile(file);
@@ -62,17 +62,17 @@ document.addEventListener('DOMContentLoaded', function () {
     },
 
     // Display selected file information
-    showFileInfo: function (file) {
-      if (!this.fileNameElement) return;
+    // showFileInfo: function (file) {
+    //   // if (!this.fileNameElement) return;
 
-      const img = new Image();
-      img.onload = () => {
-        const fileType = file.name.split('.').pop().toUpperCase();
-        const fileSizeInKB = Math.round(file.size / 1024);
-        this.fileNameElement.textContent = `${fileType} (${img.width}x${img.height}) ${fileSizeInKB}kb`;
-      };
-      img.src = URL.createObjectURL(file);
-    },
+    //   const img = new Image();
+    //   img.onload = () => {
+    //     const fileType = file.name.split('.').pop().toUpperCase();
+    //     const fileSizeInKB = Math.round(file.size / 1024);
+    //     this.fileNameElement.textContent = `${fileType} (${img.width}x${img.height}) ${fileSizeInKB}kb`;
+    //   };
+    //   img.src = URL.createObjectURL(file);
+    // },
 
     // Upload the file to the server
     uploadFile: async function (file) {

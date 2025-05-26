@@ -1,5 +1,20 @@
 .user-info__photo-metadata {
-    margin-top: 5px;
-    font-size: 12px;
-    color: #666;
+  margin-top: 5px;
+  font-size: 12px;
+  color: #666;
+}
+
+.user-info {
+  .user-info__wrap {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: flex-start;
+    align-self: center;
+    gap: 20px;
+    @media screen and (max-width: 767px) {
+      gap: 10px;
+    }
+  }
 }
