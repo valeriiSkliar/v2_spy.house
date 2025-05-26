@@ -1,4 +1,4 @@
-import { hideInButton, showInButton } from '../components/loader';
+import loader, { hideInButton, showInButton } from '../components/loader';
 import { logger } from '../helpers/logger';
 import { createAndShowToast } from '../utils';
 
@@ -44,6 +44,7 @@ const handleLoginSubmit = async function (e) {
   // submitButton.html('Вход...');
 
   try {
+    loader.show();
     showInButton(submitButton[0]);
     // Подготавливаем данные для отправки
     const formData = new FormData();
@@ -86,7 +87,7 @@ const handleLoginSubmit = async function (e) {
     if (data.success) {
       // Успешный вход
       logger('Login successful, preparing redirect to:', data.redirect);
-      createAndShowToast(data.message || 'Успешный вход в систему', 'success');
+      // createAndShowToast(data.message || 'Успешный вход в систему', 'success');
 
       // Обновляем CSRF токен если он присутствует в ответе
       if (data.csrf_token) {
@@ -103,6 +104,7 @@ const handleLoginSubmit = async function (e) {
       handleLoginError(data, form);
     }
   } catch (error) {
+    loader.hide();
     logger('Login error:', error);
 
     // Проверяем специфичные ошибки

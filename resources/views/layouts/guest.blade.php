@@ -26,7 +26,7 @@ use Illuminate\Support\Facades\Auth;
 
 <body class="">
     <div class="navigation-bg"></div>
-    
+
 
     <!-- Page Content -->
     @yield('content')
@@ -34,18 +34,14 @@ use Illuminate\Support\Facades\Auth;
 
     <!-- Global Modal Container -->
     <div id="global-modal-container"></div>
+    <x-common.fullscreen-loader :active="false" />
 
     <!-- Toast Container -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1050;">
         @if (session('toasts'))
         @foreach (session('toasts') as $toast)
-        <div 
-            class="toast opacity-75 align-items-center border-0 toast-{{ $toast['type'] }}" 
-            role="alert" 
-            aria-live="assertive"
-            aria-atomic="true"
-            :data-bs-delay="5000"
-        >
+        <div class="toast opacity-75 align-items-center border-0 toast-{{ $toast['type'] }}" role="alert"
+            aria-live="assertive" aria-atomic="true" :data-bs-delay="5000">
             <div class="d-flex align-items-center p-3">
                 <div class="toast-icon me-3">
                 </div>

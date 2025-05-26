@@ -1,9 +1,11 @@
 @props(['id' => 'recaptcha-custom'])
 
-<div class="form-item mb-3">
+<div class="form-item mb-25 pt-2 d-flex justify-content-center">
     <div id="{{ $id }}" class="g-recaptcha" data-sitekey="{{ config('captcha.sitekey') }}"></div>
     @error('g-recaptcha-response')
-    <span class="error-message">{{ $message }}</span>
+    <div class="form-item mb-3">
+        <span class="error-message">{{ $message }}</span>
+    </div>
     @enderror
 </div>
 

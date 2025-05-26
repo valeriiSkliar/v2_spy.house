@@ -1,7 +1,7 @@
 /**
  * Registration form handler
  */
-import { hideInButton, showInButton } from '../components/loader.js';
+import loader, { hideInButton, showInButton } from '../components/loader.js';
 import { createAndShowToast } from '../utils/uiHelpers.js';
 
 class RegistrationForm {
@@ -62,6 +62,8 @@ class RegistrationForm {
     showInButton(this.submitButton);
 
     try {
+      loader.show();
+
       const formData = new FormData(this.form);
 
       // Add CSRF token if not present
@@ -110,7 +112,7 @@ class RegistrationForm {
     hideInButton(this.submitButton);
 
     // Show success toast
-    createAndShowToast(data.message || 'Регистрация прошла успешно!', 'success', 3000);
+    // createAndShowToast(data.message || 'Регистрация прошла успешно!', 'success', 3000);
 
     // Redirect after a short delay
     setTimeout(() => {
@@ -119,12 +121,13 @@ class RegistrationForm {
       } else {
         window.location.reload();
       }
-    }, 1500);
+    }, 2000);
   }
 
   handleError(error) {
     // Hide loader
     hideInButton(this.submitButton);
+    loader.hide();
 
     // Reset reCAPTCHA
     if (window.grecaptcha) {
