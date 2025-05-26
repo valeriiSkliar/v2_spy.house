@@ -1,7 +1,6 @@
-export * from "./api-token";
-export * from "./fetcher";
-export * from "./landings";
-export * from "./blogs";
-export * from "./services";
-export { default as loader } from "./loader";
-export * from "./profile";
+export * from './api-token';
+export * from './blogs';
+export * from './fetcher';
+export { default as loader } from './loader';
+export * from './profile';
+export * from './services';

@@ -8,6 +8,7 @@ export default defineConfig({
         // 'resources/css/app.css',
         'resources/scss/app.scss',
         'resources/js/app.js',
+        'resources/js/landings.js',
         'resources/js/services.js',
         'resources/js/pages/profile/disable-2fa.js',
         'resources/img/telegram.svg',
@@ -49,6 +50,26 @@ export default defineConfig({
       },
       format: {
         comments: false,
+      },
+    },
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          // Включаем loader в основной app чанк
+          if (id.includes('components/loader')) {
+            return 'app';
+          }
+
+          // Выносим jQuery в отдельный vendor чанк
+          if (id.includes('node_modules/jquery')) {
+            return 'vendor-jquery';
+          }
+
+          // Другие vendor библиотеки
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
+        },
       },
     },
   },

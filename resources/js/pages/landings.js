@@ -1,4 +1,4 @@
-import { initializeDynamicLandingStatus, initializeLandingStatus } from '@/components';
+import { initializeDynamicLandingStatus, initializeLandingStatus } from '@/components/landings';
 import { initializeSelectComponent } from '@/helpers';
 import $ from 'jquery';
 import {

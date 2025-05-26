@@ -1,5 +1,9 @@
 @extends('layouts.main')
 
+@push('scripts')
+@vite('resources/js/landings.js')
+@endpush
+
 @section('page-content')
 <span style="display: none;" id="landings-page-content"></span>
 <x-landings.sort-selects :sortOptions="$sortOptions" :perPageOptions="$perPageOptions" :selectedSort="$selectedSort"
