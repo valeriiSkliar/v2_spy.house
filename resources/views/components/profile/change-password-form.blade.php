@@ -9,7 +9,8 @@
             <div class="form-item mb-20">
                 <label class="d-block mb-10">{{ __('profile.security_settings.current_password_label') }}</label>
                 <div class="form-password">
-                    <input type="password" name="current_password" class="input-h-57" data-pass="pass-1" value="">
+                    <input autofocus tabindex="1" readonly onfocus="this.removeAttribute('readonly');" type="password"
+                        name="current_password" class="input-h-57" data-pass="pass-1" value="">
                     <button type="button" class="btn-icon switch-password" data-pass-switch="pass-1">
                         <span class="icon-view-off"></span>
                         <span class="icon-view-on"></span>
@@ -21,11 +22,11 @@
             </div>
         </div>
         <div class="col-12 col-md-6 col-lg-4">
-            <x-profile.password-field name="password" type="password"
+            <x-profile.password-field tabindex="2" name="password" type="password"
                 :label="__('profile.security_settings.new_password_label')" data-pass-switch="pass-2" />
         </div>
         <div class="col-12 col-md-6 col-lg-4">
-            <x-profile.password-field name="password_confirmation" type="password"
+            <x-profile.password-field tabindex="3" name="password_confirmation" type="password"
                 :label="__('profile.security_settings.new_password_confirmation_label')" data-pass-switch="pass-3"
                 :value="old('password_confirmation')" />
         </div>

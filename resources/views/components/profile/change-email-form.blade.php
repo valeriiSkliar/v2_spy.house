@@ -12,11 +12,11 @@
                 :disabled="true" :label="__('profile.security_settings.current_email_label')" />
         </div>
         <div class="col-12 col-md-6 col-lg-4">
-            <x-profile.form-field autocomplete="nope" name="new_email" type="email"
+            <x-profile.form-field tabindex="1" autofocus autocomplete="nope" name="new_email" type="email"
                 :label="__('profile.security_settings.new_email_label')" />
         </div>
         <div class="col-12 col-md-6 col-lg-4">
-            <x-profile.form-field autocomplete="nope" name="password" type="password"
+            <x-profile.form-field tabindex="2" autocomplete="nope" name="password" type="password"
                 :label="__('profile.security_settings.password_label')" />
         </div>
         <div data-confirmation-method="{{ $confirmationMethod }}" class="col-12 col-md-6 col-lg-6">
