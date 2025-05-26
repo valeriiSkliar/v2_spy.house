@@ -17,11 +17,6 @@ const handleServerValidationErrors = response => {
     Object.keys(response.errors).forEach(field => {
       const input = $(`[name="${field}"]`);
       input.addClass('error');
-
-      // Add error message after the input
-      const errorMessage = response.errors[field][0];
-      const errorDiv = $('<div>').addClass('error-message text-danger mt-1').text(errorMessage);
-      errorDiv.insertAfter(input);
     });
 
     // Show toast with the main error message
@@ -81,12 +76,13 @@ const initFormValidation = form => {
     errorElement: 'div',
     errorPlacement: function (error, element) {
       error.addClass('error-message text-danger mt-1');
-      // error.insertAfter(element);
     },
     highlight: function (element) {
+      $(element).removeClass('valid');
       $(element).addClass('error');
     },
     unhighlight: function (element) {
+      $(element).addClass('valid');
       $(element).removeClass('error');
     },
     rules: {
