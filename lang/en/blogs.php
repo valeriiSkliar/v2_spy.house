@@ -28,7 +28,11 @@ return [
         'send' => 'Send',
         'leave_reply_in_response_to' => 'Leave a reply in response to',
         'write_comment' => 'Write the text of the comment',
-
+        'comment_added_successfully' => 'Comment successfully added. It will appear on the site after moderator approval.',
+        'flood_protection_message' => 'You can only post one comment per minute. Please wait.',
+        'content_required' => 'Please enter comment text.',
+        'content_min' => 'Comment must contain at least :min characters.',
+        'content_max' => 'Comment must not exceed :max characters.',
     ],
     'article_rating' => [
         'leave_rating' => 'To leave rating, please',

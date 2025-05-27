@@ -26,7 +26,7 @@ class BlogController extends BaseBlogController
 
         if ($search) {
             $search = $this->sanitizeInput($search);
-            $query->where('title', 'like', '%'.$search.'%');
+            $query->where('title', 'like', '%' . $search . '%');
         }
 
         return view($this->indexView, [
@@ -220,7 +220,7 @@ class BlogController extends BaseBlogController
         $window = 60; // per 60 seconds (1 minute)
 
         if (! $this->checkAntiFlood($userId, $action, $limit, $window)) {
-            $errorMessage = 'You can only post one comment per minute. Please wait.';
+            $errorMessage = __('blogs.comments.flood_protection_message');
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => $errorMessage], 429); // 429 Too Many Requests
             }
@@ -233,6 +233,10 @@ class BlogController extends BaseBlogController
         $request->validate([
             'content' => 'required|min:2|max:1000',
             'parent_id' => 'nullable|exists:blog_comments,id',
+        ], [
+            'content.required' => __('blogs.comments.content_required'),
+            'content.min' => __('blogs.comments.content_min'),
+            'content.max' => __('blogs.comments.content_max'),
         ]);
 
         $post = BlogPost::where('slug', $slug)
@@ -256,14 +260,14 @@ class BlogController extends BaseBlogController
 
         $comment->save();
 
-        $successMessage = 'Comment added successfully';
+        $successMessage = __('blogs.comments.comment_added_successfully');
         Toast::success($successMessage);
 
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => $successMessage,
-                'comment' => $comment->load('author'), // Optionally return the new comment data
+                'comment' => $comment->load('replies'), // Load replies if any
             ]);
         }
 
