@@ -15,6 +15,7 @@ import '@pages';
 
 // Import the components
 import '@/components';
+import './base-select.js';
 
 // Import the modal system
 import './components/modal';
