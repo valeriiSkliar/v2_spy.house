@@ -149,6 +149,9 @@ async function handleResendVerification(event) {
       // Успешная отправка
       createAndShowToast(data.message || 'Ссылка отправлена на ваш email', 'success');
 
+      // Скрываем загрузчик перед блокировкой
+      hideInButton(button);
+
       // Блокируем кнопку используя время разблокировки от сервера
       if (data.unblock_time) {
         const unblockTime = parseInt(data.unblock_time);
@@ -194,7 +197,12 @@ async function handleResendVerification(event) {
 
       // Блокируем кнопку если нужно
       if (blockTime) {
+        // Скрываем загрузчик перед блокировкой
+        hideInButton(button);
         blockButtonTemporarily(button, blockTime);
+      } else {
+        // Если кнопка не блокируется, скрываем загрузчик
+        hideInButton(button);
       }
     }
   } catch (error) {
@@ -209,9 +217,11 @@ async function handleResendVerification(event) {
     }
 
     createAndShowToast(errorMessage, 'error');
-  } finally {
-    // Скрываем загрузчик и убираем флаг обработки
+
+    // В случае сетевой ошибки скрываем загрузчик
     hideInButton(button);
+  } finally {
+    // Убираем только флаг обработки, не трогаем состояние кнопки
     button.dataset.processing = 'false';
   }
 }
