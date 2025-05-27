@@ -29,7 +29,6 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['jquery'],
-    exclude: ['moment'], // Исключаем moment.js для лучшего tree-shaking
   },
   build: {
     chunkSizeWarningLimit: 400,
@@ -44,7 +43,14 @@ export default defineConfig({
       compress: {
         drop_console: true,
         drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'logger'],
+        pure_funcs: [
+          'console.log',
+          'console.info',
+          'logger',
+          'loggerError',
+          'loggerWarn',
+          'loggerSuccess',
+        ],
       },
       mangle: {
         safari10: true,
