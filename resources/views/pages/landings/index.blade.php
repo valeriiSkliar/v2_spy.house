@@ -23,3 +23,7 @@
 </div>
 
 @endsection
+
+@push('scripts')
+@vite('resources/js/landings.js')
+@endpush
