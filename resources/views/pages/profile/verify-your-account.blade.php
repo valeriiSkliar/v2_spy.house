@@ -18,12 +18,13 @@
         </div>
         <div class="verify-account-controls mb-30">
             <div class="verify-account-controls__btn">
-                <button class="btn _flex _link" disabled>
+                <button type="button" class="btn _flex _link" {{ !$canResend ? 'disabled' : '' }}
+                    data-action="resend-verification" @if($unblockTime) data-unblock-time="{{ $unblockTime }}" @endif
+                    data-server-time="{{ time() * 1000 }}" data-block-duration="300000">
                     <span class="icon-resend mr-2"></span>
                     Отправить снова
                 </button>
             </div>
-            {{-- <div class="verify-account-controls__timer">In 00:05:17</div> --}}
         </div>
         <button type="submit" class="btn _flex _green _big w-100">Активировать аккаунт</button>
     </form>

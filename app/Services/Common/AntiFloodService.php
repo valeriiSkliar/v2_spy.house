@@ -36,9 +36,10 @@ class AntiFloodService
         $key = $this->getKey($userId, $action);
         $current = Redis::incr($key);
 
-        // Если это первый запрос, устанавливаем время жизни ключа
+        // Если это первый запрос, устанавливаем время жизни ключа и сохраняем метку времени
         if ($current === 1) {
             Redis::expire($key, $window);
+            $this->setTimestamp($userId, $action, time(), $window);
         }
 
         return $current <= $limit;
@@ -84,6 +85,47 @@ class AntiFloodService
         $key = $this->getKey($userId, $action);
 
         return (bool) Redis::del($key);
+    }
+
+    /**
+     * Сохраняет метку времени для конкретного действия пользователя
+     *
+     * @param  mixed  $userId  Идентификатор пользователя
+     * @param  string  $action  Идентификатор действия
+     * @param  int  $timestamp  Метка времени
+     * @param  int  $window  Время жизни записи в секундах
+     */
+    protected function setTimestamp($userId, string $action, int $timestamp, int $window): void
+    {
+        $key = $this->getTimestampKey($userId, $action);
+        Redis::setex($key, $window, $timestamp);
+    }
+
+    /**
+     * Получает метку времени последнего действия пользователя
+     *
+     * @param  mixed  $userId  Идентификатор пользователя
+     * @param  string  $action  Идентификатор действия
+     * @return int|null Метка времени или null если не найдена
+     */
+    public function getTimestamp($userId, string $action): ?int
+    {
+        $key = $this->getTimestampKey($userId, $action);
+        $timestamp = Redis::get($key);
+
+        return $timestamp !== null ? (int) $timestamp : null;
+    }
+
+    /**
+     * Формирует ключ для сохранения метки времени
+     *
+     * @param  mixed  $userId  Идентификатор пользователя
+     * @param  string  $action  Идентификатор действия
+     * @return string
+     */
+    protected function getTimestampKey($userId, string $action): string
+    {
+        return "antiflood_timestamp:{$userId}:{$action}";
     }
 
     /**

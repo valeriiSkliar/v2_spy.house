@@ -78,4 +78,16 @@ trait HasAntiFloodProtection
 
         return max(0, $limit - $currentUsage);
     }
+
+    /**
+     * Get the timestamp of the first request for the user and action
+     *
+     * @param  mixed  $userId  Identifier of the user
+     * @param  string  $action  Identifier of the action or part of the application (default 'default')
+     * @return int|null Timestamp or null if not found
+     */
+    protected function getAntiFloodTimestamp($userId, string $action = 'default'): ?int
+    {
+        return $this->getAntiFloodService()->getTimestamp($userId, $action);
+    }
 }

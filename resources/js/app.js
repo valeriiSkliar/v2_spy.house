@@ -42,6 +42,7 @@ import './libs/main';
 import './carousel.js';
 import './components/profile/profile-settings-form-validation.js';
 import { initLogin2FA } from './pages/login.js';
+import './pages/verify-email.js';
 import './tariffs';
 
 // Initialize notification checking (check every minute)
