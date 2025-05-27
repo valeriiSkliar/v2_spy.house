@@ -29,9 +29,10 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['jquery'],
+    exclude: ['moment'], // Исключаем moment.js для лучшего tree-shaking
   },
   build: {
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 400,
     cssCodeSplit: true,
     cssMinify: 'lightningcss',
     lightningcss: {
@@ -53,6 +54,11 @@ export default defineConfig({
       },
     },
     rollupOptions: {
+      treeshake: {
+        moduleSideEffects: false,
+        propertyReadSideEffects: false,
+        tryCatchDeoptimization: false,
+      },
       output: {
         manualChunks(id) {
           // Включаем loader в основной app чанк
@@ -65,9 +71,24 @@ export default defineConfig({
             return 'vendor-jquery';
           }
 
-          // Другие vendor библиотеки
+          // Тяжелые UI библиотеки в отдельный чанк
+          if (id.includes('sweetalert2') || id.includes('flatpickr')) {
+            return 'vendor-ui';
+          }
+
+          // Bootstrap и связанные библиотеки
+          if (id.includes('bootstrap')) {
+            return 'vendor-bootstrap';
+          }
+
+          // Слайдеры и карусели (только если используются)
+          if (id.includes('swiper')) {
+            return 'vendor-sliders';
+          }
+
+          // Остальные vendor библиотеки
           if (id.includes('node_modules')) {
-            return 'vendor';
+            return 'vendor-misc';
           }
         },
       },

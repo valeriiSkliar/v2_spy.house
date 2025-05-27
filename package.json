@@ -24,16 +24,12 @@
     "dependencies": {
         "@types/jquery": "^3.5.32",
         "@types/slick-carousel": "^1.6.40",
-        "bootstrap-datepicker": "^1.10.0",
         "bootstrap-select": "^1.13.18",
         "counterup": "^1.0.2",
         "css-element-queries": "^1.2.3",
-        "daterangepicker": "^3.1.0",
         "flatpickr": "^4.6.13",
         "jquery": "^3.7.1",
         "jquery-validation": "^1.21.0",
-        "moment": "^2.30.1",
-        "select2": "^4.1.0-rc.0",
         "slick-carousel": "^1.8.1",
         "sweetalert2": "^11.22.0",
         "swiper": "^11.2.6"

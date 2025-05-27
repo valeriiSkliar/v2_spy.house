@@ -37,7 +37,6 @@ import { initializeNotificationChecking } from './utils/notification-checker-usa
 import './libs/main';
 // import "./rating.js";
 // import "./comments.js";
-import './base-select.js';
 // import "./search-suggestions.js";
 import './carousel.js';
 import './components/profile/profile-settings-form-validation.js';
