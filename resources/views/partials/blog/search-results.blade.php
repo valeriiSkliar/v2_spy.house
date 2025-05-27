@@ -12,8 +12,9 @@
 
 
 
-@if ($total > count($articles)) {{-- Show 'View all' only if there are more results than shown --}}
+@if ($total > count($articles))
 <div class="text-center mt-4 mb-4">
-    <a href="{{ url('/blog/search?q=' . urlencode($query)) }}" class="btn _flex _green _medium">View all {{ $total }} results</a>
+    <a href="{{ url('/blog/search?q=' . urlencode($query)) }}" class="btn _flex _green _medium">{{
+        __('blog.view_all_results', ['total' => $total]) }}</a>
 </div>
 @endif

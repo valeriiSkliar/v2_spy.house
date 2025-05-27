@@ -15,7 +15,7 @@
                     {{ auth()->user()->currentTariff()['name'] }}
                 </x-tariff-link>
                 @else
-                <x-tariff-link>Free</x-tariff-link>
+                <x-tariff-link>{{ __('tariffs.free') }}</x-tariff-link>
                 @endif
             </div>
         </div>

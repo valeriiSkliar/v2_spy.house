@@ -4,7 +4,7 @@
             <span class="icon-list"></span>
             <span class="icon-up font-24"></span>
         </span>
-        Category
+        {{ __('blog.category') }}
     </div>
     <div class="filter__content _blog">
         <ul class="blog-nav pb-3">
@@ -13,10 +13,9 @@
             $activeCategoryId = $activeCategory ? $activeCategory->id : null;
             @endphp
             @foreach($categories['categories'] as $category)
-            <li 
-                class="{{ $category->id == $activeCategoryId ? 'is-active' : '' }}">
+            <li class="{{ $category->id == $activeCategoryId ? 'is-active' : '' }}">
                 <a href="{{ route('blog.category', $category->slug) }}">
-                    <span>{{ $category->name }}</span> 
+                    <span>{{ $category->name }}</span>
                     <span class="blog-nav__count">{{ $category->posts_count }}</span>
                 </a>
             </li>
