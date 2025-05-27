@@ -3,37 +3,37 @@
         <div class="footer__content">
             <div class="footer__left">
                 <div class="footer__logo"><img src="/img/logo.svg" alt="" width="167" height="43"></div>
-                <div class="footer__copy">© 2012 - {{ date('Y') }} Spy.House</div>
+                <div class="footer__copy">{{ __('footer.copyright', ['year' => date('Y')]) }}</div>
                 <div class="footer__lang">
                     <x-frontend.language-selector />
                 </div>
             </div>
             <div class="footer__center">
                 <div class="footer-nav _mob-two-col">
-                    <p>Creatives Spy</p>
+                    <p>{{ __('footer.creatives_spy_title') }}</p>
                     <ul>
-                        <li><a href="#">Push</a></li>
-                        <li><a href="#">In-page</a></li>
-                        <li><a href="#">Facebook</a></li>
-                        <li><a href="#">Tik Tok</a></li>
+                        <li><a href="#">{{ __('footer.push') }}</a></li>
+                        <li><a href="#">{{ __('footer.in_page') }}</a></li>
+                        <li><a href="#">{{ __('footer.facebook') }}</a></li>
+                        <li><a href="#">{{ __('footer.tiktok') }}</a></li>
                     </ul>
                 </div>
                 <div class="footer-nav">
-                    <p>Useful</p>
+                    <p>{{ __('footer.useful_title') }}</p>
                     <ul>
-                        <li><a href="#">Offers</a></li>
-                        <li><a href="#">Services</a></li>
-                        <li><a href="#">Affiliate program</a></li>
-                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">{{ __('footer.offers') }}</a></li>
+                        <li><a href="#">{{ __('footer.services') }}</a></li>
+                        <li><a href="#">{{ __('footer.affiliate_program') }}</a></li>
+                        <li><a href="#">{{ __('footer.blog') }}</a></li>
                     </ul>
                 </div>
                 <div class="footer-nav">
-                    <p>Other</p>
+                    <p>{{ __('footer.other_title') }}</p>
                     <ul>
-                        <li><a href="#">Advertising</a></li>
-                        <li><a href="#">Privacy Policy</a></li>
-                        <li><a href="#">User Agreement</a></li>
-                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">{{ __('footer.advertising') }}</a></li>
+                        <li><a href="#">{{ __('footer.privacy_policy') }}</a></li>
+                        <li><a href="#">{{ __('footer.user_agreement') }}</a></li>
+                        <li><a href="#">{{ __('footer.faq') }}</a></li>
                     </ul>
                 </div>
             </div>
@@ -41,12 +41,13 @@
                 <div class="footer__telegram">
                     <a href="#" target="_blank" class="telegram-link">
                         <span class="icon-telegram2"></span>
-                        <span class="telegram-link__label">Telegram</span>
-                        <span class="telegram-link__nickname">@spyhouse_help</span>
+                        <span class="telegram-link__label">{{ __('footer.telegram_label') }}</span>
+                        <span class="telegram-link__nickname">{{ __('footer.telegram_nickname') }}</span>
                     </a>
                 </div>
                 <div class="footer__chat">
-                    <a href="#" target="_blank" class="btn _flex _medium _blue min-200 w-100"><span class="icon-chat font-16 mr-2"></span>Telegram chat</a>
+                    <a href="#" target="_blank" class="btn _flex _medium _blue min-200 w-100"><span
+                            class="icon-chat font-16 mr-2"></span>{{ __('footer.telegram_chat_button') }}</a>
                 </div>
             </div>
         </div>
