@@ -11,6 +11,7 @@ export default defineConfig({
         'resources/js/landings.js',
         'resources/js/services.js',
         'resources/js/pages/profile/disable-2fa.js',
+        'resources/js/pages/verify-email.js',
         'resources/img/telegram.svg',
         'resources/img/viber.svg',
         'resources/img/whatsapp.svg',

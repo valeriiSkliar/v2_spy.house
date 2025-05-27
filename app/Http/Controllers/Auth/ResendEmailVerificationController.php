@@ -3,16 +3,19 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\VerificationAccountEmail;
 use App\Traits\App\HasAntiFloodProtection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Mail;
 
 class ResendEmailVerificationController extends Controller
 {
     use HasAntiFloodProtection;
 
     /**
-     * Resend email verification link
+     * Resend email verification code
      */
     public function __invoke(Request $request): JsonResponse
     {
@@ -51,23 +54,36 @@ class ResendEmailVerificationController extends Controller
         if (!$this->checkAntiFlood($userId, 'resend_verification_daily', 5, 86400)) {
             return response()->json([
                 'error' => 'Daily limit exceeded',
-                'message' => 'Дневной лимит исчерпан. Попробуйте завтра'
+                'message' => 'Превышен дневной лимит отправки кода. Попробуйте завтра.'
             ], 429);
         }
 
-        // Отправляем ссылку для подтверждения
-        $user->sendEmailVerificationNotification();
+        // Генерируем код верификации
+        $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
-        // Получаем время первого запроса для расчета времени разблокировки
-        $firstRequestTime = $this->getAntiFloodTimestamp($userId, 'resend_verification_5min');
-        $unblockTime = $firstRequestTime ? ($firstRequestTime + 300) * 1000 : (time() + 300) * 1000;
+        // Сохраняем код в кэш на 15 минут
+        Cache::put('email_verification_code:' . $user->id, $code, now()->addMinutes(15));
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Ссылка отправлена на ваш email',
-            'block_duration' => 300000, // 5 минут в миллисекундах
-            'server_time' => time() * 1000,
-            'unblock_time' => $unblockTime
-        ]);
+        // Отправляем email с кодом
+        try {
+            Mail::to($user->email)->send(new VerificationAccountEmail(
+                $code,
+                config('app.url') . '/login',
+                config('app.telegram_url', 'https://t.me/spyhouse'),
+                config('mail.support_email', 'support@spy.house'),
+                config('app.url') . '/unsubscribe'
+            ));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Код подтверждения отправлен на ваш email',
+                'unblock_time' => (time() + 300) * 1000
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to send email',
+                'message' => 'Не удалось отправить код. Попробуйте позже.'
+            ], 500);
+        }
     }
 }

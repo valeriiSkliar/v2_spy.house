@@ -1,20 +1,30 @@
 @extends('layouts.main')
 
 @section('page-content')
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <div class="verify-account">
     <div class="verify-account__figure"><img src="img/figure-verify-acc.svg" alt=""></div>
     <h1 class="mb-25">Подтвердите свой аккаунт</h1>
     <p class="mb-25">Мы отправили вам 6-значный код на ваш email, введите его и ваш аккаунт будет активирован.</p>
     <p class="mb-30"><strong>{{ substr(auth()->user()->email, 0, 4) . '...' . strstr(auth()->user()->email, '@')
             }}</strong></p>
-    <form action="">
+    <form
+        action="{{ route('verification.verify.post', ['id' => auth()->user()->id, 'hash' => sha1(auth()->user()->email)]) }}"
+        method="POST" id="verify-account-form">
+        @csrf
         <div class="verify-account-code mb-30">
-            <input type="text" inputmode="numeric" class="input-h-57">
-            <input type="text" inputmode="numeric" class="input-h-57">
-            <input type="text" inputmode="numeric" class="input-h-57">
-            <input type="text" inputmode="numeric" class="input-h-57">
-            <input type="text" inputmode="numeric" class="input-h-57">
-            <input type="text" inputmode="numeric" class="input-h-57">
+            <input type="text" inputmode="numeric" class="input-h-57" name="code[]" maxlength="1" pattern="[0-9]"
+                required>
+            <input type="text" inputmode="numeric" class="input-h-57" name="code[]" maxlength="1" pattern="[0-9]"
+                required>
+            <input type="text" inputmode="numeric" class="input-h-57" name="code[]" maxlength="1" pattern="[0-9]"
+                required>
+            <input type="text" inputmode="numeric" class="input-h-57" name="code[]" maxlength="1" pattern="[0-9]"
+                required>
+            <input type="text" inputmode="numeric" class="input-h-57" name="code[]" maxlength="1" pattern="[0-9]"
+                required>
+            <input type="text" inputmode="numeric" class="input-h-57" name="code[]" maxlength="1" pattern="[0-9]"
+                required>
         </div>
         <div class="verify-account-controls mb-30">
             <div class="verify-account-controls__btn">
@@ -36,3 +46,7 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+@vite('resources/js/pages/verify-email.js')
+@endpush

@@ -115,4 +115,15 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Custom Mail Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Custom settings for email templates
+    |
+    */
+
+    'support_email' => env('MAIL_SUPPORT_EMAIL', 'support@spy.house'),
+
 ];

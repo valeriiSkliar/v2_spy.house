@@ -9,6 +9,8 @@ const STORAGE_KEY = 'resend_verification_disabled_until';
 export function initVerifyEmailPage() {
   // Находим кнопку для повторной отправки
   const resendButton = document.querySelector('[data-action="resend-verification"]');
+  const form = document.getElementById('verify-account-form');
+  const inputs = form?.querySelectorAll('input[name="code[]"]');
 
   if (resendButton) {
     // Сбрасываем флаг обработки при загрузке страницы
@@ -24,6 +26,108 @@ export function initVerifyEmailPage() {
       resendButton.dataset.processing = 'false';
     });
   }
+
+  if (form && inputs) {
+    initVerificationForm(form, inputs);
+  }
+}
+
+/**
+ * Инициализация формы верификации
+ */
+function initVerificationForm(form, inputs) {
+  // Добавляем обработчики для каждого поля ввода
+  inputs.forEach((input, index) => {
+    // Разрешаем только цифры
+    input.addEventListener('input', e => {
+      const value = e.target.value.replace(/[^0-9]/g, '');
+      e.target.value = value.slice(0, 1); // Берем только первую цифру
+
+      if (e.target.value.length === 1) {
+        // Переходим к следующему полю
+        if (index < inputs.length - 1) {
+          inputs[index + 1].focus();
+        }
+      }
+    });
+
+    // Обработка удаления
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !e.target.value && index > 0) {
+        inputs[index - 1].focus();
+      }
+    });
+
+    // Обработка вставки
+    input.addEventListener('paste', e => {
+      e.preventDefault();
+      const pastedData = e.clipboardData
+        .getData('text')
+        .replace(/[^0-9]/g, '')
+        .split('');
+
+      inputs.forEach((input, i) => {
+        if (pastedData[i]) {
+          input.value = pastedData[i];
+        }
+      });
+
+      // Фокус на последнем незаполненном поле или последнем поле
+      const lastEmptyInput =
+        Array.from(inputs).find(input => !input.value) || inputs[inputs.length - 1];
+      lastEmptyInput.focus();
+    });
+  });
+
+  // Обработка отправки формы
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+
+    // Проверяем что все поля заполнены цифрами
+    const isComplete = Array.from(inputs).every(input => /^[0-9]$/.test(input.value));
+    if (!isComplete) {
+      createAndShowToast('Пожалуйста, введите 6-значный цифровой код', 'error');
+      return;
+    }
+
+    const submitButton = form.querySelector('button[type="submit"]');
+    showInButton(submitButton);
+
+    try {
+      const formData = new FormData(form);
+      const code = Array.from(inputs)
+        .map(input => input.value)
+        .join('');
+      formData.append('verification_code', code);
+
+      const response = await fetch(form.action, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN':
+            document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+          Accept: 'application/json',
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // createAndShowToast(data.message || 'Аккаунт успешно подтвержден', 'success');
+        window.location.href = data.redirect || '/profile/settings';
+      } else {
+        createAndShowToast(data.message || 'Ошибка подтверждения кода', 'error');
+        // Очищаем поля при ошибке
+        inputs.forEach(input => (input.value = ''));
+        inputs[0].focus();
+      }
+    } catch (error) {
+      console.error('Error verifying account:', error);
+      createAndShowToast('Произошла ошибка при подтверждении аккаунта', 'error');
+    } finally {
+      hideInButton(submitButton);
+    }
+  });
 }
 
 /**

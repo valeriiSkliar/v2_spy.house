@@ -54,6 +54,8 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    'telegram_url' => env('APP_TELEGRAM_URL', 'https://t.me/spyhouse'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone
