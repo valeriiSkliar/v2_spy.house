@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
-use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
@@ -53,10 +52,6 @@ Route::middleware('auth')->group(function () {
     Route::post('verify-email/{id}/{hash}', [VerifyEmailController::class, 'verify'])
         ->middleware(['throttle:6,1'])
         ->name('verification.verify.post');
-
-    Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
-        ->middleware('throttle:6,1')
-        ->name('verification.send');
 
     Route::post('api/resend-activation', ResendEmailVerificationController::class)
         ->name('verification.resend');

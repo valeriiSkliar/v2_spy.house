@@ -21,17 +21,11 @@ class ResendEmailVerificationController extends Controller
     {
         $user = $request->user();
 
-        // Проверяем, что пользователь аутентифицирован
-        if (!$user) {
-            return response()->json([
-                'error' => 'Unauthorized'
-            ], 401);
-        }
-
         // Проверяем, что email еще не подтвержден
         if ($user->hasVerifiedEmail()) {
             return response()->json([
-                'error' => 'Email already verified'
+                'success' => false,
+                'message' => 'Email уже подтвержден'
             ], 422);
         }
 
@@ -43,7 +37,7 @@ class ResendEmailVerificationController extends Controller
             $retryAfter = $firstRequestTime ? max(0, 300 - (time() - $firstRequestTime)) : 300;
 
             return response()->json([
-                'error' => 'Too frequent requests',
+                'success' => false,
                 'message' => 'Слишком частые запросы, попробуйте через 5 минут',
                 'retry_after' => $retryAfter,
                 'unblock_time' => $firstRequestTime ? ($firstRequestTime + 300) * 1000 : (time() + 300) * 1000
@@ -53,7 +47,7 @@ class ResendEmailVerificationController extends Controller
         // Проверяем дневной лимит (5 раз в сутки)
         if (!$this->checkAntiFlood($userId, 'resend_verification_daily', 5, 86400)) {
             return response()->json([
-                'error' => 'Daily limit exceeded',
+                'success' => false,
                 'message' => 'Превышен дневной лимит отправки кода. Попробуйте завтра.'
             ], 429);
         }
@@ -77,11 +71,12 @@ class ResendEmailVerificationController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Код подтверждения отправлен на ваш email',
-                'unblock_time' => (time() + 300) * 1000
+                'unblock_time' => (time() + 300) * 1000,
+                'server_time' => time() * 1000
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Failed to send email',
+                'success' => false,
                 'message' => 'Не удалось отправить код. Попробуйте позже.'
             ], 500);
         }

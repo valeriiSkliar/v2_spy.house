@@ -94,11 +94,7 @@ function initVerificationForm(form, inputs) {
     showInButton(submitButton);
 
     try {
-      const formData = new FormData(form);
-      const code = Array.from(inputs)
-        .map(input => input.value)
-        .join('');
-      formData.append('verification_code', code);
+      const code = Array.from(inputs).map(input => input.value);
 
       const response = await fetch(form.action, {
         method: 'POST',
@@ -106,8 +102,9 @@ function initVerificationForm(form, inputs) {
           'X-CSRF-TOKEN':
             document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
           Accept: 'application/json',
+          'Content-Type': 'application/json',
         },
-        body: formData,
+        body: JSON.stringify({ code }),
       });
 
       const data = await response.json();

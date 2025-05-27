@@ -24,28 +24,23 @@ class VerifyEmailController extends Controller
             return redirect()->intended(route('profile.settings', absolute: false) . '?verified=1');
         }
 
-        if ($user->markEmailAsVerified()) {
-            event(new Verified($user));
-        }
-
-        return redirect()->intended(route('profile.settings', absolute: false) . '?verified=1');
+        // Показываем страницу верификации
+        return redirect()->route('verify.account');
     }
 
     /**
      * Handle verification with code via POST request
      */
-    public function verify(Request $request): JsonResponse|RedirectResponse
+    public function verify(Request $request): JsonResponse
     {
         $user = $request->user();
 
         if ($user->hasVerifiedEmail()) {
-            return $request->wantsJson()
-                ? response()->json([
-                    'success' => true,
-                    'message' => 'Email уже подтвержден',
-                    'redirect' => route('profile.settings', absolute: false) . '?verified=1'
-                ])
-                : redirect()->intended(route('profile.settings', absolute: false) . '?verified=1');
+            return response()->json([
+                'success' => true,
+                'message' => 'Email уже подтвержден',
+                'redirect' => route('profile.settings', absolute: false) . '?verified=1'
+            ]);
         }
 
         // Валидация кода
@@ -61,12 +56,10 @@ class VerifyEmailController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return $request->wantsJson()
-                ? response()->json([
-                    'success' => false,
-                    'message' => $validator->errors()->first()
-                ], 422)
-                : back()->withErrors($validator)->withInput();
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first()
+            ], 422);
         }
 
         // Получаем код из запроса и объединяем в строку
@@ -76,21 +69,17 @@ class VerifyEmailController extends Controller
         $cachedCode = Cache::get('email_verification_code:' . $user->id);
 
         if (!$cachedCode) {
-            return $request->wantsJson()
-                ? response()->json([
-                    'success' => false,
-                    'message' => 'Код подтверждения истек. Пожалуйста, запросите новый код.'
-                ], 422)
-                : back()->with('error', 'Код подтверждения истек. Пожалуйста, запросите новый код.');
+            return response()->json([
+                'success' => false,
+                'message' => 'Код подтверждения истек. Пожалуйста, запросите новый код.'
+            ], 422);
         }
 
         if ($verificationCode !== $cachedCode) {
-            return $request->wantsJson()
-                ? response()->json([
-                    'success' => false,
-                    'message' => 'Неверный код подтверждения'
-                ], 422)
-                : back()->with('error', 'Неверный код подтверждения');
+            return response()->json([
+                'success' => false,
+                'message' => 'Неверный код подтверждения'
+            ], 422);
         }
 
         if ($user->markEmailAsVerified()) {
@@ -98,12 +87,10 @@ class VerifyEmailController extends Controller
             Cache::forget('email_verification_code:' . $user->id);
         }
 
-        return $request->wantsJson()
-            ? response()->json([
-                'success' => true,
-                'message' => 'Email успешно подтвержден',
-                'redirect' => route('profile.settings', absolute: false) . '?verified=1'
-            ])
-            : redirect()->route('profile.settings')->with('verified', true);
+        return response()->json([
+            'success' => true,
+            'message' => 'Email успешно подтвержден',
+            'redirect' => route('profile.settings', absolute: false) . '?verified=1'
+        ]);
     }
 }
