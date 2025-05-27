@@ -224,7 +224,6 @@ class BlogController extends BaseBlogController
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => $errorMessage], 429); // 429 Too Many Requests
             }
-            Toast::error($errorMessage);
 
             return redirect()->back()->withInput();
         }
@@ -261,7 +260,6 @@ class BlogController extends BaseBlogController
         $comment->save();
 
         $successMessage = __('blogs.comments.comment_added_successfully');
-        Toast::success($successMessage);
 
         if ($request->expectsJson()) {
             return response()->json([
