@@ -26,22 +26,10 @@ class BaseLandingsPageController extends FrontendController
         'failed' => 'landings.table.status.failed',
     ];
 
-    // Correct sort options for landings
-    protected $sortOptions = [
-        ['value' => 'created_at', 'label' => 'Date (Newest First)', 'order' => 'desc'],
-        ['value' => 'created_at', 'label' => 'Date (Oldest First)', 'order' => 'asc'],
-        ['value' => 'status', 'label' => 'Status (Asc)', 'order' => 'asc'],
-        ['value' => 'status', 'label' => 'Status (Desc)', 'order' => 'desc'],
-        ['value' => 'url', 'label' => 'URL (Asc)', 'order' => 'asc'],
-        ['value' => 'url', 'label' => 'URL (Desc)', 'order' => 'desc'],
-    ];
+    protected $sortOptions;
+    protected $perPageOptions;
 
-    protected $perPageOptions = [
-        ['value' => 12, 'label' => '12', 'order' => ''],
-        ['value' => 24, 'label' => '24', 'order' => ''],
-        ['value' => 48, 'label' => '48', 'order' => ''],
-        ['value' => 96, 'label' => '96', 'order' => ''],
-    ];
+
 
     use AuthorizesRequests;
 
@@ -55,6 +43,22 @@ class BaseLandingsPageController extends FrontendController
     ) {
         $this->downloadService = $downloadService;
         $this->antiFloodService = $antiFloodService;
+
+        $this->perPageOptions = [
+            ['value' => 12, 'label' => __('select-options.perPage.12'), 'order' => ''],
+            ['value' => 24, 'label' => __('select-options.perPage.24'), 'order' => ''],
+            ['value' => 48, 'label' => __('select-options.perPage.48'), 'order' => ''],
+            ['value' => 96, 'label' => __('select-options.perPage.96'), 'order' => ''],
+        ];
+
+        $this->sortOptions = [
+            ['value' => 'created_at', 'label' => __('select-options.landings-sort.created_at.newest'), 'order' => 'desc'],
+            ['value' => 'created_at', 'label' => __('select-options.landings-sort.created_at.oldest'), 'order' => 'asc'],
+            ['value' => 'status', 'label' => __('select-options.landings-sort.status.asc'), 'order' => 'asc'],
+            ['value' => 'status', 'label' => __('select-options.landings-sort.status.desc'), 'order' => 'desc'],
+            ['value' => 'url', 'label' => __('select-options.landings-sort.url.asc'), 'order' => 'asc'],
+            ['value' => 'url', 'label' => __('select-options.landings-sort.url.desc'), 'order' => 'desc'],
+        ];
     }
 
     public function renderIndexPage()
@@ -72,8 +76,8 @@ class BaseLandingsPageController extends FrontendController
 
     protected function getFilterOptions(): array
     {
-        $sortOptionsPlaceholder = 'Sort by — ';
-        $perPageOptionsPlaceholder = 'On page — ';
+        $sortOptionsPlaceholder = __('select-options.placeholders.sort');
+        $perPageOptionsPlaceholder = __('select-options.placeholders.perPage');
 
         return [
             'sortOptions' => $this->sortOptions,

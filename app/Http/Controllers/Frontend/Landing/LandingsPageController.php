@@ -93,7 +93,7 @@ class LandingsPageController extends BaseLandingsPageController
             // Если сервис вернул JsonResponse с ошибкой
             if ($response instanceof JsonResponse && $response->getStatusCode() !== 200) {
                 $errorData = $response->getData(true);
-                Toast::error($errorData['message']);
+                // Toast::error($errorData['message']);
 
                 return redirect()->route('landings.index');
             }
@@ -104,29 +104,12 @@ class LandingsPageController extends BaseLandingsPageController
             // Обновляем статус при исключении
             $landing->update([
                 'status' => 'failed',
-                'error' => $e->getMessage() ?? 'Download failed',
+                'error' => $e->getMessage() ?? __('landings.errors.download_failed'),
                 'completed_at' => now(),
             ]);
 
-            // Редирект с сообщением об ошибке (используем ключ для локализации)
-            Toast::error('landings.downloadException.description');
 
             return redirect()->route('landings.index');
         }
     }
-
-    // Renamed method and updated options
-    // private function getFilterOptions()
-    // {
-
-    //     $sortOptionsPlaceholder = 'Sort by — ';
-    //     $perPageOptionsPlaceholder = 'On page — ';
-
-    //     return [
-    //         'sortOptions' => $this->sortOptions,
-    //         'sortOptionsPlaceholder' => $sortOptionsPlaceholder,
-    //         'perPageOptions' => $this->perPageOptions,
-    //         'perPageOptionsPlaceholder' => $perPageOptionsPlaceholder,
-    //     ];
-    // }
 }

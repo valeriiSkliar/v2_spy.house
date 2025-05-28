@@ -1,20 +1,13 @@
 @props(['disabled' => false])
 
-<form action="{{ route('website-downloads.store') }}" method="POST" id="add-landing-form" class="row mb-{{ $disabled ? '20' : '10' }}">
+<form action="{{ route('website-downloads.store') }}" method="POST" id="add-landing-form"
+    class="row mb-{{ $disabled ? '20' : '10' }}">
     @csrf
     <div class="col-12 col-md-auto flex-grow-1 mb-10">
-        <input
-            type="text"
-            name="url"
-            id="url"
-            value="{{ old('url') }}"
-            placeholder="{{ $disabled ? __('landings.form.waitForDownloads') : __('landings.form.urlPlaceholder') }}"
+        <input type="text" name="url" id="url" value="{{ old('url') }}"
+            placeholder="{{ $disabled ? __('landings.form.waitForDownloads') : __('select-options.placeholders.download_landing_link') }}"
             class="input-h-50 w-full {{ $errors->has('url') ? 'border border-red-500' : '' }} {{ $disabled ? 'bg-gray-100 cursor-not-allowed' : '' }}"
-            maxlength="300"
-            {{ $disabled ? 'disabled' : '' }} />
-        {{-- <div id="url-counter" class="text-sm text-gray-500 mt-1" style="display: none;">
-            <span id="current-length">0</span>/300
-        </div> --}}
+            maxlength="300" {{ $disabled ? 'disabled' : '' }} />
         @error('url')
         <div class="text-red-600 mt-1 text-sm">{{ $message }}</div>
         @enderror
@@ -23,11 +16,8 @@
         @endif
     </div>
     <div class="col-12 col-md-auto mb-10 ">
-        <button
-            id="add-landing-submit-button"
-            type="submit"
-            class="btn _flex _green w-100 d-flex justify-content-center align-items-center gap-2"
-            style="height: 50px;"
+        <button id="add-landing-submit-button" type="submit"
+            class="btn _flex _green w-100 d-flex justify-content-center align-items-center gap-2" style="height: 50px;"
             {{ $disabled ? 'disabled' : '' }}>
             <span class="icon-download mr-2"></span>
             <span>{{ __('landings.form.submitButton') }}</span>

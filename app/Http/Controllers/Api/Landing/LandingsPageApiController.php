@@ -43,7 +43,7 @@ class LandingsPageApiController extends BaseLandingsPageController
 
         $responseObject = [
             'success' => true,
-            'message' => __('landings.successfully_loaded_message_text'),
+            'message' => __('landings.success.successfully_loaded_message_text'),
             'data' => [
                 'table_html' => $html,
 
@@ -76,12 +76,11 @@ class LandingsPageApiController extends BaseLandingsPageController
             ]);
 
             $sanitizedUrl = sanitize_url($validated['url']);
-            Log::info('URL validated and sanitized', ['sanitized_url' => $sanitizedUrl, 'user_id' => Auth::id()]);
 
             $existingDownloads = WebsiteDownloadMonitor::where('user_id', Auth::id())
                 ->where(function ($query) use ($sanitizedUrl) {
                     $query->where('url', $sanitizedUrl)
-                        ->orWhere('url', 'like', '%'.parse_url($sanitizedUrl, PHP_URL_HOST).'%');
+                        ->orWhere('url', 'like', '%' . parse_url($sanitizedUrl, PHP_URL_HOST) . '%');
                 })
                 ->whereIn('status', ['pending', 'in_progress', 'completed'])
                 ->first();
@@ -104,13 +103,11 @@ class LandingsPageApiController extends BaseLandingsPageController
                 ], 409); // 409 Conflict
             }
 
-            Log::info('No existing downloads found, proceeding.', ['url' => $sanitizedUrl, 'user_id' => Auth::id()]);
-
             try {
                 $this->checkWebsiteAvailability($sanitizedUrl);
                 Log::info('Website availability check passed', ['url' => $sanitizedUrl, 'user_id' => Auth::id()]);
             } catch (\Exception $e) {
-                Log::error('Failed to check website availability for ajaxStore: '.$e->getMessage(), ['url' => $sanitizedUrl, 'user_id' => Auth::id()]);
+                Log::error('Failed to check website availability for ajaxStore: ' . $e->getMessage(), ['url' => $sanitizedUrl, 'user_id' => Auth::id()]);
 
                 return response()->json([
                     'success' => false,
@@ -120,22 +117,17 @@ class LandingsPageApiController extends BaseLandingsPageController
 
             // Using AntiFloodService logic from WebsiteDownloadController
             if (! $this->antiFloodService->check($request->user()->id, 'website-download', 2, 3600)) {
-                Log::warning('Anti-flood limit reached for website-download', [
-                    'user_id' => $request->user()->id,
-                    'action' => 'website-download',
-                ]);
 
                 return response()->json([
                     'success' => false,
                     'message' => __('landings.antiFlood.description'),
                 ], 429); // 429 Too Many Requests
             }
-            Log::info('Anti-flood check passed', ['user_id' => Auth::id()]);
 
             $uuid = Str::uuid();
             $monitor = WebsiteDownloadMonitor::create([
                 'url' => $sanitizedUrl,
-                'output_path' => 'private/website-downloads/'.$uuid,
+                'output_path' => 'private/website-downloads/' . $uuid,
                 'user_id' => Auth::id(),
                 'status' => 'pending',
                 'progress' => 0,
@@ -167,14 +159,11 @@ class LandingsPageApiController extends BaseLandingsPageController
 
             if ($userLandingsCount === 1) {
                 // This is the first landing for the user, send the whole table structure
-                Log::info('First landing for user. Preparing full table HTML.', ['user_id' => Auth::id(), 'monitor_id' => $monitor->id]);
                 $tableData = parent::getData($request); // $request is available in the method
                 $fullTableHtml = $this->renderContentWrapperView($tableData);
                 $responseData['table_html'] = $fullTableHtml;
-                Log::info('Full table HTML prepared for response.', ['user_id' => Auth::id()]);
             } else {
                 // Not the first landing, send only the new row
-                Log::info('Additional landing for user. Preparing row HTML.', ['user_id' => Auth::id(), 'monitor_id' => $monitor->id]);
 
                 // For items that exceed the per_page limit, we need to return complete table HTML
                 // to properly set up pagination
@@ -186,13 +175,6 @@ class LandingsPageApiController extends BaseLandingsPageController
                     ->count();
 
                 if ($itemsOnCurrentPage > $perPage) {
-                    // We've exceeded per_page limit, send the full table HTML with updated pagination
-                    Log::info('Item count exceeds per_page limit. Preparing full table HTML.', [
-                        'user_id' => Auth::id(),
-                        'items_on_page' => $itemsOnCurrentPage,
-                        'per_page' => $perPage,
-                    ]);
-
                     $tableData = parent::getData($request);
                     $fullTableHtml = $this->renderContentWrapperView($tableData);
                     $responseData['table_html'] = $fullTableHtml;
@@ -200,7 +182,6 @@ class LandingsPageApiController extends BaseLandingsPageController
                     // Just add the new row if we haven't exceeded per_page
                     $landingHtml = view('components.landings.table.row', ['landing' => $monitor, 'viewConfig' => $this->getViewConfig()])->render();
                     $responseData['landing_html'] = $landingHtml;
-                    Log::info('Landing HTML row rendered for response.', ['user_id' => Auth::id()]);
                 }
             }
 
@@ -210,11 +191,6 @@ class LandingsPageApiController extends BaseLandingsPageController
                 'data' => $responseData,
             ], 201); // 201 Created
         } catch (ValidationException $e) {
-            Log::error('URL validation failed for ajaxStore', [
-                'url' => $request->input('url'),
-                'user_id' => Auth::id(),
-                'errors' => $e->errors(),
-            ]);
 
             return response()->json([
                 'success' => false,
@@ -222,12 +198,6 @@ class LandingsPageApiController extends BaseLandingsPageController
                 'errors' => $e->errors(),
             ], 422);
         } catch (\Exception $e) {
-            Log::error('Failed to start download in ajaxStore', [
-                'url' => $request->input('url'),
-                'user_id' => Auth::id(),
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(), // More details for debugging
-            ]);
 
             return response()->json([
                 'success' => false,
@@ -256,17 +226,12 @@ class LandingsPageApiController extends BaseLandingsPageController
                 // If HEAD fails, try GET (some servers might not support HEAD properly)
                 $response = Http::timeout(10)->withoutVerifying()->get($url);
                 if (! $response->successful()) {
-                    Log::warning('Website check failed with GET', ['url' => $url, 'status' => $response->status()]);
-                    throw new \Exception('Website returned status code: '.$response->status());
+                    throw new \Exception('Website returned status code: ' . $response->status());
                 }
             }
-            Log::info('Website availability check successful', ['url' => $url, 'status' => $response->status()]);
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            Log::error('Website availability check failed (Connection Exception)', [
-                'url' => $url,
-                'error' => $e->getMessage(),
-            ]);
-            throw new \Exception('Failed to connect to website: '.$e->getMessage());
+
+            throw new \Exception('Failed to connect to website: ' . $e->getMessage());
         } catch (\Exception $e) {
             // Catching the re-thrown exception from the block above or other general exceptions
             Log::error('Website availability check failed (General Exception)', [
@@ -294,10 +259,6 @@ class LandingsPageApiController extends BaseLandingsPageController
 
             // Затем удаляем файлы, если они существуют
             if ($outputPath) {
-                Log::info('Attempting to delete landing files', [
-                    'output_path' => $outputPath,
-                    'user_id' => $userId,
-                ]);
 
                 // Проверяем существование директории или файла
                 if (Storage::exists($outputPath)) {
@@ -306,17 +267,9 @@ class LandingsPageApiController extends BaseLandingsPageController
                     if (is_dir($fullPath)) {
                         // Удаляем всю директорию лендинга
                         $result = Storage::deleteDirectory($outputPath);
-                        Log::info('Deleted landing directory', [
-                            'output_path' => $outputPath,
-                            'success' => $result,
-                        ]);
                     } else {
                         // Удаляем только файл
                         $result = Storage::delete($outputPath);
-                        Log::info('Deleted landing file', [
-                            'output_path' => $outputPath,
-                            'success' => $result,
-                        ]);
                     }
                 } else {
                     Log::warning('Landing files not found for deletion', [
@@ -341,7 +294,7 @@ class LandingsPageApiController extends BaseLandingsPageController
 
             return response()->json([
                 'success' => true,
-                'message' => __('landings.successfully_deleted_message_text'),
+                'message' => __('landings.success.successfully_deleted_message_text'),
                 'pagination' => [
                     'total_items' => $totalItems,
                     'per_page' => $perPage,
@@ -351,11 +304,10 @@ class LandingsPageApiController extends BaseLandingsPageController
                 ],
             ]);
         } catch (\Exception $e) {
-            Log::error('Error deleting landing via AJAX: '.$e->getMessage(), ['exception' => $e]);
 
             return response()->json([
                 'success' => false,
-                'message' => __('common.error_occurred_common_message'),
+                'message' => __('landings.errors.error_occurred'),
             ], 500);
         }
     }
@@ -365,34 +317,19 @@ class LandingsPageApiController extends BaseLandingsPageController
      */
     public function ajaxDownload(WebsiteDownloadMonitor $landing, Request $request): JsonResponse
     {
-        Log::debug('Starting landing download via AJAX', [
-            'landing_id' => $landing->getKey(),
-            'user_id' => Auth::id(),
-            'ip' => $request->ip(),
-        ]);
 
         // Authorize the action using the policy (checks ownership and status)
         $this->authorize('download', $landing);
 
         try {
-            Log::debug('Checking landing status', [
-                'landing_id' => $landing->getKey(),
-                'current_status' => $landing->status,
-            ]);
 
             // Проверяем, что лендинг существует и имеет статус 'completed'
             if ($landing->status !== 'completed') {
                 return response()->json([
                     'success' => false,
-                    'message' => __('landings.download.not_completed'),
+                    'message' => __('landings.errors.not_completed'),
                 ], 400);
             }
-
-            Log::debug('Checking archive file existence', [
-                'landing_id' => $landing->getKey(),
-                'output_path' => $landing->output_path,
-                'disk' => 'landings',
-            ]);
 
             // Проверяем, что файл архива существует
             if (! $landing->output_path || ! file_exists(Storage::path($landing->output_path))) {
@@ -403,14 +340,9 @@ class LandingsPageApiController extends BaseLandingsPageController
                     'completed_at' => now(),
                 ]);
 
-                Log::warning('Landing file not found, status updated to failed', [
-                    'landing_id' => $landing->getKey(),
-                    'output_path' => $landing->output_path,
-                ]);
-
                 return response()->json([
                     'success' => false,
-                    'message' => __('landings.download.file_not_found'),
+                    'message' => __('landings.errors.file_not_found'),
                 ], 404);
             }
 
@@ -429,7 +361,7 @@ class LandingsPageApiController extends BaseLandingsPageController
 
             return response()->json([
                 'success' => true,
-                'message' => __('landings.download.ready'),
+                'message' => __('landings.success.download_ready'),
                 'data' => [
                     'download_url' => $downloadUrl,
                     'landing_id' => $landing->getKey(),
@@ -437,7 +369,7 @@ class LandingsPageApiController extends BaseLandingsPageController
                 ],
             ]);
         } catch (\Exception $e) {
-            Log::error('Error preparing landing download via AJAX: '.$e->getMessage(), [
+            Log::error('Error preparing landing download via AJAX: ' . $e->getMessage(), [
                 'exception' => $e,
                 'landing_id' => $landing->getKey(),
                 'trace' => $e->getTraceAsString(),
@@ -445,7 +377,7 @@ class LandingsPageApiController extends BaseLandingsPageController
 
             return response()->json([
                 'success' => false,
-                'message' => __('common.error_occurred_common_message'),
+                'message' => __('landings.errors.error_occurred'),
             ], 500);
         }
     }

@@ -3,26 +3,17 @@
 return [
     'index' => [
         'title' => 'Лендинги',
-        'sort' => [
-            'placeholder' => 'Сортировать по — :default',
-            'options' => [
-                'newest' => 'Сначала новые',
-                'oldest' => 'Сначала старые',
-                'status_az' => 'Статус (А-Я)',
-                'status_za' => 'Статус (Я-А)',
-                'url_az' => 'URL (А-Я)',
-                'url_za' => 'URL (Я-А)',
-            ],
-        ],
-        'pagination' => [
-            'placeholder' => 'На странице — :default',
-            'options' => [
-                '12' => '12',
-                '24' => '24',
-                '48' => '48',
-                '96' => '96',
-            ],
-        ],
+    ],
+    'success' => [
+        'download_ready' => 'Лендинг готов к скачиванию',
+        'successfully_deleted_message_text' => 'Лендинг успешно удален',
+        'successfully_loaded_message_text' => 'Лендинги успешно загружены',
+    ],
+    'errors' => [
+        'file_not_found' => 'Файл не найден',
+        'not_completed' => 'Лендинг не завершен',
+        'error_occurred' => 'Произошла ошибка',
+        'download_failed' => 'Ошибка загрузки',
     ],
     'form' => [
         'urlPlaceholder' => 'Введите ссылку для скачивания лендинга',
