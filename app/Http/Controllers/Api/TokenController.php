@@ -63,28 +63,12 @@ class TokenController extends Controller
      */
     public function refreshToken(Request $request): JsonResponse
     {
-        // Get the correct app session cookie name
-        $sessionCookieName = config('session.cookie');
-
-        \Illuminate\Support\Facades\Log::info('Token refresh attempt', [
-            'has_cookies' => $request->hasCookie('refresh_token'),
-            'cookie_names' => array_keys($request->cookies->all()),
-            'has_auth' => Auth::check(),
-            'session_cookie_name' => $sessionCookieName,
-            'has_session_cookie' => $request->hasCookie($sessionCookieName),
-            'content_type' => $request->header('Content-Type'),
-            'user_id' => Auth::id(),
-        ]);
 
         // Get refresh token from cookie
         $refreshToken = $request->cookie('refresh_token');
-        \Illuminate\Support\Facades\Log::info('Refresh token from cookie', [
-            'has_token' => ! empty($refreshToken),
-        ]);
 
         // If no refresh token in cookie, check the request body (for clients that don't support cookies)
         if (! $refreshToken) {
-            \Illuminate\Support\Facades\Log::info('No refresh token in cookie, checking request body');
 
             // Validate request when token is supplied via body
             $request->validate([
@@ -94,22 +78,17 @@ class TokenController extends Controller
             // Check if request has token in body
             if ($request->has('refresh_token')) {
                 $refreshToken = $request->input('refresh_token');
-                \Illuminate\Support\Facades\Log::info('Found refresh token in request body');
             } else {
                 // Check if token is in JSON request body
                 $jsonData = $request->json()->all();
                 if (isset($jsonData['refresh_token'])) {
                     $refreshToken = $jsonData['refresh_token'];
-                    \Illuminate\Support\Facades\Log::info('Found refresh token in JSON request body');
-                } else {
-                    \Illuminate\Support\Facades\Log::warning('No refresh token in request body either');
                 }
             }
         }
 
         // If no refresh token in cookie or request, generate a new one if user is authenticated
         if (! $refreshToken && Auth::check()) {
-            \Illuminate\Support\Facades\Log::info('No refresh token, but user is authenticated. Creating new tokens.');
             $user = Auth::user();
             $tokenData = $this->tokenService->createBasicToken($user);
 
@@ -117,7 +96,7 @@ class TokenController extends Controller
                 'access_token' => $tokenData['access_token'],
                 'expires_at' => $tokenData['expires_at'],
                 'token_type' => 'Bearer',
-                'message' => 'New token created',
+                'message' => __('common.success.new_token_created'),
             ])->cookie(
                 'refresh_token',
                 $tokenData['refresh_token'],
@@ -133,10 +112,8 @@ class TokenController extends Controller
 
         // If still no refresh token and not authenticated, return error
         if (! $refreshToken) {
-            \Illuminate\Support\Facades\Log::warning('No refresh token provided and user not authenticated');
-
             return response()->json([
-                'message' => 'Refresh token not provided and user not authenticated',
+                'message' => __('common.error.refresh_token_not_provided_and_user_not_authenticated'),
             ], 400);
         }
 
@@ -145,15 +122,8 @@ class TokenController extends Controller
         // First check if user is authenticated
         if (Auth::check()) {
             $user = $request->user();
-            \Illuminate\Support\Facades\Log::info('User authenticated via session', [
-                'user_id' => $user->id,
-            ]);
         } else {
-            // Try to find user by refresh token
-            // This allows token refresh even if session authentication expired
-            \Illuminate\Support\Facades\Log::info('Looking up user by refresh token hash');
 
-            // Directly hash the token for comparison
             $hashedToken = hash('sha256', $refreshToken);
             $refreshTokenRecord = \App\Models\RefreshToken::where('token', $hashedToken)
                 ->where('expires_at', '>', now())
@@ -161,22 +131,15 @@ class TokenController extends Controller
 
             if ($refreshTokenRecord) {
                 $user = \App\Models\User::find($refreshTokenRecord->user_id);
-                \Illuminate\Support\Facades\Log::info('Found user by refresh token', [
-                    'user_id' => $user->id,
-                    'token_id' => $refreshTokenRecord->id,
-                ]);
             } else {
-                // Only log that a refresh token was not found, without any token details
-                \Illuminate\Support\Facades\Log::warning('No valid refresh token record found for the provided token');
             }
         }
 
         // If still no user found, return authentication error
         if (! $user) {
-            \Illuminate\Support\Facades\Log::warning('No user found for this refresh token');
 
             return response()->json([
-                'message' => 'User not found for this refresh token',
+                'message' => __('common.error.user_not_found_for_refresh_token'),
             ], 401);
         }
 
@@ -185,14 +148,14 @@ class TokenController extends Controller
 
         if (! $tokenData) {
             throw ValidationException::withMessages([
-                'refresh_token' => ['The refresh token is invalid or expired.'],
+                'refresh_token' => [__('common.error.refresh_token_invalid_or_expired')],
             ]);
         }
 
         // Check if client wants the refresh token in the response body
         // This is less secure but necessary for environments that don't support cookies properly
         $includeRefreshToken = $request->input('include_refresh_token') === 'true' ||
-                               $request->header('X-Include-Refresh-Token') === 'true';
+            $request->header('X-Include-Refresh-Token') === 'true';
 
         // Return new access token and set new refresh token in cookie
         $responseData = [
@@ -205,7 +168,6 @@ class TokenController extends Controller
         // This allows clients that can't use cookies to still refresh tokens
         if ($includeRefreshToken) {
             $responseData['refresh_token'] = $tokenData['refresh_token'];
-            \Illuminate\Support\Facades\Log::info('Including refresh token in response body for client fallback');
         }
 
         $response = response()->json($responseData);
@@ -232,15 +194,15 @@ class TokenController extends Controller
         if ($revokeAll) {
             // Revoke all tokens for the user
             $count = $this->tokenService->revokeAllTokens($user);
-            $message = $count.' tokens revoked successfully';
+            $message = $count . ' tokens revoked successfully';
         } elseif ($tokenId) {
             // Revoke the specified token
             $success = $this->tokenService->revokeToken($user, $tokenId);
-            $message = $success ? 'Token revoked successfully' : 'Token not found';
+            $message = $success ? __('common.success.current_token_revoked_successfully') : __('common.error.token_not_found');
         } else {
             // Revoke the current token
             $request->user()->currentAccessToken()->delete();
-            $message = 'Current token revoked successfully';
+            $message = __('common.success.current_token_revoked_successfully');
         }
 
         // Clear refresh token cookie if all tokens are revoked or current token is revoked

@@ -56,25 +56,57 @@
         <div class="col-12 col-md-6 mb-10">
             <div class="filter-section">
                 <div class="multi-select" disabled="false">
-                    <div class="is-empty multi-select__tags"><span class="multi-select__placeholder">Select OS</span></div>
+                    <div class="is-empty multi-select__tags"><span class="multi-select__placeholder">Select OS</span>
+                    </div>
                     <div class="multi-select__dropdown" style="display: none;">
-                        <div class="multi-select__search"><input type="text" placeholder="Search" class="multi-select__search-input"></div>
+                        <div class="multi-select__search"><input type="text" placeholder="Search"
+                                class="multi-select__search-input"></div>
                         <ul class="multi-select__options">
-                            <li class=""><!----> android</li>
-                            <li class=""><!----> blackberry</li>
-                            <li class=""><!----> bot</li>
-                            <li class=""><!----> chromeos</li>
-                            <li class=""><!----> ios</li>
-                            <li class=""><!----> kindle</li>
-                            <li class=""><!----> linux</li>
-                            <li class=""><!----> macosx</li>
-                            <li class=""><!----> other</li>
-                            <li class=""><!----> playstation</li>
-                            <li class=""><!----> unknown</li>
-                            <li class=""><!----> webos</li>
-                            <li class=""><!----> windows</li>
-                            <li class=""><!----> windowsphone</li>
-                            <li class=""><!----> xbox</li>
+                            <li class="">
+                                <!----> android
+                            </li>
+                            <li class="">
+                                <!----> blackberry
+                            </li>
+                            <li class="">
+                                <!----> bot
+                            </li>
+                            <li class="">
+                                <!----> chromeos
+                            </li>
+                            <li class="">
+                                <!----> ios
+                            </li>
+                            <li class="">
+                                <!----> kindle
+                            </li>
+                            <li class="">
+                                <!----> linux
+                            </li>
+                            <li class="">
+                                <!----> macosx
+                            </li>
+                            <li class="">
+                                <!----> other
+                            </li>
+                            <li class="">
+                                <!----> playstation
+                            </li>
+                            <li class="">
+                                <!----> unknown
+                            </li>
+                            <li class="">
+                                <!----> webos
+                            </li>
+                            <li class="">
+                                <!----> windows
+                            </li>
+                            <li class="">
+                                <!----> windowsphone
+                            </li>
+                            <li class="">
+                                <!----> xbox
+                            </li>
                         </ul>
                     </div><span class="multi-select__arrow"></span>
                 </div>
@@ -84,28 +116,62 @@
             <div class="filter-section">
                 <div class="multi-select" disabled="false">
                     <div class="multi-select__tags">
-                        <span class="multi-select__tag">webos <button type="button" class="multi-select__remove"> × </button></span>
-                        <span class="multi-select__tag">windowsphone <button type="button" class="multi-select__remove"> × </button></span>
-                        <span class="multi-select__tag">xbox <button type="button" class="multi-select__remove"> × </button></span>
+                        <span class="multi-select__tag">webos <button type="button" class="multi-select__remove"> ×
+                            </button></span>
+                        <span class="multi-select__tag">windowsphone <button type="button" class="multi-select__remove">
+                                × </button></span>
+                        <span class="multi-select__tag">xbox <button type="button" class="multi-select__remove"> ×
+                            </button></span>
                     </div>
                     <div class="multi-select__dropdown" style="display: none;">
-                        <div class="multi-select__search"><input type="text" placeholder="Search" class="multi-select__search-input"></div>
+                        <div class="multi-select__search"><input type="text" placeholder="Search"
+                                class="multi-select__search-input"></div>
                         <ul class="multi-select__options">
-                            <li class=""><!----> android</li>
-                            <li class=""><!----> blackberry</li>
-                            <li class=""><!----> bot</li>
-                            <li class=""><!----> chromeos</li>
-                            <li class=""><!----> ios</li>
-                            <li class=""><!----> kindle</li>
-                            <li class=""><!----> linux</li>
-                            <li class=""><!----> macosx</li>
-                            <li class=""><!----> other</li>
-                            <li class=""><!----> playstation</li>
-                            <li class=""><!----> unknown</li>
-                            <li class="selected"><!----> webos</li>
-                            <li class=""><!----> windows</li>
-                            <li class="selected"><!----> windowsphone</li>
-                            <li class="selected"><!----> xbox</li>
+                            <li class="">
+                                <!----> android
+                            </li>
+                            <li class="">
+                                <!----> blackberry
+                            </li>
+                            <li class="">
+                                <!----> bot
+                            </li>
+                            <li class="">
+                                <!----> chromeos
+                            </li>
+                            <li class="">
+                                <!----> ios
+                            </li>
+                            <li class="">
+                                <!----> kindle
+                            </li>
+                            <li class="">
+                                <!----> linux
+                            </li>
+                            <li class="">
+                                <!----> macosx
+                            </li>
+                            <li class="">
+                                <!----> other
+                            </li>
+                            <li class="">
+                                <!----> playstation
+                            </li>
+                            <li class="">
+                                <!----> unknown
+                            </li>
+                            <li class="selected">
+                                <!----> webos
+                            </li>
+                            <li class="">
+                                <!----> windows
+                            </li>
+                            <li class="selected">
+                                <!----> windowsphone
+                            </li>
+                            <li class="selected">
+                                <!----> xbox
+                            </li>
                         </ul>
                     </div><span class="multi-select__arrow"></span>
                 </div>

@@ -293,7 +293,7 @@ class BlogController extends BaseBlogController
         $user = Auth::user();
         $commentsHtml = '';
         if ($comments->isEmpty()) {
-            $commentsHtml = '<div class="message _bg _with-border">No comments found.</div>';
+            $commentsHtml = '<div class="message _bg _with-border">' . __('blog.errors.no_comments_found') . '</div>';
         } else {
             if ($user) {
                 $commentsHtml .= view('components.blog.comment.reply-form', [
@@ -362,7 +362,7 @@ class BlogController extends BaseBlogController
         if (! Auth::check()) {
             return response()->json([
                 'success' => false,
-                'message' => 'You must be logged in to rate articles.',
+                'message' => __('blog.errors.you_must_be_logged_in_to_rate_articles'),
             ], 401);
         }
 
@@ -380,7 +380,7 @@ class BlogController extends BaseBlogController
         if ($existingRating) {
             return response()->json([
                 'success' => false,
-                'message' => 'You have already rated this article.',
+                'message' => __('blog.errors.you_have_already_rated_this_article'),
             ], 422);
         }
 

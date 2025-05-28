@@ -35,38 +35,12 @@ class ProfileAvatarController extends Controller
             // Process the avatar image
             $avatarFile = $request->file('avatar');
 
-            // Log old avatar path for debugging
-            if ($user->user_avatar) {
-                Log::info('Replacing existing avatar', [
-                    'user_id' => $user->id,
-                    'old_avatar_path' => $user->user_avatar
-                ]);
-            }
 
             $avatarPath = $imageService->replace(
                 $avatarFile,
                 $user->user_avatar,
                 'avatars'
             );
-
-            // Log successful replacement
-            Log::info('Avatar successfully replaced', [
-                'user_id' => $user->id,
-                'new_avatar_path' => $avatarPath
-            ]);
-
-            // Get image metadata
-            $image = getimagesize($avatarFile);
-            $avatarMetadata = [
-                'size' => round($avatarFile->getSize() / 1024),
-                'name' => $avatarFile->getClientOriginalName(),
-                'file_type' => $avatarFile->getClientMimeType(),
-                'dimensions' => [
-                    'width' => $image[0] ?? 0,
-                    'height' => $image[1] ?? 0,
-                ],
-                'proportions' => $image[0] && $image[1] ? round($image[0] / $image[1], 2) : 0,
-            ];
 
             // Save the user avatar path and metadata
             $user->user_avatar = $avatarPath;
@@ -75,7 +49,7 @@ class ProfileAvatarController extends Controller
             // Return success response with avatar details
             return response()->json([
                 'success' => true,
-                'message' => __('profile.personal_info.photo_updated'),
+                'message' => __('profile.success.photo_updated'),
                 'avatar' => [
                     'url' => asset('storage/' . $avatarPath),
                 ],
@@ -88,7 +62,7 @@ class ProfileAvatarController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => __('profile.personal_info.photo_update_error'),
+                'message' => __('profile.error.photo_update_error'),
             ], 500);
         }
     }

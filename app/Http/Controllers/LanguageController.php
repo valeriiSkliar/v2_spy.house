@@ -13,9 +13,8 @@ class LanguageController extends Controller
 
         if (array_key_exists($locale, $supportedLocales)) {
             Session::put('locale', $locale);
-            Session::flash('success', __('Language changed successfully.'));
         } else {
-            Session::flash('error', __('Invalid language selected.'));
+            Session::flash('error', __('common.error.invalid_language_selected'));
         }
 
         return redirect()->back();

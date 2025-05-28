@@ -48,7 +48,7 @@ class ApiBlogController extends BaseBlogController
 
         return response()->json([
             'success' => true,
-            'message' => 'Search results fetched successfully',
+            'message' => __('blog.success.search_results_fetched_successfully'),
             'data' => [
                 'html' => $html,
                 'total' => $totalResults,
@@ -148,7 +148,7 @@ class ApiBlogController extends BaseBlogController
         if ($parentComment->post_id != $post->id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid parent comment',
+                'message' => __('blog.errors.invalid_parent_comment'),
             ], 422);
         }
 
@@ -187,7 +187,7 @@ class ApiBlogController extends BaseBlogController
         $user = Auth::user();
         $commentsHtml = '';
         if ($comments->isEmpty()) {
-            $commentsHtml = '<div class="message _bg _with-border">No comments found.</div>';
+            $commentsHtml = '<div class="message _bg _with-border">' . __('blog.errors.no_comments_found') . '</div>';
         } else {
             $commentsHtml .= view('components.blog.comment.reply-form', [
                 'article' => $post,
