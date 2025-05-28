@@ -1,4 +1,4 @@
-@props(['service', 'buttonText' => 'Show promo code'])
+@props(['service', 'buttonText' => __('services.buttons.show_promo_code')])
 <div class="single-market__code">
     <button class="btn _code _flex w-100 js-toggle-code">{{ $buttonText }}</button>
     <div class="form-item pb-0">

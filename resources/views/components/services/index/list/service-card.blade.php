@@ -1,4 +1,4 @@
-@props(['service', 'route' => 'services.show', 'target' => '_self', 'buttonText' => 'More info'])
+@props(['service', 'route' => 'services.show', 'target' => '_self', 'buttonText' => __('services.buttons.more_info')])
 <div class="col-12 col-md-6 col-lg-4 col-xl-3 d-flex">
     <div class="market-list__item">
         <div class="market-list__thumb">

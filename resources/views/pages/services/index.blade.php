@@ -23,9 +23,10 @@
 </div>
 
 <div id="services-pagination-container" data-pagination-container>
-    {{-- {{ $services->links('common.pagination.spy-pagination-default') }} --}}
     @if ($services->hasPages())
     <x-pagination :currentPage="$currentPage" :totalPages="$totalPages" />
+    @else
+    <x-services.index.list.empty-services />
     @endif
 </div>
 @endsection

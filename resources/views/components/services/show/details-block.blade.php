@@ -10,7 +10,7 @@
             <div class="row align-items-center _offset30">
                 <div class="col-12 col-md-auto order-md-3">
                     <x-services.show.follow-button :service="$service" :route="'services.redirect'" :target="'_blank'"
-                        :buttonText="'Follow'" :variant="'link'" />
+                        :buttonText="__('services.buttons.follow')" :variant="'link'" />
                 </div>
                 <div class="col-12 col-md-auto">
                     <h1>{{ $service['name'] }}</h1>
@@ -26,11 +26,11 @@
     <div class="row align-items-end _offset30">
         <div class="col-12 col-md-6 col-lg-4 pb-3">
             <x-services.show.follow-button :service="$service" :route="'services.redirect'" :target="'_blank'"
-                :buttonText="'Follow'" />
+                :buttonText="__('services.buttons.follow')" />
         </div>
         <div class="col-12 col-md-auto col-lg-auto pb-3 d-flex align-items-center justify-content-center">
             @if ($isPromo)
-            <x-services.show.promo-code :service="$service" :buttonText="'Show promo code'" />
+            <x-services.show.promo-code :service="$service" :buttonText="__('services.buttons.show_promo_code')" />
             @endif
         </div>
         <div class="row _offset30 m-auto m-md-0 ">
@@ -39,7 +39,8 @@
                 $isRated = $userRating ? true : false;
                 @endphp
                 <x-services.show.rating :serviceId="$service['id']" :rating="$service['rating']" :isRated="$isRated"
-                    :userRating="$userRating" :header="'Rate this service'" :description="'Rate from 1 to 5'" />
+                    :userRating="$userRating" :header="__('services.rating.header')"
+                    :description="__('services.rating.description')" />
             </div>
         </div>
     </div>
