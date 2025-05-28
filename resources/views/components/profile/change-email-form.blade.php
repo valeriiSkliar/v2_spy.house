@@ -24,7 +24,7 @@
 
         </div>
     </div>
-    <x-profile.submit-button formId="change-email-form" :label="__('profile.security_settings.next_button')" />
+    <x-profile.submit-button formId="change-email-form" :label="__('profile.next_button')" />
     @else
     <div class="row _offset20 mb-20 ">
         @if ( $authenticatorEnabled || $confirmationMethod === 'authenticator' )
@@ -45,7 +45,7 @@
         <x-profile.submit-button formId="change-email-form" :label="__('profile.security_settings.confirm_button')" />
         <div class="mb-20">
             <a href="{{ route('api.profile.cancel-email-update') }}" class="btn _flex _red _big">
-                {{ __('profile.security_settings.cancel_button') }}
+                {{ __('profile.cancel_button') }}
             </a>
         </div>
     </div>
