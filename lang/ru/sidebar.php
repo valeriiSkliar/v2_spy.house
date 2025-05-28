@@ -11,4 +11,7 @@ return [
     'referrals' => 'Партнерка',
     'blog' => 'Блог',
     'faq' => 'FAQ',
+    'upgrade_title' => 'Обновить до Premium',
+    'upgrade_desc' => 'Получите -50% В первый месяц',
+    'go_button' => 'Обновить',
 ];

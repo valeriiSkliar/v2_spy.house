@@ -9,7 +9,7 @@
                 {{ auth()->user()->currentTariff()['name'] }}
             </x-tariff-link>
             @else
-            <x-tariff-link>{{ __('sidebar.free_tariff') }}</x-tariff-link>
+            <x-tariff-link>{{ __('tariffs.free') }}</x-tariff-link>
             @endif
         </div>
     </div>
@@ -17,8 +17,9 @@
         <x-auth.buttons-mobile />
         @include('partials.sidebar-menu')
         @include('components.promo-tariff')
-        <div class="aside__copyright">{{ __('sidebar.copyright') }}</div>
+        <div class="aside__copyright">{{ __('footer.copyright') }}</div>
     </div>
     <div class="sep _h20"></div>
-    <a href="#" target="_blank" class="banner-item"><img src="/img/52400c8bd4719323579fd1a074fff985.gif" alt="" class="d-block w-100 rounded-10"></a>
+    <a href="#" target="_blank" class="banner-item"><img src="/img/52400c8bd4719323579fd1a074fff985.gif" alt=""
+            class="d-block w-100 rounded-10"></a>
 </aside>
