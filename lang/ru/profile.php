@@ -10,7 +10,13 @@ return [
     'confirm_button' => 'Подтвердить',
     'email_label' => 'Email',
     'select_default_value' => 'Выберите значение',
-
+    'code from the' => 'Код из',
+    'authenticator_mode' => [
+        'email' => 'E-mail',
+        'authenticator' => 'Аутентификатор',
+    ],
+    'letter' => 'письма',
+    'app' => 'приложения',
 
     'ip_restriction' => [
         'page_title' => 'Настройки ограничения IP',
@@ -86,6 +92,9 @@ return [
         'system_messages_label' => 'Системные сообщения',
     ],
     '2fa' => [
+        'setup_title' => 'Настройка двухфакторной аутентификации',
+        'info_message_title_authenticator' => 'Аутентификатор',
+        'info_message_description_authenticator' => 'это 6-значный одноразовый пароль, который пользователь должен ввести в поле для входа в систему.',
         'start_activation_process' => 'Необходимо начать процесс активации с первого шага.',
         'enabled' => 'Двухфакторная аутентификация успешно включена.',
         'invalid_code' => 'Неверный код подтверждения.',
