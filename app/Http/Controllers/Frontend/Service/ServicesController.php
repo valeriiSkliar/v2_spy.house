@@ -157,25 +157,25 @@ class ServicesController extends FrontendController
             });
 
         $sortOptions = [
-            ['value' => 'transitions', 'label' => 'Transitions High to Low', 'order' => 'desc'],
-            ['value' => 'transitions', 'label' => 'Transitions Low to High', 'order' => 'asc'],
-            ['value' => 'rating', 'label' => 'Rating High to Low', 'order' => 'desc'],
-            ['value' => 'rating', 'label' => 'Rating Low to High', 'order' => 'asc'],
-            ['value' => 'views', 'label' => 'Views High to Low', 'order' => 'desc'],
-            ['value' => 'views', 'label' => 'Views Low to High', 'order' => 'asc'],
+            ['value' => 'transitions', 'label' => __('select-options.services-sort.transitions.high'), 'order' => 'desc'],
+            ['value' => 'transitions', 'label' => __('select-options.services-sort.transitions.low'), 'order' => 'asc'],
+            ['value' => 'rating', 'label' => __('select-options.services-sort.rating.high'), 'order' => 'desc'],
+            ['value' => 'rating', 'label' => __('select-options.services-sort.rating.low'), 'order' => 'asc'],
+            ['value' => 'views', 'label' => __('select-options.services-sort.views.high'), 'order' => 'desc'],
+            ['value' => 'views', 'label' => __('select-options.services-sort.views.low'), 'order' => 'asc'],
         ];
 
         $perPageOptions = [
-            ['value' => 12, 'label' => '12', 'order' => ''],
-            ['value' => 24, 'label' => '24', 'order' => ''],
-            ['value' => 48, 'label' => '48', 'order' => ''],
-            ['value' => 96, 'label' => '96', 'order' => ''],
+            ['value' => 12, 'label' => __('select-options.perPage.12'), 'order' => ''],
+            ['value' => 24, 'label' => __('select-options.perPage.24'), 'order' => ''],
+            ['value' => 48, 'label' => __('select-options.perPage.48'), 'order' => ''],
+            ['value' => 96, 'label' => __('select-options.perPage.96'), 'order' => ''],
         ];
 
         $bonusesOptions = [
-            ['value' => 'all', 'label' => 'All Bonuses', 'order' => ''],
-            ['value' => 'with_discount', 'label' => 'With Discount', 'order' => ''],
-            ['value' => 'without_discount', 'label' => 'Without Discount', 'order' => ''],
+            ['value' => 'all', 'label' => __('select-options.services-bonuses.all'), 'order' => ''],
+            ['value' => 'with_discount', 'label' => __('select-options.services-bonuses.with_discount'), 'order' => ''],
+            ['value' => 'without_discount', 'label' => __('select-options.services-bonuses.without_discount'), 'order' => ''],
         ];
 
         $categoriesOptions = ServiceCategory::all()
@@ -187,7 +187,7 @@ class ServicesController extends FrontendController
                 ];
             });
         $categoriesOptions = $categoriesOptions->merge([
-            ['value' => 'all', 'label' => 'All Categories', 'order' => ''],
+            ['value' => 'all', 'label' => __('select-options.categories.all'), 'order' => ''],
         ]);
 
         // Ensure 'All Categories' is always first
@@ -199,10 +199,10 @@ class ServicesController extends FrontendController
             $categoriesOptions->prepend($allCategoriesOption);
         }
 
-        $sortOptionsPlaceholder = 'Sort by — ';
-        $perPageOptionsPlaceholder = 'On Page — ';
-        $bonusesOptionsPlaceholder = 'Bonuses — ';
-        $categoriesOptionsPlaceholder = 'Category — ';
+        $sortOptionsPlaceholder = __('select-options.placeholders.sort');
+        $perPageOptionsPlaceholder = __('select-options.placeholders.perPage');
+        $bonusesOptionsPlaceholder = __('select-options.placeholders.services-bonuses');
+        $categoriesOptionsPlaceholder = __('select-options.placeholders.categories');
 
         $selectedSort = collect($sortOptions)->first(function ($option) use ($sortField, $sortOrder) {
             return $option['value'] === $sortField && $option['order'] === $sortOrder;
@@ -303,7 +303,7 @@ class ServicesController extends FrontendController
     {
         // Validate the rating value
         if (! in_array($rating, [1, 2, 3, 4, 5])) {
-            return response()->json(['error' => 'Invalid rating value.'], 400);
+            return response()->json(['error' => __('services.errors.invalid_rating')], 400);
         }
 
         $service = Service::findOrFail($id);
@@ -316,7 +316,7 @@ class ServicesController extends FrontendController
 
         if ($existingRating) {
             // User has already rated, return an error or appropriate response
-            return response()->json(['error' => 'You have already rated this service.'], 409); // 409 Conflict
+            return response()->json(['error' => __('services.errors.already_rated')], 409); // 409 Conflict
         }
 
         // Create a new rating
@@ -346,7 +346,7 @@ class ServicesController extends FrontendController
 
         return response()->json([
             'success' => true,
-            'message' => 'Rating submitted successfully',
+            'message' => __('services.success.rating_submitted'),
             'rating' => $newRating,
             'user_rating' => $rating,
             'average_rating' => number_format($averageRating, 1),

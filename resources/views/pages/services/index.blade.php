@@ -2,7 +2,7 @@
 
 @section('page-content')
 <div class="row align-items-center">
-    <x-services.index.header.page-h1 title="Services" />
+    <x-services.index.header.page-h1 title="{{ __('services.title') }}" />
     <x-services.index.header.sort-selects :filters="$filters" :sortOptions="$sortOptions"
         :perPageOptions="$perPageOptions" :sortOptionsPlaceholder="$sortOptionsPlaceholder"
         :perPageOptionsPlaceholder="$perPageOptionsPlaceholder" :selectedSort="$selectedSort"

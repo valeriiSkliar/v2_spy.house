@@ -7,11 +7,11 @@
         <input type="hidden" name="confirmation_method" value="{{ old('confirmation_method', $confirmationMethod) }}">
         <div class="row _offset20 mb-10">
             <div class="col-12 col-md-6">
-                <x-profile.form-field :popover="false" :popoverText="__('profile.personal_greeting_popover_text')"
-                    name="personal_greeting" type="text" :label="__('profile.personal_greeting_label')"
+                <x-profile.form-field :popover="false" :popoverText="__('profile.personal_greeting.popover_text')"
+                    name="personal_greeting" type="text" :label="__('profile.personal_greeting.label')"
                     :value="old('personal_greeting', $user->personal_greeting)" />
             </div>
         </div>
-        <x-profile.submit-button formId="personal-greeting-form" :label="__('profile.security_settings.next_button')" />
+        <x-profile.submit-button formId="personal-greeting-form" :label="__('profile.next_button')" />
     </form>
 </div>

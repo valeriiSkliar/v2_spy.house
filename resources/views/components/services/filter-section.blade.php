@@ -14,33 +14,28 @@
                         <form action="{{ route('services.index') }}" method="GET" id="searchForm">
                             <div class="form-search">
                                 <span class="icon-search"></span>
-                                <input type="search" name="search" placeholder="Search by Keyword" value="{{ request('search') }}">
+                                <input type="search" name="search"
+                                    placeholder="{{ __('select-options.placeholders.search_by_keyword') }}"
+                                    value="{{ request('search') }}">
                             </div>
                         </form>
                     </div>
                     <div class="col-12 col-md-6 col-lg-4 mb-10">
-                        <x-common.base-select
-                            id="category-filter"
-                            :selected="$selectedCategory"
-                            :options="$categoriesOptions" 
-                            :placeholder="$categoriesOptionsPlaceholder"
-                        />
+                        <x-common.base-select id="category-filter" :selected="$selectedCategory"
+                            :options="$categoriesOptions" :placeholder="$categoriesOptionsPlaceholder" />
 
                     </div>
                     <div class="col-12 col-md-6 col-lg-4 mb-10">
 
-                        <x-common.base-select
-                            id="bonuses-filter"
-                            :selected="$selectedBonuses"
-                            :options="$bonusesOptions"
-                            :placeholder="$bonusesOptionsPlaceholder"
-                        />
+                        <x-common.base-select id="bonuses-filter" :selected="$selectedBonuses"
+                            :options="$bonusesOptions" :placeholder="$bonusesOptionsPlaceholder" />
                     </div>
                 </div>
             </div>
             <div class="col-12 col-md-auto mb-10">
                 <div class="reset-btn">
-                    <a href="{{ route('services.index') }}" class="btn-icon"><span class="icon-clear"></span> <span class="ml-2 d-md-none">Reset</span></a>
+                    <a href="{{ route('services.index') }}" class="btn-icon"><span class="icon-clear"></span> <span
+                            class="ml-2 d-md-none">Reset</span></a>
                 </div>
             </div>
         </div>

@@ -17,7 +17,7 @@
         </div>
         <div class="col-12 col-md-6 col-lg-4">
             <x-profile.form-field tabindex="2" autocomplete="nope" name="password" type="password"
-                :label="__('profile.security_settings.password_label')" />
+                :label="__('profile.password_label')" />
         </div>
         <div data-confirmation-method="{{ $confirmationMethod }}" class="col-12 col-md-6 col-lg-6">
             <input type="hidden" name="confirmation_method" value="{{ $confirmationMethod }}">

@@ -1,10 +1,10 @@
 @props([
-    'selected' => ['value' => '', 'order' => '', 'label' => ''], 
-    'options' => [], 
-    'id' => '', 
-    'withFlag' => false, 
-    'icon' => null,
-    'placeholder' => '',
+'selected' => ['value' => '', 'order' => '', 'label' => ''],
+'options' => [],
+'id' => '',
+'withFlag' => false,
+'icon' => null,
+'placeholder' => '',
 ])
 
 <div class="base-select {{ $icon ? 'base-select-icon' : '' }}" id="{{ $id }}">
@@ -15,7 +15,7 @@
             @endif
             {{-- Combine placeholder with selected value --}}
             @if($placeholder)
-                <span class="base-select__placeholder">{{ $placeholder }}</span>
+            <span class="base-select__placeholder">{{ $placeholder }}</span>
             @endif
             <span class="base-select__selected-label">{{ $selected['label'] }}</span>
         </span>
@@ -23,10 +23,7 @@
     </div>
     <ul class="base-select__dropdown" style="display: none;">
         @foreach($options as $option)
-        <li
-            data-value="{{ $option['value'] }}"
-            data-order="{{ $option['order'] }}"
-            data-label="{{ $option['label'] }}"
+        <li data-value="{{ $option['value'] }}" data-order="{{ $option['order'] }}" data-label="{{ $option['label'] }}"
             data-placeholder="{{ $placeholder }}"
             class="base-select__option {{ $option['value'] == $selected['value'] && $option['order'] == $selected['order'] ? 'is-selected' : '' }}">
             @if($withFlag)

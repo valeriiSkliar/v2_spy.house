@@ -1,7 +1,7 @@
 @extends('layouts.main')
 
 @section('page-content')
-<h1 class="mb-25">{{ __('profile.personal_greeting_page_title') }}</h1>
+<h1 class="mb-25">{{ __('profile.personal_greeting.page_title') }}</h1>
 
 @php
 $user = auth()->user();
@@ -42,10 +42,10 @@ $isExpired = $updateExpiresAt && now()->isAfter($updateExpiresAt);
             {{ __('profile.security_settings.authenticator_required') }}
             @break
             @case('personal-greeting-updated')
-            {{ __('profile.personal_greeting_update_success') }}
+            {{ __('profile.personal_greeting.personal_greeting_update_success') }}
             @break
             @case('personal-greeting-update-cancelled')
-            {{ __('profile.security_settings.personal_greeting_update_cancelled') }}
+            {{ __('profile.personal_greeting.personal_greeting_update_cancelled') }}
             @break
             @default
             {{ session('status') }}

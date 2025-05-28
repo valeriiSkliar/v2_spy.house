@@ -15,7 +15,8 @@
                             data-ajax-search="true">
                             <div class="form-search">
                                 <span class="icon-search"></span>
-                                <input type="search" name="search" placeholder="Search by Keyword"
+                                <input type="search" name="search"
+                                    placeholder="{{ __('select-options.placeholders.search_by_keyword') }}"
                                     value="{{ request('search') }}" id="services-search-input" data-min-chars="3">
                             </div>
                         </form>

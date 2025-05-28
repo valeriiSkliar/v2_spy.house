@@ -55,7 +55,6 @@ use Illuminate\Support\Facades\Auth;
         @endif
     </div>
 
-    @vite(['resources/js/app.js'])
     @stack('scripts')
 </body>
 

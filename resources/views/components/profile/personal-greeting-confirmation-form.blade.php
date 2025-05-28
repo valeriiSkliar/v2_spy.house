@@ -20,12 +20,11 @@
             </div>
         </div>
         <div class="d-flex gap-3 confirmation-method__btn">
-            <x-profile.submit-button formId="personal-greeting-form"
-                :label="__('profile.security_settings.confirm_button')" />
+            <x-profile.submit-button formId="personal-greeting-form" :label="__('profile.confirm_button')" />
             <div class="mb-20">
                 <a href="{{ route('api.profile.cancel-personal-greeting-update') }}" class="btn _flex _red _big"
                     data-action="cancel-personal-greeting">
-                    {{ __('profile.security_settings.cancel_button') }}
+                    {{ __('profile.cancel_button') }}
                 </a>
             </div>
         </div>
