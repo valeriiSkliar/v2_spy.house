@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
     @if(Auth::check() && isset($api_token))
     <meta name="api-token" content="{{ $api_token }}">
     @if(isset($api_token_expires_at))
@@ -21,12 +22,12 @@ use Illuminate\Support\Facades\Auth;
     <link href="{{ asset('css/profile-avatar-upload.css') }}" rel="stylesheet">
 
     <!-- Scripts -->
-    @vite([ 'resources/js/app.js', 'resources/scss/app.scss'])
+    @vite(['resources/js/app.js', 'resources/scss/app.scss'])
 </head>
 
 <body class="">
     <div class="navigation-bg"></div>
-    
+
 
     <!-- Page Content -->
     @yield('content')
@@ -39,13 +40,8 @@ use Illuminate\Support\Facades\Auth;
     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1050;">
         @if (session('toasts'))
         @foreach (session('toasts') as $toast)
-        <div 
-            class="toast opacity-75 align-items-center border-0 toast-{{ $toast['type'] }}" 
-            role="alert" 
-            aria-live="assertive"
-            aria-atomic="true"
-            :data-bs-delay="5000"
-        >
+        <div class="toast opacity-75 align-items-center border-0 toast-{{ $toast['type'] }}" role="alert"
+            aria-live="assertive" aria-atomic="true" :data-bs-delay="5000">
             <div class="d-flex align-items-center p-3">
                 <div class="toast-icon me-3">
                 </div>
@@ -63,9 +59,7 @@ use Illuminate\Support\Facades\Auth;
     @php
     $currentTariff = auth()->user()->currentTariff();
     @endphp
-    <x-subscription-activated-modal
-        :type="$currentTariff['css_class']"
-        :tariff="$currentTariff['name']"
+    <x-subscription-activated-modal :type="$currentTariff['css_class']" :tariff="$currentTariff['name']"
         :expires="$currentTariff['expires_at']" />
 
     <script>
@@ -84,7 +78,6 @@ use Illuminate\Support\Facades\Auth;
             landingsAjaxDestroyBase: '{{ route("landings.destroy.ajax", ["landing" => ":id"]) }}',
         };
     </script>
-    @vite(['resources/js/app.js'])
     @stack('scripts')
 </body>
 

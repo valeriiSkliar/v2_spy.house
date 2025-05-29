@@ -4,7 +4,7 @@
     <div class="login-body">
         <div class="login-body__content">
             <div class="login-body__header">
-                <a href="{{ route($homeRoute) }}" class="btn _flex _dark2">
+                <a href="{{ route($homeRoute) }}" class="btn _flex _dark2 pe-3">
                     <span class="icon-home mr-2 font-20"></span>{{ __('auth.go_home') }}
                 </a>
                 <div class="lang-menu">

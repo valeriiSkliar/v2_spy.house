@@ -1,0 +1,21 @@
+.write-telegram{
+  border-radius: 10px;
+  background: #334044;
+  max-width: 455px;
+  margin: 0 auto;
+  color: #D7E0E4;
+  line-height: 1.4;
+  padding: 28px 35px;
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  @media screen and (max-width: 767px) {
+    gap: 20px;
+    padding: 25px 25px;
+  }
+  .btn{
+    background: #52A1E3;
+    color: #fff;
+    padding: 0 20px;
+  }
+}
