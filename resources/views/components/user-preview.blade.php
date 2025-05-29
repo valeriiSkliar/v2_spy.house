@@ -10,7 +10,7 @@
         </div>
         <div id="user-preview-name" class="user-preview__name">{{ auth()->user()?->login }}</div>
         <div class="btn-icon _dark">
-            <span id="notification-indicator-preview" class="icon-settings"></span>
+            <span id="notification-indicator-preview" class="icon-settings remore_margin"></span>
             @if(auth()->user()->unreadNotifications->count() > 0)
             <span class="has-notification"></span>
             @endif
@@ -30,9 +30,9 @@
                         </span>
                     </a>
                 </li>
-                <li><a href="{{ route('profile.settings') }}"><span class="icon-settings"></span> <span>{{
+                <li><a href="{{ route('profile.settings') }}"><span class="icon-settings remore_margin"></span> <span>{{
                             __('header.profile_settings') }}</span></a></li>
-                <li><a href="{{ route('tariffs.index') }}"><span class="icon-tariffs"></span> <span>{{
+                <li><a href="{{ route('tariffs.index') }}"><span class="icon-tariffs remore_margin"></span> <span>{{
                             __('header.tariffs') }}</span></a></li>
             </ul>
             <form method="POST" action="{{ route('logout') }}" class="w-100">

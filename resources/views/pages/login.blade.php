@@ -10,7 +10,7 @@
     </div>
 
     <div class="form-item mb-3">
-        <input type="email" name="email" class="input-h-57 @error('email') is-invalid @enderror"
+        <input type="email" name="email" class="input-h-57 @error('email') error @enderror"
             placeholder="{{ __('auth.email') }}" value="{{ old('email') }}" readonly autocomplete="off"
             onfocus="this.removeAttribute('readonly');" autofocus>
         {{-- @error('email')
@@ -22,7 +22,7 @@
 
     <div class="form-item mb-3">
         <div class="form-password">
-            <input type="password" name="password" class="input-h-57 @error('password') is-invalid @enderror"
+            <input type="password" name="password" class="input-h-57 @error('password') error @enderror"
                 data-pass="pass-1" placeholder="{{ __('auth.password') }}" readonly autocomplete="off"
                 onfocus="this.removeAttribute('readonly');">
             <button type="button" class="btn-icon switch-password" data-pass-switch="pass-1">

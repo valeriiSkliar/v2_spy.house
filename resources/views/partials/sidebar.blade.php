@@ -17,7 +17,7 @@
         <x-auth.buttons-mobile />
         @include('partials.sidebar-menu')
         @include('components.promo-tariff')
-        <div class="aside__copyright">{{ __('footer.copyright') }}</div>
+        <div class="aside__copyright">{{ __('footer.copyright', ['year' => date('Y')]) }}</div>
     </div>
     <div class="sep _h20"></div>
     <a href="#" target="_blank" class="banner-item"><img src="/img/52400c8bd4719323579fd1a074fff985.gif" alt=""

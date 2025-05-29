@@ -18,14 +18,26 @@
 
     <!-- Password -->
     <div class="form-item mb-3">
-        <input type="password" name="password" id="password" class="input-h-57"
-            placeholder="{{ __('auth.password_recovery.new_password') }}">
+        <div class="form-password">
+            <input type="password" name="password" id="password" class="input-h-57" data-pass="pass-1"
+                placeholder="{{ __('auth.password_recovery.new_password') }}">
+            <button type="button" class="btn-icon switch-password" data-pass-switch="pass-1">
+                <span class="icon-view-off"></span>
+                <span class="icon-view-on"></span>
+            </button>
+        </div>
     </div>
 
     <!-- Confirm Password -->
     <div class="form-item mb-3">
-        <input type="password" name="password_confirmation" id="password_confirmation" class="input-h-57"
-            placeholder="{{ __('auth.password_recovery.confirm_password') }}">
+        <div class="form-password">
+            <input type="password" name="password_confirmation" id="password_confirmation" class="input-h-57"
+                data-pass="pass-2" placeholder="{{ __('auth.password_recovery.confirm_password') }}">
+            <button type="button" class="btn-icon switch-password" data-pass-switch="pass-1">
+                <span class="icon-view-off"></span>
+                <span class="icon-view-on"></span>
+            </button>
+        </div>
     </div>
 
     <!-- reCAPTCHA -->

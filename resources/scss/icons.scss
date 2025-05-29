@@ -21,9 +21,14 @@
   line-height: 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  display: block;
-  vertical-align: middle;
+  display: inline-block;
 }
+
+[class^='icon-'].remore_margin:before,
+[class*=' icon-'].remore_margin:before {
+  margin-right: 0;
+}
+
 .icon-home:before {
   content: '\e94a';
 }
