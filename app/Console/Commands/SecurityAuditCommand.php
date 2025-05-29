@@ -68,6 +68,9 @@ class SecurityAuditCommand extends Command
 
         // Неиспользованные токены
         $this->info("Unused tokens (older than 2 hours): " . $activity['unused_tokens']);
+
+        // Успешные сбросы паролей
+        $this->info("Successful password resets: " . $activity['successful_resets']);
     }
 
     private function cleanup(int $days)

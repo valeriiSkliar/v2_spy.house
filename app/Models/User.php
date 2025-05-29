@@ -44,6 +44,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'google_2fa_enabled',
         'google_2fa_secret',
         'user_avatar',
+        'last_password_reset_at',
     ];
 
     /**
@@ -66,6 +67,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'tariff_expires_at' => 'datetime',
+            'last_password_reset_at' => 'datetime',
             'password' => 'hashed',
             'notification_settings' => 'array',
             'ip_restrictions' => 'array',

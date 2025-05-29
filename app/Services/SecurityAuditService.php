@@ -79,10 +79,17 @@ class SecurityAuditService
             ->where('created_at', '<', now()->subHours(2)) // Токены старше 2 часов
             ->count();
 
+        // Успешные сбросы паролей за период
+        $successfulResets = DB::table('users')
+            ->whereNotNull('last_password_reset_at')
+            ->where('last_password_reset_at', '>=', $startDate)
+            ->count();
+
         return [
             'multiple_requests_from_ip' => $multipleRequestsFromIp,
             'ip_mismatches' => $ipMismatches,
             'unused_tokens' => $unusedTokens,
+            'successful_resets' => $successfulResets,
             'period_days' => $days
         ];
     }

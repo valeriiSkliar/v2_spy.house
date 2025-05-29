@@ -78,14 +78,14 @@ class NewPasswordController extends Controller
                     $user->forceFill([
                         'password' => Hash::make($request->password),
                         'remember_token' => Str::random(60),
+                        'last_password_reset_at' => now(),
                     ])->save();
 
-                    // Отмечаем время использования токена и успешного сброса
+                    // Отмечаем время использования токена
                     DB::table('password_reset_tokens')
                         ->where('email', $user->email)
                         ->update([
                             'used_at' => now(),
-                            'last_successful_reset_at' => now()
                         ]);
 
                     SecurityAuditService::logPasswordResetEvent(
@@ -140,14 +140,14 @@ class NewPasswordController extends Controller
                 $user->forceFill([
                     'password' => Hash::make($request->password),
                     'remember_token' => Str::random(60),
+                    'last_password_reset_at' => now(),
                 ])->save();
 
-                // Отмечаем время использования токена и успешного сброса
+                // Отмечаем время использования токена
                 DB::table('password_reset_tokens')
                     ->where('email', $user->email)
                     ->update([
                         'used_at' => now(),
-                        'last_successful_reset_at' => now()
                     ]);
 
                 SecurityAuditService::logPasswordResetEvent(

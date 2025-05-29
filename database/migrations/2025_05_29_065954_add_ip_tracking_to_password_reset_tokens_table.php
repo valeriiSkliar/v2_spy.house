@@ -15,7 +15,6 @@ return new class extends Migration
             $table->string('request_ip', 45)->nullable()->after('token');
             $table->string('access_ip', 45)->nullable()->after('request_ip');
             $table->timestamp('used_at')->nullable()->after('access_ip');
-            $table->timestamp('last_successful_reset_at')->nullable()->after('used_at');
         });
     }
 
@@ -25,7 +24,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('password_reset_tokens', function (Blueprint $table) {
-            $table->dropColumn(['request_ip', 'access_ip', 'used_at', 'last_successful_reset_at']);
+            $table->dropColumn(['request_ip', 'access_ip', 'used_at']);
         });
     }
 };

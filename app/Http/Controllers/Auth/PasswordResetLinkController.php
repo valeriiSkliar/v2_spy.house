@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Rules\Recaptcha;
 use App\Services\Frontend\Toast;
 use App\Services\SecurityAuditService;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
@@ -35,14 +36,10 @@ class PasswordResetLinkController extends Controller
         ]);
 
         // Проверяем, прошло ли 24 часа после последнего успешного сброса
-        $lastReset = DB::table('password_reset_tokens')
-            ->where('email', $request->email)
-            ->whereNotNull('last_successful_reset_at')
-            ->orderBy('last_successful_reset_at', 'desc')
-            ->first();
+        $user = User::where('email', $request->email)->first();
 
-        if ($lastReset && $lastReset->last_successful_reset_at) {
-            $hoursSinceLastReset = now()->diffInHours($lastReset->last_successful_reset_at);
+        if ($user && $user->last_password_reset_at) {
+            $hoursSinceLastReset = now()->diffInHours($user->last_password_reset_at);
             if ($hoursSinceLastReset < 24) {
                 SecurityAuditService::logPasswordResetEvent(
                     $request->email,
@@ -51,7 +48,8 @@ class PasswordResetLinkController extends Controller
                     ['hours_since_last_reset' => $hoursSinceLastReset]
                 );
 
-                Toast::error(__('Вы можете запросить восстановление пароля только через 24 часа после последнего успешного сброса.'));
+                $remainingHours = 24 - $hoursSinceLastReset;
+                Toast::error(__('validation.password_reset_throttled', ['hours' => ceil($remainingHours)]));
                 return back()->withInput($request->only('email'));
             }
         }
