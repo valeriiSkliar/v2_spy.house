@@ -55,6 +55,22 @@ use Illuminate\Support\Facades\Auth;
         @endif
     </div>
 
+    <!-- Toast initialization script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize all toasts
+            var toastElList = [].slice.call(document.querySelectorAll('.toast'));
+            var toastList = toastElList.map(function(toastEl) {
+                return new bootstrap.Toast(toastEl);
+            });
+            
+            // Show all toasts
+            toastList.forEach(function(toast) {
+                toast.show();
+            });
+        });
+    </script>
+
     @stack('scripts')
 </body>
 

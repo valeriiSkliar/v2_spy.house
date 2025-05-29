@@ -4,12 +4,16 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Rules\Recaptcha;
+use App\Services\Frontend\Toast;
+use App\Services\SecurityAuditService;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 
@@ -20,7 +24,25 @@ class NewPasswordController extends Controller
      */
     public function create(Request $request): View
     {
-        return view('auth.reset-password', ['request' => $request]);
+        // Сохраняем IP-адрес доступа к странице сброса
+        if ($request->has('token') && $request->has('email')) {
+            DB::table('password_reset_tokens')
+                ->where('email', $request->email)
+                ->update(['access_ip' => $request->ip()]);
+
+            // Проверяем несовпадение IP
+            $ipMismatch = SecurityAuditService::checkIpMismatch($request->email);
+            if ($ipMismatch) {
+                SecurityAuditService::logPasswordResetEvent(
+                    $request->email,
+                    'password_reset_ip_mismatch',
+                    $request->ip(),
+                    $ipMismatch
+                );
+            }
+        }
+
+        return view('pages.profile.reset-password', ['request' => $request]);
     }
 
     /**
@@ -33,7 +55,8 @@ class NewPasswordController extends Controller
         $request->validate([
             'token' => ['required'],
             'email' => ['required', 'email'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password' => ['required', 'confirmed', 'min:8', 'max:64'],
+            'g-recaptcha-response' => ['required', new Recaptcha()],
         ]);
 
         // Here we will attempt to reset the user's password. If it is successful we
@@ -47,6 +70,20 @@ class NewPasswordController extends Controller
                     'remember_token' => Str::random(60),
                 ])->save();
 
+                // Отмечаем время использования токена и успешного сброса
+                DB::table('password_reset_tokens')
+                    ->where('email', $user->email)
+                    ->update([
+                        'used_at' => now(),
+                        'last_successful_reset_at' => now()
+                    ]);
+
+                SecurityAuditService::logPasswordResetEvent(
+                    $user->email,
+                    'password_reset_successful',
+                    $request->ip()
+                );
+
                 event(new PasswordReset($user));
             }
         );
@@ -54,9 +91,19 @@ class NewPasswordController extends Controller
         // If the password was successfully reset, we will redirect the user back to
         // the application's home authenticated view. If there is an error we can
         // redirect them back to where they came from with their error message.
-        return $status == Password::PASSWORD_RESET
-                    ? redirect()->route('login')->with('status', __($status))
-                    : back()->withInput($request->only('email'))
-                        ->withErrors(['email' => __($status)]);
+        if ($status == Password::PASSWORD_RESET) {
+            Toast::success(__($status));
+            return redirect()->route('login');
+        } else {
+            SecurityAuditService::logPasswordResetEvent(
+                $request->email,
+                'password_reset_failed',
+                $request->ip(),
+                ['status' => $status]
+            );
+
+            Toast::error(__($status));
+            return back()->withInput($request->only('email'));
+        }
     }
 }

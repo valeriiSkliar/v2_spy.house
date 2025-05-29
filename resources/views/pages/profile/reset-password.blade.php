@@ -7,7 +7,7 @@
             <a href="#" class="btn-icon _dark"><span class="icon-home"></span></a>
         </div>
         <div class="header__left">
-            <a href="/" class="header__logo"><img src="img/logo.svg" alt="" width="142" height="36"></a>
+            <a href="/" class="header__logo"><img src="{{ asset('img/logo.svg') }}" alt="" width="142" height="36"></a>
         </div>
         <div class="header__lang">
             <x-frontend.language-selector />
@@ -17,29 +17,43 @@
         <div class="login-page__right">
             <div class="login-form">
                 <div class="login-form__content">
-                    <form method="POST" action="{{ route('password.email') }}">
+                    <form method="POST" action="{{ route('password.store') }}" id="reset-password-form">
                         @csrf
+                        <!-- Password Reset Token -->
+                        <input type="hidden" name="token" value="{{ $request->route('token') }}">
+
                         <div class="d-flex align-items-center justify-content-between mb-30">
-                            <h1 class="mb-0 font-24">{{ __('profile.password_recovery.page_title') }}</h1>
+                            <h1 class="mb-0 font-24">{{ __('profile.password_recovery.reset_title') }}</h1>
                         </div>
 
-                        <!-- Success Message -->
-                        @if (session('status'))
-                        <div class="form-item mb-3">
-                            <div class="alert alert-success text-center">
-                                {{ session('status') }}
-                            </div>
-                        </div>
-                        @endif
-
+                        <!-- Email -->
                         <div class="form-item mb-3">
                             <input type="email" name="email" class="input-h-57 @error('email') error @enderror"
-                                placeholder="{{ __('profile.password_recovery.email_placeholder') }}"
-                                value="{{ old('email') }}" readonly autocomplete="off"
-                                onfocus="this.removeAttribute('readonly');" autofocus>
+                                placeholder="{{ __('profile.email') }}" value="{{ old('email', $request->email) }}"
+                                readonly>
                             @error('email')
                             <span class="error-message">{{ $message }}</span>
                             @enderror
+                        </div>
+
+                        <!-- Password -->
+                        <div class="form-item mb-3">
+                            <input type="password" name="password" id="password"
+                                class="input-h-57 @error('password') error @enderror"
+                                placeholder="{{ __('profile.password_recovery.new_password') }}">
+                            <span class="error-message" id="password-error" style="display: none;">Пароль должен
+                                содержать минимум 64 символа</span>
+                            @error('password')
+                            <span class="error-message">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <!-- Confirm Password -->
+                        <div class="form-item mb-3">
+                            <input type="password" name="password_confirmation" id="password_confirmation"
+                                class="input-h-57" placeholder="{{ __('profile.password_recovery.confirm_password') }}">
+                            <span class="error-message" id="password-confirm-error" style="display: none;">Пароли не
+                                совпадают</span>
                         </div>
 
                         <!-- reCAPTCHA -->
@@ -55,12 +69,8 @@
 
                         <div class="form-item mb-30">
                             <button type="submit" class="btn _flex _green _big w-100">{{
-                                __('profile.password_recovery.send_button') }}</button>
+                                __('profile.password_recovery.reset_button') }}</button>
                         </div>
-                        {{-- <div class="form-item mb-30">
-                            <div class="form-text text-center"><a href="{{ route('login') }}" target="_self">Вход</a>
-                            </div>
-                        </div> --}}
                     </form>
                 </div>
             </div>
@@ -110,10 +120,28 @@
         </div>
     </div>
 </div>
-</div>
 
 @endsection
 
 @push('scripts')
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('reset-password-form');
+        const password = document.getElementById('password');
+        const passwordConfirmation = document.getElementById('password_confirmation');
+        const passwordError = document.getElementById('password-error');
+        const confirmError = document.getElementById('password-confirm-error');
+
+        // Валидация только при отправке формы
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+
+// Проверка длины пароля
+if (password.value.length < 8) { passwordError.style.display='block' ; password.classList.add('error'); isValid=false;
+    } else { passwordError.style.display='none' ; password.classList.remove('error'); } // Проверка совпадения паролей
+    if (password.value !==passwordConfirmation.value) { confirmError.style.display='block' ;
+    passwordConfirmation.classList.add('error'); isValid=false; } else { confirmError.style.display='none' ;
+    passwordConfirmation.classList.remove('error'); } if (!isValid) { e.preventDefault(); } }); }); 
+</script>
 @endpush

@@ -9,6 +9,7 @@ return [
     'password_label' => 'Пароль',
     'confirm_button' => 'Подтвердить',
     'email_label' => 'Email',
+    'email' => 'Email',
     'select_default_value' => 'Выберите значение',
     'code from the' => 'Код из',
     'go_home' => 'На главную',
@@ -98,6 +99,10 @@ return [
         'email_label' => 'Email',
         'email_placeholder' => 'Введите email',
         'send_button' => 'Отправить',
+        'reset_title' => 'Сброс пароля',
+        'new_password' => 'Новый пароль (минимум 64 символа)',
+        'confirm_password' => 'Подтвердите пароль',
+        'reset_button' => 'Сбросить пароль',
     ],
     '2fa' => [
         'setup_title' => 'Настройка двухфакторной аутентификации',

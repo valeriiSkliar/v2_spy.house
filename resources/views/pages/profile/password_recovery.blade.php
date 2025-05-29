@@ -23,15 +23,6 @@
                             <h1 class="mb-0 font-24">{{ __('profile.password_recovery.page_title') }}</h1>
                         </div>
 
-                        <!-- Success Message -->
-                        @if (session('status'))
-                        <div class="form-item mb-3">
-                            <div class="alert alert-success text-center">
-                                {{ session('status') }}
-                            </div>
-                        </div>
-                        @endif
-
                         <div class="form-item mb-3">
                             <input type="email" name="email" class="input-h-57 @error('email') error @enderror"
                                 placeholder="{{ __('profile.password_recovery.email_placeholder') }}"
