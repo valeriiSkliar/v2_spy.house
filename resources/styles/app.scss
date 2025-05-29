@@ -1,0 +1,38 @@
+// Main application styles
+// Import from frontend structure
+
+// Variables first (needed for legacy styles)
+@import 'variables';
+
+// Base dependencies (Bootstrap, mixins) - must be first!
+@import '../../node_modules/bootstrap/scss/bootstrap.scss';
+@import '../scss/mixins.scss';
+
+// Base styles from css-new (frontend structure) - ADD SELECTIVELY
+@import 'css-new/icons';
+@import 'css-new/btn';
+@import 'css-new/input';
+
+// CSS from dev folder (generated components)
+@import 'css-from-dev/BaseSelect-BMEJFstU.css';
+@import 'css-from-dev/MultiSelect-DLgF6PJh.css';
+@import 'css-from-dev/CreativesSideBarFilters-DWIhj8Ku.css';
+@import 'css-from-dev/Pagination-kqHfmUMg.css';
+
+// Legacy styles (remove gradually)
+@import '../scss/lib/bootstrap-select.css';
+@import '../scss/lib/bootstrap-select-overwrite.scss';
+@import '../scss/lib/select2.min.css';
+@import '../scss/lib/select2-overwrite.scss';
+@import '../scss/lib/daterangepicker.css';
+@import '../scss/lib/daterangepicker-overwrite.scss';
+@import '../scss/lib/dataTables.scss';
+@import '../scss/lib/popover.scss';
+@import '../scss/lib/swiper-bundle.min.css';
+
+// Third-party libraries
+@import '../../node_modules/slick-carousel/slick/slick.scss';
+@import '../../node_modules/slick-carousel/slick/slick-theme.scss';
+
+// Custom overrides (place after all imports)
+@import '../scss/custom.scss';

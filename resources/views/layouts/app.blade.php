@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Auth;
     <link href="{{ asset('css/profile-avatar-upload.css') }}" rel="stylesheet">
 
     <!-- Scripts -->
-    @vite([ 'resources/js/app.js', 'resources/scss/app.scss'])
+    @vite(['resources/js/app.js', 'resources/scss/app.scss'])
 </head>
 
 <body class="">
@@ -78,7 +78,6 @@ use Illuminate\Support\Facades\Auth;
             landingsAjaxDestroyBase: '{{ route("landings.destroy.ajax", ["landing" => ":id"]) }}',
         };
     </script>
-    @vite(['resources/js/app.js'])
     @stack('scripts')
 </body>
 
