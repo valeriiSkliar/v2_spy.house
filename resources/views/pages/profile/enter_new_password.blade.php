@@ -20,7 +20,7 @@
                     <form method="POST" action="{{ route('password.email') }}">
                         @csrf
                         <div class="d-flex align-items-center justify-content-between mb-30">
-                            <h1 class="mb-0 font-24">Восстановление пароля</h1>
+                            <h1 class="mb-0 font-24">{{ __('profile.password_recovery.page_title') }}</h1>
                         </div>
 
                         <!-- Success Message -->
@@ -34,7 +34,8 @@
 
                         <div class="form-item mb-3">
                             <input type="email" name="email" class="input-h-57 @error('email') error @enderror"
-                                placeholder="{{ __('Email') }}" value="{{ old('email') }}" readonly autocomplete="off"
+                                placeholder="{{ __('profile.password_recovery.email_placeholder') }}"
+                                value="{{ old('email') }}" readonly autocomplete="off"
                                 onfocus="this.removeAttribute('readonly');" autofocus>
                             @error('email')
                             <span class="error-message">{{ $message }}</span>
@@ -53,12 +54,13 @@
                         @enderror
 
                         <div class="form-item mb-30">
-                            <button type="submit" class="btn _flex _green _big w-100">Восстановление пароля</button>
+                            <button type="submit" class="btn _flex _green _big w-100">{{
+                                __('profile.password_recovery.send_button') }}</button>
                         </div>
-                        <div class="form-item mb-30">
+                        {{-- <div class="form-item mb-30">
                             <div class="form-text text-center"><a href="{{ route('login') }}" target="_self">Вход</a>
                             </div>
-                        </div>
+                        </div> --}}
                     </form>
                 </div>
             </div>
@@ -68,7 +70,7 @@
                 <div class="login-body__content">
                     <div class="login-body__header">
                         <a href="{{ route('home') }}" class="btn _flex _dark2">
-                            <span class="icon-home mr-2 font-20"></span>{{ __('Go home') }}
+                            <span class="icon-home mr-2 font-20"></span>{{ __('profile.go_home') }}
                         </a>
                         <div class="lang-menu">
                             <div class="base-select base-select_login">
@@ -94,8 +96,7 @@
                         </div>
                         <h2>{{ __('Need help?') }}</h2>
                         <div class="write-telegram">
-                            <div class="write-telegram__txt">{{ __('Write to our Telegram channel, we will help you with
-                                any question!') }}</div>
+                            <div class="write-telegram__txt">{{ __('profile.write_telegram_channel') }}</div>
                             <div class="write-telegram__btn">
                                 <a href="{{ config('app.telegram_channel') }}" class="btn _flex" target="_blank">
                                     <span class="icon-telegram font-18 mr-2"></span>{{ __('Chat') }}
@@ -103,11 +104,12 @@
                             </div>
                         </div>
                     </div>
-                    <div class="login-body__footer">Copyright © {{ date('Y') }}. {{ config('app.name') }}</div>
                 </div>
+                <div class="login-body__footer">Copyright © {{ date('Y') }}. {{ config('app.name') }}</div>
             </div>
         </div>
     </div>
+</div>
 </div>
 
 @endsection

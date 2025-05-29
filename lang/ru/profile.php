@@ -11,6 +11,8 @@ return [
     'email_label' => 'Email',
     'select_default_value' => 'Выберите значение',
     'code from the' => 'Код из',
+    'go_home' => 'На главную',
+    'write_telegram_channel' => 'Напишите нам в наш телеграм канал, мы поможем вам с любым вопросом!',
     'authenticator_mode' => [
         'email' => 'E-mail',
         'authenticator' => 'Аутентификатор',
@@ -90,6 +92,12 @@ return [
         'email_title' => 'Email',
         'email_description' => 'Измените email для уведомлений',
         'system_messages_label' => 'Системные сообщения',
+    ],
+    'password_recovery' => [
+        'page_title' => 'Восстановление пароля',
+        'email_label' => 'Email',
+        'email_placeholder' => 'Введите email',
+        'send_button' => 'Отправить',
     ],
     '2fa' => [
         'setup_title' => 'Настройка двухфакторной аутентификации',
