@@ -2,12 +2,16 @@
 
 @section('content')
 <div class="wrapper login-page">
+    <!-- Toast container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+
     <header class="header">
         <div class="header__home">
-            <a href="#" class="btn-icon _dark"><span class="icon-home"></span></a>
+            <a href="{{ route('home') }}" class="btn-icon _dark"><span class="icon-home"></span></a>
         </div>
         <div class="header__left">
-            <a href="/" class="header__logo"><img src="{{ asset('img/logo.svg') }}" alt="" width="142" height="36"></a>
+            <a href="{{ route('home') }}" class="header__logo"><img src="{{ asset('img/logo.svg') }}" alt="" width="142"
+                    height="36"></a>
         </div>
         <div class="header__lang">
             <x-frontend.language-selector />
@@ -28,32 +32,20 @@
 
                         <!-- Email -->
                         <div class="form-item mb-3">
-                            <input type="email" name="email" class="input-h-57 @error('email') error @enderror"
-                                placeholder="{{ __('profile.email') }}" value="{{ old('email', $request->email) }}"
-                                readonly>
-                            @error('email')
-                            <span class="error-message">{{ $message }}</span>
-                            @enderror
+                            <input type="email" name="email" class="input-h-57" placeholder="{{ __('profile.email') }}"
+                                value="{{ old('email', $request->email) }}" readonly>
                         </div>
 
                         <!-- Password -->
                         <div class="form-item mb-3">
-                            <input type="password" name="password" id="password"
-                                class="input-h-57 @error('password') error @enderror"
+                            <input type="password" name="password" id="password" class="input-h-57"
                                 placeholder="{{ __('profile.password_recovery.new_password') }}">
-                            <span class="error-message" id="password-error" style="display: none;">Пароль должен
-                                содержать минимум 64 символа</span>
-                            @error('password')
-                            <span class="error-message">{{ $message }}</span>
-                            @enderror
                         </div>
 
                         <!-- Confirm Password -->
                         <div class="form-item mb-3">
                             <input type="password" name="password_confirmation" id="password_confirmation"
                                 class="input-h-57" placeholder="{{ __('profile.password_recovery.confirm_password') }}">
-                            <span class="error-message" id="password-confirm-error" style="display: none;">Пароли не
-                                совпадают</span>
                         </div>
 
                         <!-- reCAPTCHA -->
@@ -61,11 +53,6 @@
                             <div id="recaptcha-password-reset" class="g-recaptcha"
                                 data-sitekey="{{ config('captcha.sitekey') }}"></div>
                         </div>
-                        @error('g-recaptcha-response')
-                        <div class="form-item mb-3">
-                            <span class="error-message">{{ $message }}</span>
-                        </div>
-                        @enderror
 
                         <div class="form-item mb-30">
                             <button type="submit" class="btn _flex _green _big w-100">{{
@@ -125,23 +112,5 @@
 
 @push('scripts')
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('reset-password-form');
-        const password = document.getElementById('password');
-        const passwordConfirmation = document.getElementById('password_confirmation');
-        const passwordError = document.getElementById('password-error');
-        const confirmError = document.getElementById('password-confirm-error');
-
-        // Валидация только при отправке формы
-        form.addEventListener('submit', function(e) {
-            let isValid = true;
-
-// Проверка длины пароля
-if (password.value.length < 8) { passwordError.style.display='block' ; password.classList.add('error'); isValid=false;
-    } else { passwordError.style.display='none' ; password.classList.remove('error'); } // Проверка совпадения паролей
-    if (password.value !==passwordConfirmation.value) { confirmError.style.display='block' ;
-    passwordConfirmation.classList.add('error'); isValid=false; } else { confirmError.style.display='none' ;
-    passwordConfirmation.classList.remove('error'); } if (!isValid) { e.preventDefault(); } }); }); 
-</script>
-@endpush
+@vite('resources/js/pages/reset-password.js')
+@endp
