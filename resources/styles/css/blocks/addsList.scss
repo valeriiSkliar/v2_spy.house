@@ -1,0 +1,335 @@
+.addsList {
+  text-align: center;
+  vertical-align: top;
+  .singleAddBlock {
+    display: inline-block;
+    vertical-align: top;
+    margin-right: 15px;
+    margin-bottom: 15px;
+    .inner {
+      position: relative;
+      width: 196px;
+      height: 420px;
+      background: #FFFFFF;
+      @include border-radius(5px);
+      padding: 8px 18px 6px 18px;
+      -webkit-transition: all .4s;
+      -moz-transition: all .4s;
+      -ms-transition: all .4s;
+      -o-transition: all .4s;
+      transition: all .4s;
+      cursor: pointer;
+
+      &:hover {
+        @include box-shadow(0, 40px, 80px, #D7DADC);
+        z-index: auto;
+
+      }
+      .linksBl {
+        display: none;
+      }
+      .addDate {
+        background: #F6F8F9;
+        font-size: 10px;
+        line-height: 24px;
+        height: 24px;
+        text-align: center;
+        color: #3B4A51;
+        margin-left: -10px;
+        margin-right: -10px;
+        white-space: nowrap;
+      }
+      .addHeading {
+        height: 67px;
+        margin-top: 10px;
+        @include flexbox();
+        .imgLabelBl {
+          margin-top: 5px;
+          width: 41px;
+          min-width: 41px;
+          img {
+            width: 100%;
+            height: auto;
+          }
+        }
+        .headingBl {
+          text-align: left;
+          margin-left: 14px;
+          .domain {
+            margin: 0;
+            text-align: left;
+            a {
+              font-weight: 500;
+              font-size: 12px;
+              color: #3499C6;
+            }
+          }
+          .text {
+            font-weight: 600;
+            font-size: 11px;
+            line-height: 13px;
+            color: #3B4A51;
+          }
+        }
+      }
+
+      .infoBl {
+        border-top: 1px solid #E7EDF0;
+        border-bottom: 1px solid #E7EDF0;
+        @include flexbox();
+        @include align-items(center);
+        @include justify-content(space-between);
+        padding: 9px 0;
+        .text {
+          background: #E9F2F6;
+          @include border-radius(3px);
+          font-weight: normal;
+          font-size: 12px;
+          line-height: 18px;
+          height: 18px;
+          padding: 0 6px;
+          color: #738B96;
+        }
+        .iconsBl {
+          @include flexbox();
+          .icon {
+            margin-left: 3px;
+            &.iconMobile {
+              background: url("../images/icon_mobile.svg") left top no-repeat;
+              width: 8px;
+              min-width: 8px;
+              height: 13px;
+            }
+            &.iconDesktop {
+              background: url("../images/icon_desktop.svg") left top no-repeat;
+              width: 13px;
+              min-width: 13px;
+              height: 13px;
+            }
+          }
+        }
+
+      }
+      .heading {
+        font-weight: 500;
+        font-size: 13px;
+        line-height: 16px;
+        text-align: center;
+        color: #3B4A51;
+        height: 50px;
+      }
+
+      .domain {
+        font-weight: 500;
+        font-size: 12px;
+        line-height: 15px;
+        text-align: center;
+        color: #4090D9;
+        margin-top: 15px;
+      }
+
+      .mainAddImage {
+        position: relative;
+
+        height: 158px;
+
+        img {
+          width: 100%;
+        }
+        .checkBoxBlock {
+          opacity: 0;
+          border: 1px solid #E4E4E4;
+          @include border-radius(2px);
+          width: 21px;
+          height: 21px;
+          cursor: pointer;
+          right: -2px;
+          top: -30px;
+          background: #fff;
+          position: absolute;
+          svg {
+            display: none;
+          }
+        }
+        .labelBl {
+          position: absolute;
+          top: -4px;
+          left: -4px;
+          img {
+            width: auto;
+          }
+        }
+      }
+
+      .preText {
+        font-weight: 300;
+        font-size: 13px;
+        line-height: 16px;
+        text-align: center;
+        color: #3B4A51;
+        margin-top: 15px;
+        height: 60px;
+      }
+
+      .actions {
+
+        height: 35px;
+        margin: 5px -10px 0 -10px;
+        @include flexbox();
+        @include align-items(center);
+        @include justify-content(space-between);
+        padding: 0 15px;
+        .flag {
+          img {
+            vertical-align: baseline;
+          }
+        }
+        .downloadLink {
+          width: 15px;
+          min-width: 15px;
+          height: 15px;
+          background: url("../images/downloadIcpn.svg") center center no-repeat;
+        }
+        .rate {
+          @include flexbox();
+          @include align-items(center);
+          @include justify-content(space-between);
+          .icon {
+            width: 17px;
+            min-width: 17px;
+            height: 17px;
+            background: url("../images/starIcon.svg") center center no-repeat;
+          }
+          .text {
+            font-weight: 500;
+            font-size: 12px;
+            color: #000000;
+            line-height: 17px;
+            margin-left: 3px;
+          }
+        }
+        .info {
+          font-weight: 300;
+          font-size: 12px;
+          text-align: center;
+          color: #000000;
+        }
+
+        .views {
+          @include flexbox();
+          @include align-items(center);
+          .stat {
+            margin-left: 4px;
+            font-weight: 500;
+            font-size: 11px;
+            color: #3B4A51;
+          }
+          .icon {
+            width: 12px;
+            min-width: 12px;
+            height: 11px;
+            background: url("../images/viewstat.svg") left top no-repeat;
+          }
+        }
+      }
+
+    }
+  }
+}
+
+@media (max-width: 500px) {
+  .addsList {
+    @include flexbox();
+    @include flex-wrap(wrap);
+    @include align-items(flex-start);
+    @include justify-content(center);
+  }
+
+  .addsList .singleAddBlock .inner {
+    width: 160px;
+    height: 385px;
+  }
+  .addsList .singleAddBlock .inner .mainAddImage {
+    height: auto;
+  }
+  .addsList .singleAddBlock .inner .addDate {
+    font-size: 7px;
+  }
+  .addsList .singleAddBlock .inner .addHeading .headingBl .text {
+    font-size: 9px;
+    line-height: 10px;
+  }
+  .addsList .singleAddBlock .inner .actions {
+    padding: 0;
+  }
+}
+@media (max-width: 400px) {
+  .addsList {
+    @include flexbox();
+    @include flex-wrap(wrap);
+    @include align-items(flex-start);
+    @include justify-content(space-between);
+  }
+  .addsList .singleAddBlock {
+    margin-right: 0;
+  }
+  .addsList .singleAddBlock .inner {
+    width: 155px;
+  }
+}
+
+.addsList .singleAddBlock .inner:hover .mainAddImage .checkBoxBlock{
+  -webkit-animation-name: showCheckbox;
+  -moz-animation-name: showCheckbox;
+  -o-animation-name: showCheckbox;
+  animation-name: showCheckbox;
+  -webkit-animation-duration: .3s;
+  -moz-animation-duration: .3s;
+  -o-animation-duration: .3s;
+  animation-duration: .3s;
+  top: 5px;
+  opacity: 1;
+}
+
+.addsList .singleAddBlock.selected {
+  .inner .mainAddImage .checkBoxBlock {
+    background: #3DC98A;
+    border: 1px solid #3DC98A;
+    text-align: center;
+    top: 5px;
+    opacity: 1;
+    -webkit-animation-name: none !important;
+    -moz-animation-name: none !important;
+    -o-animation-name: none !important;
+    animation-name: none !important;
+  }
+  .inner .mainAddImage .checkBoxBlock svg {
+    display: block;
+    margin: 0 auto;
+    position: relative;
+    top: 5px;
+  }
+}
+@keyframes showCheckbox {
+  from {
+    top: -20px;
+    opacity: 0;
+  } to {
+        top: 5px;
+        opacity: 1;
+      }
+}
+
+@media (max-width: 1050px) {
+  .addsList .singleAddBlock .inner .mainAddImage .checkBoxBlock {
+    -webkit-animation-name: none !important;
+    -moz-animation-name: none !important;
+    -o-animation-name: none !important;
+    animation-name: none !important;
+
+
+    text-align: center;
+    top: 5px;
+    opacity: 1;
+  }
+}
