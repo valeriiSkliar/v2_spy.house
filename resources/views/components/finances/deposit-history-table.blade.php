@@ -5,11 +5,11 @@
         <table class="table thead-transparent no-wrap-table">
             <thead>
                 <tr>
-                    <th>Date</th>
-                    <th>Transaction Number</th>
-                    <th>Payment Method</th>
-                    <th>Amount</th>
-                    <th>Status</th>
+                    <th>{{ __('finances.history_table.date') }}</th>
+                    <th>{{ __('finances.history_table.transaction_number') }}</th>
+                    <th>{{ __('finances.history_table.payment_method') }}</th>
+                    <th>{{ __('finances.history_table.amount') }}</th>
+                    <th>{{ __('finances.history_table.status') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -20,9 +20,8 @@
                     <td>{{ $transaction['paymentMethod'] }}</td>
                     <td><span class="font-weight-bold">${{ $transaction['amount'] }} </span></td>
                     <td>
-                        <span class="table-status {{ $transaction['statusClass'] }}">
-                            {{ $transaction['status'] }}
-                        </span>
+                        <x-finances.transaction-status :status="$transaction['status']"
+                            :statusClass="$transaction['statusClass']" />
                     </td>
                 </tr>
                 @endforeach
