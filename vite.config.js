@@ -13,6 +13,7 @@ export default defineConfig({
         'resources/js/pages/profile/disable-2fa.js',
         'resources/js/pages/verify-email.js',
         'resources/js/pages/reset-password.js',
+        'resources/js/pages/forgot-password.js',
         'resources/img/telegram.svg',
         'resources/img/viber.svg',
         'resources/img/whatsapp.svg',

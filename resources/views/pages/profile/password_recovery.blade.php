@@ -2,12 +2,16 @@
 
 @section('content')
 <div class="wrapper login-page">
+    <!-- Toast container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+
     <header class="header">
         <div class="header__home">
-            <a href="#" class="btn-icon _dark"><span class="icon-home"></span></a>
+            <a href="{{ route('home') }}" class="btn-icon _dark"><span class="icon-home"></span></a>
         </div>
         <div class="header__left">
-            <a href="/" class="header__logo"><img src="img/logo.svg" alt="" width="142" height="36"></a>
+            <a href="{{ route('home') }}" class="header__logo"><img src="{{ asset('img/logo.svg') }}" alt="" width="142"
+                    height="36"></a>
         </div>
         <div class="header__lang">
             <x-frontend.language-selector />
@@ -17,20 +21,17 @@
         <div class="login-page__right">
             <div class="login-form">
                 <div class="login-form__content">
-                    <form method="POST" action="{{ route('password.email') }}">
+                    <form method="POST" action="{{ route('password.email') }}" id="forgot-password-form">
                         @csrf
                         <div class="d-flex align-items-center justify-content-between mb-30">
                             <h1 class="mb-0 font-24">{{ __('profile.password_recovery.page_title') }}</h1>
                         </div>
 
                         <div class="form-item mb-3">
-                            <input type="email" name="email" class="input-h-57 @error('email') error @enderror"
+                            <input type="email" name="email" class="input-h-57"
                                 placeholder="{{ __('profile.password_recovery.email_placeholder') }}"
                                 value="{{ old('email') }}" readonly autocomplete="off"
                                 onfocus="this.removeAttribute('readonly');" autofocus>
-                            @error('email')
-                            <span class="error-message">{{ $message }}</span>
-                            @enderror
                         </div>
 
                         <!-- reCAPTCHA -->
@@ -38,20 +39,11 @@
                             <div id="recaptcha-password-reset" class="g-recaptcha"
                                 data-sitekey="{{ config('captcha.sitekey') }}"></div>
                         </div>
-                        @error('g-recaptcha-response')
-                        <div class="form-item mb-3">
-                            <span class="error-message">{{ $message }}</span>
-                        </div>
-                        @enderror
 
                         <div class="form-item mb-30">
                             <button type="submit" class="btn _flex _green _big w-100">{{
                                 __('profile.password_recovery.send_button') }}</button>
                         </div>
-                        {{-- <div class="form-item mb-30">
-                            <div class="form-text text-center"><a href="{{ route('login') }}" target="_self">Вход</a>
-                            </div>
-                        </div> --}}
                     </form>
                 </div>
             </div>
@@ -101,10 +93,10 @@
         </div>
     </div>
 </div>
-</div>
 
 @endsection
 
 @push('scripts')
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+@vite('resources/js/pages/forgot-password.js')
 @endpush
