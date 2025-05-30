@@ -3,15 +3,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Mail\VerificationAccountEmail;
+use App\Events\User\AccountConfirmationCodeRequested;
 use App\Traits\App\HasAntiFloodProtection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Mail;
-use App\Services\EmailService;
-use Illuminate\Support\Facades\Log;
-use App\Models\EmailLog;
 
 class ResendEmailVerificationController extends Controller
 {
@@ -61,78 +57,17 @@ class ResendEmailVerificationController extends Controller
         // Сохраняем код в кэш на 15 минут
         Cache::put('email_verification_code:' . $user->id, $code, now()->addMinutes(15));
 
-        // Отправляем email с кодом
-        try {
-            $emailService = new EmailService();
-            $result = $emailService->send(
-                $user->email,
-                'Account Verification - Spy.House',
-                'verification-account',
-                [
-                    'code' => $code,
-                    'loginUrl' => config('app.url') . '/login',
-                    'telegramUrl' => config('app.telegram_url', 'https://t.me/spyhouse'),
-                    'supportEmail' => config('mail.support_email', 'support@spy.house'),
-                    'unsubscribeUrl' => config('app.url') . '/unsubscribe'
-                ]
-            );
+        // Генерируем событие запроса кода
+        AccountConfirmationCodeRequested::dispatch($user, $code, [
+            'request_ip' => $request->ip(),
+            'resend_count' => $this->getAntiFloodRecord($userId, 'resend_verification_daily') ?? 0
+        ]);
 
-            if (!$result) {
-                // Логируем неудачную попытку отправки
-                EmailLog::create([
-                    'email' => $user->email,
-                    'subject' => 'Account Verification - Spy.House',
-                    'template' => 'verification-account',
-                    'status' => 'failed',
-                    'sent_at' => null
-                ]);
-
-                Log::error('Failed to send verification email', [
-                    'user_id' => $user->id,
-                    'email' => $user->email
-                ]);
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Не удалось отправить код. Попробуйте позже.'
-                ], 500);
-            }
-
-            // Логируем успешную отправку
-            EmailLog::create([
-                'email' => $user->email,
-                'subject' => 'Account Verification - Spy.House',
-                'template' => 'verification-account',
-                'status' => 'sent',
-                'sent_at' => now()
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Код подтверждения отправлен на ваш email',
-                'unblock_time' => (time() + 300) * 1000,
-                'server_time' => time() * 1000
-            ]);
-        } catch (\Exception $e) {
-            // Логируем ошибку
-            EmailLog::create([
-                'email' => $user->email,
-                'subject' => 'Account Verification - Spy.House',
-                'template' => 'verification-account',
-                'status' => 'failed',
-                'sent_at' => null
-            ]);
-
-            Log::error('Exception while sending verification email', [
-                'user_id' => $user->id,
-                'email' => $user->email,
-                'error' => $e->getMessage()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Не удалось отправить код. Попробуйте позже.'
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Код подтверждения отправлен на ваш email',
+            'unblock_time' => (time() + 300) * 1000,
+            'server_time' => time() * 1000
+        ]);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Events\User\EmailVerified;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\RedirectResponse;
@@ -83,7 +84,12 @@ class VerifyEmailController extends Controller
         }
 
         if ($user->markEmailAsVerified()) {
-            event(new Verified($user));
+            // Генерируем событие верификации
+            EmailVerified::dispatch($user, [
+                'verification_ip' => $request->ip(),
+                'verification_method' => 'code'
+            ]);
+
             Cache::forget('email_verification_code:' . $user->id);
         }
 

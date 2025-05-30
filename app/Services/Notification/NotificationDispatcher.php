@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Notifications\CustomNotification;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
+use Illuminate\Support\Facades\Log;
 
 class NotificationDispatcher
 {

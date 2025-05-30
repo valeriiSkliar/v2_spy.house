@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Events\User\UserRegistered;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Profile\RegisteredUserRequest;
 use App\Models\User;
-use App\Notifications\Auth\WelcomeNotification;
-use App\Services\EmailService;
+use App\Services\Api\TokenService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,11 +16,11 @@ use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
-    protected $emailService;
+    protected TokenService $tokenService;
 
-    public function __construct(EmailService $emailService)
+    public function __construct(TokenService $tokenService)
     {
-        $this->emailService = $emailService;
+        $this->tokenService = $tokenService;
     }
 
     /**
@@ -51,18 +51,19 @@ class RegisteredUserController extends Controller
             'scope_of_activity' => $data['scope_of_activity'],
         ]);
 
-        // Событие регистрации для других слушателей (включая отправку письма)
-        event(new Registered($user));
-
-        // Отправляем приветственное письмо
-        $this->emailService->sendNotification($user, new WelcomeNotification());
+        // Генерируем событие регистрации
+        UserRegistered::dispatch($user, [
+            'registration_ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'source' => $request->input('source', 'web'),
+        ]);
 
         Auth::login($user);
 
-        // Create a basic API token for the user with minimal abilities
-        $token = $user->createToken('basic-access', ['read:profile', 'read:public', 'read:base-token'])->plainTextToken;
-        // Optionally store this token for the user's reference
-        session()->flash('api_token', $token);
+        // Создание API токена через сервис
+        $tokenData = $this->tokenService->createBasicToken($user);
+        session(['api_token' => $tokenData['access_token']]);
+        session(['api_token_expires_at' => $tokenData['expires_at']]);
 
         // Handle AJAX requests
         if ($request->expectsJson() || $request->ajax()) {

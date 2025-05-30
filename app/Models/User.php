@@ -6,12 +6,15 @@ namespace App\Models;
 use App\Enums\Frontend\NotificationType;
 use App\Models\Frontend\Rating;
 use App\Notifications\Auth\VerifyEmailNotification;
+use App\Notifications\Auth\WelcomeNotification;
+use App\Services\Notification\NotificationDispatcher;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Support\Facades\Log;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -278,6 +281,27 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function sendEmailVerificationNotification()
     {
-        $this->notify(new VerifyEmailNotification);
+        // $this->notify(new VerifyEmailNotification);
+        // Отправляем приветственное уведомление
+        NotificationDispatcher::sendNotification(
+            $this,
+            VerifyEmailNotification::class
+        );
+    }
+
+
+    /** 
+     * Send the email welcome notification.
+     *
+     * @return void
+     */
+    public function sendWelcomeNotification()
+    {
+        // $this->notify(new WelcomeNotification);
+        // Отправляем приветственное уведомление
+        NotificationDispatcher::sendNotification(
+            $this,
+            WelcomeNotification::class
+        );
     }
 }

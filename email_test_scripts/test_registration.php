@@ -4,6 +4,7 @@
 
 use App\Enums\Frontend\UserExperience;
 use App\Enums\Frontend\UserScopeOfActivity;
+use App\Events\User\UserRegistered;
 
 $userData = [
     'login' => 'test_user_' . time(),
@@ -17,7 +18,8 @@ $userData = [
 ];
 
 // Создаем экземпляр контроллера
-$controller = new App\Http\Controllers\Auth\RegisteredUserController();
+$tokenService = new App\Services\Api\TokenService();
+$controller = new App\Http\Controllers\Auth\RegisteredUserController($tokenService);
 
 // Создаем RegisteredUserRequest
 $request = new App\Http\Requests\Profile\RegisteredUserRequest();
