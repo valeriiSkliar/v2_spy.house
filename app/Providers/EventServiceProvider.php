@@ -7,7 +7,11 @@ use App\Events\User\AccountConfirmationCodeRequested;
 use App\Events\User\EmailVerified;
 use App\Events\User\EmailUpdated;
 use App\Events\User\PasswordChanged;
-use App\Listeners\Notifications\UserNotificationListener;
+use App\Listeners\Notifications\UserRegisteredListener;
+use App\Listeners\Notifications\AccountConfirmationCodeRequestedListener;
+use App\Listeners\Notifications\EmailVerifiedListener;
+use App\Listeners\Notifications\EmailUpdatedListener;
+use App\Listeners\Notifications\PasswordChangedListener;
 use App\Listeners\Notifications\NotificationMetricsListener;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
@@ -19,27 +23,27 @@ class EventServiceProvider extends ServiceProvider
     protected $listen = [
         // События пользователя
         UserRegistered::class => [
-            UserNotificationListener::class . '@handle',
+            UserRegisteredListener::class,
             NotificationMetricsListener::class . '@handle',
         ],
 
         AccountConfirmationCodeRequested::class => [
-            UserNotificationListener::class . '@handle',
+            AccountConfirmationCodeRequestedListener::class,
             NotificationMetricsListener::class . '@handle',
         ],
 
         EmailVerified::class => [
-            UserNotificationListener::class . '@handle',
+            EmailVerifiedListener::class,
             NotificationMetricsListener::class . '@handle',
         ],
 
         EmailUpdated::class => [
-            UserNotificationListener::class . '@handle',
+            EmailUpdatedListener::class,
             NotificationMetricsListener::class . '@handle',
         ],
 
         PasswordChanged::class => [
-            UserNotificationListener::class . '@handle',
+            PasswordChangedListener::class,
             NotificationMetricsListener::class . '@handle',
         ],
 

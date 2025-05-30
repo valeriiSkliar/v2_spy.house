@@ -17,7 +17,7 @@ class NotificationMetricsListener
         $eventName = class_basename($event);
         $userId = $event->user->id ?? null;
 
-        Log::channel('metrics')->info('User event occurred', [
+        Log::info('User event occurred', [
             'event' => $eventName,
             'user_id' => $userId,
             'timestamp' => now()->toISOString(),
