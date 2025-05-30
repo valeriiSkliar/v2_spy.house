@@ -95,4 +95,42 @@ class NotificationDispatcher
             self::sendTo('mail', $email, $notification);
         }
     }
+
+    /**
+     * Отправляет приветственное уведомление в приложение для нового пользователя
+     *
+     * @param  User  $user  Новый пользователь
+     */
+    public static function sendWelcomeInAppNotification(User $user): void
+    {
+        Log::info('Creating welcome in-app notification', [
+            'user_id' => $user->id,
+            'user_name' => $user->name ?? $user->login
+        ]);
+
+        $message = __('notifications.welcome.message', [
+            'name' => $user->name ?? $user->login,
+            'app_name' => config('app.name', 'Spy.House')
+        ]);
+
+        Log::info('Welcome message generated', [
+            'user_id' => $user->id,
+            'message' => $message
+        ]);
+
+        self::quickSend(
+            $user,
+            NotificationType::WELCOME,
+            [
+                'registration_date' => $user->created_at->format('Y-m-d H:i:s'),
+                'user_id' => $user->id
+            ],
+            __('notifications.welcome.title'),
+            $message
+        );
+
+        Log::info('Welcome in-app notification dispatched via quickSend', [
+            'user_id' => $user->id
+        ]);
+    }
 }

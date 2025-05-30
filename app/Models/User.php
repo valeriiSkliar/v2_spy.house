@@ -7,6 +7,7 @@ use App\Enums\Frontend\NotificationType;
 use App\Models\Frontend\Rating;
 use App\Notifications\Auth\VerifyEmailNotification;
 use App\Notifications\Auth\WelcomeNotification;
+use App\Notifications\WelcomeInAppNotification;
 use App\Services\Notification\NotificationDispatcher;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -297,11 +298,20 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function sendWelcomeNotification()
     {
-        // $this->notify(new WelcomeNotification);
-        // Отправляем приветственное уведомление
+        // Отправляем приветственное уведомление по email
         NotificationDispatcher::sendNotification(
             $this,
             WelcomeNotification::class
         );
+    }
+
+    /**
+     * Send welcome in-app notification to user
+     *
+     * @return void
+     */
+    public function sendWelcomeInAppNotification()
+    {
+        $this->notify(new WelcomeInAppNotification($this));
     }
 }
