@@ -13,7 +13,6 @@ use App\Notifications\Profile\EmailUpdatedNotification;
 use App\Notifications\Profile\PasswordUpdateConfirmationNotification;
 use App\Notifications\Profile\PersonalGreetingUpdateConfirmationNotification;
 use App\Services\Frontend\Toast;
-use App\Services\Notification\NotificationDispatcher;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -141,11 +140,6 @@ class ProfileController extends BaseProfileController
         ], now()->addMinutes(15));
 
         // Отправляем уведомление о коде подтверждения через диспетчер
-        NotificationDispatcher::sendNotification(
-            $user,
-            EmailUpdateConfirmationNotification::class,
-            [$verificationCode]
-        );
 
         return redirect()->route('profile.change-email')
             ->with('status', 'email-code-sent');
@@ -198,26 +192,7 @@ class ProfileController extends BaseProfileController
         ]);
 
         // Используем метод quickSend для отправки уведомления на старый email
-        NotificationDispatcher::quickSend(
-            $user,
-            NotificationType::EMAIL_VERIFIED,
-            [
-                'old_email' => $oldEmail,
-                'new_email' => $pendingUpdate['new_email'],
-            ],
-            __('profile.success.email_updated'),
-            __('profile.success.email_updated_message', [
-                'old_email' => $oldEmail,
-                'new_email' => $pendingUpdate['new_email'],
-            ])
-        );
 
-        // Также отправляем уведомление на старый email через sendTo
-        NotificationDispatcher::sendTo(
-            'mail',
-            $oldEmail,
-            new EmailUpdatedNotification($oldEmail, $pendingUpdate['new_email'])
-        );
 
         $activeTab = $request->query('tab', 'security');
 
@@ -562,13 +537,6 @@ class ProfileController extends BaseProfileController
             'expires_at' => now()->addMinutes(15),
         ], now()->addMinutes(15));
 
-        // Используем метод sendNotification
-        NotificationDispatcher::sendNotification(
-            $user,
-            PersonalGreetingUpdateConfirmationNotification::class,
-            [$verificationCode]
-        );
-
         return redirect()->route('profile.personal-greeting')
             ->with('status', 'greeting-code-sent');
     }
@@ -617,13 +585,7 @@ class ProfileController extends BaseProfileController
         Cache::forget('personal_greeting_update_code:' . $user->id);
 
         // Отправляем уведомление об успешном обновлении через quickSend
-        NotificationDispatcher::quickSend(
-            $user,
-            NotificationType::PROFILE_UPDATED,
-            ['greeting_updated' => true],
-            __('profile.success.personal_greeting_update_success_title'),
-            __('profile.success.personal_greeting_update_success_message')
-        );
+
 
         // Determine active tab for redirect, assuming personal greeting is on the 'security' or a new 'general' tab.
         // For this example, let's assume it's part of general settings, redirecting to profile.settings with 'personal' tab
@@ -712,13 +674,6 @@ class ProfileController extends BaseProfileController
             'expires_at' => now()->addMinutes(15),
         ], now()->addMinutes(15));
 
-        // Используем NotificationDispatcher для отправки уведомления о смене пароля
-        NotificationDispatcher::sendTo(
-            'mail',
-            $user->email,
-            new PasswordUpdateConfirmationNotification($verificationCode)
-        );
-
         return redirect()->route('profile.change-password')
             ->with('status', 'password-code-sent');
     }
@@ -764,14 +719,7 @@ class ProfileController extends BaseProfileController
             'user_id' => $user->id,
         ]);
 
-        // Отправляем уведомление об успешном обновлении пароля
-        NotificationDispatcher::quickSend(
-            $user,
-            NotificationType::PASSWORD_CHANGED,
-            [],
-            __('profile.security_settings.password_updated_success_title'),
-            __('profile.security_settings.password_updated_success_message')
-        );
+
 
         $activeTab = $request->query('tab', 'security');
 

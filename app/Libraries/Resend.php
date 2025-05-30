@@ -37,7 +37,7 @@ class Resend
 
             // Формируем данные для отправки
             $data = [
-                'from'      => 'Spy.House <noreply@spy.house>',
+                'from'      => config('resend.from'),
                 'to'        => [$request_body['email']],
                 'subject'   => trim($request_body['subject']),
                 'html'      => $request_body['html'],
@@ -121,44 +121,83 @@ class Resend
 
     public function add_contact($request_body = [])
     {
-        $data = [
-            'email'         => $request_body['email'],
-            'first_name'    => $request_body['first_name'] ?? '',
-            'last_name'     => $request_body['last_name'] ?? '',
-            'unsubscribed'  => $request_body['unsubscribed'] ?? FALSE,
-        ];
+        try {
+            // Валидация обязательных полей
+            if (empty($request_body['email'])) {
+                return [
+                    'status' => 'error',
+                    'msg' => 'Missing required field: email'
+                ];
+            }
 
-        $ch = curl_init('https://api.resend.com/audiences/' . $this->audience_id . '/contacts');
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Authorization: Bearer ' . $this->api_key,
-            'Content-Type: application/json'
-        ]);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-        curl_setopt($ch, CURLOPT_POST, TRUE);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-        $body = curl_exec($ch);
-        $info = curl_getinfo($ch);
-        curl_close($ch);
+            $data = [
+                'email'         => $request_body['email'],
+                'first_name'    => $request_body['first_name'] ?? '',
+                'last_name'     => $request_body['last_name'] ?? '',
+                'unsubscribed'  => $request_body['unsubscribed'] ?? FALSE,
+            ];
 
+            $ch = curl_init('https://api.resend.com/audiences/' . $this->audience_id . '/contacts');
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Authorization: Bearer ' . $this->api_key,
+                'Content-Type: application/json'
+            ]);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+            curl_setopt($ch, CURLOPT_POST, TRUE);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+            $body = curl_exec($ch);
+            $info = curl_getinfo($ch);
+            curl_close($ch);
 
-        if (in_array($info['http_code'], [200, 201])) {
-            if (validation_json($body)) {
-                $decoded_body = json_decode($body, TRUE, 512, JSON_THROW_ON_ERROR);
-                if (! empty($decoded_body['id'])) {
-                    return [
-                        'status'    => 'success',
-                        'id'        => $decoded_body['id'],
-                        'msg'       => 'Contact added successfully.'
-                    ];
+            if (in_array($info['http_code'], [200, 201])) {
+                if (validation_json($body)) {
+                    $decoded_body = json_decode($body, TRUE, 512, JSON_THROW_ON_ERROR);
+                    if (! empty($decoded_body['id'])) {
+                        return [
+                            'status'    => 'success',
+                            'id'        => $decoded_body['id'],
+                            'msg'       => 'Contact added successfully.'
+                        ];
+                    }
                 }
             }
-        }
 
-        return [
-            'status'    => 'error',
-            'msg'       => 'Failed to add contact.'
-        ];
+            // Детальное логирование ошибки
+            $error_details = [
+                'request' => $data,
+                'response' => $body,
+                'http_code' => $info['http_code'],
+                'audience_id' => $this->audience_id
+            ];
+
+            if (validation_json($body)) {
+                $error_response = json_decode($body, TRUE);
+                $error_details['error_message'] = $error_response['message'] ?? 'Unknown error';
+                $error_details['error_name'] = $error_response['name'] ?? 'Unknown error type';
+            }
+
+            Log::error('Failed to add contact via Resend', $error_details);
+
+            return [
+                'status' => 'error',
+                'msg' => 'Failed to add contact',
+                'error' => $error_details['error_message'] ?? $body,
+                'http_code' => $info['http_code']
+            ];
+        } catch (\Exception $e) {
+            // Логируем исключение
+            Log::error('Exception while adding contact via Resend', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return [
+                'status' => 'error',
+                'msg' => 'Exception while adding contact',
+                'error' => $e->getMessage()
+            ];
+        }
     }
 
 
@@ -276,7 +315,7 @@ class Resend
     {
         $data = [
             'audience_id'   => $request_body['audience_id'],
-            'from'          => 'Pay2.House <noreply@pay2.house>',
+            'from'          => config('resend.from'),
             'subject'       => trim($request_body['subject']),
             'html'          => $request_body['html'],
             'name'          => $request_body['name'],
