@@ -244,6 +244,29 @@ class BlogController extends BaseBlogController
 
         $user = Auth::user(); // Get user details AFTER validation and anti-flood check
 
+        // Check if this is a reply to user's own comment
+        if ($request->filled('parent_id')) {
+            $parentComment = BlogComment::findOrFail($request->parent_id);
+
+            // Verify parent comment belongs to this post
+            if ($parentComment->post_id != $post->id) {
+                $errorMessage = __('blog.errors.invalid_parent_comment');
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $errorMessage], 422);
+                }
+                return redirect()->back()->withErrors(['parent_id' => $errorMessage]);
+            }
+
+            // Prevent users from replying to their own comments
+            if ($parentComment->email === $user->email) {
+                $errorMessage = __('blog.errors.cannot_reply_to_own_comment');
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $errorMessage], 422);
+                }
+                return redirect()->back()->withErrors(['content' => $errorMessage]);
+            }
+        }
+
         $comment = new BlogComment([
             'post_id' => $post->id,
             'author_name' => $user->name,

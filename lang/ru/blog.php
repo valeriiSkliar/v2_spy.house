@@ -12,5 +12,6 @@ return [
         'no_comments_found' => 'Комментарии не найдены',
         'you_must_be_logged_in_to_rate_articles' => 'Вы должны быть авторизованы для оценки статей',
         'you_have_already_rated_this_article' => 'Вы уже оценили эту статью',
+        'cannot_reply_to_own_comment' => 'Нельзя отвечать на собственные комментарии',
     ],
 ];

@@ -154,6 +154,14 @@ class ApiBlogController extends BaseBlogController
 
         $user = Auth::user();
 
+        // Prevent users from replying to their own comments
+        if ($parentComment->email === $user->email) {
+            return response()->json([
+                'success' => false,
+                'message' => __('blog.errors.cannot_reply_to_own_comment'),
+            ], 422);
+        }
+
         $reply = new BlogComment([
             'post_id' => $post->id,
             'parent_id' => $parentComment->id,
