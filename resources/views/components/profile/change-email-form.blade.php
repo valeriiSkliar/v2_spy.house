@@ -42,7 +42,7 @@
         </div>
     </div>
     <div class="d-flex gap-3">
-        <x-profile.submit-button formId="change-email-form" :label="__('profile.security_settings.confirm_button')" />
+        <x-profile.submit-button formId="change-email-form" :label="__('profile.confirm_button')" />
         <div class="mb-20">
             <a href="{{ route('api.profile.cancel-email-update') }}" class="btn _flex _red _big">
                 {{ __('profile.cancel_button') }}
@@ -50,5 +50,5 @@
         </div>
     </div>
     @endif
-    <x-profile.success-message status="email-updated" :message="__('profile.security_settings.email_updated')" />
+    <x-profile.success-message status="email-updated" :message="__('profile.email_updated')" />
 </form>
