@@ -4,24 +4,33 @@ namespace App\Notifications\Profile;
 
 use App\Enums\Frontend\NotificationType;
 use App\Notifications\BaseNotification;
-use Illuminate\Notifications\Messages\MailMessage;
 
 class PasswordUpdateConfirmationNotification extends BaseNotification
 {
-    public function __construct(
-        private readonly int $verificationCode
-    ) {
+    private int $verificationCode;
+
+    public function __construct(int $verificationCode)
+    {
         parent::__construct(NotificationType::PASSWORD_RESET);
+        $this->verificationCode = $verificationCode;
     }
 
-    public function toMail(object $notifiable): MailMessage
+    protected function getEmailTemplate(): string
     {
-        return (new MailMessage)
-            ->subject($this->getTitle($notifiable))
-            ->line($this->getMessage($notifiable))
-            ->line(__('profile.security_settings.verification_code').': '.$this->verificationCode)
-            ->line(__('profile.security_settings.code_expires_in', ['minutes' => 15]))
-            ->line(__('profile.security_settings.if_you_did_not_request'));
+        return 'password-update-confirmation';
+    }
+
+    protected function getEmailSubject(object $notifiable): string
+    {
+        return __('profile.security_settings.password_update_confirmation');
+    }
+
+    protected function getEmailTemplateData(object $notifiable): array
+    {
+        return array_merge(parent::getEmailTemplateData($notifiable), [
+            'verification_code' => $this->verificationCode,
+            'expires_in' => 15,
+        ]);
     }
 
     protected function getTitle(object $notifiable): string

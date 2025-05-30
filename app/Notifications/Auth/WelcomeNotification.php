@@ -2,89 +2,54 @@
 
 namespace App\Notifications\Auth;
 
-use App\Services\EmailService;
-use App\Models\EmailLog;
-use Illuminate\Notifications\Notification;
-use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Support\Facades\Log;
+use App\Enums\Frontend\NotificationType;
+use App\Notifications\BaseNotification;
 
-class WelcomeNotification extends Notification
+class WelcomeNotification extends BaseNotification
 {
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @return array<int, string>
-     */
-    public function via($notifiable): array
+    public function __construct()
     {
-        return ['mail'];
+        parent::__construct(NotificationType::WELCOME);
     }
 
-    /**
-     * Get the mail representation of the notification.
-     */
-    public function toMail($notifiable): MailMessage
+    protected function getEmailTemplate(): string
     {
-        Log::info('WelcomeNotification toMail() called', [
-            'user_id' => $notifiable->id,
-            'email' => $notifiable->email,
-            'username' => $notifiable->login
-        ]);
+        return 'welcome';
+    }
 
-        // Параметры для шаблона
-        $mailData = [
+    protected function getEmailSubject(object $notifiable): string
+    {
+        return 'Welcome to Partners.House!';
+    }
+
+    protected function getEmailTemplateData(object $notifiable): array
+    {
+        return array_merge(parent::getEmailTemplateData($notifiable), [
             'username' => $notifiable->login,
-            'loginUrl' => config('app.url') . '/login',
-            'dashboardUrl' => config('app.url') . '/dashboard',
-            'telegramUrl' => config('app.telegram_url', 'https://t.me/spyhouse'),
-            'supportEmail' => config('mail.support_email', 'support@spy.house'),
-            'unsubscribeUrl' => config('app.url') . '/unsubscribe'
+            'dashboardUrl' => config('app.url') . '/profile/settings',
+        ]);
+    }
+
+    protected function getTitle(object $notifiable): string
+    {
+        return __('notifications.welcome.title');
+    }
+
+    protected function getMessage(object $notifiable): string
+    {
+        return __('notifications.welcome.message', ['name' => $notifiable->name ?? $notifiable->login]);
+    }
+
+    protected function getIcon(): string
+    {
+        return 'user-plus';
+    }
+
+    protected function getAdditionalData(object $notifiable): array
+    {
+        return [
+            'registration_date' => $notifiable->created_at->format('Y-m-d H:i:s'),
+            'user_id' => $notifiable->id
         ];
-
-        try {
-            $emailService = app(EmailService::class);
-            $result = $emailService->send(
-                $notifiable->email,
-                'Welcome to Partners.House!',
-                'welcome',
-                $mailData
-            );
-
-            // Логируем результат отправки
-            EmailLog::create([
-                'email' => $notifiable->email,
-                'subject' => 'Welcome to Partners.House!',
-                'template' => 'welcome',
-                'status' => $result ? 'sent' : 'failed',
-                'sent_at' => $result ? now() : null
-            ]);
-
-            if (!$result) {
-                Log::error('Failed to send welcome email', [
-                    'user_id' => $notifiable->id,
-                    'email' => $notifiable->email
-                ]);
-            }
-        } catch (\Exception $e) {
-            // Логируем ошибку
-            EmailLog::create([
-                'email' => $notifiable->email,
-                'subject' => 'Welcome to Partners.House!',
-                'template' => 'welcome',
-                'status' => 'failed',
-                'sent_at' => null
-            ]);
-
-            Log::error('Exception while sending welcome email', [
-                'user_id' => $notifiable->id,
-                'email' => $notifiable->email,
-                'error' => $e->getMessage()
-            ]);
-        }
-
-        // Возвращаем MailMessage с данными для кастомного шаблона
-        return (new MailMessage)
-            ->subject('Welcome to Partners.House!')
-            ->view('emails.welcome', $mailData);
     }
 }

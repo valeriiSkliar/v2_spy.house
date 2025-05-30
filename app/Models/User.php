@@ -277,41 +277,34 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Send the email verification notification.
-     *
-     * @return void
      */
     public function sendEmailVerificationNotification()
     {
-        // $this->notify(new VerifyEmailNotification);
-        // Отправляем приветственное уведомление
-        NotificationDispatcher::sendNotification(
-            $this,
-            VerifyEmailNotification::class
-        );
-    }
-
-
-    /** 
-     * Send the email welcome notification.
-     *
-     * @return void
-     */
-    public function sendWelcomeNotification()
-    {
-        // Отправляем приветственное уведомление по email
-        NotificationDispatcher::sendNotification(
-            $this,
-            WelcomeNotification::class
-        );
+        $this->notify(new VerifyEmailNotification());
     }
 
     /**
-     * Send welcome in-app notification to user
-     *
-     * @return void
+     * Send welcome notification via email
      */
-    public function sendWelcomeInAppNotification()
+    public function sendWelcomeNotification(): void
     {
-        $this->notify(new WelcomeInAppNotification($this));
+        $this->notify(new WelcomeNotification());
+    }
+
+    /**
+     * Send welcome notification to in-app database
+     */
+    public function sendWelcomeInAppNotification(): void
+    {
+        NotificationDispatcher::quickSend(
+            $this,
+            NotificationType::WELCOME,
+            [
+                'registration_date' => $this->created_at->format('Y-m-d H:i:s'),
+                'user_id' => $this->id
+            ],
+            __('notifications.welcome.title'),
+            __('notifications.welcome.message', ['name' => $this->name ?? $this->login])
+        );
     }
 }

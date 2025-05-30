@@ -3,10 +3,7 @@
 namespace App\Notifications\Profile;
 
 use App\Enums\Frontend\NotificationType;
-use App\Models\EmailLog;
 use App\Notifications\BaseNotification;
-use App\Services\EmailService;
-use Illuminate\Support\Facades\Log;
 
 class EmailUpdateConfirmationNotification extends BaseNotification
 {
@@ -18,31 +15,20 @@ class EmailUpdateConfirmationNotification extends BaseNotification
         $this->code = $code;
     }
 
-    public function toMail($notifiable)
+    protected function getEmailTemplate(): string
     {
-        Log::info('toMail', ['code' => $this->code]);
-        $emailService = app(EmailService::class);
+        return 'verification-account';
+    }
 
-        $result = $emailService->send(
-            $notifiable->email,
-            $this->getTitle($notifiable),
-            'verification-account',
-            [
-                'code' => $this->code,
-                'loginUrl' => config('app.url') . '/login',
-                'telegramUrl' => config('app.telegram_url', 'https://t.me/spyhouse'),
-                'supportEmail' => config('mail.support_email', 'support@spy.house'),
-                'unsubscribeUrl' => config('app.url') . '/unsubscribe'
-            ]
-        );
+    protected function getEmailSubject(object $notifiable): string
+    {
+        return __('profile.email_update.confirmation_title');
+    }
 
-        // Логируем результат отправки
-        EmailLog::create([
-            'email' => $notifiable->email,
-            'subject' => $this->getTitle($notifiable),
-            'template' => 'verification-account',
-            'status' => $result ? 'success' : 'failed',
-            'sent_at' => $result ? now() : null
+    protected function getEmailTemplateData(object $notifiable): array
+    {
+        return array_merge(parent::getEmailTemplateData($notifiable), [
+            'code' => $this->code,
         ]);
     }
 

@@ -13,6 +13,7 @@ enum NotificationType: string
     case WELCOME = 'welcome'; // Приветственное сообщение после регистрации
     case ACCOUNT_VERIFIED = 'account_verified'; // Аккаунт подтвержден
     case EMAIL_VERIFIED = 'email_verified'; // Email подтвержден (первичная верификация)
+    case EMAIL_VERIFICATION_REQUEST = 'email_verification_request'; // Запрос на верификацию email
     case EMAIL_UPDATED = 'email_updated'; // Email адрес обновлен
     case PASSWORD_CHANGED = 'password_changed'; // Пароль изменен
     case PROFILE_UPDATED = 'profile_updated'; // Профиль обновлен
