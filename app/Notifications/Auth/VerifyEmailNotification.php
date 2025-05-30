@@ -30,7 +30,7 @@ class VerifyEmailNotification extends VerifyEmail
         Cache::put('email_verification_code:' . $notifiable->id, $code, now()->addMinutes(15));
 
         try {
-            $emailService = new EmailService();
+            $emailService = app(EmailService::class);
             $result = $emailService->send(
                 $notifiable->email,
                 'Account Verification - Spy.House',

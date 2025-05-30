@@ -3,8 +3,9 @@
 namespace App\Notifications\Profile;
 
 use App\Enums\Frontend\NotificationType;
+use App\Models\EmailLog;
 use App\Notifications\BaseNotification;
-use Illuminate\Notifications\Messages\MailMessage;
+use App\Services\EmailService;
 use Illuminate\Support\Facades\Log;
 
 class EmailUpdateConfirmationNotification extends BaseNotification
@@ -17,24 +18,32 @@ class EmailUpdateConfirmationNotification extends BaseNotification
         $this->code = $code;
     }
 
-    public function toMail($notifiable): MailMessage
+    public function toMail($notifiable)
     {
         Log::info('toMail', ['code' => $this->code]);
+        $emailService = app(EmailService::class);
 
-        $mailMessage = (new MailMessage)
-            ->subject($this->getTitle($notifiable))
-            ->line($this->getMessage($notifiable))
-            ->line(__('profile.email_update.verification_code_label').': '.$this->code)
-            ->line(__('profile.email_update.verification_expires'));
+        $result = $emailService->send(
+            $notifiable->email,
+            $this->getTitle($notifiable),
+            'verification-account',
+            [
+                'code' => $this->code,
+                'loginUrl' => config('app.url') . '/login',
+                'telegramUrl' => config('app.telegram_url', 'https://t.me/spyhouse'),
+                'supportEmail' => config('mail.support_email', 'support@spy.house'),
+                'unsubscribeUrl' => config('app.url') . '/unsubscribe'
+            ]
+        );
 
-        Log::info('Mail content', [
+        // Логируем результат отправки
+        EmailLog::create([
+            'email' => $notifiable->email,
             'subject' => $this->getTitle($notifiable),
-            'message' => $this->getMessage($notifiable),
-            'code' => $this->code,
-            'expires' => __('profile.email_update.verification_expires'),
+            'template' => 'verification-account',
+            'status' => $result ? 'success' : 'failed',
+            'sent_at' => $result ? now() : null
         ]);
-
-        return $mailMessage;
     }
 
     protected function getTitle(object $notifiable): string

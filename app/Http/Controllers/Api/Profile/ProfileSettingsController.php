@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\Profile;
 
-use App\Enums\Frontend\NotificationType;
 use App\Http\Controllers\Frontend\Profile\BaseProfileController;
 use App\Http\Requests\Api\Profile\ChangePasswordApiRequest;
 use App\Http\Requests\Profile\ProfileUpdateRequest;
@@ -10,12 +9,6 @@ use App\Http\Requests\Profile\UpdateEmailRequest;
 use App\Http\Requests\Profile\UpdateIpRestrictionRequest;
 use App\Http\Requests\Profile\UpdateNotificationSettingsRequest;
 use App\Http\Requests\Profile\UpdatePersonalGreetingSettingsRequest;
-use App\Notifications\Profile\EmailUpdateConfirmationNotification;
-use App\Notifications\Profile\EmailUpdatedNotification;
-use App\Notifications\Profile\PasswordUpdateConfirmationNotification;
-use App\Notifications\Profile\PersonalGreetingUpdateConfirmationNotification;
-use App\Services\Notification\NotificationDispatcher;
-use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -179,12 +172,6 @@ class ProfileSettingsController extends BaseProfileController
                 'status' => 'pending',
             ], now()->addMinutes(15));
 
-            // Отправляем уведомление о коде подтверждения через диспетчер
-            NotificationDispatcher::sendNotification(
-                $user,
-                EmailUpdateConfirmationNotification::class,
-                [$verificationCode]
-            );
 
             return response()->json([
                 'success' => true,
@@ -290,27 +277,8 @@ class ProfileSettingsController extends BaseProfileController
 
             Cache::forget('email_update_code:' . $user->id);
 
-            // Используем метод quickSend для отправки уведомления на старый email
-            NotificationDispatcher::quickSend(
-                $user,
-                NotificationType::EMAIL_VERIFIED,
-                [
-                    'old_email' => $oldEmail,
-                    'new_email' => $pendingUpdate['new_email'],
-                ],
-                __('profile.success.email_updated'),
-                __('profile.success.email_updated_message', [
-                    'old_email' => $oldEmail,
-                    'new_email' => $pendingUpdate['new_email'],
-                ])
-            );
+            $user->sendEmailVerificationNotification();
 
-            // Также отправляем уведомление на старый email через sendTo
-            NotificationDispatcher::sendTo(
-                'mail',
-                $oldEmail,
-                new EmailUpdatedNotification($oldEmail, $pendingUpdate['new_email'])
-            );
 
             return response()->json([
                 'success' => true,
@@ -393,13 +361,6 @@ class ProfileSettingsController extends BaseProfileController
                 'expires_at' => now()->addMinutes(15),
                 'status' => 'pending',
             ], now()->addMinutes(15));
-
-            // Send notification with verification code
-            NotificationDispatcher::sendNotification(
-                $user,
-                PersonalGreetingUpdateConfirmationNotification::class,
-                [$verificationCode]
-            );
 
             Log::info('Personal greeting update initiated via email (API).', ['user_id' => $user->id, 'email' => $user->email]);
 
@@ -564,14 +525,6 @@ class ProfileSettingsController extends BaseProfileController
 
             Log::info('Personal greeting updated successfully (API).', ['user_id' => $user->id]);
 
-            // Send notification about successful update
-            NotificationDispatcher::quickSend(
-                $user,
-                NotificationType::PROFILE_UPDATED,
-                ['greeting_updated' => true],
-                __('profile.success.personal_greeting_update_success_title'),
-                __('profile.success.personal_greeting_update_success_message')
-            );
 
             return response()->json([
                 'success' => true,
@@ -727,12 +680,6 @@ class ProfileSettingsController extends BaseProfileController
                 'status' => 'pending',
             ], now()->addMinutes(15));
 
-            // Send notification with verification code
-            NotificationDispatcher::sendTo(
-                'mail',
-                $user->email,
-                new PasswordUpdateConfirmationNotification($verificationCode)
-            );
 
             return response()->json([
                 'success' => true,
@@ -884,14 +831,6 @@ class ProfileSettingsController extends BaseProfileController
             // Clear the pending update
             Cache::forget('password_update_code:' . $user->id);
 
-            // Send notification about successful update
-            NotificationDispatcher::quickSend(
-                $user,
-                NotificationType::PASSWORD_CHANGED,
-                [],
-                __('profile.security_settings.password_updated_success_title'),
-                __('profile.security_settings.password_updated_success_message')
-            );
 
             return response()->json([
                 'success' => true,
