@@ -42,7 +42,7 @@
 
                 <div class="d-flex justify-content-start mt-4">
                     <button type="submit" class="btn _flex _green _big min-200 mt-15 w-mob-100">{{
-                        __('profile.2fa.confirm_button') }}</button>
+                        __('profile.confirm_button') }}</button>
                 </div>
             </form>
         </div>
