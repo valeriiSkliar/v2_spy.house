@@ -24,6 +24,7 @@ class NotificationTypesSeeder extends Seeder
             NotificationTypeEnum::WELCOME->value => 'account',
             NotificationTypeEnum::ACCOUNT_VERIFIED->value => 'account',
             NotificationTypeEnum::EMAIL_VERIFIED->value => 'account',
+            NotificationTypeEnum::EMAIL_UPDATED->value => 'account',
             NotificationTypeEnum::PASSWORD_CHANGED->value => 'account',
             NotificationTypeEnum::PROFILE_UPDATED->value => 'account',
 
@@ -66,6 +67,7 @@ class NotificationTypesSeeder extends Seeder
             NotificationTypeEnum::WELCOME->value => 'Welcome to the platform',
             NotificationTypeEnum::ACCOUNT_VERIFIED->value => 'Your account has been verified',
             NotificationTypeEnum::EMAIL_VERIFIED->value => 'Your email has been verified',
+            NotificationTypeEnum::EMAIL_UPDATED->value => 'Your email has been updated',
             NotificationTypeEnum::PASSWORD_CHANGED->value => 'Your password has been changed',
             NotificationTypeEnum::PROFILE_UPDATED->value => 'Your profile has been updated',
 
@@ -108,6 +110,7 @@ class NotificationTypesSeeder extends Seeder
             NotificationTypeEnum::WELCOME->value => 'Welcome message sent to new users after registration.',
             NotificationTypeEnum::ACCOUNT_VERIFIED->value => 'Notification sent when a user account is verified.',
             NotificationTypeEnum::EMAIL_VERIFIED->value => 'Notification sent when a user email is verified.',
+            NotificationTypeEnum::EMAIL_UPDATED->value => 'Notification sent when a user email is updated.',
             NotificationTypeEnum::PASSWORD_CHANGED->value => 'Notification sent when a user password is changed.',
             NotificationTypeEnum::PROFILE_UPDATED->value => 'Notification sent when a user profile is updated.',
 
@@ -150,6 +153,7 @@ class NotificationTypesSeeder extends Seeder
             NotificationTypeEnum::WELCOME->value => ['mail', 'database'],
             NotificationTypeEnum::ACCOUNT_VERIFIED->value => ['mail', 'database'],
             NotificationTypeEnum::EMAIL_VERIFIED->value => ['mail', 'database'],
+            NotificationTypeEnum::EMAIL_UPDATED->value => ['mail', 'database'],
             NotificationTypeEnum::PASSWORD_CHANGED->value => ['mail', 'database'],
             NotificationTypeEnum::PROFILE_UPDATED->value => ['mail', 'database'],
 
@@ -192,6 +196,7 @@ class NotificationTypesSeeder extends Seeder
             NotificationTypeEnum::WELCOME->value => true,
             NotificationTypeEnum::ACCOUNT_VERIFIED->value => true,
             NotificationTypeEnum::EMAIL_VERIFIED->value => false,
+            NotificationTypeEnum::EMAIL_UPDATED->value => false,
             NotificationTypeEnum::PASSWORD_CHANGED->value => false,
             NotificationTypeEnum::PROFILE_UPDATED->value => true,
 
