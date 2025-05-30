@@ -36,7 +36,7 @@ if (! function_exists('sanitize_url')) {
 
         // Ensure protocol exists, default to https if not present
         if (! preg_match('~^(?:f|ht)tps?://~i', $url)) {
-            $url = 'https://'.$url;
+            $url = 'https://' . $url;
         }
 
         // Convert protocol to lowercase
@@ -63,5 +63,23 @@ if (! function_exists('sanitize_url')) {
         );
 
         return $url;
+    }
+}
+
+if (! function_exists('validation_json')) {
+    /**
+     * Validate if string is valid JSON
+     * 
+     * @param  string  $string  The string to validate
+     * @return bool
+     */
+    function validation_json($string)
+    {
+        if (!is_string($string)) {
+            return false;
+        }
+
+        json_decode($string);
+        return (json_last_error() === JSON_ERROR_NONE);
     }
 }
