@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Events\User\UserRegistered;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Profile\RegisteredUserRequest;
 use App\Models\User;
 use App\Services\Api\TokenService;
-use Illuminate\Auth\Events\Registered;
+use App\Services\User\UserRegistrationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,10 +16,12 @@ use Illuminate\View\View;
 class RegisteredUserController extends Controller
 {
     protected TokenService $tokenService;
+    protected UserRegistrationService $registrationService;
 
-    public function __construct(TokenService $tokenService)
+    public function __construct(TokenService $tokenService, UserRegistrationService $registrationService)
     {
         $this->tokenService = $tokenService;
+        $this->registrationService = $registrationService;
     }
 
     /**
@@ -51,8 +52,8 @@ class RegisteredUserController extends Controller
             'scope_of_activity' => $data['scope_of_activity'],
         ]);
 
-        // Генерируем событие регистрации
-        UserRegistered::dispatch($user, [
+        // Обрабатываем регистрацию через сервис
+        $this->registrationService->processRegistration($user, [
             'registration_ip' => $request->ip(),
             'user_agent' => $request->userAgent(),
             'source' => $request->input('source', 'web'),

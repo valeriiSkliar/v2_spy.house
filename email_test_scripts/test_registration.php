@@ -4,7 +4,6 @@
 
 use App\Enums\Frontend\UserExperience;
 use App\Enums\Frontend\UserScopeOfActivity;
-use App\Events\User\UserRegistered;
 
 $userData = [
     'login' => 'test_user_' . time(),
@@ -17,9 +16,10 @@ $userData = [
     'scope_of_activity' => UserScopeOfActivity::CRYPTO->name
 ];
 
-// Создаем экземпляр контроллера
+// Создаем экземпляры сервисов
 $tokenService = new App\Services\Api\TokenService();
-$controller = new App\Http\Controllers\Auth\RegisteredUserController($tokenService);
+$registrationService = new App\Services\User\UserRegistrationService();
+$controller = new App\Http\Controllers\Auth\RegisteredUserController($tokenService, $registrationService);
 
 // Создаем RegisteredUserRequest
 $request = new App\Http\Requests\Profile\RegisteredUserRequest();
@@ -59,3 +59,5 @@ if ($emailLog) {
 } else {
     echo "\nNo email log found\n";
 }
+
+echo "\nCheck logs with: tail -f storage/logs/laravel.log\n";
