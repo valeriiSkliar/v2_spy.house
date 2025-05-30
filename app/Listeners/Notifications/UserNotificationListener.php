@@ -20,9 +20,35 @@ use Illuminate\Support\Facades\Log;
 class UserNotificationListener
 {
     /**
+     * Обработка событий пользователя
+     */
+    public function handle($event): void
+    {
+        $eventName = class_basename($event);
+
+        switch ($eventName) {
+            case 'UserRegistered':
+                $this->processUserRegistered($event);
+                break;
+            case 'AccountConfirmationCodeRequested':
+                $this->handleAccountConfirmationCodeRequested($event);
+                break;
+            case 'EmailVerified':
+                $this->handleEmailVerified($event);
+                break;
+            case 'EmailUpdated':
+                $this->handleEmailUpdated($event);
+                break;
+            case 'PasswordChanged':
+                $this->handlePasswordChanged($event);
+                break;
+        }
+    }
+
+    /**
      * Обработка события регистрации пользователя
      */
-    public function handleUserRegistered(UserRegistered $event): void
+    public function processUserRegistered(UserRegistered $event): void
     {
         Log::info('Processing UserRegistered event', [
             'user_id' => $event->user->id,
@@ -125,32 +151,5 @@ class UserNotificationListener
             __('profile.security_settings.password_updated_success_title'),
             __('profile.security_settings.password_updated_success_message')
         );
-    }
-}
-
-/**
- * Слушатель для аналитики и метрик
- */
-class NotificationMetricsListener
-{
-    /**
-     * Обработка всех событий пользователя для сбора метрик
-     */
-    public function handle($event): void
-    {
-        $eventName = class_basename($event);
-        $userId = $event->user->id ?? null;
-
-        Log::channel('metrics')->info('User event occurred', [
-            'event' => $eventName,
-            'user_id' => $userId,
-            'timestamp' => now()->toISOString(),
-            'metadata' => $event->metadata ?? []
-        ]);
-
-        // Здесь можно добавить отправку метрик в внешние системы:
-        // - Google Analytics
-        // - Mixpanel
-        // - Custom metrics service
     }
 }

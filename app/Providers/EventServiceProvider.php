@@ -19,28 +19,28 @@ class EventServiceProvider extends ServiceProvider
     protected $listen = [
         // События пользователя
         UserRegistered::class => [
-            UserNotificationListener::class . '@handleUserRegistered',
-            NotificationMetricsListener::class,
+            UserNotificationListener::class . '@handle',
+            NotificationMetricsListener::class . '@handle',
         ],
 
         AccountConfirmationCodeRequested::class => [
-            UserNotificationListener::class . '@handleAccountConfirmationCodeRequested',
-            NotificationMetricsListener::class,
+            UserNotificationListener::class . '@handle',
+            NotificationMetricsListener::class . '@handle',
         ],
 
         EmailVerified::class => [
-            UserNotificationListener::class . '@handleEmailVerified',
-            NotificationMetricsListener::class,
+            UserNotificationListener::class . '@handle',
+            NotificationMetricsListener::class . '@handle',
         ],
 
         EmailUpdated::class => [
-            UserNotificationListener::class . '@handleEmailUpdated',
-            NotificationMetricsListener::class,
+            UserNotificationListener::class . '@handle',
+            NotificationMetricsListener::class . '@handle',
         ],
 
         PasswordChanged::class => [
-            UserNotificationListener::class . '@handlePasswordChanged',
-            NotificationMetricsListener::class,
+            UserNotificationListener::class . '@handle',
+            NotificationMetricsListener::class . '@handle',
         ],
 
         // Системные события Laravel
@@ -68,6 +68,6 @@ class EventServiceProvider extends ServiceProvider
      */
     public function shouldDiscoverEvents(): bool
     {
-        return false; // Используем явное определение для лучшего контроля
+        return false; // Отключено для предотвращения дублирования
     }
 }
