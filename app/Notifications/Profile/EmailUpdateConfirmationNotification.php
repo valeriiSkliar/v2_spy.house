@@ -53,20 +53,20 @@ class EmailUpdateConfirmationNotification extends Notification implements Should
             ]);
     }
 
-    /**
-     * Get the array representation of the notification for database storage.
-     */
-    public function toDatabase(object $notifiable): array
-    {
-        return [
-            'title' => __('profile.email_update.confirmation_title'),
-            'message' => __('profile.email_update.confirmation_message'),
-            'type' => NotificationType::EMAIL_VERIFIED->value,
-            'icon' => 'mail',
-            'data' => [
-                'code' => $this->code,
-                'expires_in' => 15, // минут
-            ],
-        ];
-    }
+    // /**
+    //  * Get the array representation of the notification for database storage.
+    //  */
+    // public function toDatabase(object $notifiable): array
+    // {
+    //     return [
+    //         'title' => __('profile.email_update.confirmation_title'),
+    //         'message' => __('profile.email_update.confirmation_message'),
+    //         'type' => NotificationType::EMAIL_VERIFIED->value,
+    //         'icon' => 'mail',
+    //         'data' => [
+    //             'code' => $this->code,
+    //             'expires_in' => 15, // минут
+    //         ],
+    //     ];
+    // }
 }

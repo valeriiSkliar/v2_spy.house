@@ -13,6 +13,7 @@ const cancelEmailUpdate = async () => {
   const $formContainer = $('#change-email-form-container');
   const $form = $formContainer.find('#change-email-form');
   let loader = null;
+
   try {
     loader = showInElement($formContainer[0]);
     const response = await ajaxFetcher.get(config.apiProfileEmailCancelEndpoint, null, {});
@@ -24,6 +25,11 @@ const cancelEmailUpdate = async () => {
 
         // Reinitialize form handlers
         changeEmail();
+      }
+
+      // Show success message
+      if (response.message) {
+        createAndShowToast(response.message, 'success');
       }
     } else {
       createAndShowToast(response.message || 'Error cancelling email update', 'error');
@@ -60,6 +66,9 @@ const confirmEmailUpdate = async formData => {
       }
       checkNotifications();
       changeEmail();
+      if (response.redirect_url) {
+        window.location.href = response.redirect_url;
+      }
     } else {
       // Handle server validation errors
       handleChangeEmailValidationErrors(response, $form);
@@ -189,11 +198,14 @@ const changeEmail = () => {
               $form.replaceWith(confirmationFormHtml);
               // Reinitialize form handlers for the new confirmation form
               changeEmail();
+
               // Add event listener for cancel button
-              $('.btn._border-red._big').on('click', function (e) {
-                e.preventDefault();
-                cancelEmailUpdate();
-              });
+              $('.btn._flex._red._big')
+                .off('click')
+                .on('click', function (e) {
+                  e.preventDefault();
+                  cancelEmailUpdate();
+                });
             }
           } else {
             handleChangeEmailValidationErrors(response, $form);
@@ -222,10 +234,12 @@ const changeEmail = () => {
   }
 
   // Add event listener for cancel button if it exists
-  $('.btn._border-red._big').on('click', function (e) {
-    e.preventDefault();
-    cancelEmailUpdate();
-  });
+  $('.btn._flex._red._big')
+    .off('click')
+    .on('click', function (e) {
+      e.preventDefault();
+      cancelEmailUpdate();
+    });
 };
 
 const initChangeEmail = () => {

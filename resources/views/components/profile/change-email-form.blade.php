@@ -44,9 +44,9 @@
     <div class="d-flex gap-3">
         <x-profile.submit-button formId="change-email-form" :label="__('profile.confirm_button')" />
         <div class="mb-20">
-            <a href="{{ route('api.profile.cancel-email-update') }}" class="btn _flex _red _big">
+            <button type="button" class="btn _flex _red _big">
                 {{ __('profile.cancel_button') }}
-            </a>
+            </button>
         </div>
     </div>
     @endif
