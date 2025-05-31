@@ -58,10 +58,7 @@ class ResendEmailVerificationController extends Controller
         Cache::put('email_verification_code:' . $user->id, $code, now()->addMinutes(15));
 
         // Генерируем событие запроса кода
-        AccountConfirmationCodeRequested::dispatch($user, $code, [
-            'request_ip' => $request->ip(),
-            'resend_count' => $this->getAntiFloodRecord($userId, 'resend_verification_daily') ?? 0
-        ]);
+        $user->sendEmailVerificationNotification($code);
 
         return response()->json([
             'success' => true,
