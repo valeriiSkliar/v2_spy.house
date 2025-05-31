@@ -15,6 +15,7 @@ class ProcessUserRegistrationJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected User $user;
+
     protected array $metadata;
 
     /**
@@ -34,11 +35,11 @@ class ProcessUserRegistrationJob implements ShouldQueue
         Log::info('Processing user registration', [
             'user_id' => $this->user->id,
             'email' => $this->user->email,
-            'metadata' => $this->metadata
+            'metadata' => $this->metadata,
         ]);
 
         // Отправляем email верификацию если нужно
-        if (!$this->user->hasVerifiedEmail()) {
+        if (! $this->user->hasVerifiedEmail()) {
             Log::info('Sending email verification notification', ['user_id' => $this->user->id]);
             $this->user->sendEmailVerificationNotification();
             Log::info('Email verification notification sent', ['user_id' => $this->user->id]);
@@ -54,7 +55,7 @@ class ProcessUserRegistrationJob implements ShouldQueue
         Log::info('Welcome in-app notification sent', ['user_id' => $this->user->id]);
 
         Log::info('User registration processed successfully', [
-            'user_id' => $this->user->id
+            'user_id' => $this->user->id,
         ]);
     }
 
@@ -65,7 +66,7 @@ class ProcessUserRegistrationJob implements ShouldQueue
     {
         Log::error('User registration job failed permanently', [
             'user_id' => $this->user->id,
-            'error' => $exception->getMessage()
+            'error' => $exception->getMessage(),
         ]);
     }
 }

@@ -7,6 +7,8 @@ use App\Enums\Frontend\NotificationType;
 use App\Models\Frontend\Rating;
 use App\Notifications\Auth\VerifyEmailNotification;
 use App\Notifications\Auth\WelcomeNotification;
+use App\Notifications\Profile\EmailUpdateConfirmationNotification;
+use App\Notifications\Profile\PasswordUpdateConfirmationNotification;
 use App\Notifications\WelcomeInAppNotification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -281,9 +283,9 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Send the email verification notification.
      */
-    public function sendEmailVerificationNotification()
+    public function sendEmailVerificationNotification(?string $verificationCode = null)
     {
-        $this->notify(new VerifyEmailNotification());
+        $this->notify(new VerifyEmailNotification($verificationCode));
     }
 
     /**

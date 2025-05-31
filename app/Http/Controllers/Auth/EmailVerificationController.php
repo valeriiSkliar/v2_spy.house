@@ -27,7 +27,7 @@ class EmailVerificationController extends Controller
         $user = $request->user();
 
         if ($user->hasVerifiedEmail()) {
-            return redirect()->intended(route('profile.settings', absolute: false).'?verified=1');
+            return redirect()->intended(route('profile.settings', absolute: false) . '?verified=1');
         }
 
         $userId = $user->id;
@@ -71,7 +71,7 @@ class EmailVerificationController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => __('auth.email_verification.already_verified'),
-                'redirect' => route('profile.settings', absolute: false).'?verified=1',
+                'redirect' => route('profile.settings', absolute: false) . '?verified=1',
             ]);
         }
 
@@ -79,7 +79,7 @@ class EmailVerificationController extends Controller
         $verificationCode = $request->getVerificationCode();
 
         // Получаем сохраненный код из кэша
-        $cachedCode = Cache::get('email_verification_code:'.$user->id);
+        $cachedCode = Cache::get('email_verification_code:' . $user->id);
 
         if (! $cachedCode) {
             return response()->json([
@@ -120,9 +120,11 @@ class EmailVerificationController extends Controller
 
                         // If the existing contact has a different email than current user email,
                         // it means this is an email change verification - delete the old contact
-                        if ($existingContactById &&
+                        if (
+                            $existingContactById &&
                             isset($existingContactById['email']) &&
-                            $existingContactById['email'] !== $user->email) {
+                            $existingContactById['email'] !== $user->email
+                        ) {
 
                             Log::info('Email change detected during verification - deleting old contact', [
                                 'user_id' => $user->id,
@@ -202,7 +204,8 @@ class EmailVerificationController extends Controller
                         $audienceId,
                         [
                             'email' => $user->email,
-                            'first_name' => $user->name ?? $user->login ?? '',
+                            'first_name' => $user->login ?? $user->name ?? '',
+                            'last_name' => $unsubscribeHash,
                             'unsubscribed' => false,
                         ]
                     );
@@ -230,13 +233,13 @@ class EmailVerificationController extends Controller
                 ]);
             }
 
-            Cache::forget('email_verification_code:'.$user->id);
+            Cache::forget('email_verification_code:' . $user->id);
         }
 
         return response()->json([
             'success' => true,
             'message' => __('auth.email_verification.success'),
-            'redirect' => route('profile.settings', absolute: false).'?verified=1',
+            'redirect' => route('profile.settings', absolute: false) . '?verified=1',
         ]);
     }
 }

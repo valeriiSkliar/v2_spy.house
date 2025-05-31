@@ -7,6 +7,9 @@ use App\Http\Requests\Profile\UpdateEmailRequest;
 use App\Http\Requests\Profile\UpdateIpRestrictionRequest;
 use App\Http\Requests\Profile\UpdateNotificationSettingsRequest;
 use App\Http\Requests\Profile\UpdatePersonalGreetingSettingsRequest;
+use App\Jobs\SendEmailUpdateConfirmationJob;
+use App\Jobs\SendPasswordUpdateConfirmationJob;
+use App\Notifications\Auth\VerifyEmailNotification;
 use App\Services\Frontend\Toast;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -135,7 +138,8 @@ class ProfileController extends BaseProfileController
             'expires_at' => now()->addMinutes(15),
         ], now()->addMinutes(15));
 
-        // Отправляем уведомление о коде подтверждения через диспетчер
+        // Send verification code to current email address asynchronously
+        SendEmailUpdateConfirmationJob::dispatch($user, (string) $verificationCode, $newEmail);
 
         return redirect()->route('profile.change-email')
             ->with('status', 'email-code-sent');
@@ -221,7 +225,8 @@ class ProfileController extends BaseProfileController
                     $audienceId,
                     [
                         'email' => $pendingUpdate['new_email'],
-                        'first_name' => $user->name ?? $user->login ?? '',
+                        'first_name' => $user->login ?? $user->name ?? '',
+                        'last_name' => $user->unsubscribe_hash ?? Hash::make($user->id ?? $user->login ?? '', ['rounds' => 12]),
                         'unsubscribed' => ! $user->is_newsletter_subscribed,
                     ]
                 );
@@ -255,7 +260,21 @@ class ProfileController extends BaseProfileController
             }
         }
 
-        // Используем метод quickSend для отправки уведомления на старый email
+        // Send verification email to the new email address
+        try {
+            $user->notify(new VerifyEmailNotification);
+
+            Log::info('Email verification sent after email change', [
+                'user_id' => $user->id,
+                'new_email' => $user->email,
+            ]);
+        } catch (\Exception $e) {
+            Log::warning('Failed to send verification email after email change', [
+                'user_id' => $user->id,
+                'new_email' => $user->email,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         $activeTab = $request->query('tab', 'security');
 
@@ -733,6 +752,9 @@ class ProfileController extends BaseProfileController
             'method' => 'email',
             'expires_at' => now()->addMinutes(15),
         ], now()->addMinutes(15));
+
+        // Send verification code to current email address asynchronously
+        SendPasswordUpdateConfirmationJob::dispatch($user, $verificationCode);
 
         return redirect()->route('profile.change-password')
             ->with('status', 'password-code-sent');

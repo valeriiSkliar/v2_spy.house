@@ -9,6 +9,7 @@ use App\Http\Requests\Profile\UpdateEmailRequest;
 use App\Http\Requests\Profile\UpdateIpRestrictionRequest;
 use App\Http\Requests\Profile\UpdateNotificationSettingsRequest;
 use App\Http\Requests\Profile\UpdatePersonalGreetingSettingsRequest;
+use App\Jobs\SendEmailUpdateConfirmationJob;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -171,6 +172,8 @@ class ProfileSettingsController extends BaseProfileController
                 'expires_at' => now()->addMinutes(15),
                 'status' => 'pending',
             ], now()->addMinutes(15));
+
+            SendEmailUpdateConfirmationJob::dispatch($user, (string) $verificationCode, $newEmail);
 
 
             return response()->json([
