@@ -287,7 +287,7 @@ class ProfileSettingsController extends BaseProfileController
                 'success' => true,
                 'message' => __('profile.success.email_updated'),
                 'successFormHtml' => $this->renderChangeEmailForm()->render(),
-                'redirect_url' => route('profile.settings'),
+                'redirect_url' => route('profile.settings', ['tab' => 'security']),
             ]);
         } catch (\Exception $e) {
             Log::error('Error confirming email update: ' . $e->getMessage(), [
