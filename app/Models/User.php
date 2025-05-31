@@ -48,6 +48,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'google_2fa_secret',
         'user_avatar',
         'last_password_reset_at',
+        'email_contact_id',
+        'is_newsletter_subscribed',
+        'unsubscribe_hash',
     ];
 
     /**
@@ -75,6 +78,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'notification_settings' => 'array',
             'ip_restrictions' => 'array',
             'google_2fa_enabled' => 'boolean',
+            'is_newsletter_subscribed' => 'boolean',
         ];
     }
 

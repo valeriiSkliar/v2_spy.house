@@ -3,13 +3,17 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\EmailVerificationRequest;
 use App\Notifications\Auth\EmailVerifiedNotification;
 use App\Traits\App\HasAntiFloodProtection;
+use Resend\Laravel\Facades\Resend;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class EmailVerificationController extends Controller
@@ -60,39 +64,20 @@ class EmailVerificationController extends Controller
     /**
      * Handle email verification with code via POST request
      */
-    public function verify(Request $request): JsonResponse
+    public function verify(EmailVerificationRequest $request): JsonResponse
     {
         $user = $request->user();
 
         if ($user->hasVerifiedEmail()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Email уже подтвержден',
+                'message' => __('auth.email_verification.already_verified'),
                 'redirect' => route('profile.settings', absolute: false) . '?verified=1'
             ]);
         }
 
-        // Валидация кода
-        $validator = Validator::make($request->all(), [
-            'code' => 'required|array|size:6',
-            'code.*' => 'required|string|size:1|regex:/^[0-9]$/'
-        ], [
-            'code.required' => 'Код подтверждения обязателен',
-            'code.array' => 'Неверный формат кода',
-            'code.size' => 'Код должен состоять из 6 цифр',
-            'code.*.required' => 'Все поля кода должны быть заполнены',
-            'code.*.regex' => 'Код должен содержать только цифры'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => $validator->errors()->first()
-            ], 422);
-        }
-
-        // Получаем код из запроса и объединяем в строку
-        $verificationCode = implode('', $request->input('code'));
+        // Получаем код из запроса
+        $verificationCode = $request->getVerificationCode();
 
         // Получаем сохраненный код из кэша
         $cachedCode = Cache::get('email_verification_code:' . $user->id);
@@ -100,14 +85,14 @@ class EmailVerificationController extends Controller
         if (!$cachedCode) {
             return response()->json([
                 'success' => false,
-                'message' => 'Код подтверждения истек. Пожалуйста, запросите новый код.'
+                'message' => __('auth.email_verification.code_expired')
             ], 422);
         }
 
         if ($verificationCode !== $cachedCode) {
             return response()->json([
                 'success' => false,
-                'message' => 'Неверный код подтверждения'
+                'message' => __('auth.email_verification.invalid_code')
             ], 422);
         }
 
@@ -119,12 +104,48 @@ class EmailVerificationController extends Controller
                 'verification_date' => now()->format('Y-m-d H:i:s')
             ]));
 
+            // Add user to Resend audience
+            try {
+                $unsubscribeHash = Hash::make($user->id ?? $user->login ?? '', ['rounds' => 12]);
+                $response = Resend::contacts()->create(
+                    config('services.resend.audience_id'),
+                    [
+                        'email' => $user->email,
+                        'first_name' => $user->id ?? $user->login ?? '',
+                        'last_name' => $unsubscribeHash,
+                        'unsubscribed' => false,
+                    ]
+                );
+
+                // Update user with contact ID and newsletter subscription status
+                if (isset($response['id'])) {
+                    $user->update([
+                        'email_contact_id' => $response['id'],
+                        'is_newsletter_subscribed' => true,
+                        'unsubscribe_hash' => $unsubscribeHash, // Generate unique unsubscribe hash
+                    ]);
+
+                    Log::info('User successfully added to Resend audience', [
+                        'user_id' => $user->id,
+                        'email' => $user->email,
+                        'contact_id' => $response['id']
+                    ]);
+                }
+            } catch (\Exception $e) {
+                // Log error but don't fail the verification process
+                Log::warning('Failed to add user to Resend audience after email verification', [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'error' => $e->getMessage()
+                ]);
+            }
+
             Cache::forget('email_verification_code:' . $user->id);
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Email успешно подтвержден',
+            'message' => __('auth.email_verification.success'),
             'redirect' => route('profile.settings', absolute: false) . '?verified=1'
         ]);
     }

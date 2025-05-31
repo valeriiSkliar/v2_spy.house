@@ -35,6 +35,9 @@ return new class extends Migration
             $table->text('google_2fa_secret')->nullable()->comment('2FA secret key');
             $table->date('date_of_birth')->nullable()->comment('User\'s date of birth');
             $table->string('user_avatar', 255)->nullable()->comment('User\'s avatar');
+            $table->string('email_contact_id')->nullable()->comment('Email service contact ID for newsletters');
+            $table->boolean('is_newsletter_subscribed')->default(false)->comment('Newsletter subscription status');
+            $table->string('unsubscribe_hash')->unique()->nullable()->comment('Unique hash for newsletter unsubscribe');
             $table->rememberToken();
             $table->timestamps();
 
