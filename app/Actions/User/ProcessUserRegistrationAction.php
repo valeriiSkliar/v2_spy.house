@@ -3,10 +3,15 @@
 namespace App\Actions\User;
 
 use App\Models\User;
+use App\Services\Notifications\UserNotificationService;
 use Illuminate\Support\Facades\Log;
 
 class ProcessUserRegistrationAction
 {
+    public function __construct(
+        private readonly UserNotificationService $notificationService
+    ) {}
+
     /**
      * Выполнить обработку регистрации пользователя
      */
@@ -26,15 +31,15 @@ class ProcessUserRegistrationAction
     private function handleEmailVerification(User $user): void
     {
         if (!$user->hasVerifiedEmail()) {
-            $user->sendEmailVerificationNotification();
+            $this->notificationService->sendEmailVerification($user);
             Log::info('Verification email sent', ['user_id' => $user->id]);
         }
     }
 
     private function handleWelcomeNotifications(User $user): void
     {
-        $user->sendWelcomeNotification();
-        $user->sendWelcomeInAppNotification();
+        $this->notificationService->sendWelcomeEmail($user);
+        $this->notificationService->sendWelcomeInAppNotification($user);
         Log::info('Welcome notifications sent', ['user_id' => $user->id]);
     }
 }
