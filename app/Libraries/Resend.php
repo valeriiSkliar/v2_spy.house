@@ -5,6 +5,20 @@ namespace App\Libraries;
 use function App\Helpers\validation_json;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * @deprecated This custom Resend library is deprecated.
+ * Use the official Resend Laravel package instead: composer require resend/resend-laravel
+ * 
+ * Migration guide:
+ * - Replace App\Libraries\Resend with Resend\Laravel\Facades\Resend
+ * - Use Resend::emails()->send() instead of send_email()
+ * - Use Resend::contacts()->create() instead of add_contact()
+ * - Use Resend::contacts()->update() instead of update_contact()
+ * - Use Resend::contacts()->remove() instead of delete_contact()
+ * - Use Resend::contacts()->get() instead of retrieve_contact()
+ * 
+ * Official documentation: https://resend.com/docs/send-with-laravel
+ */
 class Resend
 {
     private string $api_key;
@@ -27,6 +41,7 @@ class Resend
     /**
      * Send email via Resend API
      * 
+     * @deprecated Use Resend::emails()->send() from official package instead
      * @param array $request_body
      * @return array
      */
@@ -147,6 +162,8 @@ class Resend
 
     /**
      * Add contact to Resend audience
+     * 
+     * @deprecated Use Resend::contacts()->create() from official package instead
      */
     public function add_contact($request_body = [])
     {
@@ -195,6 +212,11 @@ class Resend
     }
 
 
+    /**
+     * Update contact in Resend audience
+     * 
+     * @deprecated Use Resend::contacts()->update() from official package instead
+     */
     public function update_contact($contact_id, $request_body = [])
     {
         $data = [
@@ -235,6 +257,11 @@ class Resend
     }
 
 
+    /**
+     * Delete contact from Resend audience
+     * 
+     * @deprecated Use Resend::contacts()->remove() from official package instead
+     */
     public function delete_contact($contact_id)
     {
         $ch = curl_init('https://api.resend.com/audiences/' . $this->audience_id . '/contacts/' . $contact_id);
@@ -268,6 +295,11 @@ class Resend
     }
 
 
+    /**
+     * Retrieve contact from Resend audience
+     * 
+     * @deprecated Use Resend::contacts()->get() from official package instead
+     */
     public function retrieve_contact($contact_id)
     {
         $ch = curl_init('https://api.resend.com/audiences/' . $this->audience_id . '/contacts/' . $contact_id);
@@ -305,6 +337,11 @@ class Resend
     }
 
 
+    /**
+     * Create broadcast in Resend
+     * 
+     * @deprecated Use Resend::broadcasts()->create() from official package instead
+     */
     public function create_broadcast($request_body = [])
     {
         $data = [
@@ -349,6 +386,11 @@ class Resend
     }
 
 
+    /**
+     * Send broadcast via Resend
+     * 
+     * @deprecated Use Resend::broadcasts()->send() from official package instead
+     */
     public function send_broadcast($broadcast_id)
     {
         $data = [
@@ -387,6 +429,11 @@ class Resend
     }
 
 
+    /**
+     * Delete broadcast from Resend
+     * 
+     * @deprecated Use Resend::broadcasts()->remove() from official package instead
+     */
     public function delete_broadcast($broadcast_id)
     {
         $ch = curl_init('https://api.resend.com/broadcasts/' . $broadcast_id);
@@ -420,6 +467,11 @@ class Resend
     }
 
 
+    /**
+     * Retrieve email from Resend
+     * 
+     * @deprecated Use Resend::emails()->get() from official package instead
+     */
     public function retrieve_email($email_id)
     {
         $ch = curl_init('https://api.resend.com/emails/' . $email_id);
