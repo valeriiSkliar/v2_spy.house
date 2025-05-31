@@ -43,7 +43,8 @@ class PasswordUpdateConfirmationNotification extends Notification implements Sho
 
         return (new MailMessage)
             ->subject(__('profile.security_settings.password_update_confirmation'))
-            ->view('emails.password-update-confirmation', [
+            ->view('emails.verification-account', [
+                'code' => $this->verificationCode,
                 'verification_code' => $this->verificationCode,
                 'expires_in' => 15,
                 'user' => $notifiable,

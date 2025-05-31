@@ -10,6 +10,7 @@ use App\Http\Requests\Profile\UpdateIpRestrictionRequest;
 use App\Http\Requests\Profile\UpdateNotificationSettingsRequest;
 use App\Http\Requests\Profile\UpdatePersonalGreetingSettingsRequest;
 use App\Jobs\SendEmailUpdateConfirmationJob;
+use App\Jobs\SendPasswordUpdateConfirmationJob;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -683,6 +684,8 @@ class ProfileSettingsController extends BaseProfileController
                 'expires_at' => now()->addMinutes(15),
                 'status' => 'pending',
             ], now()->addMinutes(15));
+
+            SendPasswordUpdateConfirmationJob::dispatch($user, $verificationCode);
 
 
             return response()->json([
