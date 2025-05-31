@@ -3,21 +3,23 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Events\User\EmailVerified;
-use Illuminate\Auth\Events\Verified;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use App\Notifications\Auth\EmailVerifiedNotification;
+use App\Traits\App\HasAntiFloodProtection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\View\View;
 
-class VerifyEmailController extends Controller
+class EmailVerificationController extends Controller
 {
+    use HasAntiFloodProtection;
+
     /**
-     * Show verification page or handle GET request
+     * Display the email verification prompt or redirect if already verified.
      */
-    public function show(Request $request): RedirectResponse
+    public function show(Request $request): RedirectResponse|View
     {
         $user = $request->user();
 
@@ -25,12 +27,38 @@ class VerifyEmailController extends Controller
             return redirect()->intended(route('profile.settings', absolute: false) . '?verified=1');
         }
 
-        // Показываем страницу верификации
-        return redirect()->route('verify.account');
+        $userId = $user->id;
+        $unblockTime = null;
+
+        // Проверяем текущие записи AntiFlood без инкремента
+        $current5min = $this->getAntiFloodRecord($userId, 'resend_verification_5min');
+        $currentDaily = $this->getAntiFloodRecord($userId, 'resend_verification_daily');
+
+        $canResend5min = ($current5min === null || $current5min < 1);
+        $canResendDaily = ($currentDaily === null || $currentDaily < 5);
+
+        // Если нарушен 5-минутный лимит, вычисляем время разблокировки
+        if (!$canResend5min) {
+            // Получаем время первого запроса в текущем окне
+            $firstRequestTime = $this->getAntiFloodTimestamp($userId, 'resend_verification_5min');
+
+            if ($firstRequestTime) {
+                // Время разблокировки = время первого запроса + 5 минут
+                $unblockTime = ($firstRequestTime + 300) * 1000; // В миллисекундах для JS
+            } else {
+                // Если нет данных о первом запросе, блокируем на 5 минут от текущего времени
+                $unblockTime = (time() + 300) * 1000;
+            }
+        }
+
+        return view('pages.profile.verify-your-account', [
+            'unblockTime' => $unblockTime,
+            'canResend' => $canResend5min && $canResendDaily
+        ]);
     }
 
     /**
-     * Handle verification with code via POST request
+     * Handle email verification with code via POST request
      */
     public function verify(Request $request): JsonResponse
     {
@@ -84,11 +112,12 @@ class VerifyEmailController extends Controller
         }
 
         if ($user->markEmailAsVerified()) {
-            // Генерируем событие верификации
-            EmailVerified::dispatch($user, [
+            // Отправляем уведомление в приложение о подтверждении email
+            $user->notify(new EmailVerifiedNotification([
                 'verification_ip' => $request->ip(),
-                'verification_method' => 'code'
-            ]);
+                'verification_method' => 'code',
+                'verification_date' => now()->format('Y-m-d H:i:s')
+            ]));
 
             Cache::forget('email_verification_code:' . $user->id);
         }

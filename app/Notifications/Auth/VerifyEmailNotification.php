@@ -2,19 +2,21 @@
 
 namespace App\Notifications\Auth;
 
-use App\Enums\Frontend\NotificationType;
-use App\Notifications\BaseNotification;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
-class VerifyEmailNotification extends BaseNotification
+class VerifyEmailNotification extends Notification implements ShouldQueue
 {
+    use Queueable;
+
     private string $code;
 
     public function __construct(?string $code = null)
     {
-        parent::__construct(NotificationType::EMAIL_VERIFICATION_REQUEST);
-
         // Генерируем код если не передан
         $this->code = $code ?: str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
@@ -23,17 +25,18 @@ class VerifyEmailNotification extends BaseNotification
         ]);
     }
 
-    protected function getEmailTemplate(): string
+    /**
+     * Get the notification's delivery channels.
+     */
+    public function via(object $notifiable): array
     {
-        return 'verification-account';
+        return ['mail'];
     }
 
-    protected function getEmailSubject(object $notifiable): string
-    {
-        return 'Account Verification - Spy.House';
-    }
-
-    protected function getEmailTemplateData(object $notifiable): array
+    /**
+     * Get the mail representation of the notification.
+     */
+    public function toMail(object $notifiable): MailMessage
     {
         // Сохраняем код в кэш при отправке
         Cache::put('email_verification_code:' . $notifiable->id, $this->code, now()->addMinutes(15));
@@ -43,31 +46,23 @@ class VerifyEmailNotification extends BaseNotification
             'code_length' => strlen($this->code)
         ]);
 
-        return array_merge(parent::getEmailTemplateData($notifiable), [
-            'code' => $this->code,
+        Log::info('Sending verification email', [
+            'notification_class' => get_class($this),
+            'user_id' => $notifiable->id ?? null,
+            'email' => $notifiable->email,
+            'template' => 'verification-account',
+            'subject' => 'Account Verification - Spy.House'
         ]);
-    }
 
-    protected function getTitle(object $notifiable): string
-    {
-        return __('auth.verify_email_title', [], 'Account Verification');
-    }
-
-    protected function getMessage(object $notifiable): string
-    {
-        return __('auth.verify_email_message', [], 'Please verify your email address to complete registration.');
-    }
-
-    protected function getIcon(): string
-    {
-        return 'mail';
-    }
-
-    protected function getAdditionalData(object $notifiable): array
-    {
-        return [
-            'code' => $this->code,
-            'expires_in' => 15, // минут
-        ];
+        return (new MailMessage)
+            ->subject('Account Verification - Spy.House')
+            ->view('emails.verification-account', [
+                'code' => $this->code,
+                'user' => $notifiable,
+                'loginUrl' => config('app.url') . '/login',
+                'telegramUrl' => config('app.telegram_url', 'https://t.me/spyhouse'),
+                'supportEmail' => config('mail.support_email', 'support@spy.house'),
+                'unsubscribeUrl' => config('app.url') . '/unsubscribe'
+            ]);
     }
 }

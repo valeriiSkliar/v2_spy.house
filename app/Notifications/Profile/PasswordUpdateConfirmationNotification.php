@@ -3,56 +3,71 @@
 namespace App\Notifications\Profile;
 
 use App\Enums\Frontend\NotificationType;
-use App\Notifications\BaseNotification;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
 
-class PasswordUpdateConfirmationNotification extends BaseNotification
+class PasswordUpdateConfirmationNotification extends Notification implements ShouldQueue
 {
+    use Queueable;
+
     private int $verificationCode;
 
     public function __construct(int $verificationCode)
     {
-        parent::__construct(NotificationType::PASSWORD_RESET);
         $this->verificationCode = $verificationCode;
     }
 
-    protected function getEmailTemplate(): string
+    /**
+     * Get the notification's delivery channels.
+     */
+    public function via(object $notifiable): array
     {
-        return 'password-update-confirmation';
+        return ['mail', 'database'];
     }
 
-    protected function getEmailSubject(object $notifiable): string
+    /**
+     * Get the mail representation of the notification.
+     */
+    public function toMail(object $notifiable): MailMessage
     {
-        return __('profile.security_settings.password_update_confirmation');
-    }
-
-    protected function getEmailTemplateData(object $notifiable): array
-    {
-        return array_merge(parent::getEmailTemplateData($notifiable), [
-            'verification_code' => $this->verificationCode,
-            'expires_in' => 15,
+        Log::info('Sending password update confirmation', [
+            'notification_class' => get_class($this),
+            'user_id' => $notifiable->id ?? null,
+            'email' => $notifiable->email,
+            'template' => 'password-update-confirmation',
+            'subject' => __('profile.security_settings.password_update_confirmation')
         ]);
+
+        return (new MailMessage)
+            ->subject(__('profile.security_settings.password_update_confirmation'))
+            ->view('emails.password-update-confirmation', [
+                'verification_code' => $this->verificationCode,
+                'expires_in' => 15,
+                'user' => $notifiable,
+                'loginUrl' => config('app.url') . '/login',
+                'telegramUrl' => config('app.telegram_url', 'https://t.me/spyhouse'),
+                'supportEmail' => config('mail.support_email', 'support@spy.house'),
+                'unsubscribeUrl' => config('app.url') . '/unsubscribe'
+            ]);
     }
 
-    protected function getTitle(object $notifiable): string
-    {
-        return __('profile.security_settings.password_update_confirmation');
-    }
-
-    protected function getMessage(object $notifiable): string
-    {
-        return __('profile.security_settings.password_update_confirmation_text');
-    }
-
-    protected function getIcon(): string
-    {
-        return 'lock';
-    }
-
-    protected function getAdditionalData(object $notifiable): array
+    /**
+     * Get the array representation of the notification for database storage.
+     */
+    public function toDatabase(object $notifiable): array
     {
         return [
-            'verification_code' => $this->verificationCode,
-            'expires_in' => 15,
+            'title' => __('profile.security_settings.password_update_confirmation'),
+            'message' => __('profile.security_settings.password_update_confirmation_text'),
+            'type' => NotificationType::PASSWORD_RESET->value,
+            'icon' => 'lock',
+            'data' => [
+                'verification_code' => $this->verificationCode,
+                'expires_in' => 15,
+            ],
         ];
     }
 }

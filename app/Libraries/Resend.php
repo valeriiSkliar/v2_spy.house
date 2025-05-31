@@ -7,14 +7,20 @@ use Illuminate\Support\Facades\Log;
 
 class Resend
 {
-    private $api_key;
-    private $audience_id;
+    private string $api_key;
+    private string $audience_id;
+    private string $api_url;
+    private int $timeout;
+    private bool $verify_ssl;
 
 
     public function __construct()
     {
-        $this->api_key      = config('resend.api_key');
-        $this->audience_id  = config('resend.audience_id');
+        $this->api_key = config('resend.api_key');
+        $this->audience_id = config('resend.audience_id');
+        $this->api_url = config('resend.api_url', 'https://api.resend.com');
+        $this->timeout = config('resend.timeout', 30);
+        $this->verify_ssl = config('resend.verify_ssl', true);
     }
 
 
@@ -27,7 +33,7 @@ class Resend
     public function send_email($request_body = [])
     {
         try {
-            // Валидация обязательных полей
+            // Validate required fields
             if (empty($request_body['email']) || empty($request_body['subject']) || empty($request_body['html'])) {
                 return [
                     'status' => 'error',
@@ -35,79 +41,99 @@ class Resend
                 ];
             }
 
-            // Формируем данные для отправки
+            // Prepare email data
             $data = [
-                'from'      => config('resend.from'),
-                'to'        => [$request_body['email']],
-                'subject'   => trim($request_body['subject']),
-                'html'      => $request_body['html'],
-                'bcc'       => $request_body['bcc'] ?? null,
-                'cc'        => $request_body['cc'] ?? null,
-                'reply_to'  => $request_body['reply_to'] ?? null,
-                'headers'   => $request_body['headers'] ?? [],
-                'tags'      => $request_body['tags'] ?? []
+                'from' => $request_body['from'] ?? config('resend.from'),
+                'to' => [$request_body['email']],
+                'subject' => trim($request_body['subject']),
+                'html' => $request_body['html'],
+
+                // 'bcc'       => $request_body['bcc'] ?? null,
+                // 'cc'        => $request_body['cc'] ?? null,
+                // 'reply_to'  => $request_body['reply_to'] ?? null,
+                // 'headers'   => $request_body['headers'] ?? [],
+                // 'tags'      => $request_body['tags'] ?? []
             ];
 
-            // Добавляем idempotency key если передан
+            // Add optional fields
+            if (!empty($request_body['text'])) {
+                $data['text'] = $request_body['text'];
+            }
+            if (!empty($request_body['bcc'])) {
+                $data['bcc'] = is_array($request_body['bcc']) ? $request_body['bcc'] : [$request_body['bcc']];
+            }
+            if (!empty($request_body['cc'])) {
+                $data['cc'] = is_array($request_body['cc']) ? $request_body['cc'] : [$request_body['cc']];
+            }
+            if (!empty($request_body['reply_to'])) {
+                $data['reply_to'] = is_array($request_body['reply_to']) ? $request_body['reply_to'] : [$request_body['reply_to']];
+            }
+            if (!empty($request_body['headers']) && is_array($request_body['headers'])) {
+                $data['headers'] = $request_body['headers'];
+            }
+            if (!empty($request_body['tags']) && is_array($request_body['tags'])) {
+                $data['tags'] = $request_body['tags'];
+            }
+
+            // Prepare headers
             $headers = [
                 'Authorization: Bearer ' . $this->api_key,
-                'Content-Type: application/json'
+                'Content-Type: application/json',
+                'User-Agent: Laravel-Resend/1.0'
             ];
 
+            // Add idempotency key if provided
             if (!empty($request_body['idempotency_key'])) {
                 $headers[] = 'Idempotency-Key: ' . $request_body['idempotency_key'];
             }
 
             // Отправляем запрос
-            $ch = curl_init('https://api.resend.com/emails');
-            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-            curl_setopt($ch, CURLOPT_POST, TRUE);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-            $body = curl_exec($ch);
-            $info = curl_getinfo($ch);
-            curl_close($ch);
+            $response = $this->makeRequest('/emails', 'POST', $data, $headers);
 
-            // Обработка ответа
-            if (in_array($info['http_code'], [200, 201])) {
-                if (validation_json($body)) {
-                    $decoded_body = json_decode($body, TRUE, 512, JSON_THROW_ON_ERROR);
-                    if (!empty($decoded_body['id'])) {
-                        return [
-                            'status' => 'success',
-                            'id' => $decoded_body['id'],
-                            'msg' => 'Email sent successfully'
-                        ];
-                    }
-                }
+            // $ch = curl_init('https://api.resend.com/emails');
+            // curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            // curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+            // curl_setopt($ch, CURLOPT_POST, TRUE);
+            // curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+            // curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+            // $body = curl_exec($ch);
+            // $info = curl_getinfo($ch);
+            // curl_close($ch);
+
+            if ($response['success'] && !empty($response['data']['id'])) {
+                Log::info('Email sent successfully via Resend', [
+                    'resend_id' => $response['data']['id'],
+                    'to' => $request_body['email'],
+                    'subject' => $request_body['subject']
+                ]);
+
+                return [
+                    'status' => 'success',
+                    'id' => $response['data']['id'],
+                    'msg' => 'Email sent successfully'
+                ];
             }
 
-            // Детальное логирование ошибки
-            $error_details = [
-                'request' => $data,
-                'response' => $body,
-                'http_code' => $info['http_code']
-            ];
-
-            if (validation_json($body)) {
-                $error_response = json_decode($body, TRUE);
-                $error_details['error_message'] = $error_response['message'] ?? 'Unknown error';
-                $error_details['error_name'] = $error_response['name'] ?? 'Unknown error type';
-            }
-
-            Log::error('Failed to send email via Resend', $error_details);
+            // Handle error response
+            $errorMessage = $response['data']['message'] ?? $response['error'] ?? 'Unknown error';
+            Log::error('Failed to send email via Resend', [
+                'error' => $errorMessage,
+                'to' => $request_body['email'],
+                'subject' => $request_body['subject'],
+                'http_code' => $response['http_code'] ?? null
+            ]);
 
             return [
                 'status' => 'error',
                 'msg' => 'Failed to send email',
-                'error' => $error_details['error_message'] ?? $body
+                'error' => $errorMessage,
+                'http_code' => $response['http_code'] ?? null
             ];
         } catch (\Exception $e) {
-            // Логируем исключение
             Log::error('Exception while sending email via Resend', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => config('app.debug') ? $e->getTraceAsString() : null,
+                'to' => $request_body['email'] ?? null
             ]);
 
             return [
@@ -119,10 +145,12 @@ class Resend
     }
 
 
+    /**
+     * Add contact to Resend audience
+     */
     public function add_contact($request_body = [])
     {
         try {
-            // Валидация обязательных полей
             if (empty($request_body['email'])) {
                 return [
                     'status' => 'error',
@@ -131,65 +159,31 @@ class Resend
             }
 
             $data = [
-                'email'         => $request_body['email'],
-                'first_name'    => $request_body['first_name'] ?? '',
-                'last_name'     => $request_body['last_name'] ?? '',
-                'unsubscribed'  => $request_body['unsubscribed'] ?? FALSE,
+                'email' => $request_body['email'],
+                'first_name' => $request_body['first_name'] ?? '',
+                'last_name' => $request_body['last_name'] ?? '',
+                'unsubscribed' => $request_body['unsubscribed'] ?? false,
             ];
 
-            $ch = curl_init('https://api.resend.com/audiences/' . $this->audience_id . '/contacts');
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Authorization: Bearer ' . $this->api_key,
-                'Content-Type: application/json'
-            ]);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-            curl_setopt($ch, CURLOPT_POST, TRUE);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-            $body = curl_exec($ch);
-            $info = curl_getinfo($ch);
-            curl_close($ch);
+            $response = $this->makeRequest("/audiences/{$this->audience_id}/contacts", 'POST', $data);
 
-            if (in_array($info['http_code'], [200, 201])) {
-                if (validation_json($body)) {
-                    $decoded_body = json_decode($body, TRUE, 512, JSON_THROW_ON_ERROR);
-                    if (! empty($decoded_body['id'])) {
-                        return [
-                            'status'    => 'success',
-                            'id'        => $decoded_body['id'],
-                            'msg'       => 'Contact added successfully.'
-                        ];
-                    }
-                }
+            if ($response['success'] && !empty($response['data']['id'])) {
+                return [
+                    'status' => 'success',
+                    'id' => $response['data']['id'],
+                    'msg' => 'Contact added successfully.'
+                ];
             }
-
-            // Детальное логирование ошибки
-            $error_details = [
-                'request' => $data,
-                'response' => $body,
-                'http_code' => $info['http_code'],
-                'audience_id' => $this->audience_id
-            ];
-
-            if (validation_json($body)) {
-                $error_response = json_decode($body, TRUE);
-                $error_details['error_message'] = $error_response['message'] ?? 'Unknown error';
-                $error_details['error_name'] = $error_response['name'] ?? 'Unknown error type';
-            }
-
-            Log::error('Failed to add contact via Resend', $error_details);
 
             return [
                 'status' => 'error',
                 'msg' => 'Failed to add contact',
-                'error' => $error_details['error_message'] ?? $body,
-                'http_code' => $info['http_code']
+                'error' => $response['data']['message'] ?? $response['error'] ?? 'Unknown error'
             ];
         } catch (\Exception $e) {
-            // Логируем исключение
             Log::error('Exception while adding contact via Resend', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'email' => $request_body['email'] ?? null
             ]);
 
             return [
@@ -456,6 +450,50 @@ class Resend
         return [
             'status'    => 'error',
             'msg'       => 'Failed to retrieve email.'
+        ];
+    }
+
+    /**
+     * Make HTTP request to Resend API
+     */
+    private function makeRequest(string $endpoint, string $method = 'GET', array $data = [], array $headers = []): array
+    {
+        $url = $this->api_url . $endpoint;
+
+        $defaultHeaders = [
+            'Authorization: Bearer ' . $this->api_key,
+            'Content-Type: application/json',
+            'User-Agent: Laravel-Resend/1.0'
+        ];
+
+        $headers = array_merge($defaultHeaders, $headers);
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_TIMEOUT => $this->timeout,
+            CURLOPT_SSL_VERIFYPEER => $this->verify_ssl,
+            CURLOPT_CUSTOMREQUEST => $method,
+            CURLOPT_POSTFIELDS => $method !== 'GET' ? json_encode($data) : null,
+        ]);
+
+        $body = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        if ($error) {
+            throw new \Exception('cURL error: ' . $error);
+        }
+
+        $decodedBody = json_decode($body, true);
+
+        return [
+            'success' => in_array($httpCode, [200, 201]),
+            'http_code' => $httpCode,
+            'data' => $decodedBody,
+            'error' => !in_array($httpCode, [200, 201]) ? ($decodedBody['message'] ?? 'HTTP error') : null
         ];
     }
 }

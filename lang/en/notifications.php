@@ -25,4 +25,8 @@ return [
         'title' => 'Welcome to :app_name!',
         'message' => 'Hello, :name! Welcome to :app_name. We\'re excited to have you on board. Start exploring the platform\'s features and create successful affiliate campaigns!',
     ],
+    'email_verified' => [
+        'title' => 'Email Verified',
+        'message' => 'Your email address :email has been successfully verified. You now have full access to all platform features.',
+    ],
 ];

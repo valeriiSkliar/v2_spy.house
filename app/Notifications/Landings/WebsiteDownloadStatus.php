@@ -3,12 +3,19 @@
 namespace App\Notifications\Landings;
 
 use App\Enums\Frontend\NotificationType;
-use App\Notifications\BaseNotification;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\Facades\Log;
 
-class WebsiteDownloadStatus extends BaseNotification
+class WebsiteDownloadStatus extends Notification implements ShouldQueue
 {
+    use Queueable;
+
+    private NotificationType $notificationType;
+
     /**
      * Create a new notification instance.
      */
@@ -18,14 +25,20 @@ class WebsiteDownloadStatus extends BaseNotification
         private readonly ?string $error = null
     ) {
         // Выбираем подходящий тип уведомления на основе статуса
-        $type = match ($status) {
+        $this->notificationType = match ($status) {
             'started' => NotificationType::WEBSITE_DOWNLOAD_STARTED,
             'completed' => NotificationType::WEBSITE_DOWNLOAD_COMPLETED,
             'failed' => NotificationType::WEBSITE_DOWNLOAD_FAILED,
             default => NotificationType::WEBSITE_DOWNLOAD_STARTED,
         };
+    }
 
-        parent::__construct($type);
+    /**
+     * Get the notification's delivery channels.
+     */
+    public function via(object $notifiable): array
+    {
+        return ['mail', 'database'];
     }
 
     /**
@@ -33,6 +46,14 @@ class WebsiteDownloadStatus extends BaseNotification
      */
     public function toMail(object $notifiable): MailMessage
     {
+        Log::info('Sending website download status email', [
+            'notification_class' => get_class($this),
+            'user_id' => $notifiable->id ?? null,
+            'email' => $notifiable->email,
+            'url' => $this->url,
+            'status' => $this->status
+        ]);
+
         $mailMessage = (new MailMessage)
             ->subject($this->getTitle($notifiable))
             ->line($this->getMessage($notifiable));
@@ -42,6 +63,20 @@ class WebsiteDownloadStatus extends BaseNotification
         }
 
         return $mailMessage;
+    }
+
+    /**
+     * Get the array representation of the notification for database storage.
+     */
+    public function toDatabase(object $notifiable): array
+    {
+        return [
+            'title' => $this->getTitle($notifiable),
+            'message' => $this->getMessage($notifiable),
+            'type' => $this->notificationType->value,
+            'icon' => $this->getIcon(),
+            'data' => $this->getAdditionalData($notifiable),
+        ];
     }
 
     protected function getTitle(object $notifiable): string

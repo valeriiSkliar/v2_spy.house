@@ -9,7 +9,6 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
 
 class ProcessUserRegistrationJob implements ShouldQueue
 {
@@ -32,44 +31,31 @@ class ProcessUserRegistrationJob implements ShouldQueue
      */
     public function handle(): void
     {
-        $cacheKey = 'user_registration_job:' . $this->user->id;
-
-        // Защита от дублирования в очереди
-        if (Cache::has($cacheKey)) {
-            Log::info('User registration job already processed, skipping', [
-                'user_id' => $this->user->id
-            ]);
-            return;
-        }
-
-        Cache::put($cacheKey, true, now()->addMinutes(30));
-
-        Log::info('Processing user registration job', [
+        Log::info('Processing user registration', [
             'user_id' => $this->user->id,
             'email' => $this->user->email,
             'metadata' => $this->metadata
         ]);
 
-        try {
-            // Отправляем уведомления
-            if (!$this->user->hasVerifiedEmail()) {
-                $this->user->sendEmailVerificationNotification();
-            }
-
-            $this->user->sendWelcomeNotification();
-            $this->user->sendWelcomeInAppNotification();
-
-            Log::info('User registration job completed successfully', [
-                'user_id' => $this->user->id
-            ]);
-        } catch (\Exception $e) {
-            Cache::forget($cacheKey);
-            Log::error('User registration job failed', [
-                'user_id' => $this->user->id,
-                'error' => $e->getMessage()
-            ]);
-            throw $e;
+        // Отправляем email верификацию если нужно
+        if (!$this->user->hasVerifiedEmail()) {
+            Log::info('Sending email verification notification', ['user_id' => $this->user->id]);
+            $this->user->sendEmailVerificationNotification();
+            Log::info('Email verification notification sent', ['user_id' => $this->user->id]);
         }
+
+        // Отправляем приветственные уведомления
+        Log::info('Sending welcome email notification', ['user_id' => $this->user->id]);
+        $this->user->sendWelcomeNotification();
+        Log::info('Welcome email notification sent', ['user_id' => $this->user->id]);
+
+        Log::info('Sending welcome in-app notification', ['user_id' => $this->user->id]);
+        $this->user->sendWelcomeInAppNotification();
+        Log::info('Welcome in-app notification sent', ['user_id' => $this->user->id]);
+
+        Log::info('User registration processed successfully', [
+            'user_id' => $this->user->id
+        ]);
     }
 
     /**

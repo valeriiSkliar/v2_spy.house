@@ -8,7 +8,6 @@ use App\Models\Frontend\Rating;
 use App\Notifications\Auth\VerifyEmailNotification;
 use App\Notifications\Auth\WelcomeNotification;
 use App\Notifications\WelcomeInAppNotification;
-use App\Services\Notification\NotificationDispatcher;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -296,15 +295,6 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function sendWelcomeInAppNotification(): void
     {
-        NotificationDispatcher::quickSend(
-            $this,
-            NotificationType::WELCOME,
-            [
-                'registration_date' => $this->created_at->format('Y-m-d H:i:s'),
-                'user_id' => $this->id
-            ],
-            __('notifications.welcome.title'),
-            __('notifications.welcome.message', ['name' => $this->name ?? $this->login])
-        );
+        $this->notify(new WelcomeInAppNotification());
     }
 }
