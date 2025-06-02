@@ -51,7 +51,7 @@
         </div>
     </div>
 
-    <div class="form-item mb-3">
+    {{-- <div class="form-item mb-3">
         <div class="form-messenger">
             <input readonly onfocus="this.removeAttribute('readonly');" type="text" name="messenger_contact"
                 class="input-h-57 @error('messenger_contact') error @enderror" value="{{ old('messenger_contact') }}"
@@ -69,7 +69,10 @@
                 </ul>
             </div>
         </div>
-    </div>
+    </div> --}}
+
+    <x-common.messenger-field-component name="messenger_contact" messenger-type-name="messenger_type"
+        :show-label="false" messenger-type="telegram" select-id="register-messenger-select" />
 
     <div class="form-item mb-3">
         <input type="hidden" name="experience" value="">

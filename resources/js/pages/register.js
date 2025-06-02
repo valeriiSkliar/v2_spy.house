@@ -19,6 +19,7 @@ class RegistrationForm {
 
     this.form.addEventListener('submit', this.handleSubmit.bind(this));
     this.initCustomSelects();
+    this.initMessengerField();
   }
 
   initCustomSelects() {
@@ -42,9 +43,87 @@ class RegistrationForm {
 
           // Remove empty class when selection is made
           select.classList.remove('is-empty');
+
+          // Special handling for messenger type
+          if (targetName === 'messenger_type') {
+            this.updateMessengerPlaceholder(value);
+          }
         });
       });
     });
+  }
+
+  initMessengerField() {
+    // Initialize messenger field functionality
+    const messengerSelect = this.form.querySelector('#register-messenger-select');
+    if (!messengerSelect) return;
+
+    const messengerContactInput = this.form.querySelector('input[name="messenger_contact"]');
+    const messengerTypeInput = this.form.querySelector('input[name="messenger_type"]');
+    const triggerElement = messengerSelect.querySelector('.base-select__trigger');
+    const dropdown = messengerSelect.querySelector('.base-select__dropdown');
+    const options = messengerSelect.querySelectorAll('.base-select__option');
+
+    if (!messengerContactInput || !messengerTypeInput) return;
+
+    // Toggle dropdown
+    triggerElement.addEventListener('click', e => {
+      e.preventDefault();
+      const isVisible = dropdown.style.display !== 'none';
+      dropdown.style.display = isVisible ? 'none' : 'block';
+    });
+
+    // Handle option selection
+    options.forEach(option => {
+      option.addEventListener('click', e => {
+        e.preventDefault();
+        const value = option.getAttribute('data-value');
+        const img = option.querySelector('img');
+
+        if (value && img) {
+          // Update hidden input
+          messengerTypeInput.value = value;
+
+          // Update trigger image
+          const triggerImg = messengerSelect.querySelector('.base-select__trigger img');
+          if (triggerImg) {
+            triggerImg.src = img.src;
+            triggerImg.alt = img.alt;
+          }
+
+          // Update selected state
+          options.forEach(opt => opt.classList.remove('is-selected'));
+          option.classList.add('is-selected');
+
+          // Update placeholder
+          this.updateMessengerPlaceholder(value);
+
+          // Hide dropdown
+          dropdown.style.display = 'none';
+        }
+      });
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', e => {
+      if (!messengerSelect.contains(e.target)) {
+        dropdown.style.display = 'none';
+      }
+    });
+  }
+
+  updateMessengerPlaceholder(messengerType) {
+    const messengerContactInput = this.form.querySelector('input[name="messenger_contact"]');
+    if (!messengerContactInput) return;
+
+    const placeholders = {
+      telegram: '@username',
+      viber: '+1 (999) 999-99-99',
+      whatsapp: '+1 (999) 999-99-99',
+    };
+
+    const placeholder = placeholders[messengerType] || placeholders['telegram'];
+    messengerContactInput.placeholder = placeholder;
   }
 
   async handleSubmit(event) {
