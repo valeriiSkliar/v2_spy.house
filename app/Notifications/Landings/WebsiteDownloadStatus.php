@@ -9,6 +9,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\App;
 
 class WebsiteDownloadStatus extends Notification implements ShouldQueue
 {
@@ -46,12 +47,21 @@ class WebsiteDownloadStatus extends Notification implements ShouldQueue
      */
     public function toMail(object $notifiable): MailMessage
     {
+        // Сохраняем текущую локаль
+        $currentLocale = App::getLocale();
+
+        // Устанавливаем предпочитаемую локаль пользователя или дефолтную
+        $userLocale = $notifiable->preferred_locale ?? config('app.locale', 'en');
+        App::setLocale($userLocale);
+
         Log::info('Sending website download status email', [
             'notification_class' => get_class($this),
             'user_id' => $notifiable->id ?? null,
             'email' => $notifiable->email,
             'url' => $this->url,
-            'status' => $this->status
+            'status' => $this->status,
+            'user_locale' => $userLocale,
+            'current_locale' => $currentLocale
         ]);
 
         $mailMessage = (new MailMessage)
@@ -59,8 +69,11 @@ class WebsiteDownloadStatus extends Notification implements ShouldQueue
             ->line($this->getMessage($notifiable));
 
         if ($this->error && $this->status === 'failed') {
-            $mailMessage->line(Lang::get('landings.download.error_details').': '.$this->error);
+            $mailMessage->line(__('landings.download.error_details') . ': ' . $this->error);
         }
+
+        // Восстанавливаем исходную локаль
+        App::setLocale($currentLocale);
 
         return $mailMessage;
     }
@@ -70,23 +83,35 @@ class WebsiteDownloadStatus extends Notification implements ShouldQueue
      */
     public function toDatabase(object $notifiable): array
     {
-        return [
+        // Сохраняем текущую локаль
+        $currentLocale = App::getLocale();
+
+        // Устанавливаем предпочитаемую локаль пользователя или дефолтную
+        $userLocale = $notifiable->preferred_locale ?? config('app.locale', 'en');
+        App::setLocale($userLocale);
+
+        $result = [
             'title' => $this->getTitle($notifiable),
             'message' => $this->getMessage($notifiable),
             'type' => $this->notificationType->value,
             'icon' => $this->getIcon(),
             'data' => $this->getAdditionalData($notifiable),
         ];
+
+        // Восстанавливаем исходную локаль
+        App::setLocale($currentLocale);
+
+        return $result;
     }
 
     protected function getTitle(object $notifiable): string
     {
-        return Lang::get('landings.download.status.'.$this->status.'.title', ['url' => $this->url]);
+        return __('landings.download.status.' . $this->status . '.title', ['url' => $this->url]);
     }
 
     protected function getMessage(object $notifiable): string
     {
-        return Lang::get('landings.download.status.'.$this->status.'.message', ['url' => $this->url]);
+        return __('landings.download.status.' . $this->status . '.message', ['url' => $this->url]);
     }
 
     protected function getIcon(): string

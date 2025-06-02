@@ -118,6 +118,10 @@ return [
         'already_disabled' => 'Двухфакторная аутентификация уже отключена.',
         'error_decrypting_secret' => 'Ошибка расшифровки секретного ключа. Пожалуйста, обратитесь в поддержку.',
     ],
+    'email_update' => [
+        'confirmation_title' => 'Подтверждение смены email',
+        'confirmation_message' => 'Для подтверждения смены email введите код из письма',
+    ],
     'error' => [
         'current_password_incorrect' => 'Неверный текущий пароль.',
         'settings_update_error' => 'Ошибка обновления данных.',

@@ -30,7 +30,7 @@ class SendEmailUpdateConfirmationJob implements ShouldQueue
 
     public function handle(): void
     {
-        Log::info('Sending email update confirmation code', [
+        Log::debug('Sending email update confirmation code', [
             'user_id' => $this->user->id,
             'current_email' => $this->user->email,
             'new_email' => $this->newEmail,
@@ -40,7 +40,7 @@ class SendEmailUpdateConfirmationJob implements ShouldQueue
         try {
             $this->user->notify(new EmailUpdateConfirmationNotification($this->verificationCode));
 
-            Log::info('Email update confirmation code sent successfully', [
+            Log::debug('Email update confirmation code sent successfully', [
                 'user_id' => $this->user->id,
                 'current_email' => $this->user->email,
                 'new_email' => $this->newEmail,

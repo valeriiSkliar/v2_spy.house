@@ -6,6 +6,7 @@ use App\Enums\Frontend\NotificationType;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\App;
 
 class EmailVerifiedNotification extends Notification implements ShouldQueue
 {
@@ -31,7 +32,14 @@ class EmailVerifiedNotification extends Notification implements ShouldQueue
      */
     public function toDatabase(object $notifiable): array
     {
-        return [
+        // Сохраняем текущую локаль
+        $currentLocale = App::getLocale();
+
+        // Устанавливаем предпочитаемую локаль пользователя или дефолтную
+        $userLocale = $notifiable->preferred_locale ?? config('app.locale', 'en');
+        App::setLocale($userLocale);
+
+        $result = [
             'title' => __('notifications.email_verified.title'),
             'message' => __('notifications.email_verified.message', [
                 'email' => $notifiable->email
@@ -44,5 +52,10 @@ class EmailVerifiedNotification extends Notification implements ShouldQueue
                 'email' => $notifiable->email
             ], $this->data),
         ];
+
+        // Восстанавливаем исходную локаль
+        App::setLocale($currentLocale);
+
+        return $result;
     }
 }

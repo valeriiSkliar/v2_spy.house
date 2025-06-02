@@ -8,6 +8,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\App;
 
 class VerifyEmailNotification extends Notification implements ShouldQueue
 {
@@ -20,7 +21,7 @@ class VerifyEmailNotification extends Notification implements ShouldQueue
         // Генерируем код если не передан
         $this->code = $code ?: str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
-        Log::info('VerifyEmailNotification created', [
+        Log::debug('VerifyEmailNotification created', [
             'code_length' => strlen($this->code)
         ]);
     }
@@ -38,24 +39,33 @@ class VerifyEmailNotification extends Notification implements ShouldQueue
      */
     public function toMail(object $notifiable): MailMessage
     {
+        // Сохраняем текущую локаль
+        $currentLocale = App::getLocale();
+
+        // Устанавливаем предпочитаемую локаль пользователя или дефолтную
+        $userLocale = $notifiable->preferred_locale ?? config('app.locale', 'en');
+        App::setLocale($userLocale);
+
         // Сохраняем код в кэш при отправке
         Cache::put('email_verification_code:' . $notifiable->id, $this->code, now()->addMinutes(15));
 
-        Log::info('Verification code saved to cache', [
+        Log::debug('Verification code saved to cache', [
             'user_id' => $notifiable->id,
             'code_length' => strlen($this->code)
         ]);
 
-        Log::info('Sending verification email', [
+        Log::debug('Sending verification email', [
             'notification_class' => get_class($this),
             'user_id' => $notifiable->id ?? null,
             'email' => $notifiable->email,
             'template' => 'verification-account',
-            'subject' => 'Account Verification - Spy.House'
+            'subject' => __('emails.verification.subject'),
+            'user_locale' => $userLocale,
+            'current_locale' => $currentLocale
         ]);
 
-        return (new MailMessage)
-            ->subject('Account Verification - Spy.House')
+        $mailMessage = (new MailMessage)
+            ->subject(__('emails.verification.subject'))
             ->view('emails.verification-account', [
                 'code' => $this->code,
                 'user' => $notifiable,
@@ -66,5 +76,10 @@ class VerifyEmailNotification extends Notification implements ShouldQueue
                     ? route('unsubscribe.show', $notifiable->unsubscribe_hash)
                     : config('app.url') . '/unsubscribe'
             ]);
+
+        // Восстанавливаем исходную локаль
+        App::setLocale($currentLocale);
+
+        return $mailMessage;
     }
 }

@@ -32,7 +32,7 @@ class ProcessUserRegistrationJob implements ShouldQueue
      */
     public function handle(): void
     {
-        Log::info('Processing user registration', [
+        Log::debug('Processing user registration', [
             'user_id' => $this->user->id,
             'email' => $this->user->email,
             'metadata' => $this->metadata,
@@ -40,21 +40,21 @@ class ProcessUserRegistrationJob implements ShouldQueue
 
         // Отправляем email верификацию если нужно
         if (! $this->user->hasVerifiedEmail()) {
-            Log::info('Sending email verification notification', ['user_id' => $this->user->id]);
+            Log::debug('Sending email verification notification', ['user_id' => $this->user->id]);
             $this->user->sendEmailVerificationNotification();
-            Log::info('Email verification notification sent', ['user_id' => $this->user->id]);
+            Log::debug('Email verification notification sent', ['user_id' => $this->user->id]);
         }
 
         // Отправляем приветственные уведомления
-        Log::info('Sending welcome email notification', ['user_id' => $this->user->id]);
+        Log::debug('Sending welcome email notification', ['user_id' => $this->user->id]);
         $this->user->sendWelcomeNotification();
-        Log::info('Welcome email notification sent', ['user_id' => $this->user->id]);
+        Log::debug('Welcome email notification sent', ['user_id' => $this->user->id]);
 
-        Log::info('Sending welcome in-app notification', ['user_id' => $this->user->id]);
+        Log::debug('Sending welcome in-app notification', ['user_id' => $this->user->id]);
         $this->user->sendWelcomeInAppNotification();
-        Log::info('Welcome in-app notification sent', ['user_id' => $this->user->id]);
+        Log::debug('Welcome in-app notification sent', ['user_id' => $this->user->id]);
 
-        Log::info('User registration processed successfully', [
+        Log::debug('User registration processed successfully', [
             'user_id' => $this->user->id,
         ]);
     }
