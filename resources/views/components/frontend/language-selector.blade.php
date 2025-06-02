@@ -15,9 +15,8 @@
             @foreach (config('languages') as $locale => $properties)
             <li class="base-select__option{{ $locale == $currentLocale ? ' is-selected' : '' }}"
                 data-lang="{{ $locale }}">
-                <a href="{{ route('language.switch', $locale) }}"
-                    style="text-decoration: none; color: inherit; display: block;">
-                    <img src="/img/flags/{{ $properties['flag'] }}.svg" alt=""> {{ $properties['display'] }}
+                <a href="{{ route('language.switch', $locale) }}">
+                    <img src="/img/flags/{{ $properties['flag'] }}.svg" alt="">
                 </a>
             </li>
             @endforeach
