@@ -62,7 +62,9 @@ class VerifyEmailNotification extends Notification implements ShouldQueue
                 'loginUrl' => config('app.url') . '/login',
                 'telegramUrl' => config('app.telegram_url', 'https://t.me/spyhouse'),
                 'supportEmail' => config('mail.support_email', 'support@spy.house'),
-                'unsubscribeUrl' => config('app.url') . '/unsubscribe'
+                'unsubscribeUrl' => $notifiable->unsubscribe_hash
+                    ? route('unsubscribe.show', $notifiable->unsubscribe_hash)
+                    : config('app.url') . '/unsubscribe'
             ]);
     }
 }
