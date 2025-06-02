@@ -1,11 +1,11 @@
 @import 'custom/rating';
-@import 'custom/profile';
 @import 'custom/welcome-txt';
 @import 'components/flatpickr';
 @import 'custom/loader-fullscreen';
 @import 'custom/profile-avatar-upload';
 @import 'custom/toast';
 @import 'custom/loader-btn';
+@import 'custom/profile';
 html {
   scroll-behavior: smooth;
 }
@@ -284,7 +284,7 @@ html {
     left: 90px;
   }
   input {
-    padding-left: 135px;
+    padding-left: 105px;
   }
   .base-select {
     position: absolute;
