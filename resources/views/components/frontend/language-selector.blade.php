@@ -7,14 +7,16 @@
             $currentLanguage = config('languages.' . $currentLocale);
             @endphp
             <span class="base-select__value">
-                <img src="/img/flags/{{ $currentLanguage['flag'] }}.svg" alt="">{{ $currentLanguage['display'] }}
+                <img src="/img/flags/{{ $currentLanguage['flag'] }}.svg" alt="">
             </span>
             <span class="base-select__arrow"></span>
         </div>
         <ul class="base-select__dropdown" style="display: none;">
             @foreach (config('languages') as $locale => $properties)
-            <li class="base-select__option{{ $locale == $currentLocale ? ' is-selected' : '' }}" data-lang="{{ $locale }}">
-                <a href="{{ route('language.switch', $locale) }}" style="text-decoration: none; color: inherit; display: block;">
+            <li class="base-select__option{{ $locale == $currentLocale ? ' is-selected' : '' }}"
+                data-lang="{{ $locale }}">
+                <a href="{{ route('language.switch', $locale) }}"
+                    style="text-decoration: none; color: inherit; display: block;">
                     <img src="/img/flags/{{ $properties['flag'] }}.svg" alt=""> {{ $properties['display'] }}
                 </a>
             </li>
