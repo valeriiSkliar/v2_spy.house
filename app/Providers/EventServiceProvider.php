@@ -13,6 +13,7 @@ use App\Listeners\Notifications\EmailVerifiedListener;
 use App\Listeners\Notifications\EmailUpdatedListener;
 use App\Listeners\Notifications\PasswordChangedListener;
 use App\Listeners\Notifications\NotificationMetricsListener;
+use App\Listeners\DebugRegistrationListener;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 class EventServiceProvider extends ServiceProvider
@@ -23,8 +24,8 @@ class EventServiceProvider extends ServiceProvider
     protected $listen = [
         // События пользователя
         UserRegistered::class => [
-            UserRegisteredListener::class,
-            NotificationMetricsListener::class . '@handle',
+            // UserRegisteredListener::class,
+            // NotificationMetricsListener::class . '@handle',
         ],
 
         AccountConfirmationCodeRequested::class => [
@@ -49,6 +50,7 @@ class EventServiceProvider extends ServiceProvider
 
         // Системные события Laravel
         \Illuminate\Auth\Events\Registered::class => [
+            // DebugRegistrationListener::class,
             // Можем добавить дополнительные слушатели для стандартного события
         ],
 
