@@ -7,6 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\App;
 
 class WelcomeNotification extends Notification implements ShouldQueue
 {
@@ -30,16 +31,25 @@ class WelcomeNotification extends Notification implements ShouldQueue
      */
     public function toMail(object $notifiable): MailMessage
     {
-        Log::info('Sending welcome email', [
+        // Сохраняем текущую локаль
+        $currentLocale = App::getLocale();
+
+        // Устанавливаем предпочитаемую локаль пользователя или дефолтную
+        $userLocale = $notifiable->preferred_locale ?? config('app.locale', 'en');
+        App::setLocale($userLocale);
+
+        Log::debug('Sending welcome email', [
             'notification_class' => get_class($this),
             'user_id' => $notifiable->id ?? null,
             'email' => $notifiable->email,
             'template' => 'welcome',
-            'subject' => 'Welcome to Partners.House!'
+            'subject' => __('emails.welcome.subject'),
+            'user_locale' => $userLocale,
+            'current_locale' => $currentLocale
         ]);
 
-        return (new MailMessage)
-            ->subject('Welcome to Partners.House!')
+        $mailMessage = (new MailMessage)
+            ->subject(__('emails.welcome.subject'))
             ->view('emails.welcome', [
                 'username' => $notifiable->login,
                 'user' => $notifiable,
@@ -51,5 +61,10 @@ class WelcomeNotification extends Notification implements ShouldQueue
                     ? route('unsubscribe.show', $notifiable->unsubscribe_hash)
                     : config('app.url') . '/unsubscribe'
             ]);
+
+        // Восстанавливаем исходную локаль
+        App::setLocale($currentLocale);
+
+        return $mailMessage;
     }
 }
