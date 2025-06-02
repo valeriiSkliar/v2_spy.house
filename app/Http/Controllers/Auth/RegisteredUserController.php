@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Profile\RegisteredUserRequest;
+use App\Jobs\ProcessUserRegistrationJob;
 use App\Models\User;
 use App\Services\Api\TokenService;
-use App\Services\User\UserRegistrationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,12 +16,10 @@ use Illuminate\View\View;
 class RegisteredUserController extends Controller
 {
     protected TokenService $tokenService;
-    protected UserRegistrationService $registrationService;
 
-    public function __construct(TokenService $tokenService, UserRegistrationService $registrationService)
+    public function __construct(TokenService $tokenService)
     {
         $this->tokenService = $tokenService;
-        $this->registrationService = $registrationService;
     }
 
     /**
@@ -50,10 +48,11 @@ class RegisteredUserController extends Controller
             'messenger_contact' => $data['messenger_contact'],
             'experience' => $data['experience'],
             'scope_of_activity' => $data['scope_of_activity'],
+            'preferred_locale' => session('locale', config('app.locale')),  // Сохраняем текущую локаль
         ]);
 
-        // Обрабатываем регистрацию через сервис
-        $this->registrationService->processRegistration($user, [
+        // Асинхронная обработка регистрации через очередь
+        ProcessUserRegistrationJob::dispatch($user, [
             'registration_ip' => $request->ip(),
             'user_agent' => $request->userAgent(),
             'source' => $request->input('source', 'web'),

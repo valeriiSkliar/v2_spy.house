@@ -2,16 +2,14 @@
 
 namespace App\Http\Controllers\Frontend\Profile;
 
-use App\Enums\Frontend\NotificationType;
 use App\Http\Requests\Profile\ProfileUpdateRequest;
 use App\Http\Requests\Profile\UpdateEmailRequest;
 use App\Http\Requests\Profile\UpdateIpRestrictionRequest;
 use App\Http\Requests\Profile\UpdateNotificationSettingsRequest;
 use App\Http\Requests\Profile\UpdatePersonalGreetingSettingsRequest;
-use App\Notifications\Profile\EmailUpdateConfirmationNotification;
-use App\Notifications\Profile\EmailUpdatedNotification;
-use App\Notifications\Profile\PasswordUpdateConfirmationNotification;
-use App\Notifications\Profile\PersonalGreetingUpdateConfirmationNotification;
+use App\Jobs\SendEmailUpdateConfirmationJob;
+use App\Jobs\SendPasswordUpdateConfirmationJob;
+use App\Notifications\Auth\VerifyEmailNotification;
 use App\Services\Frontend\Toast;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,6 +21,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 use PragmaRX\Google2FALaravel\Facade as Google2FAFacade;
+use Resend\Laravel\Facades\Resend;
 
 class ProfileController extends BaseProfileController
 {
@@ -85,7 +84,7 @@ class ProfileController extends BaseProfileController
     public function changePassword(Request $request): View
     {
         $user = $request->user();
-        $pendingUpdate = Cache::get('password_update_code:' . $user->id);
+        $pendingUpdate = Cache::get('password_update_code:'.$user->id);
         $confirmationMethod = $user->google_2fa_enabled ? 'authenticator' : 'email';
 
         return view('pages.profile.change-password', [
@@ -98,7 +97,7 @@ class ProfileController extends BaseProfileController
     public function changeEmail(Request $request): View
     {
         $user = $request->user();
-        $pendingUpdate = Cache::get('email_update_code:' . $user->id);
+        $pendingUpdate = Cache::get('email_update_code:'.$user->id);
 
         return view('pages.profile.change-email', [
             'user' => $user,
@@ -121,7 +120,7 @@ class ProfileController extends BaseProfileController
         }
 
         if ($method === 'authenticator') {
-            Cache::put('email_update_code:' . $user->id, [
+            Cache::put('email_update_code:'.$user->id, [
                 'new_email' => $newEmail,
                 'method' => 'authenticator',
                 'expires_at' => now()->addMinutes(15),
@@ -132,14 +131,15 @@ class ProfileController extends BaseProfileController
         }
 
         $verificationCode = random_int(100000, 999999);
-        Cache::put('email_update_code:' . $user->id, [
+        Cache::put('email_update_code:'.$user->id, [
             'new_email' => $newEmail,
             'code' => $verificationCode,
             'method' => 'email',
             'expires_at' => now()->addMinutes(15),
         ], now()->addMinutes(15));
 
-        // Отправляем уведомление о коде подтверждения через диспетчер
+        // Send verification code to current email address asynchronously
+        SendEmailUpdateConfirmationJob::dispatch($user, (string) $verificationCode, $newEmail);
 
         return redirect()->route('profile.change-email')
             ->with('status', 'email-code-sent');
@@ -152,7 +152,7 @@ class ProfileController extends BaseProfileController
         ]);
 
         $user = $request->user();
-        $pendingUpdate = Cache::get('email_update_code:' . $user->id);
+        $pendingUpdate = Cache::get('email_update_code:'.$user->id);
 
         if (! $pendingUpdate) {
 
@@ -160,7 +160,7 @@ class ProfileController extends BaseProfileController
         }
 
         if (now()->isAfter($pendingUpdate['expires_at'])) {
-            Cache::forget('email_update_code:' . $user->id);
+            Cache::forget('email_update_code:'.$user->id);
 
             return back()->withErrors(['verification_code' => __('profile.security_settings.update_request_expired')]);
         }
@@ -183,7 +183,7 @@ class ProfileController extends BaseProfileController
         $user->email_verified_at = null;
         $user->save();
 
-        Cache::forget('email_update_code:' . $user->id);
+        Cache::forget('email_update_code:'.$user->id);
 
         Log::info('Email updated successfully', [
             'user_id' => $user->id,
@@ -191,8 +191,90 @@ class ProfileController extends BaseProfileController
             'new_email' => $pendingUpdate['new_email'],
         ]);
 
-        // Используем метод quickSend для отправки уведомления на старый email
+        // Update contact in Resend audience if user has contact_id
+        if ($user->email_contact_id && $user->is_newsletter_subscribed) {
+            try {
+                $audienceId = config('services.resend.audience_id');
+                $oldContactId = $user->email_contact_id; // Save old contact ID before it gets updated
 
+                // For email change, we need to delete old contact and create new one
+                // because Resend update() doesn't actually change the email field
+                try {
+                    // Delete old contact using contact ID, not email
+                    Resend::contacts()->remove(
+                        $audienceId,
+                        $oldContactId
+                    );
+
+                    Log::info('Old contact deleted from Resend audience', [
+                        'user_id' => $user->id,
+                        'old_email' => $oldEmail,
+                        'contact_id' => $oldContactId,
+                    ]);
+                } catch (\Exception $deleteE) {
+                    Log::warning('Failed to delete old contact from Resend audience', [
+                        'user_id' => $user->id,
+                        'old_email' => $oldEmail,
+                        'contact_id' => $oldContactId,
+                        'error' => $deleteE->getMessage(),
+                    ]);
+                }
+
+                // Create new contact with new email
+                $response = Resend::contacts()->create(
+                    $audienceId,
+                    [
+                        'email' => $pendingUpdate['new_email'],
+                        'first_name' => $user->login ?? $user->name ?? '',
+                        'last_name' => $user->unsubscribe_hash ?? Hash::make($user->id ?? $user->login ?? '', ['rounds' => 12]),
+                        'unsubscribed' => ! $user->is_newsletter_subscribed,
+                    ]
+                );
+
+                if (isset($response['id'])) {
+                    // Update user's contact_id with new contact ID
+                    $user->update(['email_contact_id' => $response['id']]);
+
+                    Log::info('New contact created in Resend audience after email change', [
+                        'user_id' => $user->id,
+                        'old_email' => $oldEmail,
+                        'new_email' => $pendingUpdate['new_email'],
+                        'old_contact_id' => $oldContactId,
+                        'new_contact_id' => $response['id'],
+                    ]);
+                } else {
+                    Log::warning('Failed to create new contact in Resend audience', [
+                        'user_id' => $user->id,
+                        'old_email' => $oldEmail,
+                        'new_email' => $pendingUpdate['new_email'],
+                        'response' => $response,
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::warning('Failed to update user email in Resend audience', [
+                    'user_id' => $user->id,
+                    'old_email' => $oldEmail,
+                    'new_email' => $pendingUpdate['new_email'],
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Send verification email to the new email address
+        try {
+            $user->notify(new VerifyEmailNotification);
+
+            Log::info('Email verification sent after email change', [
+                'user_id' => $user->id,
+                'new_email' => $user->email,
+            ]);
+        } catch (\Exception $e) {
+            Log::warning('Failed to send verification email after email change', [
+                'user_id' => $user->id,
+                'new_email' => $user->email,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         $activeTab = $request->query('tab', 'security');
 
@@ -203,10 +285,10 @@ class ProfileController extends BaseProfileController
     public function cancelEmailUpdate(Request $request): RedirectResponse
     {
         $user = $request->user();
-        $pendingUpdate = Cache::get('email_update_code:' . $user->id);
+        $pendingUpdate = Cache::get('email_update_code:'.$user->id);
 
         if ($pendingUpdate) {
-            Cache::forget('email_update_code:' . $user->id);
+            Cache::forget('email_update_code:'.$user->id);
         }
 
         $activeTab = $request->query('tab', 'security');
@@ -383,7 +465,6 @@ class ProfileController extends BaseProfileController
         $user = $request->user();
         $otp = $request->input('verification_code');
 
-
         // Проверяем, что 2FA включен у пользователя
         if (! $user->google_2fa_enabled || ! $user->google_2fa_secret) {
 
@@ -436,7 +517,6 @@ class ProfileController extends BaseProfileController
 
         $valid = $google2fa->verifyKey($secret, $otp);
 
-
         if ($valid) {
 
             $user->google_2fa_enabled = false;
@@ -480,7 +560,7 @@ class ProfileController extends BaseProfileController
     public function personalGreeting(Request $request): View
     {
         $user = $request->user();
-        $pendingUpdate = Cache::get('personal_greeting_update_code:' . $user->id);
+        $pendingUpdate = Cache::get('personal_greeting_update_code:'.$user->id);
 
         return view('pages.profile.personal-greeting', [
             'user' => $user,
@@ -513,12 +593,12 @@ class ProfileController extends BaseProfileController
         }
 
         // Clear any previous expired attempts
-        if (Cache::has('personal_greeting_update_code:' . $user->id)) {
-            Cache::forget('personal_greeting_update_code:' . $user->id);
+        if (Cache::has('personal_greeting_update_code:'.$user->id)) {
+            Cache::forget('personal_greeting_update_code:'.$user->id);
         }
 
         if ($method === 'authenticator') {
-            Cache::put('personal_greeting_update_code:' . $user->id, [
+            Cache::put('personal_greeting_update_code:'.$user->id, [
                 'personal_greeting' => $newPersonalGreeting,
                 'method' => 'authenticator',
                 'expires_at' => now()->addMinutes(15),
@@ -530,7 +610,7 @@ class ProfileController extends BaseProfileController
 
         // Email confirmation
         $verificationCode = random_int(100000, 999999);
-        Cache::put('personal_greeting_update_code:' . $user->id, [
+        Cache::put('personal_greeting_update_code:'.$user->id, [
             'personal_greeting' => $newPersonalGreeting,
             'code' => $verificationCode,
             'method' => 'email',
@@ -551,14 +631,14 @@ class ProfileController extends BaseProfileController
         ]);
 
         $user = $request->user();
-        $pendingUpdate = Cache::get('personal_greeting_update_code:' . $user->id);
+        $pendingUpdate = Cache::get('personal_greeting_update_code:'.$user->id);
 
         if (! $pendingUpdate) {
             return redirect()->route('profile.personal-greeting')->withErrors(['verification_code' => __('profile.security_settings.update_request_expired')]);
         }
 
         if (now()->isAfter($pendingUpdate['expires_at'])) {
-            Cache::forget('personal_greeting_update_code:' . $user->id);
+            Cache::forget('personal_greeting_update_code:'.$user->id);
 
             return redirect()->route('profile.personal-greeting')->withErrors(['verification_code' => __('profile.security_settings.update_request_expired')]);
         }
@@ -582,10 +662,9 @@ class ProfileController extends BaseProfileController
         $user->personal_greeting = $pendingUpdate['personal_greeting'];
         $user->save();
 
-        Cache::forget('personal_greeting_update_code:' . $user->id);
+        Cache::forget('personal_greeting_update_code:'.$user->id);
 
         // Отправляем уведомление об успешном обновлении через quickSend
-
 
         // Determine active tab for redirect, assuming personal greeting is on the 'security' or a new 'general' tab.
         // For this example, let's assume it's part of general settings, redirecting to profile.settings with 'personal' tab
@@ -601,10 +680,10 @@ class ProfileController extends BaseProfileController
     public function cancelPersonalGreetingUpdate(Request $request): RedirectResponse
     {
         $user = $request->user();
-        $pendingUpdate = Cache::get('personal_greeting_update_code:' . $user->id);
+        $pendingUpdate = Cache::get('personal_greeting_update_code:'.$user->id);
 
         if ($pendingUpdate) {
-            Cache::forget('personal_greeting_update_code:' . $user->id);
+            Cache::forget('personal_greeting_update_code:'.$user->id);
         }
 
         $activeTab = $request->query('tab', 'personal');
@@ -656,7 +735,7 @@ class ProfileController extends BaseProfileController
         }
 
         if ($method === 'authenticator') {
-            Cache::put('password_update_code:' . $user->id, [
+            Cache::put('password_update_code:'.$user->id, [
                 'password' => $request->input('password'),
                 'method' => 'authenticator',
                 'expires_at' => now()->addMinutes(15),
@@ -667,12 +746,15 @@ class ProfileController extends BaseProfileController
         }
 
         $verificationCode = random_int(100000, 999999);
-        Cache::put('password_update_code:' . $user->id, [
+        Cache::put('password_update_code:'.$user->id, [
             'password' => $request->input('password'),
             'code' => $verificationCode,
             'method' => 'email',
             'expires_at' => now()->addMinutes(15),
         ], now()->addMinutes(15));
+
+        // Send verification code to current email address asynchronously
+        SendPasswordUpdateConfirmationJob::dispatch($user, $verificationCode);
 
         return redirect()->route('profile.change-password')
             ->with('status', 'password-code-sent');
@@ -685,14 +767,14 @@ class ProfileController extends BaseProfileController
         ]);
 
         $user = $request->user();
-        $pendingUpdate = Cache::get('password_update_code:' . $user->id);
+        $pendingUpdate = Cache::get('password_update_code:'.$user->id);
 
         if (! $pendingUpdate) {
             return back()->withErrors(['verification_code' => __('profile.security_settings.update_request_expired')]);
         }
 
         if (now()->isAfter($pendingUpdate['expires_at'])) {
-            Cache::forget('password_update_code:' . $user->id);
+            Cache::forget('password_update_code:'.$user->id);
 
             return back()->withErrors(['verification_code' => __('profile.security_settings.update_request_expired')]);
         }
@@ -713,13 +795,11 @@ class ProfileController extends BaseProfileController
         $user->password = Hash::make($pendingUpdate['password']);
         $user->save();
 
-        Cache::forget('password_update_code:' . $user->id);
+        Cache::forget('password_update_code:'.$user->id);
 
         Log::info('Password updated successfully', [
             'user_id' => $user->id,
         ]);
-
-
 
         $activeTab = $request->query('tab', 'security');
 
@@ -730,10 +810,10 @@ class ProfileController extends BaseProfileController
     public function cancelPasswordUpdate(Request $request): RedirectResponse
     {
         $user = $request->user();
-        $pendingUpdate = Cache::get('password_update_code:' . $user->id);
+        $pendingUpdate = Cache::get('password_update_code:'.$user->id);
 
         if ($pendingUpdate) {
-            Cache::forget('password_update_code:' . $user->id);
+            Cache::forget('password_update_code:'.$user->id);
         }
 
         $activeTab = $request->query('tab', 'security');
@@ -778,11 +858,11 @@ class ProfileController extends BaseProfileController
         $user = $request->user();
 
         // Проверяем, есть ли временный секрет в сессии
-        if (!$request->session()->has('google_2fa_secret_temp')) {
+        if (! $request->session()->has('google_2fa_secret_temp')) {
             return response()->json([
                 'success' => false,
                 'message' => __('profile.2fa.invalid_request'),
-                'redirect' => route('profile.connect-2fa')
+                'redirect' => route('profile.connect-2fa'),
             ], 400);
         }
 
@@ -802,7 +882,7 @@ class ProfileController extends BaseProfileController
      */
     public function store2faAjax(Request $request)
     {
-        if (!$request->ajax()) {
+        if (! $request->ajax()) {
             return response()->json([
                 'success' => false,
                 'message' => __('profile.2fa.invalid_request'),
@@ -820,11 +900,11 @@ class ProfileController extends BaseProfileController
 
         $secret = $request->session()->get('google_2fa_secret_temp');
 
-        if (!$secret) {
+        if (! $secret) {
             return response()->json([
                 'success' => false,
                 'message' => __('profile.2fa.secret_not_found'),
-                'redirect' => route('profile.connect-2fa')
+                'redirect' => route('profile.connect-2fa'),
             ], 400);
         }
 
@@ -840,23 +920,24 @@ class ProfileController extends BaseProfileController
             return response()->json([
                 'success' => true,
                 'message' => __('profile.2fa.enabled'),
-                'redirect' => route('profile.disable-2fa')
+                'redirect' => route('profile.disable-2fa'),
             ]);
         } else {
             Log::warning('Invalid 2FA verification code provided via AJAX', [
                 'user_id' => $user->id,
-                'otp_masked' => substr($otp, 0, 2) . '****',
+                'otp_masked' => substr($otp, 0, 2).'****',
             ]);
 
             return response()->json([
                 'success' => false,
                 'message' => __('profile.2fa.invalid_code'),
                 'errors' => [
-                    'verification_code' => [__('profile.2fa.invalid_code')]
-                ]
+                    'verification_code' => [__('profile.2fa.invalid_code')],
+                ],
             ], 422);
         }
     }
+
     public function verifyYourAccount(Request $request): View
     {
         $user = $request->user();

@@ -7,8 +7,9 @@ use App\Enums\Frontend\NotificationType;
 use App\Models\Frontend\Rating;
 use App\Notifications\Auth\VerifyEmailNotification;
 use App\Notifications\Auth\WelcomeNotification;
+use App\Notifications\Profile\EmailUpdateConfirmationNotification;
+use App\Notifications\Profile\PasswordUpdateConfirmationNotification;
 use App\Notifications\WelcomeInAppNotification;
-use App\Services\Notification\NotificationDispatcher;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -49,6 +50,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'google_2fa_secret',
         'user_avatar',
         'last_password_reset_at',
+        'email_contact_id',
+        'is_newsletter_subscribed',
+        'unsubscribe_hash',
     ];
 
     /**
@@ -76,6 +80,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'notification_settings' => 'array',
             'ip_restrictions' => 'array',
             'google_2fa_enabled' => 'boolean',
+            'is_newsletter_subscribed' => 'boolean',
         ];
     }
 
@@ -278,9 +283,9 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Send the email verification notification.
      */
-    public function sendEmailVerificationNotification()
+    public function sendEmailVerificationNotification(?string $verificationCode = null)
     {
-        $this->notify(new VerifyEmailNotification());
+        $this->notify(new VerifyEmailNotification($verificationCode));
     }
 
     /**
@@ -296,15 +301,6 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function sendWelcomeInAppNotification(): void
     {
-        NotificationDispatcher::quickSend(
-            $this,
-            NotificationType::WELCOME,
-            [
-                'registration_date' => $this->created_at->format('Y-m-d H:i:s'),
-                'user_id' => $this->id
-            ],
-            __('notifications.welcome.title'),
-            __('notifications.welcome.message', ['name' => $this->name ?? $this->login])
-        );
+        $this->notify(new WelcomeInAppNotification());
     }
 }

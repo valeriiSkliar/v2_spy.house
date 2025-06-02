@@ -1,4 +1,4 @@
-import { hideInButton, showInButton } from '../components/loader.js';
+import loader, { hideInButton, showInButton } from '../components/loader.js';
 import { createAndShowToast } from '../utils/uiHelpers.js';
 
 const STORAGE_KEY = 'resend_verification_disabled_until';
@@ -92,7 +92,7 @@ function initVerificationForm(form, inputs) {
 
     const submitButton = form.querySelector('button[type="submit"]');
     showInButton(submitButton);
-
+    loader.show();
     try {
       const code = Array.from(inputs).map(input => input.value);
 
@@ -113,6 +113,7 @@ function initVerificationForm(form, inputs) {
         // createAndShowToast(data.message || 'Аккаунт успешно подтвержден', 'success');
         window.location.href = data.redirect || '/profile/settings';
       } else {
+        loader.hide();
         createAndShowToast(data.message || 'Ошибка подтверждения кода', 'error');
         // Очищаем поля при ошибке
         inputs.forEach(input => (input.value = ''));
@@ -199,6 +200,7 @@ function disableButton(button) {
 function enableButton(button) {
   console.log('Разблокировка кнопки');
   button.disabled = false;
+  loader.hide();
 
   // Очищаем активный таймер если есть
   const timeoutId = button.dataset.timeoutId;

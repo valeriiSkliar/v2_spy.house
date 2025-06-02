@@ -2,72 +2,84 @@
 
 namespace App\Notifications\Auth;
 
-use App\Enums\Frontend\NotificationType;
-use App\Notifications\BaseNotification;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\App;
 
-class VerifyEmailNotification extends BaseNotification
+class VerifyEmailNotification extends Notification implements ShouldQueue
 {
+    use Queueable;
+
     private string $code;
 
     public function __construct(?string $code = null)
     {
-        parent::__construct(NotificationType::EMAIL_VERIFICATION_REQUEST);
-
         // Генерируем код если не передан
         $this->code = $code ?: str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
-        Log::info('VerifyEmailNotification created', [
+        Log::debug('VerifyEmailNotification created', [
             'code_length' => strlen($this->code)
         ]);
     }
 
-    protected function getEmailTemplate(): string
+    /**
+     * Get the notification's delivery channels.
+     */
+    public function via(object $notifiable): array
     {
-        return 'verification-account';
+        return ['mail'];
     }
 
-    protected function getEmailSubject(object $notifiable): string
+    /**
+     * Get the mail representation of the notification.
+     */
+    public function toMail(object $notifiable): MailMessage
     {
-        return 'Account Verification - Spy.House';
-    }
+        // Сохраняем текущую локаль
+        $currentLocale = App::getLocale();
 
-    protected function getEmailTemplateData(object $notifiable): array
-    {
+        // Устанавливаем предпочитаемую локаль пользователя или дефолтную
+        $userLocale = $notifiable->preferred_locale ?? config('app.locale', 'en');
+        App::setLocale($userLocale);
+
         // Сохраняем код в кэш при отправке
         Cache::put('email_verification_code:' . $notifiable->id, $this->code, now()->addMinutes(15));
 
-        Log::info('Verification code saved to cache', [
+        Log::debug('Verification code saved to cache', [
             'user_id' => $notifiable->id,
             'code_length' => strlen($this->code)
         ]);
 
-        return array_merge(parent::getEmailTemplateData($notifiable), [
-            'code' => $this->code,
+        Log::debug('Sending verification email', [
+            'notification_class' => get_class($this),
+            'user_id' => $notifiable->id ?? null,
+            'email' => $notifiable->email,
+            'template' => 'verification-account',
+            'subject' => __('emails.verification.subject'),
+            'user_locale' => $userLocale,
+            'current_locale' => $currentLocale
         ]);
-    }
 
-    protected function getTitle(object $notifiable): string
-    {
-        return __('auth.verify_email_title', [], 'Account Verification');
-    }
+        $mailMessage = (new MailMessage)
+            ->subject(__('emails.verification.subject'))
+            ->view('emails.verification-account', [
+                'code' => $this->code,
+                'user' => $notifiable,
+                'loginUrl' => config('app.url') . '/login',
+                'telegramUrl' => config('app.telegram_url', 'https://t.me/spyhouse'),
+                'supportEmail' => config('mail.support_email', 'support@spy.house'),
+                'unsubscribeUrl' => $notifiable->unsubscribe_hash
+                    ? route('unsubscribe.show', $notifiable->unsubscribe_hash)
+                    : config('app.url') . '/unsubscribe'
+            ]);
 
-    protected function getMessage(object $notifiable): string
-    {
-        return __('auth.verify_email_message', [], 'Please verify your email address to complete registration.');
-    }
+        // Восстанавливаем исходную локаль
+        App::setLocale($currentLocale);
 
-    protected function getIcon(): string
-    {
-        return 'mail';
-    }
-
-    protected function getAdditionalData(object $notifiable): array
-    {
-        return [
-            'code' => $this->code,
-            'expires_in' => 15, // минут
-        ];
+        return $mailMessage;
     }
 }

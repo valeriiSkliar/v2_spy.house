@@ -3,46 +3,74 @@
 namespace App\Notifications;
 
 use App\Enums\Frontend\NotificationType;
-use Illuminate\Notifications\Messages\MailMessage;
+use App\Traits\HasNotificationType;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Notification;
 
-class CustomNotification extends BaseNotification
+/**
+ * Custom notification for in-app notifications (database channel only)
+ */
+class CustomNotification extends Notification implements ShouldQueue
 {
+    use HasNotificationType, Queueable;
+
     private array $data;
-
     private ?string $customTitle;
-
     private ?string $customMessage;
 
     public function __construct(NotificationType $type, array $data = [], ?string $title = null, ?string $message = null)
     {
-        parent::__construct($type);
+        $this->notificationType = $type;
         $this->data = $data;
         $this->customTitle = $title;
         $this->customMessage = $message;
     }
 
     /**
-     * Get the mail representation of the notification.
+     * Get the notification's delivery channels.
      */
-    public function toMail(object $notifiable): MailMessage
+    public function via(object $notifiable): array
     {
-        return (new MailMessage)
-            ->subject($this->getTitle($notifiable))
-            ->line($this->getMessage($notifiable));
+        return ['database'];
+    }
+
+    /**
+     * Get the array representation of the notification for database storage.
+     */
+    public function toDatabase(object $notifiable): array
+    {
+        return [
+            'title' => $this->getTitle($notifiable),
+            'message' => $this->getMessage($notifiable),
+            'type' => $this->getNotificationTypeKey(),
+            'icon' => $this->getIcon(),
+            'data' => $this->data,
+        ];
     }
 
     protected function getTitle(object $notifiable): string
     {
-        return $this->customTitle ?? parent::getTitle($notifiable);
+        if ($this->customTitle) {
+            return $this->customTitle;
+        }
+
+        $typeModel = $this->getNotificationTypeModel();
+        return $typeModel ? $typeModel->name : 'Notification';
     }
 
     protected function getMessage(object $notifiable): string
     {
-        return $this->customMessage ?? parent::getMessage($notifiable);
+        if ($this->customMessage) {
+            return $this->customMessage;
+        }
+
+        $typeModel = $this->getNotificationTypeModel();
+        return $typeModel ? $typeModel->description : 'You have a new notification';
     }
 
-    protected function getAdditionalData(object $notifiable): array
+    protected function getIcon(): string
     {
-        return $this->data;
+        return $this->getDefaultIcon();
     }
 }

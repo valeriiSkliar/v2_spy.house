@@ -2,54 +2,69 @@
 
 namespace App\Notifications\Auth;
 
-use App\Enums\Frontend\NotificationType;
-use App\Notifications\BaseNotification;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\App;
 
-class WelcomeNotification extends BaseNotification
+class WelcomeNotification extends Notification implements ShouldQueue
 {
+    use Queueable;
+
     public function __construct()
     {
-        parent::__construct(NotificationType::WELCOME);
+        //
     }
 
-    protected function getEmailTemplate(): string
+    /**
+     * Get the notification's delivery channels.
+     */
+    public function via(object $notifiable): array
     {
-        return 'welcome';
+        return ['mail'];
     }
 
-    protected function getEmailSubject(object $notifiable): string
+    /**
+     * Get the mail representation of the notification.
+     */
+    public function toMail(object $notifiable): MailMessage
     {
-        return 'Welcome to Partners.House!';
-    }
+        // Сохраняем текущую локаль
+        $currentLocale = App::getLocale();
 
-    protected function getEmailTemplateData(object $notifiable): array
-    {
-        return array_merge(parent::getEmailTemplateData($notifiable), [
-            'username' => $notifiable->login,
-            'dashboardUrl' => config('app.url') . '/profile/settings',
+        // Устанавливаем предпочитаемую локаль пользователя или дефолтную
+        $userLocale = $notifiable->preferred_locale ?? config('app.locale', 'en');
+        App::setLocale($userLocale);
+
+        Log::debug('Sending welcome email', [
+            'notification_class' => get_class($this),
+            'user_id' => $notifiable->id ?? null,
+            'email' => $notifiable->email,
+            'template' => 'welcome',
+            'subject' => __('emails.welcome.subject'),
+            'user_locale' => $userLocale,
+            'current_locale' => $currentLocale
         ]);
-    }
 
-    protected function getTitle(object $notifiable): string
-    {
-        return __('notifications.welcome.title');
-    }
+        $mailMessage = (new MailMessage)
+            ->subject(__('emails.welcome.subject'))
+            ->view('emails.welcome', [
+                'username' => $notifiable->login,
+                'user' => $notifiable,
+                'dashboardUrl' => config('app.url') . '/profile/settings',
+                'loginUrl' => config('app.url') . '/login',
+                'telegramUrl' => config('app.telegram_url', 'https://t.me/spyhouse'),
+                'supportEmail' => config('mail.support_email', 'support@spy.house'),
+                'unsubscribeUrl' => $notifiable->unsubscribe_hash
+                    ? route('unsubscribe.show', $notifiable->unsubscribe_hash)
+                    : config('app.url') . '/unsubscribe'
+            ]);
 
-    protected function getMessage(object $notifiable): string
-    {
-        return __('notifications.welcome.message', ['name' => $notifiable->name ?? $notifiable->login]);
-    }
+        // Восстанавливаем исходную локаль
+        App::setLocale($currentLocale);
 
-    protected function getIcon(): string
-    {
-        return 'user-plus';
-    }
-
-    protected function getAdditionalData(object $notifiable): array
-    {
-        return [
-            'registration_date' => $notifiable->created_at->format('Y-m-d H:i:s'),
-            'user_id' => $notifiable->id
-        ];
+        return $mailMessage;
     }
 }

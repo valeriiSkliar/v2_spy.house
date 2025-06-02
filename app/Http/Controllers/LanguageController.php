@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Auth;
 
 class LanguageController extends Controller
 {
@@ -13,6 +14,7 @@ class LanguageController extends Controller
 
         if (array_key_exists($locale, $supportedLocales)) {
             Session::put('locale', $locale);
+            // Обновление в профиле пользователя произойдет автоматически через LanguageMiddleware на следующем запросе
         } else {
             Session::flash('error', __('common.error.invalid_language_selected'));
         }

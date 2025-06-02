@@ -6,6 +6,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Test\ApiController;
 use App\Http\Controllers\Test\CreativesController;
 use App\Http\Controllers\Test\FinanceController;
+use App\Http\Controllers\UnsubscribeController;
+// use App\Http\Controllers\UnsubscribeController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -39,13 +41,23 @@ Route::get('/creatives', [CreativesController::class, 'index'])->name('creatives
 
 Route::get('/language/{locale}', [LanguageController::class, 'switch'])->name('language.switch');
 
-require __DIR__.'/auth.php';
+// Маршруты для отписки от рассылки
+Route::get('/unsubscribe/{hash}', [UnsubscribeController::class, 'show'])
+    ->name('unsubscribe.show');
+
+Route::post('/unsubscribe/{hash}', [UnsubscribeController::class, 'unsubscribe'])
+    ->name('unsubscribe.process');
+
+Route::get('/unsubscribe-success', [UnsubscribeController::class, 'success'])
+    ->name('unsubscribe.success');
+
+require __DIR__ . '/auth.php';
 // API routes are included directly in api.php with proper prefixing
-include __DIR__.'/api.php';
-require __DIR__.'/blog.php';
-require __DIR__.'/profile.php';
-require __DIR__.'/tariffs.php';
-require __DIR__.'/landings.php';
-require __DIR__.'/notifications.php';
-require __DIR__.'/services.php';
-require __DIR__.'/test.php';
+include __DIR__ . '/api.php';
+require __DIR__ . '/blog.php';
+require __DIR__ . '/profile.php';
+require __DIR__ . '/tariffs.php';
+require __DIR__ . '/landings.php';
+require __DIR__ . '/notifications.php';
+require __DIR__ . '/services.php';
+require __DIR__ . '/test.php';

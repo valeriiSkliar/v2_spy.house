@@ -3,52 +3,71 @@
 namespace App\Notifications\Profile;
 
 use App\Enums\Frontend\NotificationType;
-use App\Notifications\BaseNotification;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
 
-class EmailUpdatedNotification extends BaseNotification
+class EmailUpdatedNotification extends Notification implements ShouldQueue
 {
-    private string $oldEmail;
+    use Queueable;
 
+    private string $oldEmail;
     private string $newEmail;
 
     public function __construct(string $oldEmail, string $newEmail)
     {
-        parent::__construct(NotificationType::EMAIL_VERIFIED);
         $this->oldEmail = $oldEmail;
         $this->newEmail = $newEmail;
     }
 
-    public function toMail($notifiable): MailMessage
+    /**
+     * Get the notification's delivery channels.
+     */
+    public function via(object $notifiable): array
     {
-        return (new MailMessage)
-            ->subject($this->getTitle($notifiable))
-            ->line($this->getMessage($notifiable));
+        return ['mail', 'database'];
     }
 
-    protected function getTitle(object $notifiable): string
+    /**
+     * Get the mail representation of the notification.
+     */
+    public function toMail(object $notifiable): MailMessage
     {
-        return __('profile.email_updated');
-    }
-
-    protected function getMessage(object $notifiable): string
-    {
-        return __('profile.email_updated_message', [
+        Log::info('Sending email updated notification', [
+            'notification_class' => get_class($this),
+            'user_id' => $notifiable->id ?? null,
             'old_email' => $this->oldEmail,
             'new_email' => $this->newEmail,
+            'subject' => __('profile.email_updated')
         ]);
+
+        return (new MailMessage)
+            ->subject(__('profile.email_updated'))
+            ->line(__('profile.email_updated_message', [
+                'old_email' => $this->oldEmail,
+                'new_email' => $this->newEmail,
+            ]));
     }
 
-    protected function getIcon(): string
-    {
-        return 'mail';
-    }
-
-    protected function getAdditionalData(object $notifiable): array
+    /**
+     * Get the array representation of the notification for database storage.
+     */
+    public function toDatabase(object $notifiable): array
     {
         return [
-            'old_email' => $this->oldEmail,
-            'new_email' => $this->newEmail,
+            'title' => __('profile.email_updated'),
+            'message' => __('profile.email_updated_message', [
+                'old_email' => $this->oldEmail,
+                'new_email' => $this->newEmail,
+            ]),
+            'type' => NotificationType::EMAIL_VERIFIED->value,
+            'icon' => 'mail',
+            'data' => [
+                'old_email' => $this->oldEmail,
+                'new_email' => $this->newEmail,
+            ],
         ];
     }
 }

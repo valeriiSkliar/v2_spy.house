@@ -47,6 +47,11 @@ const cancelPasswordUpdate = async cancelButton => {
         logger('[WARNING] Change Password - No initial form HTML received, reloading page');
         window.location.reload();
       }
+
+      // Show success message
+      if (response.message) {
+        createAndShowToast(response.message, 'success');
+      }
     } else {
       createAndShowToast(response.message || 'Error cancelling password update', 'error');
       // Re-enable the button on error
@@ -227,7 +232,7 @@ const initiatePasswordUpdate = async (form, formData) => {
         changePassword();
 
         // Add event listener for cancel button
-        $('.btn._border-red._big, .btn._gray').on('click', function (e) {
+        $('.btn._flex._red._big, .btn._gray').on('click', function (e) {
           e.preventDefault();
           cancelPasswordUpdate(this);
         });
@@ -305,10 +310,10 @@ const changePassword = () => {
   logger('[DEBUG] Change Password - Initializing form handlers');
 
   // Remove all existing event handlers
-  $('.btn._border-red._big, .btn._gray').off();
+  $('.btn._flex._red._big, .btn._gray').off();
 
   // Add single event handler for cancel buttons
-  $('.btn._border-red._big, .btn._gray').on('click', function (e) {
+  $('.btn._flex._red._big, .btn._gray').on('click', function (e) {
     e.preventDefault();
     e.stopPropagation();
     // Pass the button element to the cancel function

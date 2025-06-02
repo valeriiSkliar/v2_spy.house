@@ -77,7 +77,6 @@
 @import 'components/sweetalert.scss';
 
 // Custom
-@import 'custom.scss';
 
 // NEW FRONTEND STYLES - Added as supplement
 @import '../styles/css-new/btn';
@@ -95,3 +94,5 @@
 @import '../styles/css-from-dev/MultiSelect-DLgF6PJh.css';
 @import '../styles/css-from-dev/CreativesSideBarFilters-DWIhj8Ku.css';
 @import '../styles/css-from-dev/Pagination-kqHfmUMg.css';
+
+@import 'custom.scss';

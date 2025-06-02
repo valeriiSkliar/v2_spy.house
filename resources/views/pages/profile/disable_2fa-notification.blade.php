@@ -1,15 +1,13 @@
 @extends('layouts.main')
 
 @section('page-content')
-<h1 class="mb-25">{{ __('profile.2fa.disable_title') }}</h1>
+<h1 class="mb-25">{{ __('profile.2fa.setup_title') }}</h1>
 
 <div id="disable-2fa-section" class="section mb-20">
     {{-- <div class="confirm-operation"> --}}
         {{-- <div class="confirm-operation__figure"><img src="/img/2fa-figure.svg" alt=""></div> --}}
-        <h2 id="warning-title">Отключение двухфакторной аутентификации</h2>
-        <p id="warning-text" class="mb-25 txt-gray">Отключение двухфакторной аутентификации сделает ваш аккаунт менее
-            защищенным. Вы
-            уверены, что хотите продолжить?</p>
+        <h2 id="warning-title">{{ __('profile.2fa.disable_title') }}</h2>
+        <p id="warning-text" class="mb-25 txt-gray">{{ __('profile.2fa.disable_description') }}</p>
 
         {{-- <div class="alert alert-warning mb-25">
             <strong>Внимание!</strong> После отключения двухфакторной аутентификации для входа в аккаунт будет

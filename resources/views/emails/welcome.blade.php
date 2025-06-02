@@ -41,9 +41,8 @@
                                             <img src="https://dev.vitaliimaksymchuk.com.ua/spy/email/images/login.png"
                                                 alt="cpa.house" width="37" height="37" border="0"
                                                 style="max-width: 100%; display: inline-block; vertical-align: middle; margin-right: 10px;">
-                                            <span
-                                                style="font-weight: bold; font-size: 18px; vertical-align: middle;">Log
-                                                in</span>
+                                            <span style="font-weight: bold; font-size: 18px; vertical-align: middle;">{{
+                                                __('emails.welcome.login') }}</span>
                                         </a>
                                     </td>
                                 </tr>
@@ -68,24 +67,16 @@
                                                 <td>
                                                     <p
                                                         style="margin: 0; color: #3B4A51; font-size: 20px; line-height: 130%; text-align: left; padding-bottom: 20px;">
-                                                        <strong>Hi, {{ $username }}!</strong>
+                                                        <strong>{{ __('emails.welcome.greeting', ['username' =>
+                                                            $username]) }}</strong>
                                                     </p>
                                                     <p
                                                         style="margin: 0; color: #3B4A51; font-size: 14px; line-height: 130%; text-align: left; padding-bottom: 20px;">
-                                                        Welcome to Partners.House and thank you for signing up!
+                                                        {{ __('emails.welcome.title') }}
                                                     </p>
                                                     <p
                                                         style="margin: 0; color: #3B4A51; font-size: 14px; line-height: 130%; text-align: left; padding-bottom: 20px;">
-                                                        Partners.House is an affiliate program that monetizes your
-                                                        traffic with push subscriptions. You can add our codes to your
-                                                        site to collect subscribers, or if you don't have a website -
-                                                        use multilingual landing pages from our system, direct traffic
-                                                        to them and get subscribers who see the advertisements that we
-                                                        send. You get paid for each ad click made by your subscribers.
-                                                        To learn how much money subscriptions bring - see the TOP
-                                                        COUNTRIES section in your personal account. The income indicated
-                                                        there is the average for the system for 1000 subscribers and for
-                                                        a period of 55 days.
+                                                        {{ __('emails.welcome.description') }}
                                                     </p>
                                                 </td>
                                             </tr>
@@ -96,7 +87,7 @@
                                     <td align="center" style="padding-top: 0; padding-bottom: 35px;">
                                         <a href="{{ $dashboardUrl }}" target="_blank"
                                             style="font-size: 16px; line-height: 1; font-weight: bold; color: #ffffff; text-decoration: none !important; display: inline-block; text-align: center; cursor: pointer; border-radius: 10px; background-color: #3DC98A; padding: 20px 20px; min-width: 200px; box-sizing: border-box;">
-                                            Go now
+                                            {{ __('emails.welcome.go_now_button') }}
                                         </a>
                                     </td>
                                 </tr>
@@ -106,7 +97,7 @@
                                         </p>
                                         <p
                                             style="margin: 0; color: #879399; font-size: 14px; line-height: 130%; text-align: center;">
-                                            Best regards, Spy.House Support Service
+                                            {{ __('emails.welcome.regards') }}
                                         </p>
                                     </td>
                                 </tr>
@@ -124,8 +115,7 @@
                                             <tr>
                                                 <td align="left" valign="middle" style="padding-right: 30px;">
                                                     <p style="margin: 0; color: #D7E0E4; font-size: 15px;">
-                                                        Write to our Telegram channel, we will help you with any
-                                                        question!
+                                                        {{ __('emails.welcome.telegram_text') }}
                                                     </p>
                                                 </td>
                                                 <td align="right" valign="middle">
@@ -157,11 +147,10 @@
                                         </p>
                                         <p
                                             style="margin: 0; color: #3B4A51; font-size: 14px; line-height: 130%; text-align: center; padding-bottom: 15px;">
-                                            You have received this newsletter because you are a spy.house customer or
-                                            subscriber
+                                            {{ __('emails.welcome.footer_newsletter_text') }}
                                             <a href="{{ $unsubscribeUrl }}"
                                                 style="text-decoration: underline; color: #3B4A51; font-weight: bold;">
-                                                <strong>Unsubscribe</strong>
+                                                <strong>{{ __('emails.welcome.unsubscribe') }}</strong>
                                             </a>
                                         </p>
                                     </td>
