@@ -48,6 +48,7 @@ class RegisteredUserController extends Controller
             'messenger_contact' => $data['messenger_contact'],
             'experience' => $data['experience'],
             'scope_of_activity' => $data['scope_of_activity'],
+            'preferred_locale' => session('locale', config('app.locale')),  // Сохраняем текущую локаль
         ]);
 
         // Асинхронная обработка регистрации через очередь
