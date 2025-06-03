@@ -40,16 +40,16 @@ class SitemapService
      */
     public function generateSitemapIndex(array $sitemaps): string
     {
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
-        $xml .= '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . PHP_EOL;
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>'.PHP_EOL;
+        $xml .= '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'.PHP_EOL;
 
         foreach ($sitemaps as $sitemap) {
-            $xml .= '  <sitemap>' . PHP_EOL;
-            $xml .= '    <loc>' . htmlspecialchars($sitemap['url']) . '</loc>' . PHP_EOL;
+            $xml .= '  <sitemap>'.PHP_EOL;
+            $xml .= '    <loc>'.htmlspecialchars($sitemap['url']).'</loc>'.PHP_EOL;
             if (isset($sitemap['lastmod'])) {
-                $xml .= '    <lastmod>' . $sitemap['lastmod'] . '</lastmod>' . PHP_EOL;
+                $xml .= '    <lastmod>'.$sitemap['lastmod'].'</lastmod>'.PHP_EOL;
             }
-            $xml .= '  </sitemap>' . PHP_EOL;
+            $xml .= '  </sitemap>'.PHP_EOL;
         }
 
         $xml .= '</sitemapindex>';
@@ -114,10 +114,10 @@ class SitemapService
             $posts = BlogPost::published()->get();
             foreach ($posts as $post) {
                 $urls->push([
-                    'url' => URL::to('/blog/' . $post->slug),
+                    'url' => URL::to('/blog/'.$post->slug),
                     'lastmod' => $post->updated_at->format('Y-m-d'),
                     'changefreq' => 'monthly',
-                    'priority' => '0.6'
+                    'priority' => '0.6',
                 ]);
             }
 
@@ -176,26 +176,26 @@ class SitemapService
      */
     private function buildXml(Collection $urls): string
     {
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
-        $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . PHP_EOL;
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>'.PHP_EOL;
+        $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'.PHP_EOL;
 
         foreach ($urls as $url) {
-            $xml .= '  <url>' . PHP_EOL;
-            $xml .= '    <loc>' . htmlspecialchars($url['url']) . '</loc>' . PHP_EOL;
+            $xml .= '  <url>'.PHP_EOL;
+            $xml .= '    <loc>'.htmlspecialchars($url['url']).'</loc>'.PHP_EOL;
 
             if (isset($url['lastmod'])) {
-                $xml .= '    <lastmod>' . $url['lastmod'] . '</lastmod>' . PHP_EOL;
+                $xml .= '    <lastmod>'.$url['lastmod'].'</lastmod>'.PHP_EOL;
             }
 
             if (isset($url['changefreq'])) {
-                $xml .= '    <changefreq>' . $url['changefreq'] . '</changefreq>' . PHP_EOL;
+                $xml .= '    <changefreq>'.$url['changefreq'].'</changefreq>'.PHP_EOL;
             }
 
             if (isset($url['priority'])) {
-                $xml .= '    <priority>' . $url['priority'] . '</priority>' . PHP_EOL;
+                $xml .= '    <priority>'.$url['priority'].'</priority>'.PHP_EOL;
             }
 
-            $xml .= '  </url>' . PHP_EOL;
+            $xml .= '  </url>'.PHP_EOL;
         }
 
         $xml .= '</urlset>';
