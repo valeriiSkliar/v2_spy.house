@@ -1,6 +1,6 @@
 <?php
 
-// Скрипт для тестирования регистрации пользователя
+// Скрипт для тестирования регистрации пользователя в Tinker
 // Использует обновленную архитектуру с ProcessUserRegistrationJob
 
 use App\Enums\Frontend\UserExperience;
@@ -20,24 +20,23 @@ $userData = [
     'scope_of_activity' => UserScopeOfActivity::CRYPTO->value
 ];
 
-echo "Creating test user...\n";
-
 // Создаем пользователя напрямую
 $user = User::create($userData);
 
-echo "User created with ID: " . $user->id . "\n";
-echo "Email: " . $user->email . "\n";
+dump("User created", [
+    'id' => $user->id,
+    'email' => $user->email,
+    'login' => $user->login
+]);
 
 // Запускаем job для обработки регистрации
-echo "Dispatching ProcessUserRegistrationJob...\n";
-
 ProcessUserRegistrationJob::dispatch($user, [
     'registration_ip' => '127.0.0.1',
     'user_agent' => 'Test Script',
     'source' => 'test_script',
 ]);
 
-echo "Registration job dispatched!\n";
+dump("Registration job dispatched");
 
 // Проверяем логи email для тестового email
 $testEmail = 'delivered@resend.dev';
@@ -46,14 +45,12 @@ $emailLog = App\Models\EmailLog::where('email', $testEmail)
     ->first();
 
 if ($emailLog) {
-    echo "\nEmail Log:\n";
-    echo "Status: " . $emailLog->status . "\n";
-    echo "Subject: " . $emailLog->subject . "\n";
-    echo "Template: " . $emailLog->template . "\n";
-    echo "Sent at: " . $emailLog->sent_at . "\n";
+    dump("Email Log found", [
+        'status' => $emailLog->status,
+        'subject' => $emailLog->subject,
+        'template' => $emailLog->template,
+        'sent_at' => $emailLog->sent_at
+    ]);
 } else {
-    echo "\nNo email log found for $testEmail\n";
+    dump("No email log found for $testEmail");
 }
-
-echo "\nCheck logs with: tail -f storage/logs/laravel.log\n";
-echo "Run queue worker: php artisan queue:work\n";
