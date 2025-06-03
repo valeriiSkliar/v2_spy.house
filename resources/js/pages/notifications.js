@@ -31,7 +31,6 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // Initialize per-page selector
-  console.log('Initializing select component with useAjax:', useAjax);
   initializeSelectComponent('#per-page', {
     selectors: {
       select: '.base-select__dropdown',
