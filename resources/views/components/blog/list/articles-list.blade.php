@@ -4,7 +4,9 @@
     @if($heroArticle)
     <x-blog.hero-article :heroArticle="$heroArticle" />
     @endif
-    @forelse($articles as $article)
+
+    @if($articles->count() > 0)
+    @foreach($articles as $article)
     <x-article>
         <x-slot name="thumb">
             <a href="{{ route('blog.show', $article->slug) }}" class="article__thumb thumb">
@@ -35,8 +37,10 @@
             </div>
         </x-slot>
     </x-article>
-    @empty
+    @endforeach
+    @elseif(!$heroArticle)
+    {{-- Show no results only if there's no hero article either --}}
     <x-blog.blog-no-results-found />
-    @endforelse
+    @endif
     {{--
 </div> --}}

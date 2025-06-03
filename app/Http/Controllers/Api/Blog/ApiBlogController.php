@@ -266,6 +266,19 @@ class ApiBlogController extends BaseBlogController
             $query->where('title', 'like', '%' . $search . '%');
         }
 
+        // Add category filtering
+        $categorySlug = $request->input('category');
+        $currentCategory = null;
+        if ($categorySlug) {
+            $currentCategory = \App\Models\Frontend\Blog\PostCategory::where('slug', $categorySlug)->first();
+            if ($currentCategory) {
+                $query->whereHas('categories', function ($q) use ($currentCategory) {
+                    $q->where('post_categories.id', $currentCategory->id)
+                        ->orWhere('post_categories.parent_id', $currentCategory->id);
+                });
+            }
+        }
+
         // Get hero article only for first page
         $heroArticle = null;
         if ($request->get('page', 1) == 1) {
@@ -286,7 +299,13 @@ class ApiBlogController extends BaseBlogController
                 $articlesHtml .= view('components.blog.list.articles-list', compact('articles', 'heroArticle'))->render();
             } else {
                 $searchQuery = $request->get('search', '');
-                $articlesHtml = view('components.blog.blog-no-results-found', ['query' => $searchQuery])->render();
+                // For category filtering without search, use category name as query
+                if ($categorySlug && !$searchQuery && $currentCategory) {
+                    $queryText = $currentCategory->name;
+                } else {
+                    $queryText = $searchQuery ?: '';
+                }
+                $articlesHtml = view('components.blog.blog-no-results-found', ['query' => $queryText])->render();
             }
 
             // Generate pagination HTML
@@ -304,6 +323,11 @@ class ApiBlogController extends BaseBlogController
                 'currentPage' => $articles->currentPage(),
                 'totalPages' => $articles->lastPage(),
                 'count' => $articles->count(),
+                'currentCategory' => $currentCategory ? [
+                    'id' => $currentCategory->id,
+                    'name' => $currentCategory->name,
+                    'slug' => $currentCategory->slug
+                ] : null,
             ]);
         }
 

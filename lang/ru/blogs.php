@@ -10,6 +10,7 @@ return [
         'back_to_ads' => 'Вернуться к объявлениям',
         'back_to_blogs' => 'Вернуться к блогам',
     ],
+    'all_categories' => 'Все категории',
     'new_article_label' => 'Новое',
     'read_often' => 'Часто читают',
     'it_will_also_be_interesting' => 'Также будет интересно',
