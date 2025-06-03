@@ -24,7 +24,7 @@ $isExpired = $updateExpiresAt && now()->isAfter($updateExpiresAt);
 <div id="change-email-form-container" class="section">
     <x-profile.change-email-form :confirmation-method="$updateMethod" :user="$user"
         :email-update-pending="$updateStep === 'confirmation'" :authenticator-enabled="$user->google_2fa_enabled" />
-    @if (session('status'))
+    {{-- @if (session('status'))
     <div class="message _bg _with-border font-weight-500">
         <span class="icon-warning font-18"></span>
         <div class="message__txt">
@@ -46,7 +46,7 @@ $isExpired = $updateExpiresAt && now()->isAfter($updateExpiresAt);
             @endswitch
         </div>
     </div>
-    @endif
+    @endif --}}
 </div>
 @endsection
 

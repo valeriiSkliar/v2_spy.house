@@ -14,8 +14,11 @@ const cancelEmailUpdate = async () => {
   const $form = $formContainer.find('#change-email-form');
   let loader = null;
 
+  logger('[DEBUG] Change Email - Cancel update requested');
+
   try {
     loader = showInElement($formContainer[0]);
+
     const response = await ajaxFetcher.get(config.apiProfileEmailCancelEndpoint, null, {});
 
     if (response.success) {
@@ -105,6 +108,18 @@ const confirmEmailUpdate = async formData => {
     }
     checkNotifications();
   }
+};
+
+/**
+ * Initialize cancel button event listener
+ */
+const initCancelButton = () => {
+  $('[data-action="cancel-email-update"]')
+    .off('click')
+    .on('click', function (e) {
+      e.preventDefault();
+      cancelEmailUpdate();
+    });
 };
 
 const changeEmail = () => {
@@ -200,12 +215,7 @@ const changeEmail = () => {
               changeEmail();
 
               // Add event listener for cancel button
-              $('.btn._flex._red._big')
-                .off('click')
-                .on('click', function (e) {
-                  e.preventDefault();
-                  cancelEmailUpdate();
-                });
+              initCancelButton();
             }
           } else {
             handleChangeEmailValidationErrors(response, $form);
@@ -233,13 +243,8 @@ const changeEmail = () => {
     });
   }
 
-  // Add event listener for cancel button if it exists
-  $('.btn._flex._red._big')
-    .off('click')
-    .on('click', function (e) {
-      e.preventDefault();
-      cancelEmailUpdate();
-    });
+  // Initialize cancel button
+  initCancelButton();
 };
 
 const initChangeEmail = () => {
