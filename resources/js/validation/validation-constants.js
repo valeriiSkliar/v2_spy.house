@@ -55,6 +55,11 @@ export const PERSONAL_GREETING_CONFIG = {
   errorMessage: 'Personal greeting must be between 3 and 100 characters',
 };
 
+export const PASSWORD_CONFIG = {
+  minLength: 8,
+  errorMessage: 'Password must be at least 8 characters long',
+};
+
 /**
  * Unified validation methods
  */
@@ -194,5 +199,27 @@ export const ValidationMethods = {
       trimmedValue.length >= PERSONAL_GREETING_CONFIG.minLength &&
       trimmedValue.length <= PERSONAL_GREETING_CONFIG.maxLength
     );
+  },
+
+  /**
+   * Validate password strength
+   * @param {string} value - The value to validate
+   * @param {number} minLength - Minimum length (default from config)
+   * @returns {boolean} - True if valid
+   */
+  validatePasswordStrength(value, minLength = PASSWORD_CONFIG.minLength) {
+    if (!value || !value.trim()) return false; // Required field
+    return value.length >= minLength;
+  },
+
+  /**
+   * Validate password confirmation
+   * @param {string} password - The password value
+   * @param {string} confirmation - The confirmation value
+   * @returns {boolean} - True if they match
+   */
+  validatePasswordConfirmation(password, confirmation) {
+    if (!password || !confirmation) return false;
+    return password === confirmation;
   },
 };
