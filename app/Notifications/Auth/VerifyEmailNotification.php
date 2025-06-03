@@ -69,6 +69,7 @@ class VerifyEmailNotification extends Notification implements ShouldQueue
             ->view('emails.verification-account', [
                 'code' => $this->code,
                 'user' => $notifiable,
+                'emailType' => 'verification',
                 'loginUrl' => config('app.url') . '/login',
                 'telegramUrl' => config('app.telegram_url', 'https://t.me/spyhouse'),
                 'supportEmail' => config('mail.support_email', 'support@spy.house'),

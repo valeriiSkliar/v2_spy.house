@@ -37,17 +37,18 @@ class PasswordUpdateConfirmationNotification extends Notification implements Sho
             'notification_class' => get_class($this),
             'user_id' => $notifiable->id ?? null,
             'email' => $notifiable->email,
-            'template' => 'password-update-confirmation',
-            'subject' => __('profile.security_settings.password_update_confirmation')
+            'template' => 'verification-account',
+            'subject' => __('emails.password_update_confirmation.subject')
         ]);
 
         return (new MailMessage)
-            ->subject(__('profile.security_settings.password_update_confirmation'))
+            ->subject(__('emails.password_update_confirmation.subject'))
             ->view('emails.verification-account', [
                 'code' => $this->verificationCode,
                 'verification_code' => $this->verificationCode,
                 'expires_in' => 15,
                 'user' => $notifiable,
+                'emailType' => 'password_update_confirmation',
                 'loginUrl' => config('app.url') . '/login',
                 'telegramUrl' => config('app.telegram_url', 'https://t.me/spyhouse'),
                 'supportEmail' => config('mail.support_email', 'support@spy.house'),
@@ -63,8 +64,8 @@ class PasswordUpdateConfirmationNotification extends Notification implements Sho
     public function toDatabase(object $notifiable): array
     {
         return [
-            'title' => __('profile.security_settings.password_update_confirmation'),
-            'message' => __('profile.security_settings.password_update_confirmation_text'),
+            'title' => __('emails.password_update_confirmation.title'),
+            'message' => __('emails.password_update_confirmation.message', ['code' => $this->verificationCode]),
             'type' => NotificationType::PASSWORD_RESET->value,
             'icon' => 'lock',
             'data' => [

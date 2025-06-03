@@ -91,7 +91,7 @@ return [
     ],
     'notification_settings' => [
         'email_title' => 'Email',
-        'email_description' => 'Измените email для уведомлений',
+        'email_description' => 'Измените настройки уведомлений',
         'system_messages_label' => 'Системные сообщения',
     ],
     'password_recovery' => [

@@ -41,9 +41,8 @@
                                             <img src="https://dev.vitaliimaksymchuk.com.ua/spy/email/images/login.png"
                                                 alt="cpa.house" width="37" height="37" border="0"
                                                 style="max-width: 100%; display: inline-block; vertical-align: middle; margin-right: 10px;">
-                                            <span
-                                                style="font-weight: bold; font-size: 18px; vertical-align: middle;">Log
-                                                in</span>
+                                            <span style="font-weight: bold; font-size: 18px; vertical-align: middle;">{{
+                                                __('emails.' . $emailType . '.login') }}</span>
                                         </a>
                                     </td>
                                 </tr>
@@ -57,14 +56,15 @@
                                     <td style="padding-top: 30px; padding-bottom: 20px;">
                                         <p
                                             style="margin: 0; color: #3B4A51; font-size: 20px; line-height: 130%; text-align: center; padding-bottom: 25px;">
-                                            <strong>Account verification</strong>
+                                            <strong>{{ __('emails.' . $emailType . '.title') }}</strong>
                                         </p>
                                         <table align="center"
                                             style="margin-bottom: 30px; border-collapse: collapse; background: #F1FBF7; border-radius: 10px;">
                                             <tr>
                                                 <td style="padding: 19px 20px 19px 25px" align="left" valign="middle">
                                                     <span
-                                                        style="padding: 0; margin: 0; font-size: 14px; color: #3B4A51; vertical-align: middle;">Code:</span>
+                                                        style="padding: 0; margin: 0; font-size: 14px; color: #3B4A51; vertical-align: middle;">{{
+                                                        __('emails.' . $emailType . '.code_label') }}</span>
                                                 </td>
                                                 <td style="padding: 19px 30px 19px 0px" align="left" valign="middle">
                                                     <span
@@ -76,8 +76,7 @@
                                         </table>
                                         <p
                                             style="margin: 0; color: #3B4A51; font-size: 14px; line-height: 130%; text-align: center; padding-bottom: 20px;">
-                                            This is your account confirmation code, <br>enter it on the spy.house
-                                            service
+                                            {!! __('emails.' . $emailType . '.description') !!}
                                         </p>
                                     </td>
                                 </tr>
@@ -87,7 +86,7 @@
                                         </p>
                                         <p
                                             style="margin: 0; color: #879399; font-size: 14px; line-height: 130%; text-align: center;">
-                                            Best regards, Spy.House Support Service
+                                            {{ __('emails.' . $emailType . '.regards') }}
                                         </p>
                                     </td>
                                 </tr>
@@ -105,8 +104,7 @@
                                             <tr>
                                                 <td align="left" valign="middle" style="padding-right: 30px;">
                                                     <p style="margin: 0; color: #D7E0E4; font-size: 15px;">
-                                                        Write to our Telegram channel, we will help you with any
-                                                        question!
+                                                        {{ __('emails.' . $emailType . '.telegram_text') }}
                                                     </p>
                                                 </td>
                                                 <td align="right" valign="middle">
@@ -138,11 +136,10 @@
                                         </p>
                                         <p
                                             style="margin: 0; color: #3B4A51; font-size: 14px; line-height: 130%; text-align: center; padding-bottom: 15px;">
-                                            You have received this newsletter because you are a spy.house customer or
-                                            subscriber
+                                            {{ __('emails.' . $emailType . '.footer_text') }}
                                             <a href="{{ $unsubscribeUrl }}"
                                                 style="text-decoration: underline; color: #3B4A51; font-weight: bold;">
-                                                <strong>Unsubscribe</strong>
+                                                <strong>{{ __('emails.' . $emailType . '.unsubscribe') }}</strong>
                                             </a>
                                         </p>
                                     </td>

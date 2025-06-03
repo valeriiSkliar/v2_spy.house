@@ -5,6 +5,8 @@ return [
     'per_page' => 'На странице — ',
     'mark_all_read' => 'Прочитать все',
     'acquainted' => 'Ознакомлен',
+    'you_have_a_new_notification' => 'У вас новое уведомление',
+    'notification' => 'Уведомление',
     'notification_item' => [
         'new' => 'Новое',
         'read' => 'Прочитано',
