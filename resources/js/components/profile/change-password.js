@@ -196,12 +196,10 @@ const initiatePasswordUpdate = async (form, formData) => {
  * Initialize cancel button event listener
  */
 const initCancelButton = () => {
-  $('[data-action="cancel-password-update"]')
-    .off('click')
-    .on('click', function (e) {
-      e.preventDefault();
-      cancelPasswordUpdate();
-    });
+  $('[data-action="cancel-password"]').off('click').on('click', function (e) {
+    e.preventDefault();
+    cancelPasswordUpdate();
+  });
 };
 
 /**

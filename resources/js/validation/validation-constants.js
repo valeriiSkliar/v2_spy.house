@@ -60,6 +60,12 @@ export const PASSWORD_CONFIG = {
   errorMessage: 'Password must be at least 8 characters long',
 };
 
+export const IP_RESTRICTION_CONFIG = {
+  maxIpAddresses: 50,
+  errorMessage: 'Please enter valid IP addresses (one per line, max 50)',
+  ipv4Pattern: /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/,
+};
+
 /**
  * Unified validation methods
  */
@@ -221,5 +227,47 @@ export const ValidationMethods = {
   validatePasswordConfirmation(password, confirmation) {
     if (!password || !confirmation) return false;
     return password === confirmation;
+  },
+
+  /**
+   * Validate single IP address
+   * @param {string} ip - The IP address to validate
+   * @returns {boolean} - True if valid
+   */
+  validateIpAddress(ip) {
+    if (!ip || !ip.trim()) return false;
+    
+    const ipv4Match = ip.trim().match(IP_RESTRICTION_CONFIG.ipv4Pattern);
+    if (!ipv4Match) return false;
+
+    // Validate each octet
+    for (let i = 1; i <= 4; i++) {
+      const octet = parseInt(ipv4Match[i], 10);
+      if (octet < 0 || octet > 255) {
+        return false;
+      }
+    }
+
+    return true;
+  },
+
+  /**
+   * Validate multiple IP addresses
+   * @param {string} ipList - Newline-separated IP addresses
+   * @returns {boolean} - True if all are valid
+   */
+  validateIpAddressList(ipList) {
+    if (!ipList || !ipList.trim()) return true; // Empty is valid
+
+    const ips = ipList
+      .split('\n')
+      .map(ip => ip.trim())
+      .filter(ip => ip !== '');
+
+    if (ips.length > IP_RESTRICTION_CONFIG.maxIpAddresses) {
+      return false;
+    }
+
+    return ips.every(ip => this.validateIpAddress(ip));
   },
 };
