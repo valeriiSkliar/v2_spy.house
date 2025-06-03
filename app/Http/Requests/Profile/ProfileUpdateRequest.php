@@ -39,8 +39,8 @@ class ProfileUpdateRequest extends BaseRequest
 
         return [
             'login' => $loginRules,
-            'experience' => 'nullable|string|in:' . implode(',', UserExperience::names()),
-            'scope_of_activity' => 'nullable|string|in:' . implode(',', UserScopeOfActivity::names()),
+            'experience' => 'nullable|string|in:'.implode(',', UserExperience::names()),
+            'scope_of_activity' => 'nullable|string|in:'.implode(',', UserScopeOfActivity::names()),
             'messenger_type' => 'nullable|string|in:telegram,viber,whatsapp',
             'messenger_contact' => [
                 'nullable',
@@ -58,23 +58,24 @@ class ProfileUpdateRequest extends BaseRequest
 
                         if ($exists) {
                             $fail(__('validation.messenger_contact_taken'));
+
                             return;
                         }
 
                         // Format validation
                         switch ($messengerType) {
                             case 'telegram':
-                                if (!parent::validation_telegram_login($value)) {
+                                if (! parent::validation_telegram_login($value)) {
                                     $fail(__('validation.telegram_format'));
                                 }
                                 break;
                             case 'viber':
-                                if (!parent::validation_viber_identifier($value)) {
+                                if (! parent::validation_viber_identifier($value)) {
                                     $fail(__('validation.phone_format'));
                                 }
                                 break;
                             case 'whatsapp':
-                                if (!parent::validation_whatsapp_identifier($value)) {
+                                if (! parent::validation_whatsapp_identifier($value)) {
                                     $fail(__('validation.phone_format'));
                                 }
                                 break;

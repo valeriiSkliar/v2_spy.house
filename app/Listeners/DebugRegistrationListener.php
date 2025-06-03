@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 class DebugRegistrationListener
 {
     private static int $callCount = 0;
+
     private static array $processedEvents = [];
 
     /**
@@ -24,13 +25,13 @@ class DebugRegistrationListener
             'user_id' => $user->id,
             'user_email' => $user->email,
             'timestamp_second' => now()->format('Y-m-d H:i:s'), // округляем до секунды
-            'memory_mb' => round(memory_get_usage(true) / 1024 / 1024) // округляем до МБ
+            'memory_mb' => round(memory_get_usage(true) / 1024 / 1024), // округляем до МБ
         ]));
 
         $isDuplicate = isset(static::$processedEvents[$eventHash]);
         static::$processedEvents[$eventHash] = [
             'call_count' => static::$callCount,
-            'timestamp' => now()->toDateTimeString()
+            'timestamp' => now()->toDateTimeString(),
         ];
 
         // Получаем stack trace для анализа места вызова
@@ -42,7 +43,7 @@ class DebugRegistrationListener
                 $file = basename($trace['file']);
                 $uniqueFiles[] = $file;
                 $callStack[] = sprintf(
-                    "#%d %s:%d %s%s%s()",
+                    '#%d %s:%d %s%s%s()',
                     $index,
                     $file,
                     $trace['line'],
@@ -65,7 +66,7 @@ class DebugRegistrationListener
             'user_name' => $user->name ?? 'null',
             'user_created_at' => $user->created_at ?? 'null',
             'timestamp' => now()->toDateTimeString(),
-            'memory_usage' => memory_get_usage(true) . ' bytes',
+            'memory_usage' => memory_get_usage(true).' bytes',
             'source_analysis' => $sourceAnalysis,
             'unique_files_in_stack' => array_unique($uniqueFiles),
             'call_stack' => $callStack,
@@ -77,18 +78,18 @@ class DebugRegistrationListener
         // Дополнительно выводим в консоль если запущено через artisan
         if (app()->runningInConsole()) {
             echo "\n=== DEBUG REGISTRATION EVENT ===\n";
-            echo "Call Count: " . static::$callCount . "\n";
-            echo "Is Duplicate: " . ($isDuplicate ? 'YES' : 'NO') . "\n";
-            echo "Event Hash: " . substr($eventHash, 0, 8) . "...\n";
-            echo "User ID: " . ($user->id ?? 'null') . "\n";
-            echo "User Email: " . ($user->email ?? 'null') . "\n";
-            echo "User Name: " . ($user->name ?? 'null') . "\n";
-            echo "Created At: " . ($user->created_at ?? 'null') . "\n";
-            echo "Memory Usage: " . memory_get_usage(true) . " bytes\n";
-            echo "Source: " . $sourceAnalysis . "\n";
+            echo 'Call Count: '.static::$callCount."\n";
+            echo 'Is Duplicate: '.($isDuplicate ? 'YES' : 'NO')."\n";
+            echo 'Event Hash: '.substr($eventHash, 0, 8)."...\n";
+            echo 'User ID: '.($user->id ?? 'null')."\n";
+            echo 'User Email: '.($user->email ?? 'null')."\n";
+            echo 'User Name: '.($user->name ?? 'null')."\n";
+            echo 'Created At: '.($user->created_at ?? 'null')."\n";
+            echo 'Memory Usage: '.memory_get_usage(true)." bytes\n";
+            echo 'Source: '.$sourceAnalysis."\n";
             echo "--- CALL STACK (first 5) ---\n";
             foreach (array_slice($callStack, 0, 5) as $call) {
-                echo $call . "\n";
+                echo $call."\n";
             }
             echo "===============================\n\n";
         }

@@ -5,28 +5,28 @@
 
 use App\Enums\Frontend\UserExperience;
 use App\Enums\Frontend\UserScopeOfActivity;
-use App\Models\User;
 use App\Jobs\ProcessUserRegistrationJob;
+use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
 // Создаем тестовые данные пользователя
 $userData = [
-    'login' => 'test_user_' . time(),
+    'login' => 'test_user_'.time(),
     'email' => 'delivered@resend.dev',
     'password' => Hash::make('Test123!@#'),
     'messenger_type' => 'telegram',
     'messenger_contact' => '@test_user',
     'experience' => UserExperience::BEGINNER->value,
-    'scope_of_activity' => UserScopeOfActivity::CRYPTO->value
+    'scope_of_activity' => UserScopeOfActivity::CRYPTO->value,
 ];
 
 // Создаем пользователя напрямую
 $user = User::create($userData);
 
-dump("User created", [
+dump('User created', [
     'id' => $user->id,
     'email' => $user->email,
-    'login' => $user->login
+    'login' => $user->login,
 ]);
 
 // Запускаем job для обработки регистрации
@@ -36,7 +36,7 @@ ProcessUserRegistrationJob::dispatch($user, [
     'source' => 'test_script',
 ]);
 
-dump("Registration job dispatched");
+dump('Registration job dispatched');
 
 // Проверяем логи email для тестового email
 $testEmail = 'delivered@resend.dev';
@@ -45,11 +45,11 @@ $emailLog = App\Models\EmailLog::where('email', $testEmail)
     ->first();
 
 if ($emailLog) {
-    dump("Email Log found", [
+    dump('Email Log found', [
         'status' => $emailLog->status,
         'subject' => $emailLog->subject,
         'template' => $emailLog->template,
-        'sent_at' => $emailLog->sent_at
+        'sent_at' => $emailLog->sent_at,
     ]);
 } else {
     dump("No email log found for $testEmail");

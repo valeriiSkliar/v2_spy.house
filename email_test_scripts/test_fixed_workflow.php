@@ -1,11 +1,11 @@
 <?php
 
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__.'/../vendor/autoload.php';
 
 // Check if Laravel is already initialized (e.g., running via tinker)
-if (!function_exists('app') || !app()) {
+if (! function_exists('app') || ! app()) {
     // Load Laravel configuration only if not already loaded
-    $app = require_once __DIR__ . '/../bootstrap/app.php';
+    $app = require_once __DIR__.'/../bootstrap/app.php';
     if ($app && method_exists($app, 'make')) {
         $app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
     }
@@ -14,13 +14,13 @@ if (!function_exists('app') || !app()) {
     echo "Laravel already initialized (running via tinker)\n";
 }
 
-use Resend\Laravel\Facades\Resend;
 use Illuminate\Support\Str;
+use Resend\Laravel\Facades\Resend;
 
 echo "=== Testing FIXED User Email Change Workflow ===\n\n";
 
 // Rate limiting helper function (Resend allows 2 requests per second)
-if (!function_exists('waitForRateLimit')) {
+if (! function_exists('waitForRateLimit')) {
     function waitForRateLimit()
     {
         echo "   ⏱️ Waiting for rate limit (0.6s)...\n";
@@ -29,7 +29,7 @@ if (!function_exists('waitForRateLimit')) {
 }
 
 // Check configuration
-if (!config('services.resend.key') || !config('services.resend.audience_id')) {
+if (! config('services.resend.key') || ! config('services.resend.audience_id')) {
     echo "❌ Missing required configuration. Please set RESEND_API_KEY and RESEND_AUDIENCE_ID in your .env file.\n";
     exit(1);
 }
@@ -37,8 +37,8 @@ if (!config('services.resend.key') || !config('services.resend.audience_id')) {
 $audienceId = config('services.resend.audience_id');
 
 // Test data
-$initialEmail = 'test-fixed-' . time() . '@example.com';
-$newEmail = 'updated-fixed-' . time() . '@example.com';
+$initialEmail = 'test-fixed-'.time().'@example.com';
+$newEmail = 'updated-fixed-'.time().'@example.com';
 
 echo "Test Configuration:\n";
 echo "Audience ID: $audienceId\n";
@@ -70,8 +70,8 @@ try {
         ]
     );
 
-    if (!isset($response['id'])) {
-        throw new Exception("Failed to create initial contact: " . json_encode($response));
+    if (! isset($response['id'])) {
+        throw new Exception('Failed to create initial contact: '.json_encode($response));
     }
 
     $userData['email_contact_id'] = $response['id'];
@@ -79,8 +79,8 @@ try {
     $userData['unsubscribe_hash'] = Str::random(32);
 
     echo "✅ Initial contact created successfully\n";
-    echo "Contact ID: " . $response['id'] . "\n";
-    echo "Email: " . $userData['email'] . "\n\n";
+    echo 'Contact ID: '.$response['id']."\n";
+    echo 'Email: '.$userData['email']."\n\n";
 
     // Step 2: Email change using FIXED ProfileController logic
     echo "🧪 STEP 2: Email Change with FIXED Logic (Delete + Create)\n";
@@ -104,7 +104,7 @@ try {
         echo "✅ Old contact deleted successfully\n";
         echo "Contact ID: $oldContactId\n\n";
     } catch (\Exception $deleteE) {
-        echo "❌ Failed to delete old contact: " . $deleteE->getMessage() . "\n\n";
+        echo '❌ Failed to delete old contact: '.$deleteE->getMessage()."\n\n";
         throw $deleteE;
     }
 
@@ -116,12 +116,12 @@ try {
         [
             'email' => $newEmail,
             'first_name' => $userData['name'] ?? $userData['login'] ?? '',
-            'unsubscribed' => !$userData['is_newsletter_subscribed'],
+            'unsubscribed' => ! $userData['is_newsletter_subscribed'],
         ]
     );
 
-    if (!isset($newContactResponse['id'])) {
-        throw new Exception("Failed to create new contact: " . json_encode($newContactResponse));
+    if (! isset($newContactResponse['id'])) {
+        throw new Exception('Failed to create new contact: '.json_encode($newContactResponse));
     }
 
     // Update user data
@@ -129,8 +129,8 @@ try {
     $userData['email_contact_id'] = $newContactResponse['id'];
 
     echo "✅ New contact created successfully\n";
-    echo "New Contact ID: " . $newContactResponse['id'] . "\n";
-    echo "Email: " . $newEmail . "\n\n";
+    echo 'New Contact ID: '.$newContactResponse['id']."\n";
+    echo 'Email: '.$newEmail."\n\n";
 
     // Step 3: Verification
     echo "🧪 STEP 3: Verification\n";
@@ -147,14 +147,14 @@ try {
 
         if (isset($verifyNewResponse['id'])) {
             echo "✅ New email contact found successfully\n";
-            echo "Contact ID: " . $verifyNewResponse['id'] . "\n";
-            echo "Email: " . $verifyNewResponse['email'] . "\n";
-            echo "Matches user contact ID: " . ($verifyNewResponse['id'] === $userData['email_contact_id'] ? 'Yes' : 'No') . "\n\n";
+            echo 'Contact ID: '.$verifyNewResponse['id']."\n";
+            echo 'Email: '.$verifyNewResponse['email']."\n";
+            echo 'Matches user contact ID: '.($verifyNewResponse['id'] === $userData['email_contact_id'] ? 'Yes' : 'No')."\n\n";
         } else {
             echo "❌ New email contact not found\n\n";
         }
     } catch (\Exception $e) {
-        echo "❌ Error getting new email contact: " . $e->getMessage() . "\n\n";
+        echo '❌ Error getting new email contact: '.$e->getMessage()."\n\n";
     }
 
     // Step 3.2: Verify old email no longer exists
@@ -168,13 +168,13 @@ try {
 
         if (isset($verifyOldResponse['id'])) {
             echo "❌ Old email still exists (this is a problem)\n";
-            echo "Old email contact: " . json_encode($verifyOldResponse, JSON_PRETTY_PRINT) . "\n\n";
+            echo 'Old email contact: '.json_encode($verifyOldResponse, JSON_PRETTY_PRINT)."\n\n";
         } else {
             echo "✅ Old email correctly doesn't exist\n\n";
         }
     } catch (\Exception $e) {
         echo "✅ Old email correctly doesn't exist (expected exception)\n";
-        echo "Exception: " . $e->getMessage() . "\n\n";
+        echo 'Exception: '.$e->getMessage()."\n\n";
     }
 
     // Step 4: Test re-verification scenario
@@ -191,8 +191,8 @@ try {
 
         if (isset($existingContact['id'])) {
             echo "✅ Contact exists for re-verification\n";
-            echo "Contact ID: " . $existingContact['id'] . "\n";
-            echo "Email: " . $existingContact['email'] . "\n";
+            echo 'Contact ID: '.$existingContact['id']."\n";
+            echo 'Email: '.$existingContact['email']."\n";
 
             // Test update (re-verification)
             waitForRateLimit();
@@ -207,7 +207,7 @@ try {
 
             if (isset($updateResponse['id'])) {
                 echo "✅ Re-verification update successful\n";
-                echo "Contact ID unchanged: " . ($updateResponse['id'] === $existingContact['id'] ? 'Yes' : 'No') . "\n\n";
+                echo 'Contact ID unchanged: '.($updateResponse['id'] === $existingContact['id'] ? 'Yes' : 'No')."\n\n";
             } else {
                 echo "❌ Re-verification update failed\n\n";
             }
@@ -215,7 +215,7 @@ try {
             echo "❌ Contact doesn't exist for re-verification\n\n";
         }
     } catch (\Exception $e) {
-        echo "❌ Error during re-verification test: " . $e->getMessage() . "\n\n";
+        echo '❌ Error during re-verification test: '.$e->getMessage()."\n\n";
     }
 
     // Step 5: Extended Contact Data Update Tests
@@ -243,26 +243,26 @@ try {
 
         if (isset($updateResponse['id'])) {
             echo "✅ Name update successful\n";
-            echo "Contact ID: " . $updateResponse['id'] . "\n";
+            echo 'Contact ID: '.$updateResponse['id']."\n";
 
             // Verify the update
             waitForRateLimit();
             $verifyResponse = Resend::contacts()->get($audienceId, $email);
             if (isset($verifyResponse['first_name']) && $verifyResponse['first_name'] === 'Updated First') {
-                echo "✅ First name correctly updated to: " . $verifyResponse['first_name'] . "\n";
+                echo '✅ First name correctly updated to: '.$verifyResponse['first_name']."\n";
             } else {
                 echo "❌ First name update verification failed\n";
             }
             if (isset($verifyResponse['last_name']) && $verifyResponse['last_name'] === 'Updated Last') {
-                echo "✅ Last name correctly updated to: " . $verifyResponse['last_name'] . "\n";
+                echo '✅ Last name correctly updated to: '.$verifyResponse['last_name']."\n";
             } else {
                 echo "❌ Last name update verification failed\n";
             }
         } else {
-            echo "❌ Name update failed: " . json_encode($updateResponse) . "\n";
+            echo '❌ Name update failed: '.json_encode($updateResponse)."\n";
         }
     } catch (\Exception $e) {
-        echo "❌ Error updating names: " . $e->getMessage() . "\n";
+        echo '❌ Error updating names: '.$e->getMessage()."\n";
     }
     echo "\n";
 
@@ -319,7 +319,7 @@ try {
             echo "❌ Unsubscribe failed\n";
         }
     } catch (\Exception $e) {
-        echo "❌ Error updating subscription status: " . $e->getMessage() . "\n";
+        echo '❌ Error updating subscription status: '.$e->getMessage()."\n";
     }
     echo "\n";
 
@@ -338,13 +338,13 @@ try {
 
         if (isset($updateByIdResponse['id'])) {
             echo "✅ Update by contact ID successful\n";
-            echo "Contact ID: " . $updateByIdResponse['id'] . "\n";
+            echo 'Contact ID: '.$updateByIdResponse['id']."\n";
 
             // Verify the update
             waitForRateLimit();
             $verifyIdUpdate = Resend::contacts()->get($audienceId, $email);
             if (isset($verifyIdUpdate['first_name']) && $verifyIdUpdate['first_name'] === 'ID Updated Name') {
-                echo "✅ Name correctly updated via contact ID to: " . $verifyIdUpdate['first_name'] . "\n";
+                echo '✅ Name correctly updated via contact ID to: '.$verifyIdUpdate['first_name']."\n";
             } else {
                 echo "❌ Update by contact ID verification failed\n";
             }
@@ -352,14 +352,14 @@ try {
             echo "❌ Update by contact ID failed\n";
         }
     } catch (\Exception $e) {
-        echo "❌ Error updating by contact ID: " . $e->getMessage() . "\n";
+        echo '❌ Error updating by contact ID: '.$e->getMessage()."\n";
     }
     echo "\n";
 
     echo "✅ ALL TESTS PASSED! The fixed workflow works correctly.\n\n";
 } catch (\Exception $e) {
-    echo "❌ Test failed with exception: " . $e->getMessage() . "\n";
-    echo "Stack trace: " . $e->getTraceAsString() . "\n\n";
+    echo '❌ Test failed with exception: '.$e->getMessage()."\n";
+    echo 'Stack trace: '.$e->getTraceAsString()."\n\n";
 } finally {
     // Cleanup
     echo "🧹 CLEANUP\n";
@@ -377,7 +377,7 @@ try {
             );
             echo "✅ Cleaned up: $emailToCleanup\n";
         } catch (\Exception $e) {
-            echo "⚠️ Failed to cleanup $emailToCleanup: " . $e->getMessage() . "\n";
+            echo "⚠️ Failed to cleanup $emailToCleanup: ".$e->getMessage()."\n";
         }
     }
 }

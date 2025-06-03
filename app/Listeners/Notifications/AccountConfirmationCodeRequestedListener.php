@@ -17,7 +17,7 @@ class AccountConfirmationCodeRequestedListener
     {
         Log::info('Processing AccountConfirmationCodeRequested event', [
             'user_id' => $event->user->id,
-            'code_length' => strlen($event->code)
+            'code_length' => strlen($event->code),
         ]);
 
         // Код отправки обрабатывается в VerifyEmailNotification

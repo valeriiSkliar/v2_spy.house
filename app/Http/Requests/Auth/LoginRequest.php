@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Rules\Recaptcha;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -12,7 +13,6 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use PragmaRX\Google2FA\Exceptions\Google2FAException;
 use PragmaRX\Google2FA\Google2FA;
-use App\Rules\Recaptcha;
 
 class LoginRequest extends FormRequest
 {
@@ -35,7 +35,7 @@ class LoginRequest extends FormRequest
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
             'code' => ['nullable', 'string', 'size:6'],
-            'g-recaptcha-response' => ['required', new Recaptcha()],
+            'g-recaptcha-response' => ['required', new Recaptcha],
         ];
     }
 
@@ -164,9 +164,9 @@ class LoginRequest extends FormRequest
     public function throttleKey(string $type = 'login'): string
     {
         if ($type === '2fa') {
-            return Str::transliterate(Str::lower($this->input('email')) . '|2fa|' . $this->ip());
+            return Str::transliterate(Str::lower($this->input('email')).'|2fa|'.$this->ip());
         }
 
-        return Str::transliterate(Str::lower($this->input('email')) . '|' . $this->ip());
+        return Str::transliterate(Str::lower($this->input('email')).'|'.$this->ip());
     }
 }

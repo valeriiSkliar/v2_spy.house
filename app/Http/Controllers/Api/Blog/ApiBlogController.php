@@ -195,7 +195,7 @@ class ApiBlogController extends BaseBlogController
         $user = Auth::user();
         $commentsHtml = '';
         if ($comments->isEmpty()) {
-            $commentsHtml = '<div class="message _bg _with-border">' . __('blog.errors.no_comments_found') . '</div>';
+            $commentsHtml = '<div class="message _bg _with-border">'.__('blog.errors.no_comments_found').'</div>';
         } else {
             $commentsHtml .= view('components.blog.comment.reply-form', [
                 'article' => $post,

@@ -21,22 +21,24 @@ class NewsletterService
 
             if ($result['success']) {
                 DB::commit();
+
                 return $result;
             }
 
             DB::rollBack();
+
             return $result;
         } catch (\Exception $e) {
             DB::rollBack();
 
             Log::error('Exception in unsubscribeUser', [
                 'user_id' => $user->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return [
                 'success' => false,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ];
         }
     }
@@ -50,7 +52,7 @@ class NewsletterService
             if ($user->is_newsletter_subscribed) {
                 return [
                     'success' => true,
-                    'message' => 'User already subscribed'
+                    'message' => 'User already subscribed',
                 ];
             }
 
@@ -76,28 +78,28 @@ class NewsletterService
                 Log::info('User subscribed to newsletter', [
                     'user_id' => $user->id,
                     'email' => $user->email,
-                    'contact_id' => $response['id']
+                    'contact_id' => $response['id'],
                 ]);
 
                 return [
                     'success' => true,
-                    'contact_id' => $response['id']
+                    'contact_id' => $response['id'],
                 ];
             }
 
             return [
                 'success' => false,
-                'error' => 'Failed to create contact in Resend'
+                'error' => 'Failed to create contact in Resend',
             ];
         } catch (\Exception $e) {
             Log::error('Exception in subscribeUser', [
                 'user_id' => $user->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return [
                 'success' => false,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ];
         }
     }
@@ -108,10 +110,10 @@ class NewsletterService
     public function updateUserInResend(User $user, array $data): array
     {
         try {
-            if (!$user->email_contact_id) {
+            if (! $user->email_contact_id) {
                 return [
                     'success' => false,
-                    'error' => 'User has no contact ID'
+                    'error' => 'User has no contact ID',
                 ];
             }
 
@@ -127,28 +129,28 @@ class NewsletterService
                 Log::info('User contact updated in Resend', [
                     'user_id' => $user->id,
                     'email' => $user->email,
-                    'contact_id' => $response['id']
+                    'contact_id' => $response['id'],
                 ]);
 
                 return [
                     'success' => true,
-                    'contact_id' => $response['id']
+                    'contact_id' => $response['id'],
                 ];
             }
 
             return [
                 'success' => false,
-                'error' => 'Failed to update contact in Resend'
+                'error' => 'Failed to update contact in Resend',
             ];
         } catch (\Exception $e) {
             Log::error('Exception in updateUserInResend', [
                 'user_id' => $user->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return [
                 'success' => false,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ];
         }
     }
@@ -175,17 +177,17 @@ class NewsletterService
                 Log::info('User contact removed from Resend audience', [
                     'user_id' => $user->id,
                     'email' => $user->email,
-                    'contact_id' => $user->email_contact_id
+                    'contact_id' => $user->email_contact_id,
                 ]);
             } catch (\Exception $e) {
-                $error = 'Failed to remove from Resend: ' . $e->getMessage();
+                $error = 'Failed to remove from Resend: '.$e->getMessage();
                 $errors[] = $error;
 
                 Log::warning('Failed to remove user from Resend audience', [
                     'user_id' => $user->id,
                     'email' => $user->email,
                     'contact_id' => $user->email_contact_id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -200,16 +202,16 @@ class NewsletterService
             $steps[] = 'Updated database state';
             Log::info('User newsletter subscription disabled in database', [
                 'user_id' => $user->id,
-                'email' => $user->email
+                'email' => $user->email,
             ]);
         } catch (\Exception $e) {
-            $error = 'Failed to update database: ' . $e->getMessage();
+            $error = 'Failed to update database: '.$e->getMessage();
             $errors[] = $error;
 
             Log::error('Failed to update user subscription status in database', [
                 'user_id' => $user->id,
                 'email' => $user->email,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
 
@@ -217,7 +219,7 @@ class NewsletterService
         if (empty($errors)) {
             return [
                 'success' => true,
-                'steps' => $steps
+                'steps' => $steps,
             ];
         }
 
@@ -226,20 +228,20 @@ class NewsletterService
             Log::warning('Partial unsubscribe success - database updated but Resend failed', [
                 'user_id' => $user->id,
                 'steps' => $steps,
-                'errors' => $errors
+                'errors' => $errors,
             ]);
 
             return [
                 'success' => true, // Основная цель достигнута - пользователь отписан в БД
                 'partial' => true,
                 'steps' => $steps,
-                'errors' => $errors
+                'errors' => $errors,
             ];
         }
 
         return [
             'success' => false,
-            'errors' => $errors
+            'errors' => $errors,
         ];
     }
 }

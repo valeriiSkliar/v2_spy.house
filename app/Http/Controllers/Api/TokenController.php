@@ -194,7 +194,7 @@ class TokenController extends Controller
         if ($revokeAll) {
             // Revoke all tokens for the user
             $count = $this->tokenService->revokeAllTokens($user);
-            $message = $count . ' tokens revoked successfully';
+            $message = $count.' tokens revoked successfully';
         } elseif ($tokenId) {
             // Revoke the specified token
             $success = $this->tokenService->revokeToken($user, $tokenId);

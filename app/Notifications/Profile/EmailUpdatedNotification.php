@@ -14,6 +14,7 @@ class EmailUpdatedNotification extends Notification implements ShouldQueue
     use Queueable;
 
     private string $oldEmail;
+
     private string $newEmail;
 
     public function __construct(string $oldEmail, string $newEmail)
@@ -40,7 +41,7 @@ class EmailUpdatedNotification extends Notification implements ShouldQueue
             'user_id' => $notifiable->id ?? null,
             'old_email' => $this->oldEmail,
             'new_email' => $this->newEmail,
-            'subject' => __('emails.email_updated.subject')
+            'subject' => __('emails.email_updated.subject'),
         ]);
 
         return (new MailMessage)

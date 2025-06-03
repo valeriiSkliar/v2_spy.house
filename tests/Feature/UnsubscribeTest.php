@@ -14,6 +14,7 @@ class UnsubscribeTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private string $unsubscribeHash;
 
     protected function setUp(): void
@@ -79,7 +80,7 @@ class UnsubscribeTest extends TestCase
         $response->assertStatus(200);
         $response->assertJson([
             'success' => true,
-            'message' => 'Вы успешно отписались от рассылки'
+            'message' => 'Вы успешно отписались от рассылки',
         ]);
     }
 
@@ -91,7 +92,7 @@ class UnsubscribeTest extends TestCase
         $response->assertStatus(404);
         $response->assertJson([
             'success' => false,
-            'message' => 'Неверная ссылка для отписки или пользователь уже отписан'
+            'message' => 'Неверная ссылка для отписки или пользователь уже отписан',
         ]);
     }
 
@@ -105,7 +106,7 @@ class UnsubscribeTest extends TestCase
             ->with(Mockery::type(User::class))
             ->andReturn([
                 'success' => false,
-                'error' => 'Resend API error'
+                'error' => 'Resend API error',
             ]);
 
         $this->app->instance(NewsletterService::class, $mockService);
@@ -115,7 +116,7 @@ class UnsubscribeTest extends TestCase
         $response->assertStatus(500);
         $response->assertJson([
             'success' => false,
-            'message' => 'Произошла ошибка при отписке. Попробуйте позже.'
+            'message' => 'Произошла ошибка при отписке. Попробуйте позже.',
         ]);
     }
 

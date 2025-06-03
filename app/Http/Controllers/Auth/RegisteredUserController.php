@@ -7,7 +7,6 @@ use App\Http\Requests\Profile\RegisteredUserRequest;
 use App\Jobs\ProcessUserRegistrationJob;
 use App\Models\User;
 use App\Services\Api\TokenService;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -70,7 +69,7 @@ class RegisteredUserController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => __('Registration successful'),
-                'redirect_url' => route('profile.settings', absolute: false)
+                'redirect_url' => route('profile.settings', absolute: false),
             ]);
         }
 

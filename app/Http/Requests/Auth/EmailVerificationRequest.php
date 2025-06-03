@@ -21,7 +21,7 @@ class EmailVerificationRequest extends FormRequest
     {
         return [
             'code' => 'required|array|size:6',
-            'code.*' => 'required|string|size:1|regex:/^[0-9]$/'
+            'code.*' => 'required|string|size:1|regex:/^[0-9]$/',
         ];
     }
 
@@ -35,7 +35,7 @@ class EmailVerificationRequest extends FormRequest
             'code.array' => __('validation.custom.code.array'),
             'code.size' => __('validation.custom.code.size'),
             'code.*.required' => __('validation.custom.code.*.required'),
-            'code.*.regex' => __('validation.custom.code.*.regex')
+            'code.*.regex' => __('validation.custom.code.*.regex'),
         ];
     }
 

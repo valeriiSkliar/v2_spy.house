@@ -25,7 +25,7 @@ class UpdatePersonalGreetingSettingsRequest extends FormRequest
             'confirmation_method' => [
                 'required',
                 'string',
-                Rule::in(['email', 'authenticator'])
+                Rule::in(['email', 'authenticator']),
             ],
         ];
     }

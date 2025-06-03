@@ -42,14 +42,14 @@ class EmailVerifiedNotification extends Notification implements ShouldQueue
         $result = [
             'title' => __('notifications.email_verified.title'),
             'message' => __('notifications.email_verified.message', [
-                'email' => $notifiable->email
+                'email' => $notifiable->email,
             ]),
             'type' => NotificationType::EMAIL_VERIFIED->value,
             'icon' => 'email-verified',
             'data' => array_merge([
                 'verification_date' => now()->format('Y-m-d H:i:s'),
                 'user_id' => $notifiable->id,
-                'email' => $notifiable->email
+                'email' => $notifiable->email,
             ], $this->data),
         ];
 

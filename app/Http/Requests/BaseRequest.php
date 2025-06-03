@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 use function App\Helpers\sanitize_input;
@@ -20,7 +20,7 @@ class BaseRequest extends FormRequest
                 response()->json([
                     'status' => 'error',
                     'message' => __('Validation failed'),
-                    'errors' => $validator->errors()->toArray()
+                    'errors' => $validator->errors()->toArray(),
                 ], 422)
             );
         }

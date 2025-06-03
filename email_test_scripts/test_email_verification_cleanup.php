@@ -1,11 +1,11 @@
 <?php
 
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__.'/../vendor/autoload.php';
 
 // Check if Laravel is already initialized (e.g., running via tinker)
-if (!function_exists('app') || !app()) {
+if (! function_exists('app') || ! app()) {
     // Load Laravel configuration only if not already loaded
-    $app = require_once __DIR__ . '/../bootstrap/app.php';
+    $app = require_once __DIR__.'/../bootstrap/app.php';
     if ($app && method_exists($app, 'make')) {
         $app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
     }
@@ -14,13 +14,13 @@ if (!function_exists('app') || !app()) {
     echo "Laravel already initialized (running via tinker)\n";
 }
 
-use Resend\Laravel\Facades\Resend;
 use Illuminate\Support\Str;
+use Resend\Laravel\Facades\Resend;
 
 echo "=== Testing FIXED Email Verification with Old Contact Cleanup ===\n\n";
 
 // Rate limiting helper function (Resend allows 2 requests per second)
-if (!function_exists('waitForRateLimit')) {
+if (! function_exists('waitForRateLimit')) {
     function waitForRateLimit()
     {
         echo "   ⏱️ Waiting for rate limit (0.6s)...\n";
@@ -29,7 +29,7 @@ if (!function_exists('waitForRateLimit')) {
 }
 
 // Check configuration
-if (!config('services.resend.key') || !config('services.resend.audience_id')) {
+if (! config('services.resend.key') || ! config('services.resend.audience_id')) {
     echo "❌ Missing required configuration. Please set RESEND_API_KEY and RESEND_AUDIENCE_ID in your .env file.\n";
     exit(1);
 }
@@ -37,8 +37,8 @@ if (!config('services.resend.key') || !config('services.resend.audience_id')) {
 $audienceId = config('services.resend.audience_id');
 
 // Test data
-$initialEmail = 'initial-verify-' . time() . '@example.com';
-$newEmail = 'changed-verify-' . time() . '@example.com';
+$initialEmail = 'initial-verify-'.time().'@example.com';
+$newEmail = 'changed-verify-'.time().'@example.com';
 
 echo "Test Configuration:\n";
 echo "Audience ID: $audienceId\n";
@@ -71,8 +71,8 @@ try {
         ]
     );
 
-    if (!isset($response['id'])) {
-        throw new Exception("Failed to create initial contact: " . json_encode($response));
+    if (! isset($response['id'])) {
+        throw new Exception('Failed to create initial contact: '.json_encode($response));
     }
 
     $userData['email_contact_id'] = $response['id'];
@@ -80,8 +80,8 @@ try {
     $userData['unsubscribe_hash'] = Str::random(32);
 
     echo "✅ Initial email verification complete\n";
-    echo "Contact ID: " . $response['id'] . "\n";
-    echo "Email: " . $userData['email'] . "\n\n";
+    echo 'Contact ID: '.$response['id']."\n";
+    echo 'Email: '.$userData['email']."\n\n";
 
     // Step 2: Simulate email change (ProfileController logic - without the deletion part)
     echo "🧪 STEP 2: Email Change Process\n";
@@ -89,10 +89,10 @@ try {
 
     $oldEmail = $userData['email'];
     $oldContactId = $userData['email_contact_id'];
-    
+
     // Update user's email but keep the old contact_id (simulating email change)
     $userData['email'] = $newEmail;
-    
+
     echo "Email changed from: $oldEmail\n";
     echo "Email changed to: $newEmail\n";
     echo "Old contact ID still stored: $oldContactId\n\n";
@@ -111,9 +111,9 @@ try {
         );
 
         echo "Found existing contact:\n";
-        echo "- Contact ID: " . $existingContactById['id'] . "\n";
-        echo "- Contact Email: " . $existingContactById['email'] . "\n";
-        echo "- User Current Email: " . $userData['email'] . "\n";
+        echo '- Contact ID: '.$existingContactById['id']."\n";
+        echo '- Contact Email: '.$existingContactById['email']."\n";
+        echo '- User Current Email: '.$userData['email']."\n";
 
         // Check if emails are different (email change scenario)
         if ($existingContactById['email'] !== $userData['email']) {
@@ -128,7 +128,7 @@ try {
 
             echo "✅ Old contact deleted successfully\n";
             echo "Deleted contact ID: $oldContactId\n";
-            echo "Deleted email: " . $existingContactById['email'] . "\n\n";
+            echo 'Deleted email: '.$existingContactById['email']."\n\n";
 
             // Reset contact ID
             $userData['email_contact_id'] = null;
@@ -136,7 +136,7 @@ try {
             echo "ℹ️ Same email - no deletion needed\n\n";
         }
     } catch (\Exception $e) {
-        echo "⚠️ Could not find existing contact: " . $e->getMessage() . "\n\n";
+        echo '⚠️ Could not find existing contact: '.$e->getMessage()."\n\n";
         $userData['email_contact_id'] = null;
     }
 
@@ -151,15 +151,15 @@ try {
         ]
     );
 
-    if (!isset($newResponse['id'])) {
-        throw new Exception("Failed to create new contact: " . json_encode($newResponse));
+    if (! isset($newResponse['id'])) {
+        throw new Exception('Failed to create new contact: '.json_encode($newResponse));
     }
 
     $userData['email_contact_id'] = $newResponse['id'];
 
     echo "✅ New contact created successfully\n";
-    echo "New Contact ID: " . $newResponse['id'] . "\n";
-    echo "Email: " . $userData['email'] . "\n\n";
+    echo 'New Contact ID: '.$newResponse['id']."\n";
+    echo 'Email: '.$userData['email']."\n\n";
 
     // Step 4: Verification
     echo "🧪 STEP 4: Verification\n";
@@ -172,13 +172,13 @@ try {
         $verifyNew = Resend::contacts()->get($audienceId, $newEmail);
         if (isset($verifyNew['id'])) {
             echo "✅ New email contact found\n";
-            echo "Contact ID: " . $verifyNew['id'] . "\n";
-            echo "Email: " . $verifyNew['email'] . "\n\n";
+            echo 'Contact ID: '.$verifyNew['id']."\n";
+            echo 'Email: '.$verifyNew['email']."\n\n";
         } else {
             echo "❌ New email contact not found\n\n";
         }
     } catch (\Exception $e) {
-        echo "❌ Error finding new email: " . $e->getMessage() . "\n\n";
+        echo '❌ Error finding new email: '.$e->getMessage()."\n\n";
     }
 
     // 4.2: Verify old email no longer exists
@@ -188,13 +188,13 @@ try {
         $verifyOld = Resend::contacts()->get($audienceId, $oldEmail);
         if (isset($verifyOld['id'])) {
             echo "❌ Old email still exists (PROBLEM!)\n";
-            echo "Old contact: " . json_encode($verifyOld, JSON_PRETTY_PRINT) . "\n\n";
+            echo 'Old contact: '.json_encode($verifyOld, JSON_PRETTY_PRINT)."\n\n";
         } else {
             echo "✅ Old email correctly doesn't exist\n\n";
         }
     } catch (\Exception $e) {
         echo "✅ Old email correctly deleted (expected exception)\n";
-        echo "Exception: " . $e->getMessage() . "\n\n";
+        echo 'Exception: '.$e->getMessage()."\n\n";
     }
 
     echo "✅ EMAIL VERIFICATION CLEANUP TEST PASSED!\n\n";
@@ -204,8 +204,8 @@ try {
     echo "- No orphaned contacts remain in Resend\n\n";
 
 } catch (\Exception $e) {
-    echo "❌ Test failed with exception: " . $e->getMessage() . "\n";
-    echo "Stack trace: " . $e->getTraceAsString() . "\n\n";
+    echo '❌ Test failed with exception: '.$e->getMessage()."\n";
+    echo 'Stack trace: '.$e->getTraceAsString()."\n\n";
 } finally {
     // Cleanup
     echo "🧹 CLEANUP\n";
@@ -223,7 +223,7 @@ try {
             );
             echo "✅ Cleaned up: $emailToCleanup\n";
         } catch (\Exception $e) {
-            echo "⚠️ Failed to cleanup $emailToCleanup: " . $e->getMessage() . "\n";
+            echo "⚠️ Failed to cleanup $emailToCleanup: ".$e->getMessage()."\n";
         }
     }
 }

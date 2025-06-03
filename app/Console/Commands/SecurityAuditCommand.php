@@ -64,13 +64,13 @@ class SecurityAuditCommand extends Command
         }
 
         // IP несовпадения
-        $this->info("\nIP Address Mismatches: " . $activity['ip_mismatches']);
+        $this->info("\nIP Address Mismatches: ".$activity['ip_mismatches']);
 
         // Неиспользованные токены
-        $this->info("Unused tokens (older than 2 hours): " . $activity['unused_tokens']);
+        $this->info('Unused tokens (older than 2 hours): '.$activity['unused_tokens']);
 
         // Успешные сбросы паролей
-        $this->info("Successful password resets: " . $activity['successful_resets']);
+        $this->info('Successful password resets: '.$activity['successful_resets']);
     }
 
     private function cleanup(int $days)

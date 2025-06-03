@@ -34,16 +34,18 @@ class TestRecaptcha extends Command
 
         if (empty($sitekey)) {
             $this->error('❌ NOCAPTCHA_SITEKEY not configured');
+
             return 1;
         }
 
         if (empty($secret)) {
             $this->error('❌ NOCAPTCHA_SECRET not configured');
+
             return 1;
         }
 
         $this->info("✅ Site Key: {$sitekey}");
-        $this->info("✅ Secret Key: " . str_repeat('*', strlen($secret) - 8) . substr($secret, -8));
+        $this->info('✅ Secret Key: '.str_repeat('*', strlen($secret) - 8).substr($secret, -8));
 
         // Тестируем токен если предоставлен
         $token = $this->argument('token');
@@ -60,6 +62,7 @@ class TestRecaptcha extends Command
                 }
             } catch (\Exception $e) {
                 $this->error("❌ Error during verification: {$e->getMessage()}");
+
                 return 1;
             }
         } else {
@@ -67,6 +70,7 @@ class TestRecaptcha extends Command
         }
 
         $this->info("\n🎉 reCAPTCHA configuration test completed!");
+
         return 0;
     }
 }

@@ -16,7 +16,7 @@ class UserNotificationService
 
         Log::info('Verification email sent', [
             'user_id' => $user->id,
-            'code' => $code
+            'code' => $code,
         ]);
     }
 
@@ -25,7 +25,7 @@ class UserNotificationService
         Mail::to($user->email)->send(new \App\Mail\WelcomeMail($user));
 
         Log::info('Welcome email sent', [
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ]);
     }
 
@@ -33,7 +33,7 @@ class UserNotificationService
     {
         // Implement in-app notification logic here
         Log::info('Welcome in-app notification sent', [
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ]);
     }
 
@@ -44,7 +44,7 @@ class UserNotificationService
         Log::info('Email update confirmation sent', [
             'user_id' => $user->id,
             'new_email' => $newEmail,
-            'code' => $code
+            'code' => $code,
         ]);
     }
 
@@ -54,7 +54,7 @@ class UserNotificationService
 
         Log::info('Password update confirmation sent', [
             'user_id' => $user->id,
-            'code' => $code
+            'code' => $code,
         ]);
     }
 }

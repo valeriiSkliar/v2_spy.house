@@ -108,7 +108,6 @@ class LandingsPageController extends BaseLandingsPageController
                 'completed_at' => now(),
             ]);
 
-
             return redirect()->route('landings.index');
         }
     }

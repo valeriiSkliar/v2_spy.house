@@ -64,7 +64,7 @@ class ProfileSettingsController extends BaseProfileController
                 ],
             ]);
         } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
-            Log::error('Unique constraint violation while updating profile settings: ' . $e->getMessage(), [
+            Log::error('Unique constraint violation while updating profile settings: '.$e->getMessage(), [
                 'user_id' => $request->user()->id ?? null,
                 'exception' => $e,
                 'request_data' => $request->except(['password', 'current_password']),
@@ -95,7 +95,7 @@ class ProfileSettingsController extends BaseProfileController
                 ],
             ], 422);
         } catch (\Exception $e) {
-            Log::error('Error updating profile settings: ' . $e->getMessage(), [
+            Log::error('Error updating profile settings: '.$e->getMessage(), [
                 'user_id' => $request->user()->id ?? null,
                 'exception' => $e,
                 'request_data' => $request->except(['password', 'current_password']),
@@ -150,7 +150,7 @@ class ProfileSettingsController extends BaseProfileController
             }
 
             if ($confirmationMethod === 'authenticator') {
-                Cache::put('email_update_code:' . $user->id, [
+                Cache::put('email_update_code:'.$user->id, [
                     'new_email' => $newEmail,
                     'method' => 'authenticator',
                     'expires_at' => now()->addMinutes(15),
@@ -166,7 +166,7 @@ class ProfileSettingsController extends BaseProfileController
             }
 
             $verificationCode = random_int(100000, 999999);
-            Cache::put('email_update_code:' . $user->id, [
+            Cache::put('email_update_code:'.$user->id, [
                 'new_email' => $newEmail,
                 'code' => $verificationCode,
                 'method' => 'email',
@@ -176,7 +176,6 @@ class ProfileSettingsController extends BaseProfileController
 
             SendEmailUpdateConfirmationJob::dispatch($user, (string) $verificationCode, $newEmail);
 
-
             return response()->json([
                 'success' => true,
                 'message' => __('profile.security_settings.email_code_sent'),
@@ -184,7 +183,7 @@ class ProfileSettingsController extends BaseProfileController
                 'confirmation_form_html' => $this->renderChangeEmailForm('email')->render(),
             ]);
         } catch (\Exception $e) {
-            Log::error('Error initiating email update: ' . $e->getMessage(), [
+            Log::error('Error initiating email update: '.$e->getMessage(), [
                 'user_id' => $request->user()->id ?? null,
                 'exception' => $e,
             ]);
@@ -203,10 +202,10 @@ class ProfileSettingsController extends BaseProfileController
     {
         try {
             $user = $request->user();
-            $pendingUpdate = Cache::get('email_update_code:' . $user->id);
+            $pendingUpdate = Cache::get('email_update_code:'.$user->id);
 
             if ($pendingUpdate) {
-                Cache::forget('email_update_code:' . $user->id);
+                Cache::forget('email_update_code:'.$user->id);
             }
 
             $confirmationMethod = $user->google_2fa_enabled ? 'authenticator' : 'email';
@@ -218,7 +217,7 @@ class ProfileSettingsController extends BaseProfileController
                 'initialFormHtml' => $this->renderChangeEmailForm($confirmationMethod)->render(),
             ]);
         } catch (\Exception $e) {
-            Log::error('Error cancelling email update: ' . $e->getMessage(), [
+            Log::error('Error cancelling email update: '.$e->getMessage(), [
                 'user_id' => $request->user()->id ?? null,
                 'exception' => $e,
             ]);
@@ -241,7 +240,7 @@ class ProfileSettingsController extends BaseProfileController
             ]);
 
             $user = $request->user();
-            $pendingUpdate = Cache::get('email_update_code:' . $user->id);
+            $pendingUpdate = Cache::get('email_update_code:'.$user->id);
 
             if (! $pendingUpdate || ! isset($pendingUpdate['status']) || $pendingUpdate['status'] !== 'pending') {
                 return response()->json([
@@ -251,7 +250,7 @@ class ProfileSettingsController extends BaseProfileController
             }
 
             if (now()->isAfter($pendingUpdate['expires_at'])) {
-                Cache::forget('email_update_code:' . $user->id);
+                Cache::forget('email_update_code:'.$user->id);
 
                 return response()->json([
                     'success' => false,
@@ -279,10 +278,9 @@ class ProfileSettingsController extends BaseProfileController
             $user->email_verified_at = null;
             $user->save();
 
-            Cache::forget('email_update_code:' . $user->id);
+            Cache::forget('email_update_code:'.$user->id);
 
             $user->sendEmailVerificationNotification();
-
 
             return response()->json([
                 'success' => true,
@@ -291,7 +289,7 @@ class ProfileSettingsController extends BaseProfileController
                 'redirect_url' => route('profile.settings', ['tab' => 'security']),
             ]);
         } catch (\Exception $e) {
-            Log::error('Error confirming email update: ' . $e->getMessage(), [
+            Log::error('Error confirming email update: '.$e->getMessage(), [
                 'user_id' => $request->user()->id ?? null,
                 'exception' => $e,
             ]);
@@ -335,12 +333,12 @@ class ProfileSettingsController extends BaseProfileController
             }
 
             // Clear any previous expired attempts
-            if (Cache::has('personal_greeting_update_code:' . $user->id)) {
-                Cache::forget('personal_greeting_update_code:' . $user->id);
+            if (Cache::has('personal_greeting_update_code:'.$user->id)) {
+                Cache::forget('personal_greeting_update_code:'.$user->id);
             }
 
             if ($confirmationMethod === 'authenticator') {
-                Cache::put('personal_greeting_update_code:' . $user->id, [
+                Cache::put('personal_greeting_update_code:'.$user->id, [
                     'personal_greeting' => $newPersonalGreeting,
                     'method' => 'authenticator',
                     'expires_at' => now()->addMinutes(15),
@@ -359,7 +357,7 @@ class ProfileSettingsController extends BaseProfileController
 
             // Email confirmation
             $verificationCode = random_int(100000, 999999);
-            Cache::put('personal_greeting_update_code:' . $user->id, [
+            Cache::put('personal_greeting_update_code:'.$user->id, [
                 'personal_greeting' => $newPersonalGreeting,
                 'code' => $verificationCode,
                 'method' => 'email',
@@ -387,7 +385,7 @@ class ProfileSettingsController extends BaseProfileController
                 'errors' => $e->errors(),
             ], 422);
         } catch (\Exception $e) {
-            Log::error('Error initiating personal greeting update: ' . $e->getMessage(), [
+            Log::error('Error initiating personal greeting update: '.$e->getMessage(), [
                 'user_id' => $request->user()->id ?? null,
                 'exception' => $e,
                 'trace' => $e->getTraceAsString(),
@@ -407,7 +405,7 @@ class ProfileSettingsController extends BaseProfileController
     {
         try {
             $user = $request->user();
-            $pendingUpdate = Cache::get('personal_greeting_update_code:' . $user->id);
+            $pendingUpdate = Cache::get('personal_greeting_update_code:'.$user->id);
 
             Log::debug('Personal greeting update cancellation requested', [
                 'user_id' => $user->id,
@@ -415,7 +413,7 @@ class ProfileSettingsController extends BaseProfileController
             ]);
 
             if ($pendingUpdate) {
-                Cache::forget('personal_greeting_update_code:' . $user->id);
+                Cache::forget('personal_greeting_update_code:'.$user->id);
                 Log::info('Personal greeting update cancelled by user (API)', ['user_id' => $user->id]);
             }
 
@@ -429,7 +427,7 @@ class ProfileSettingsController extends BaseProfileController
                 'showToast' => true,
             ]);
         } catch (\Exception $e) {
-            Log::error('Error cancelling personal greeting update: ' . $e->getMessage(), [
+            Log::error('Error cancelling personal greeting update: '.$e->getMessage(), [
                 'user_id' => $request->user()->id ?? null,
                 'exception' => $e,
                 'trace' => $e->getTraceAsString(),
@@ -454,7 +452,7 @@ class ProfileSettingsController extends BaseProfileController
 
             $user = $request->user();
             $otp = $request->input('verification_code');
-            $pendingUpdate = Cache::get('personal_greeting_update_code:' . $user->id);
+            $pendingUpdate = Cache::get('personal_greeting_update_code:'.$user->id);
 
             if (! $pendingUpdate) {
                 return response()->json([
@@ -467,7 +465,7 @@ class ProfileSettingsController extends BaseProfileController
             }
 
             if (now()->isAfter($pendingUpdate['expires_at'])) {
-                Cache::forget('personal_greeting_update_code:' . $user->id);
+                Cache::forget('personal_greeting_update_code:'.$user->id);
 
                 return response()->json([
                     'success' => false,
@@ -526,10 +524,9 @@ class ProfileSettingsController extends BaseProfileController
             $user->personal_greeting = $pendingUpdate['personal_greeting'];
             $user->save();
 
-            Cache::forget('personal_greeting_update_code:' . $user->id);
+            Cache::forget('personal_greeting_update_code:'.$user->id);
 
             Log::info('Personal greeting updated successfully (API).', ['user_id' => $user->id]);
-
 
             return response()->json([
                 'success' => true,
@@ -548,7 +545,7 @@ class ProfileSettingsController extends BaseProfileController
                 'errors' => $e->errors(),
             ], 422);
         } catch (\Exception $e) {
-            Log::error('Error confirming personal greeting update: ' . $e->getMessage(), [
+            Log::error('Error confirming personal greeting update: '.$e->getMessage(), [
                 'user_id' => $request->user()->id ?? null,
                 'exception' => $e,
                 'trace' => $e->getTraceAsString(),
@@ -588,7 +585,7 @@ class ProfileSettingsController extends BaseProfileController
                 'successFormHtml' => $this->renderIpRestrictionForm()->render(),
             ]);
         } catch (\Exception $e) {
-            Log::error('Error updating IP restrictions: ' . $e->getMessage(), [
+            Log::error('Error updating IP restrictions: '.$e->getMessage(), [
                 'user_id' => $request->user()->id ?? null,
                 'exception' => $e,
             ]);
@@ -638,8 +635,8 @@ class ProfileSettingsController extends BaseProfileController
                     'success' => false,
                     'message' => __('profile.error.current_password_incorrect'),
                     'errors' => [
-                        'current_password' => [__('profile.error.current_password_incorrect')]
-                    ]
+                        'current_password' => [__('profile.error.current_password_incorrect')],
+                    ],
                 ], 422);
             }
 
@@ -648,24 +645,23 @@ class ProfileSettingsController extends BaseProfileController
                     'success' => false,
                     'message' => __('profile.error.2fa_not_enabled'),
                     'errors' => [
-                        'confirmation_method' => [__('profile.error.2fa_not_enabled')]
-                    ]
+                        'confirmation_method' => [__('profile.error.2fa_not_enabled')],
+                    ],
                 ], 422);
             }
 
             // Clear any previous expired attempts
-            if (Cache::has('password_update_code:' . $user->id)) {
-                Cache::forget('password_update_code:' . $user->id);
+            if (Cache::has('password_update_code:'.$user->id)) {
+                Cache::forget('password_update_code:'.$user->id);
             }
 
             if ($confirmationMethod === 'authenticator') {
-                Cache::put('password_update_code:' . $user->id, [
+                Cache::put('password_update_code:'.$user->id, [
                     'password' => $request->input('password'),
                     'method' => 'authenticator',
                     'expires_at' => now()->addMinutes(15),
                     'status' => 'pending',
                 ], now()->addMinutes(15));
-
 
                 return response()->json([
                     'success' => true,
@@ -677,7 +673,7 @@ class ProfileSettingsController extends BaseProfileController
 
             // Email confirmation
             $verificationCode = random_int(100000, 999999);
-            Cache::put('password_update_code:' . $user->id, [
+            Cache::put('password_update_code:'.$user->id, [
                 'password' => $request->input('password'),
                 'code' => $verificationCode,
                 'method' => 'email',
@@ -686,7 +682,6 @@ class ProfileSettingsController extends BaseProfileController
             ], now()->addMinutes(15));
 
             SendPasswordUpdateConfirmationJob::dispatch($user, $verificationCode);
-
 
             return response()->json([
                 'success' => true,
@@ -706,7 +701,7 @@ class ProfileSettingsController extends BaseProfileController
                 'errors' => $e->errors(),
             ], 422);
         } catch (\Exception $e) {
-            Log::error('Error initiating password update: ' . $e->getMessage(), [
+            Log::error('Error initiating password update: '.$e->getMessage(), [
                 'user_id' => $request->user()->id ?? null,
                 'exception' => $e,
                 'trace' => $e->getTraceAsString(),
@@ -723,10 +718,10 @@ class ProfileSettingsController extends BaseProfileController
     {
         try {
             $user = $request->user();
-            $pendingUpdate = Cache::get('password_update_code:' . $user->id);
+            $pendingUpdate = Cache::get('password_update_code:'.$user->id);
 
             if ($pendingUpdate) {
-                Cache::forget('password_update_code:' . $user->id);
+                Cache::forget('password_update_code:'.$user->id);
             }
 
             $confirmationMethod = $user->google_2fa_enabled ? 'authenticator' : 'email';
@@ -738,7 +733,7 @@ class ProfileSettingsController extends BaseProfileController
                 'initialFormHtml' => $this->renderChangePasswordForm($confirmationMethod)->render(),
             ]);
         } catch (\Exception $e) {
-            Log::error('Error cancelling password update: ' . $e->getMessage(), [
+            Log::error('Error cancelling password update: '.$e->getMessage(), [
                 'user_id' => $request->user()->id ?? null,
                 'exception' => $e,
                 'trace' => $e->getTraceAsString(),
@@ -760,27 +755,27 @@ class ProfileSettingsController extends BaseProfileController
 
             $user = $request->user();
             $otp = $request->input('verification_code');
-            $pendingUpdate = Cache::get('password_update_code:' . $user->id);
+            $pendingUpdate = Cache::get('password_update_code:'.$user->id);
 
             if (! $pendingUpdate) {
                 return response()->json([
                     'success' => false,
                     'message' => __('profile.security_settings.update_request_expired'),
                     'errors' => [
-                        'verification_code' => [__('profile.security_settings.update_request_expired')]
-                    ]
+                        'verification_code' => [__('profile.security_settings.update_request_expired')],
+                    ],
                 ], 422);
             }
 
             if (now()->isAfter($pendingUpdate['expires_at'])) {
-                Cache::forget('password_update_code:' . $user->id);
+                Cache::forget('password_update_code:'.$user->id);
 
                 return response()->json([
                     'success' => false,
                     'message' => __('profile.security_settings.update_request_expired'),
                     'errors' => [
-                        'verification_code' => [__('profile.security_settings.update_request_expired')]
-                    ]
+                        'verification_code' => [__('profile.security_settings.update_request_expired')],
+                    ],
                 ], 422);
             }
 
@@ -788,12 +783,13 @@ class ProfileSettingsController extends BaseProfileController
             if ($pendingUpdate['method'] === 'authenticator') {
                 if (! $user->google_2fa_secret) {
                     Log::error('Password update 2FA confirmation failed (API): 2FA secret not found for user.', ['user_id' => $user->id]);
+
                     return response()->json([
                         'success' => false,
                         'message' => __('profile.error.invalid_verification_code'),
                         'errors' => [
-                            'verification_code' => [__('profile.error.invalid_verification_code')]
-                        ]
+                            'verification_code' => [__('profile.error.invalid_verification_code')],
+                        ],
                     ], 422);
                 }
 
@@ -811,13 +807,13 @@ class ProfileSettingsController extends BaseProfileController
                         'success' => false,
                         'message' => __('profile.2fa.error_decrypting_secret'),
                         'errors' => [
-                            'verification_code' => [__('profile.2fa.error_decrypting_secret')]
-                        ]
+                            'verification_code' => [__('profile.2fa.error_decrypting_secret')],
+                        ],
                     ], 500);
                 }
             } else {
                 // For email confirmation
-                $isValid = $otp === (string)$pendingUpdate['code'];
+                $isValid = $otp === (string) $pendingUpdate['code'];
             }
 
             if (! $isValid) {
@@ -825,8 +821,8 @@ class ProfileSettingsController extends BaseProfileController
                     'success' => false,
                     'message' => __('profile.error.invalid_verification_code'),
                     'errors' => [
-                        'verification_code' => [__('profile.error.invalid_verification_code')]
-                    ]
+                        'verification_code' => [__('profile.error.invalid_verification_code')],
+                    ],
                 ], 422);
             }
 
@@ -836,8 +832,7 @@ class ProfileSettingsController extends BaseProfileController
             ])->save();
 
             // Clear the pending update
-            Cache::forget('password_update_code:' . $user->id);
-
+            Cache::forget('password_update_code:'.$user->id);
 
             return response()->json([
                 'success' => true,
@@ -856,7 +851,7 @@ class ProfileSettingsController extends BaseProfileController
                 'errors' => $e->errors(),
             ], 422);
         } catch (\Exception $e) {
-            Log::error('Error confirming password update: ' . $e->getMessage(), [
+            Log::error('Error confirming password update: '.$e->getMessage(), [
                 'user_id' => $request->user()->id ?? null,
                 'exception' => $e,
                 'trace' => $e->getTraceAsString(),
@@ -908,7 +903,7 @@ class ProfileSettingsController extends BaseProfileController
                 'system_enabled' => (bool) ($currentSettings['system'] ?? false),
             ]);
         } catch (\Exception $e) {
-            Log::error('Error updating notification settings: ' . $e->getMessage(), [
+            Log::error('Error updating notification settings: '.$e->getMessage(), [
                 'user_id' => $request->user()->id ?? null,
                 'exception' => $e,
                 'request_data' => $request->all(),

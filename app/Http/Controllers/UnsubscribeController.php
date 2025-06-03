@@ -30,7 +30,7 @@ class UnsubscribeController extends Controller
         return view('unsubscribe.show', [
             'user' => $user,
             'hash' => $hash,
-            'isValidHash' => $user !== null
+            'isValidHash' => $user !== null,
         ]);
     }
 
@@ -44,15 +44,15 @@ class UnsubscribeController extends Controller
                 ->where('is_newsletter_subscribed', true)
                 ->first();
 
-            if (!$user) {
+            if (! $user) {
                 Log::warning('Unsubscribe attempt with invalid hash', [
                     'hash' => $hash,
-                    'ip' => $request->ip()
+                    'ip' => $request->ip(),
                 ]);
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Неверная ссылка для отписки или пользователь уже отписан'
+                    'message' => 'Неверная ссылка для отписки или пользователь уже отписан',
                 ], 404);
             }
 
@@ -63,36 +63,36 @@ class UnsubscribeController extends Controller
                 Log::info('User successfully unsubscribed from newsletter', [
                     'user_id' => $user->id,
                     'email' => $user->email,
-                    'ip' => $request->ip()
+                    'ip' => $request->ip(),
                 ]);
 
                 return response()->json([
                     'success' => true,
                     'message' => 'Вы успешно отписались от рассылки',
-                    'redirect' => route('unsubscribe.success')
+                    'redirect' => route('unsubscribe.success'),
                 ]);
             }
 
             Log::error('Failed to unsubscribe user', [
                 'user_id' => $user->id,
                 'email' => $user->email,
-                'error' => $result['error'] ?? 'Unknown error'
+                'error' => $result['error'] ?? 'Unknown error',
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Произошла ошибка при отписке. Попробуйте позже.'
+                'message' => 'Произошла ошибка при отписке. Попробуйте позже.',
             ], 500);
         } catch (\Exception $e) {
             Log::error('Exception during unsubscribe process', [
                 'hash' => $hash,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Произошла внутренняя ошибка'
+                'message' => 'Произошла внутренняя ошибка',
             ], 500);
         }
     }

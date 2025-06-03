@@ -10,6 +10,7 @@ use Illuminate\Console\Command;
 class TestRegistrationDebug extends Command
 {
     protected $signature = 'debug:registration-test {--reset : Reset call counter}';
+
     protected $description = 'Test registration debug listener';
 
     public function handle(): int
@@ -17,11 +18,12 @@ class TestRegistrationDebug extends Command
         if ($this->option('reset')) {
             DebugRegistrationListener::resetCallCount();
             $this->info('Call counter reset to 0');
+
             return 0;
         }
 
         $this->info('Testing registration debug listener...');
-        $this->info('Current call count: ' . DebugRegistrationListener::getCallCount());
+        $this->info('Current call count: '.DebugRegistrationListener::getCallCount());
 
         // Создаем тестового пользователя
         $user = new User([
@@ -34,7 +36,7 @@ class TestRegistrationDebug extends Command
         // Запускаем событие
         event(new Registered($user));
 
-        $this->info('Event fired. New call count: ' . DebugRegistrationListener::getCallCount());
+        $this->info('Event fired. New call count: '.DebugRegistrationListener::getCallCount());
         $this->info('Check logs for detailed output');
 
         return 0;

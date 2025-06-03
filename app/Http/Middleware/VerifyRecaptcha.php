@@ -25,7 +25,7 @@ class VerifyRecaptcha
         // Проверяем только если есть reCAPTCHA в запросе
         if ($request->has('g-recaptcha-response')) {
             $validator = Validator::make($request->all(), [
-                'g-recaptcha-response' => ['required', new Recaptcha()],
+                'g-recaptcha-response' => ['required', new Recaptcha],
             ]);
 
             if ($validator->fails()) {

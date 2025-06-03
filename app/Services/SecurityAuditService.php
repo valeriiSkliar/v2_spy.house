@@ -17,7 +17,7 @@ class SecurityAuditService
             'email' => $email,
             'ip' => $ip,
             'timestamp' => now()->toDateTimeString(),
-            'context' => $context
+            'context' => $context,
         ];
 
         Log::channel('security')->info('Password Reset Event', $logData);
@@ -33,7 +33,7 @@ class SecurityAuditService
             ->latest('created_at')
             ->first();
 
-        if (!$record || !$record->request_ip || !$record->access_ip) {
+        if (! $record || ! $record->request_ip || ! $record->access_ip) {
             return null;
         }
 
@@ -41,7 +41,7 @@ class SecurityAuditService
             return [
                 'request_ip' => $record->request_ip,
                 'access_ip' => $record->access_ip,
-                'mismatch' => true
+                'mismatch' => true,
             ];
         }
 
@@ -90,7 +90,7 @@ class SecurityAuditService
             'ip_mismatches' => $ipMismatches,
             'unused_tokens' => $unusedTokens,
             'successful_resets' => $successfulResets,
-            'period_days' => $days
+            'period_days' => $days,
         ];
     }
 

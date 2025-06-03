@@ -7,7 +7,6 @@ use App\Models\Frontend\Blog\BlogComment;
 use App\Models\Frontend\Blog\BlogPost;
 use App\Models\Frontend\Blog\PostCategory;
 use App\Models\Frontend\Rating;
-use App\Services\Frontend\Toast;
 use App\Traits\App\HasAntiFloodProtection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -26,7 +25,7 @@ class BlogController extends BaseBlogController
 
         if ($search) {
             $search = $this->sanitizeInput($search);
-            $query->where('title', 'like', '%' . $search . '%');
+            $query->where('title', 'like', '%'.$search.'%');
         }
 
         return view($this->indexView, [
@@ -254,6 +253,7 @@ class BlogController extends BaseBlogController
                 if ($request->expectsJson()) {
                     return response()->json(['success' => false, 'message' => $errorMessage], 422);
                 }
+
                 return redirect()->back()->withErrors(['parent_id' => $errorMessage]);
             }
 
@@ -263,6 +263,7 @@ class BlogController extends BaseBlogController
                 if ($request->expectsJson()) {
                     return response()->json(['success' => false, 'message' => $errorMessage], 422);
                 }
+
                 return redirect()->back()->withErrors(['content' => $errorMessage]);
             }
         }
@@ -316,7 +317,7 @@ class BlogController extends BaseBlogController
         $user = Auth::user();
         $commentsHtml = '';
         if ($comments->isEmpty()) {
-            $commentsHtml = '<div class="message _bg _with-border">' . __('blog.errors.no_comments_found') . '</div>';
+            $commentsHtml = '<div class="message _bg _with-border">'.__('blog.errors.no_comments_found').'</div>';
         } else {
             if ($user) {
                 $commentsHtml .= view('components.blog.comment.reply-form', [
