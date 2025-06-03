@@ -195,7 +195,7 @@ class ApiBlogController extends BaseBlogController
         $user = Auth::user();
         $commentsHtml = '';
         if ($comments->isEmpty()) {
-            $commentsHtml = '<div class="message _bg _with-border">'.__('blog.errors.no_comments_found').'</div>';
+            $commentsHtml = '<div class="message _bg _with-border">' . __('blog.errors.no_comments_found') . '</div>';
         } else {
             $commentsHtml .= view('components.blog.comment.reply-form', [
                 'article' => $post,
@@ -251,6 +251,30 @@ class ApiBlogController extends BaseBlogController
             'lastPage' => $comments->lastPage(),
             'total' => $comments->total(),
         ]);
+    }
+
+    public function ajaxList(Request $request)
+    {
+        $blogController = app(BlogController::class);
+        $view = $blogController->index($request);
+
+        if ($request->ajax()) {
+            $viewData = $view->getData();
+            $articles = $viewData['articles'];
+            $currentPage = $viewData['currentPage'];
+            $totalPages = $viewData['totalPages'];
+
+            return response()->json([
+                'html' => view('components.blog.list.articles-list', compact('articles'))->render(),
+                'pagination' => $articles->hasPages() ? view('components.pagination', compact('currentPage', 'totalPages'))->render() : '',
+                'hasPagination' => $articles->hasPages(),
+                'currentPage' => $currentPage,
+                'totalPages' => $totalPages,
+                'count' => $articles->count(),
+            ]);
+        }
+
+        return $view;
     }
 
     /**
