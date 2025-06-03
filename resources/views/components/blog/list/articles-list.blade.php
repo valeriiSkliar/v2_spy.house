@@ -1,6 +1,9 @@
-@props(['articles'])
+@props(['articles', 'heroArticle'])
 
-<div class="articles-grid">
+{{-- <div class="articles-grid"> --}}
+    @if($heroArticle)
+    <x-blog.hero-article :heroArticle="$heroArticle" />
+    @endif
     @forelse($articles as $article)
     <x-article>
         <x-slot name="thumb">
@@ -35,4 +38,5 @@
     @empty
     <x-blog.blog-no-results-found />
     @endforelse
-</div>
+    {{--
+</div> --}}

@@ -255,26 +255,60 @@ class ApiBlogController extends BaseBlogController
 
     public function ajaxList(Request $request)
     {
-        $blogController = app(BlogController::class);
-        $view = $blogController->index($request);
+        // Build query directly instead of calling BlogController
+        $query = BlogPost::query()
+            ->with(['author', 'categories'])
+            ->where('is_published', true);
+
+        $search = $request->input('search');
+        if ($search) {
+            $search = $this->sanitizeInput($search);
+            $query->where('title', 'like', '%' . $search . '%');
+        }
+
+        // Get hero article only for first page
+        $heroArticle = null;
+        if ($request->get('page', 1) == 1) {
+            $heroArticle = $query->orderBy('created_at', 'desc')->first();
+        }
+
+        // Get paginated articles, exclude hero article to avoid duplication
+        $articlesQuery = clone $query;
+        if ($heroArticle) {
+            $articlesQuery->where('id', '!=', $heroArticle->id);
+        }
+        $articles = $articlesQuery->orderBy('created_at', 'desc')->paginate(12)->appends($request->all());
 
         if ($request->ajax()) {
-            $viewData = $view->getData();
-            $articles = $viewData['articles'];
-            $currentPage = $viewData['currentPage'];
-            $totalPages = $viewData['totalPages'];
+            // Generate articles HTML with empty state handling
+            $articlesHtml = '';
+            if ($articles->count() > 0 || $heroArticle) {
+                $articlesHtml .= view('components.blog.list.articles-list', compact('articles', 'heroArticle'))->render();
+            } else {
+                $searchQuery = $request->get('search', '');
+                $articlesHtml = view('components.blog.blog-no-results-found', ['query' => $searchQuery])->render();
+            }
+
+            // Generate pagination HTML
+            $paginationHtml = '';
+            if ($articles->hasPages()) {
+                // Set the path for pagination links to the regular blog route instead of API route
+                $articles->withPath(route('blog.index'));
+                $paginationHtml = $articles->links()->toHtml();
+            }
 
             return response()->json([
-                'html' => view('components.blog.list.articles-list', compact('articles'))->render(),
-                'pagination' => $articles->hasPages() ? view('components.pagination', compact('currentPage', 'totalPages'))->render() : '',
+                'html' => $articlesHtml,
+                'pagination' => $paginationHtml,
                 'hasPagination' => $articles->hasPages(),
-                'currentPage' => $currentPage,
-                'totalPages' => $totalPages,
+                'currentPage' => $articles->currentPage(),
+                'totalPages' => $articles->lastPage(),
                 'count' => $articles->count(),
             ]);
         }
 
-        return $view;
+        // For non-AJAX requests, redirect to regular blog controller
+        return redirect()->route('blog.index', $request->all());
     }
 
     /**
