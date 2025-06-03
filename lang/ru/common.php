@@ -3,16 +3,16 @@
 return [
     'error' => [
         'invalid_language_selected' => 'Неверный выбор языка',
-        'invalid_credentials' => 'Неверные учетные данные',
-        'user_not_found_for_refresh_token' => 'Пользователь не найден для этого токена обновления',
-        'refresh_token_not_provided' => 'Токен обновления не предоставлен',
-        'refresh_token_invalid_or_expired' => 'Токен обновления недействителен или истек',
-        'refresh_token_not_provided_and_user_not_authenticated' => 'Токен обновления не предоставлен и пользователь не авторизован',
-        'token_not_found' => 'Токен не найден',
+        'invalid_credentials' => 'Операция недоступна.',
+        'user_not_found_for_refresh_token' => 'Операция недоступна.',
+        'refresh_token_not_provided' => 'Операция недоступна.',
+        'refresh_token_invalid_or_expired' => 'Операция недоступна.',
+        'refresh_token_not_provided_and_user_not_authenticated' => 'Операция недоступна.',
+        'token_not_found' => 'Операция недоступна.',
     ],
     'success' => [
-        'logged_out' => 'Вы успешно вышли из системы',
-        'new_token_created' => 'Новый токен создан',
-        'current_token_revoked_successfully' => 'Текущий токен успешно удален',
+        'logged_out' => 'Операция выполнена успешно.',
+        'new_token_created' => 'Операция выполнена успешно.',
+        'current_token_revoked_successfully' => 'Операция выполнена успешно.',
     ],
 ];
