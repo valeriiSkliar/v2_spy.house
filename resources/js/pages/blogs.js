@@ -40,6 +40,12 @@ function reloadBlogContent(container, url, scrollToTop = true) {
     .then(data => {
       console.log('AJAX response received:', data);
 
+      // Handle redirect response
+      if (data.redirect) {
+        window.location.href = data.url;
+        return;
+      }
+
       // Update content
       container.innerHTML = data.html;
 

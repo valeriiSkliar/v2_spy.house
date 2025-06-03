@@ -279,9 +279,47 @@ class ApiBlogController extends BaseBlogController
             }
         }
 
+        // Get total count for validation
+        $totalCount = $query->count();
+        $currentPage = (int) $request->get('page', 1);
+
+        // Validate pagination: if no results or invalid page, redirect to page 1
+        if ($totalCount === 0 || ($currentPage > 1 && $totalCount === 0)) {
+            if ($request->ajax()) {
+                // For AJAX requests, redirect to page 1
+                $redirectParams = $request->except('page');
+                $redirectUrl = route('blog.index', $redirectParams);
+                return response()->json([
+                    'redirect' => true,
+                    'url' => $redirectUrl
+                ]);
+            }
+            return redirect()->route('blog.index', $request->except('page'));
+        }
+
+        // Calculate maximum available pages
+        $heroTakesSlot = ($currentPage === 1 && $totalCount > 0) ? 1 : 0;
+        $articlesPerPage = 12;
+        $availableForPagination = $totalCount - $heroTakesSlot;
+        $maxPages = $heroTakesSlot > 0 ? max(1, ceil($availableForPagination / $articlesPerPage)) : ceil($totalCount / $articlesPerPage);
+
+        // If current page exceeds max pages, redirect to last valid page
+        if ($currentPage > $maxPages && $maxPages > 0) {
+            $redirectPage = $maxPages;
+            if ($request->ajax()) {
+                $redirectParams = array_merge($request->except('page'), ['page' => $redirectPage]);
+                $redirectUrl = route('blog.index', $redirectParams);
+                return response()->json([
+                    'redirect' => true,
+                    'url' => $redirectUrl
+                ]);
+            }
+            return redirect()->route('blog.index', array_merge($request->except('page'), ['page' => $redirectPage]));
+        }
+
         // Get hero article only for first page
         $heroArticle = null;
-        if ($request->get('page', 1) == 1) {
+        if ($currentPage == 1 && $totalCount > 0) {
             $heroArticle = $query->orderBy('created_at', 'desc')->first();
         }
 
@@ -293,25 +331,39 @@ class ApiBlogController extends BaseBlogController
         $articles = $articlesQuery->orderBy('created_at', 'desc')->paginate(12)->appends($request->all());
 
         if ($request->ajax()) {
-            // Generate articles HTML with empty state handling
-            $articlesHtml = '';
-            if ($articles->count() > 0 || $heroArticle) {
-                $articlesHtml .= view('components.blog.list.articles-list', compact('articles', 'heroArticle'))->render();
-            } else {
+            // For empty results (shouldn't happen due to validation above, but safety check)
+            if ($articles->count() === 0 && !$heroArticle) {
                 $searchQuery = $request->get('search', '');
-                // For category filtering without search, use category name as query
                 if ($categorySlug && !$searchQuery && $currentCategory) {
                     $queryText = $currentCategory->name;
                 } else {
                     $queryText = $searchQuery ?: '';
                 }
                 $articlesHtml = view('components.blog.blog-no-results-found', ['query' => $queryText])->render();
+
+                return response()->json([
+                    'html' => $articlesHtml,
+                    'pagination' => '',
+                    'hasPagination' => false,
+                    'currentPage' => 1,
+                    'totalPages' => 0,
+                    'count' => 0,
+                    'currentCategory' => $currentCategory ? [
+                        'id' => $currentCategory->id,
+                        'name' => $currentCategory->name,
+                        'slug' => $currentCategory->slug
+                    ] : null,
+                ]);
             }
 
-            // Generate pagination HTML
+            // Generate articles HTML
+            $articlesHtml = view('components.blog.list.articles-list', compact('articles', 'heroArticle'))->render();
+
+            // Generate pagination HTML only if there are multiple pages needed
             $paginationHtml = '';
-            if ($articles->hasPages()) {
-                // Set the path for pagination links to the regular blog route instead of API route
+            $shouldShowPagination = ($totalCount > $articlesPerPage) || ($heroArticle && $totalCount > $articlesPerPage + 1);
+
+            if ($shouldShowPagination && $articles->hasPages()) {
                 $articles->withPath(route('blog.index'));
                 $paginationHtml = $articles->links()->toHtml();
             }
@@ -319,7 +371,7 @@ class ApiBlogController extends BaseBlogController
             return response()->json([
                 'html' => $articlesHtml,
                 'pagination' => $paginationHtml,
-                'hasPagination' => $articles->hasPages(),
+                'hasPagination' => $shouldShowPagination && $articles->hasPages(),
                 'currentPage' => $articles->currentPage(),
                 'totalPages' => $articles->lastPage(),
                 'count' => $articles->count(),
