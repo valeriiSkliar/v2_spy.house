@@ -25,7 +25,7 @@ class PasswordUpdateConfirmationNotification extends Notification implements Sho
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        return ['mail'];
     }
 
     /**
