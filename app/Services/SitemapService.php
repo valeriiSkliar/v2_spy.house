@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\Frontend\Blog\BlogPost;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\URL;
 
@@ -110,17 +111,15 @@ class SitemapService
                 'priority' => '0.8',
             ]);
 
-            // TODO: Add blog posts when blog functionality is implemented
-            // Example:
-            // $posts = \App\Models\BlogPost::published()->get();
-            // foreach ($posts as $post) {
-            //     $urls->push([
-            //         'url' => URL::to('/blog/' . $post->slug),
-            //         'lastmod' => $post->updated_at->format('Y-m-d'),
-            //         'changefreq' => 'monthly',
-            //         'priority' => '0.6'
-            //     ]);
-            // }
+            $posts = BlogPost::published()->get();
+            foreach ($posts as $post) {
+                $urls->push([
+                    'url' => URL::to('/blog/' . $post->slug),
+                    'lastmod' => $post->updated_at->format('Y-m-d'),
+                    'changefreq' => 'monthly',
+                    'priority' => '0.6'
+                ]);
+            }
 
             return $urls;
         });
