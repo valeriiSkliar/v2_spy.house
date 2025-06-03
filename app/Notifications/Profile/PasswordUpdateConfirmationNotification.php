@@ -49,29 +49,29 @@ class PasswordUpdateConfirmationNotification extends Notification implements Sho
                 'expires_in' => 15,
                 'user' => $notifiable,
                 'emailType' => 'password_update_confirmation',
-                'loginUrl' => config('app.url').'/login',
+                'loginUrl' => config('app.url') . '/login',
                 'telegramUrl' => config('app.telegram_url', 'https://t.me/spyhouse'),
                 'supportEmail' => config('mail.support_email', 'support@spy.house'),
                 'unsubscribeUrl' => $notifiable->unsubscribe_hash
                     ? route('unsubscribe.show', $notifiable->unsubscribe_hash)
-                    : config('app.url').'/unsubscribe',
+                    : config('app.url') . '/unsubscribe',
             ]);
     }
 
-    /**
-     * Get the array representation of the notification for database storage.
-     */
-    public function toDatabase(object $notifiable): array
-    {
-        return [
-            'title' => __('emails.password_update_confirmation.title'),
-            'message' => __('emails.password_update_confirmation.message', ['code' => $this->verificationCode]),
-            'type' => NotificationType::PASSWORD_RESET->value,
-            'icon' => 'lock',
-            'data' => [
-                'verification_code' => $this->verificationCode,
-                'expires_in' => 15,
-            ],
-        ];
-    }
+    // /**
+    //  * Get the array representation of the notification for database storage.
+    //  */
+    // public function toDatabase(object $notifiable): array
+    // {
+    //     return [
+    //         'title' => __('emails.password_update_confirmation.title'),
+    //         'message' => __('emails.password_update_confirmation.message', ['code' => $this->verificationCode]),
+    //         'type' => NotificationType::PASSWORD_RESET->value,
+    //         'icon' => 'lock',
+    //         'data' => [
+    //             'verification_code' => $this->verificationCode,
+    //             'expires_in' => 15,
+    //         ],
+    //     ];
+    // }
 }
