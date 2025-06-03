@@ -10,9 +10,15 @@ Route::middleware(['web', 'auth'])
         Route::get('/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unreadCount');
     });
 
+// Route::middleware(['web'])
+//     ->prefix('api/notifications')
+//     ->group(function () {
+//     });
+
 Route::middleware(['web', 'auth:sanctum'])
     ->prefix('api/notifications')
     ->group(function () {
+        Route::get('/list', [NotificationController::class, 'ajaxList'])->name('api.notifications.list');
         Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
         Route::post('/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
     });

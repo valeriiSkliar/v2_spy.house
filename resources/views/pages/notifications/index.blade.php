@@ -7,59 +7,31 @@
     </div>
     <div class="col-12 col-md-6 col-lg-auto mb-15">
         <div class="base-select-icon">
-        <x-common.base-select
-            id="per-page"
-            :selected="$selectedPerPage"
-            :options="$perPageOptions" 
-            :placeholder="$perPageOptionsPlaceholder"
-            :icon="'list'"
-        />
+            <x-common.base-select :id="'per-page'" :selected="$selectedPerPage" :options="$perPageOptions"
+                :placeholder="$perPageOptionsPlaceholder" :icon="'list'" />
         </div>
     </div>
     <div class="col-12 col-md-6 col-lg-3 mb-15">
-        <button 
-            id="mark-all-read" 
-            @disabled(count($notifications['items']))
-            type="button" 
-            class="btn _flex _green _medium w-100"
-            data-url="{{ route('notifications.markAllAsRead') }}"
-        >{{ __('notifications.mark_all_read') }}</button>
+        <button id="mark-all-read" @disabled($unreadCount===0) type="button" class="btn _flex _green _medium w-100"
+            data-url="{{ route('notifications.markAllAsRead') }}">{{ __('notifications.mark_all_read') }}</button>
     </div>
 </div>
 
-<x-notification-list :notifications="$notifications['items']" />
+{{-- AJAX Container for notifications content --}}
+<div id="notifications-container" data-notifications-ajax-url="{{ route('api.notifications.list') }}">
+    @if (count($notifications['items']) === 0)
+    <x-notifications.empty-notifications />
+    @else
+    <x-notifications.notifications-list :notifications="$notifications['items']" />
+    @endif
+</div>
 
-{{-- <div class="notification-list">
-    @foreach($notifications['items'] as $notification)
-    <x-notification-item
-        :id="$notification['id']"
-        :read="$notification['read']"
-        :date="$notification['date']"
-        :title="$notification['title']"
-        :content="$notification['content']"
-        :hasButton="$notification['hasButton'] ?? false" />
-    @endforeach
-</div> --}}
-
-@if($notifications['pagination']->hasPages())
+{{-- AJAX Container for pagination --}}
+<div id="notifications-pagination-container" data-pagination-container>
+    @if($notifications['pagination']->hasPages())
     <div class="pagination-container">
         {{ $notifications['pagination']->links() }}
     </div>
-@endif
+    @endif
+</div>
 @endsection
-
-@section('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const perPageSelect = document.getElementById('per-page');
-        if (perPageSelect) {
-            perPageSelect.addEventListener('baseSelect:change', function(e) {
-                const perPage = e.detail.value;
-                window.location.href = `{{ route('notifications.index') }}?per_page=${perPage}`;
-            });
-        }
-
-    });
-</script>
-@endsection
-

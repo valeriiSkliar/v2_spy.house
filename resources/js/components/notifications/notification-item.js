@@ -53,7 +53,7 @@ export class NotificationItem {
     static async markAllAsRead(url) {
         const markAllReadBtn = document.getElementById("mark-all-read");
         try {
-            if (!markAllReadBtn) return;
+            if (!markAllReadBtn) return Promise.resolve();
             
             showInButton(markAllReadBtn);
             await ajaxFetcher.post(url);
@@ -76,6 +76,7 @@ export class NotificationItem {
             this.updateMarkAllReadButton();
             createAndShowToast("All notifications marked as read.", "success");
             checkNotifications();
+            return Promise.resolve();
         } catch (error) {
             createAndShowToast(
                 error.message ||
@@ -84,6 +85,7 @@ export class NotificationItem {
             );
             hideInButton(markAllReadBtn);
             console.error("Failed to mark all notifications as read:", error);
+            return Promise.reject(error);
         }
     }
 }
