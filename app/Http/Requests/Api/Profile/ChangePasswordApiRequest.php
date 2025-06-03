@@ -23,7 +23,7 @@ class ChangePasswordApiRequest extends FormRequest
                 'confirmed',
                 function ($attribute, $value, $fail) {
                     if (Hash::check($value, $this->user()->password)) {
-                        $fail(__('profile.validation.new_password_same_as_current'));
+                        $fail(__('validation.profile.new_password_same_as_current'));
                     }
                 },
             ],
@@ -35,9 +35,9 @@ class ChangePasswordApiRequest extends FormRequest
     public function messages(): array // Опционально, для кастомных сообщений
     {
         return [
-            'current_password.required' => __('profile.validation.current_password_required'),
-            'password.required' => __('profile.validation.new_password_required'),
-            'password.confirmed' => __('profile.validation.passwords_do_not_match'),
+            'current_password.required' => __('validation.profile.current_password_required'),
+            'password.required' => __('validation.profile.new_password_required'),
+            'password.confirmed' => __('validation.profile.passwords_do_not_match'),
         ];
     }
 }

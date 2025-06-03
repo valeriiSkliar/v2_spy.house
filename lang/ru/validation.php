@@ -48,4 +48,21 @@ return [
 
     // Custom messages
     'password_reset_throttled' => 'Слишком много попыток. Повторите позже.',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Profile Validation Messages (Anti-phishing protection)
+    |--------------------------------------------------------------------------
+    |
+    | These messages use generic wording to prevent revealing specific
+    | information that could be used for social engineering attacks.
+    |
+    */
+
+    'profile' => [
+        'current_password_required' => 'Проверьте правильность заполнения полей.',
+        'new_password_required' => 'Проверьте правильность заполнения полей.',
+        'passwords_do_not_match' => 'Проверьте правильность заполнения полей.',
+        'new_password_same_as_current' => 'Проверьте правильность заполнения полей.',
+    ],
 ];
