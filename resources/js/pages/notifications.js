@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // Initialize per-page selector
+  console.log('Initializing select component with useAjax:', useAjax);
   initializeSelectComponent('#per-page', {
     selectors: {
       select: '.base-select__dropdown',
@@ -45,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function () {
     preventReload: useAjax,
     callback: useAjax
       ? function () {
-          console.log('callback');
+          console.log('Per-page select callback triggered');
           reloadNotificationsContent(notificationsContainer, ajaxUrl);
         }
       : null,

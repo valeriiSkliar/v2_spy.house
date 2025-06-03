@@ -199,6 +199,16 @@ export function initializeSelectComponent(containerId, config) {
         selectors.container.trigger('select:changed', [eventData]);
 
         logger('Triggered change event with data:', eventData);
+
+        // Call the callback if provided
+        if (config.callback && typeof config.callback === 'function') {
+          logger('Calling callback function');
+          try {
+            config.callback(eventData);
+          } catch (error) {
+            loggerError('Error executing callback:', error);
+          }
+        }
       } else {
         // Standard behavior - redirect to new URL
         window.location.href = redirectUrl;
