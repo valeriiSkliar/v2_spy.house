@@ -13,10 +13,12 @@ import {
  * Initialize cancel button event listener
  */
 const initCancelButton = () => {
-  $('[data-action="cancel-ip-restriction"]').off('click').on('click', function (e) {
-    e.preventDefault();
-    cancelIpRestrictionUpdate();
-  });
+  $('[data-action="cancel-ip-restriction"]')
+    .off('click')
+    .on('click', function (e) {
+      e.preventDefault();
+      cancelIpRestrictionUpdate();
+    });
 };
 
 /**
@@ -31,13 +33,12 @@ const cancelIpRestrictionUpdate = async () => {
 
   try {
     loader = showInElement($formContainer[0]);
-    
+
     // For now, just reset the form since we don't have a two-step process yet
     $form[0].reset();
     $form.find('input, textarea').removeClass('error valid');
-    
+
     createAndShowToast('IP restriction update cancelled', 'success');
-    
   } catch (error) {
     loggerError('[ERROR] IP Restriction - Error cancelling update:', error);
     createAndShowToast('Error cancelling IP restriction update. Please try again.', 'error');
@@ -57,7 +58,7 @@ const updateIpRestriction = () => {
   const $formContainer = $('#ip-restriction-form-container');
   const $form = $formContainer.find('#ip-restriction-form');
 
-  logger('[DEBUG] IP Restriction - Form found', { debug: true });
+  logger('[DEBUG] IP Restriction - Form found');
 
   if ($form.length) {
     // Remove previous event handlers
@@ -67,20 +68,12 @@ const updateIpRestriction = () => {
     let validator = null;
     try {
       validator = initIpRestrictionValidation($form, false);
-      logger(
-        '[DEBUG] IP Restriction - Validator initialized',
-        {
-          validatorExists: !!validator,
-          rules: validator?.settings?.rules,
-        },
-        { debug: true }
-      );
+      logger('[DEBUG] IP Restriction - Validator initialized', {
+        validatorExists: !!validator,
+        rules: validator?.settings?.rules,
+      });
     } catch (error) {
-      logger(
-        '[DEBUG] IP Restriction - Validator initialization failed',
-        { error },
-        { debug: true }
-      );
+      logger('[DEBUG] IP Restriction - Validator initialization failed', { error });
       // Continue without validation, but with warning
       validator = null;
     }
@@ -92,7 +85,7 @@ const updateIpRestriction = () => {
     };
 
     const textareas = $form.find('.auto-resize');
-    textareas.each(function() {
+    textareas.each(function () {
       this.addEventListener('input', function () {
         adjustHeight(this);
       });
@@ -100,13 +93,13 @@ const updateIpRestriction = () => {
 
     // Form submission handler
     $form.on('submit', async function (e) {
-      logger('[DEBUG] IP Restriction - Form submit triggered', { debug: true });
+      logger('[DEBUG] IP Restriction - Form submit triggered');
       e.preventDefault();
 
       // Check if form is valid
       if (validator) {
         const isValid = validator.form();
-        logger('[DEBUG] IP Restriction - Form validation result', { isValid }, { debug: true });
+        logger('[DEBUG] IP Restriction - Form validation result', { isValid });
 
         if (!isValid) {
           return false;
@@ -117,14 +110,10 @@ const updateIpRestriction = () => {
       const formData = new FormData(this);
 
       // Log form data for debugging
-      logger(
-        '[DEBUG] IP Restriction - Form data',
-        {
-          ipRestrictions: formData.get('ip_restrictions'),
-          formFields: Array.from(formData.entries()).map(([key, value]) => key),
-        },
-        { debug: true }
-      );
+      logger('[DEBUG] IP Restriction - Form data', {
+        ipRestrictions: formData.get('ip_restrictions'),
+        formFields: Array.from(formData.entries()).map(([key, value]) => key),
+      });
 
       // Handle form submission
       await submitIpRestrictionUpdate(formData);
@@ -138,7 +127,7 @@ const updateIpRestriction = () => {
 /**
  * Handle IP restriction form submission
  */
-const submitIpRestrictionUpdate = async (formData) => {
+const submitIpRestrictionUpdate = async formData => {
   let loader = null;
   const $formContainer = $('#ip-restriction-form-container');
   const $form = $formContainer.find('#ip-restriction-form');
@@ -148,10 +137,7 @@ const submitIpRestrictionUpdate = async (formData) => {
   try {
     loader = showInElement($formContainer[0]);
 
-    const response = await ajaxFetcher.form(
-      config.apiProfileIpRestrictionUpdateEndpoint,
-      formData
-    );
+    const response = await ajaxFetcher.form(config.apiProfileIpRestrictionUpdateEndpoint, formData);
 
     logger('[DEBUG] IP Restriction - Submit response:', response);
 
@@ -166,7 +152,7 @@ const submitIpRestrictionUpdate = async (formData) => {
 
       // Clear password field
       $form.find('input[name="password"]').val('');
-      
+
       checkNotifications();
     } else {
       // Handle server validation errors
@@ -194,7 +180,7 @@ const submitIpRestrictionUpdate = async (formData) => {
  * Initialize IP restriction form handling
  */
 const initUpdateIpRestriction = () => {
-  logger('[DEBUG] IP Restriction - Initializing', { debug: true });
+  logger('[DEBUG] IP Restriction - Initializing');
   updateIpRestriction();
 };
 

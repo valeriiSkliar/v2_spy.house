@@ -126,7 +126,7 @@ const changeEmail = () => {
   let loader = null;
   const $formContainer = $('#change-email-form-container');
   const $form = $formContainer.find('#change-email-form');
-  logger('[DEBUG] Change Email - Form found', { debug: true });
+  logger('[DEBUG] Change Email - Form found');
 
   if ($form.length) {
     // Remove previous event handlers
@@ -139,29 +139,25 @@ const changeEmail = () => {
     let validator = null;
     try {
       validator = initChangeEmailValidation($form, isConfirmationStep);
-      logger(
-        '[DEBUG] Change Email - Validator initialized',
-        {
-          validatorExists: !!validator,
-          rules: validator?.settings?.rules,
-          isConfirmationStep,
-        },
-        { debug: true }
-      );
+      logger('[DEBUG] Change Email - Validator initialized', {
+        validatorExists: !!validator,
+        rules: validator?.settings?.rules,
+        isConfirmationStep,
+      });
     } catch (error) {
-      logger('[DEBUG] Change Email - Validator initialization failed', { error }, { debug: true });
+      logger('[DEBUG] Change Email - Validator initialization failed', { error });
       return;
     }
 
     // Form submission handler
     $form.on('submit', async function (e) {
-      logger('[DEBUG] Change Email - Form submit triggered', { debug: true });
+      logger('[DEBUG] Change Email - Form submit triggered');
       e.preventDefault();
 
       // Check if form is valid
       if (validator) {
         const isValid = validator.form();
-        logger('[DEBUG] Change Email - Form validation result', { isValid }, { debug: true });
+        logger('[DEBUG] Change Email - Form validation result', { isValid });
 
         if (!isValid) {
           return false;
@@ -172,16 +168,12 @@ const changeEmail = () => {
       const formData = new FormData(this);
 
       // Log form data for debugging
-      logger(
-        '[DEBUG] Change Email - Form data',
-        {
-          hasVerificationCode: formData.has('verification_code'),
-          verificationCode: formData.get('verification_code'),
-          formFields: Array.from(formData.entries()).map(([key, value]) => key),
-          isConfirmationStep,
-        },
-        { debug: true }
-      );
+      logger('[DEBUG] Change Email - Form data', {
+        hasVerificationCode: formData.has('verification_code'),
+        verificationCode: formData.get('verification_code'),
+        formFields: Array.from(formData.entries()).map(([key, value]) => key),
+        isConfirmationStep,
+      });
 
       // Validation should have already caught missing verification code
       // If we reach here, the form data should be valid
@@ -248,7 +240,7 @@ const changeEmail = () => {
 };
 
 const initChangeEmail = () => {
-  logger('[DEBUG] Change Email - Initializing', { debug: true });
+  logger('[DEBUG] Change Email - Initializing');
   changeEmail();
 };
 
