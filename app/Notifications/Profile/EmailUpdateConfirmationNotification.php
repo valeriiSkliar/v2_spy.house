@@ -38,14 +38,15 @@ class EmailUpdateConfirmationNotification extends Notification implements Should
             'user_id' => $notifiable->id ?? null,
             'email' => $notifiable->email,
             'template' => 'verification-account',
-            'subject' => __('profile.email_update.confirmation_title')
+            'subject' => __('emails.email_update_confirmation.subject')
         ]);
 
         return (new MailMessage)
-            ->subject(__('profile.email_update.confirmation_title'))
+            ->subject(__('emails.email_update_confirmation.subject'))
             ->view('emails.verification-account', [
                 'code' => $this->code,
                 'user' => $notifiable,
+                'emailType' => 'email_update_confirmation',
                 'loginUrl' => config('app.url') . '/login',
                 'telegramUrl' => config('app.telegram_url', 'https://t.me/spyhouse'),
                 'supportEmail' => config('mail.support_email', 'support@spy.house'),
@@ -61,8 +62,8 @@ class EmailUpdateConfirmationNotification extends Notification implements Should
     // public function toDatabase(object $notifiable): array
     // {
     //     return [
-    //         'title' => __('profile.email_update.confirmation_title'),
-    //         'message' => __('profile.email_update.confirmation_message'),
+    //         'title' => __('emails.email_update_confirmation.title'),
+    //         'message' => __('emails.email_update_confirmation.message', ['code' => $this->code]),
     //         'type' => NotificationType::EMAIL_VERIFIED->value,
     //         'icon' => 'mail',
     //         'data' => [

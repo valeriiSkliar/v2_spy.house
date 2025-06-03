@@ -56,7 +56,7 @@ class CustomNotification extends Notification implements ShouldQueue
         }
 
         $typeModel = $this->getNotificationTypeModel();
-        return $typeModel ? $typeModel->name : 'Notification';
+        return $typeModel ? $typeModel->name : __('notifications.notification');
     }
 
     protected function getMessage(object $notifiable): string
@@ -66,7 +66,7 @@ class CustomNotification extends Notification implements ShouldQueue
         }
 
         $typeModel = $this->getNotificationTypeModel();
-        return $typeModel ? $typeModel->description : 'You have a new notification';
+        return $typeModel ? $typeModel->description : __('notifications.you_have_a_new_notification');
     }
 
     protected function getIcon(): string

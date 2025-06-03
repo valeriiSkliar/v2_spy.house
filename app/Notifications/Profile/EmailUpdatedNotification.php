@@ -40,12 +40,12 @@ class EmailUpdatedNotification extends Notification implements ShouldQueue
             'user_id' => $notifiable->id ?? null,
             'old_email' => $this->oldEmail,
             'new_email' => $this->newEmail,
-            'subject' => __('profile.email_updated')
+            'subject' => __('emails.email_updated.subject')
         ]);
 
         return (new MailMessage)
-            ->subject(__('profile.email_updated'))
-            ->line(__('profile.email_updated_message', [
+            ->subject(__('emails.email_updated.subject'))
+            ->line(__('emails.email_updated.message', [
                 'old_email' => $this->oldEmail,
                 'new_email' => $this->newEmail,
             ]));
@@ -57,12 +57,12 @@ class EmailUpdatedNotification extends Notification implements ShouldQueue
     public function toDatabase(object $notifiable): array
     {
         return [
-            'title' => __('profile.email_updated'),
-            'message' => __('profile.email_updated_message', [
+            'title' => __('emails.email_updated.subject'),
+            'message' => __('emails.email_updated.message', [
                 'old_email' => $this->oldEmail,
                 'new_email' => $this->newEmail,
             ]),
-            'type' => NotificationType::EMAIL_VERIFIED->value,
+            'type' => NotificationType::EMAIL_UPDATED->value,
             'icon' => 'mail',
             'data' => [
                 'old_email' => $this->oldEmail,
