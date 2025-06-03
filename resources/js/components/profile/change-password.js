@@ -2,36 +2,26 @@ import { logger, loggerError } from '@/helpers/logger';
 import { checkNotifications } from '@/helpers/notification-checker';
 import { createAndShowToast } from '@/utils/uiHelpers';
 import $ from 'jquery';
-import 'jquery-validation';
 import { config } from '../../config';
 import { ajaxFetcher } from '../fetcher/ajax-fetcher';
 import { hideInElement, showInElement } from '../loader';
+import {
+  handleChangePasswordValidationErrors,
+  initChangePasswordValidation,
+} from './change-password-validation';
 
 /**
  * Cancel password update process
  */
-const cancelPasswordUpdate = async cancelButton => {
-  const form = $('#change-password-form');
+const cancelPasswordUpdate = async () => {
+  const $formContainer = $('#change-password-form-container');
+  const $form = $formContainer.find('#change-password-form');
   let loader = null;
-
-  // Disable the cancel button
-  if (cancelButton) {
-    $(cancelButton).prop('disabled', true);
-    // Remove click handler immediately
-    $(cancelButton).off('click');
-  }
 
   logger('[DEBUG] Change Password - Cancel update requested');
 
-  if (!form.length) {
-    loggerError('[ERROR] Change Password - Form not found');
-    createAndShowToast('Form not found. Please refresh the page.', 'error');
-    return;
-  }
-
   try {
-    loader = showInElement(form[0]);
-
+    loader = showInElement($formContainer[0]);
     const response = await ajaxFetcher.get(config.apiProfilePasswordCancelEndpoint, null, {});
 
     logger('[DEBUG] Change Password - Cancel response:', response);
@@ -39,7 +29,7 @@ const cancelPasswordUpdate = async cancelButton => {
     if (response.success) {
       // Use the server-provided HTML form
       if (response.initialFormHtml) {
-        form.replaceWith(response.initialFormHtml);
+        $form.replaceWith(response.initialFormHtml);
         // Reinitialize form handlers
         changePassword();
       } else {
@@ -54,10 +44,6 @@ const cancelPasswordUpdate = async cancelButton => {
       }
     } else {
       createAndShowToast(response.message || 'Error cancelling password update', 'error');
-      // Re-enable the button on error
-      if (cancelButton) {
-        $(cancelButton).prop('disabled', false);
-      }
     }
   } catch (error) {
     loggerError('[ERROR] Change Password - Error cancelling update:', error);
@@ -70,10 +56,6 @@ const cancelPasswordUpdate = async cancelButton => {
     }
 
     createAndShowToast(errorMessage, 'error');
-    // Re-enable the button on error
-    if (cancelButton) {
-      $(cancelButton).prop('disabled', false);
-    }
   } finally {
     if (loader) {
       hideInElement(loader);
@@ -87,29 +69,13 @@ const cancelPasswordUpdate = async cancelButton => {
  */
 const confirmPasswordUpdate = async formData => {
   let loader = null;
-  const submitButton = $('#change-password-form button[type="submit"]');
-  const passwordForm = $('#change-password-form');
+  const $formContainer = $('#change-password-form-container');
+  const $form = $formContainer.find('#change-password-form');
 
   logger('[DEBUG] Change Password - Confirm update started');
 
-  // Check if form exists
-  if (!passwordForm.length) {
-    loggerError('[ERROR] Change Password - Form not found');
-    createAndShowToast('Form not found. Please refresh the page.', 'error');
-    return;
-  }
-
-  // Check if request is already in progress
-  if (submitButton.prop('disabled')) {
-    logger('[DEBUG] Change Password - Request already in progress');
-    return;
-  }
-
-  // Disable button
-  submitButton.prop('disabled', true);
-
   try {
-    loader = showInElement(passwordForm[0]);
+    loader = showInElement($formContainer[0]);
 
     const response = await ajaxFetcher.form(
       config.apiProfilePasswordUpdateConfirmEndpoint,
@@ -119,86 +85,55 @@ const confirmPasswordUpdate = async formData => {
     logger('[DEBUG] Change Password - Confirm response:', response);
 
     if (response.success) {
-      // Show success message
       createAndShowToast(response.message || 'Password updated successfully', 'success');
 
-      // Replace form with success form or original form
+      // Replace form with success message or original form
       if (response.successFormHtml) {
-        passwordForm.replaceWith(response.successFormHtml);
-        // Reinitialize form handlers
-        changePassword();
+        $form.replaceWith(response.successFormHtml);
       } else if (response.initialFormHtml) {
-        passwordForm.replaceWith(response.initialFormHtml);
-        changePassword();
+        $form.replaceWith(response.initialFormHtml);
       } else {
         // Fallback: reload page
         setTimeout(() => {
           window.location.reload();
         }, 1500);
       }
+      
+      checkNotifications();
+      changePassword();
     } else {
-      // Handle error response
-      let errorMessage = response.message || 'Invalid confirmation code';
+      // Handle server validation errors
+      handleChangePasswordValidationErrors(response, $form);
+      createAndShowToast(response.message || 'Error confirming password update', 'error');
 
-      // Use specific error message if available
-      if (response.errors && response.errors.verification_code) {
-        errorMessage = Array.isArray(response.errors.verification_code)
-          ? response.errors.verification_code[0]
-          : response.errors.verification_code;
-      }
-
-      createAndShowToast(errorMessage, 'error');
-
-      // Clear and focus verification code field
-      const verificationField = $('input[name="verification_code"]');
-      if (verificationField.length) {
-        verificationField.addClass('error').focus().val('');
+      // Focus verification code field if it exists
+      const $verificationCodeField = $form.find('input[name="verification_code"]');
+      if ($verificationCodeField.length) {
+        $verificationCodeField.val('').focus();
       }
     }
   } catch (error) {
     loggerError('[ERROR] Change Password - Error confirming update:', error);
 
-    // Handle different types of errors
-    let errorMessage = 'Error confirming password update. Please try again.';
+    // Handle validation errors from server
+    if (error.status === 422) {
+      const response = error.responseJSON || {};
+      handleChangePasswordValidationErrors(response, $form);
 
-    if (error.status === 422 && error.responseJSON) {
-      // Validation error
-      const errorData = error.responseJSON;
-
-      if (errorData.errors && errorData.errors.verification_code) {
-        errorMessage = Array.isArray(errorData.errors.verification_code)
-          ? errorData.errors.verification_code[0]
-          : errorData.errors.verification_code;
-      } else if (errorData.message) {
-        errorMessage = errorData.message;
+      // Clear and focus verification code field
+      const $verificationCodeField = $form.find('input[name="verification_code"]');
+      if ($verificationCodeField.length) {
+        $verificationCodeField.val('').focus();
       }
-    } else if (error.status === 500 && error.responseJSON && error.responseJSON.message) {
-      // Server error
-      errorMessage = error.responseJSON.message;
-    } else if (error.responseJSON && error.responseJSON.message) {
-      // Other error
-      errorMessage = error.responseJSON.message;
-    }
 
-    createAndShowToast(errorMessage, 'error');
-
-    // Clear and focus verification code field
-    const verificationField = $('input[name="verification_code"]');
-    if (verificationField.length) {
-      verificationField.addClass('error').focus().val('');
+      createAndShowToast(response.message || 'Invalid verification code', 'error');
+    } else {
+      createAndShowToast('Error confirming password update. Please try again.', 'error');
     }
   } finally {
     if (loader) {
       hideInElement(loader);
     }
-
-    // Re-enable button after delay
-    setTimeout(() => {
-      if (submitButton.length) {
-        submitButton.prop('disabled', false);
-      }
-    }, 1000);
-
     checkNotifications();
   }
 };
@@ -208,12 +143,13 @@ const confirmPasswordUpdate = async formData => {
  */
 const initiatePasswordUpdate = async (form, formData) => {
   let loader = null;
+  const $formContainer = $('#change-password-form-container');
+  const $form = $formContainer.find('#change-password-form');
 
   logger('[DEBUG] Change Password - Initiate update started');
 
   try {
-    const changePasswordForm = $('#change-password-form');
-    loader = showInElement(changePasswordForm[0]);
+    loader = showInElement($formContainer[0]);
 
     const response = await ajaxFetcher.form(
       config.apiProfilePasswordUpdateInitiateEndpoint,
@@ -227,67 +163,30 @@ const initiatePasswordUpdate = async (form, formData) => {
 
       // Replace form with confirmation form
       if (confirmationFormHtml) {
-        $(form).replaceWith(confirmationFormHtml);
-        // Reinitialize form handlers
+        $form.replaceWith(confirmationFormHtml);
+        // Reinitialize form handlers for the new confirmation form
         changePassword();
-
-        // Add event listener for cancel button
-        $('.btn._flex._red._big, .btn._gray').on('click', function (e) {
-          e.preventDefault();
-          cancelPasswordUpdate(this);
-        });
+        // Reinitialize cancel button
+        initCancelButton();
       } else {
         createAndShowToast('Error loading confirmation form', 'error');
       }
     } else {
-      // Handle error response
-      let errorMessage = response.message || 'Error updating password. Please try again.';
-
-      // Handle validation errors
-      if (response.errors) {
-        const errorMessages = Object.values(response.errors)
-          .flat()
-          .filter(msg => msg && msg.trim() !== '')
-          .join(', ');
-
-        if (errorMessages) {
-          errorMessage = errorMessages;
-        }
-      }
-
-      createAndShowToast(errorMessage, 'error');
+      handleChangePasswordValidationErrors(response, $form);
+      createAndShowToast(
+        response.message || 'Error updating password. Please try again.',
+        'error'
+      );
     }
   } catch (error) {
     loggerError('[ERROR] Change Password - Error initiating update:', error);
 
-    // Handle different types of errors
-    let errorMessage = 'Error updating password. Please try again.';
-
     if (error.status === 422 && error.responseJSON) {
-      // Validation error
-      const errorData = error.responseJSON;
-
-      if (errorData.errors) {
-        const errorMessages = Object.values(errorData.errors)
-          .flat()
-          .filter(msg => msg && msg.trim() !== '')
-          .join(', ');
-
-        if (errorMessages) {
-          errorMessage = errorMessages;
-        }
-      } else if (errorData.message) {
-        errorMessage = errorData.message;
-      }
-    } else if (error.status === 500 && error.responseJSON && error.responseJSON.message) {
-      // Server error
-      errorMessage = error.responseJSON.message;
-    } else if (error.responseJSON && error.responseJSON.message) {
-      // Other error
-      errorMessage = error.responseJSON.message;
+      handleChangePasswordValidationErrors(error.responseJSON, $form);
+      createAndShowToast(error.responseJSON.message || 'Validation errors occurred', 'error');
+    } else {
+      createAndShowToast('Error updating password. Please try again.', 'error');
     }
-
-    createAndShowToast(errorMessage, 'error');
   } finally {
     if (loader) {
       hideInElement(loader);
@@ -297,175 +196,104 @@ const initiatePasswordUpdate = async (form, formData) => {
 };
 
 /**
- * Main form handler initialization
+ * Initialize cancel button event listener
+ */
+const initCancelButton = () => {
+  $('[data-action="cancel-password"]').off('click').on('click', function (e) {
+    e.preventDefault();
+    cancelPasswordUpdate();
+  });
+};
+
+/**
+ * Main form handler for password changes
  */
 const changePassword = () => {
-  const form = $('#change-password-form');
+  let loader = null;
+  const $formContainer = $('#change-password-form-container');
+  const $form = $formContainer.find('#change-password-form');
 
-  if (!form.length) {
-    logger('[DEBUG] Change Password - Form not found, skipping initialization');
-    return;
-  }
+  logger('[DEBUG] Change Password - Form found', { debug: true });
 
-  logger('[DEBUG] Change Password - Initializing form handlers');
+  if ($form.length) {
+    // Remove previous event handlers
+    $form.off('submit');
 
-  // Remove all existing event handlers
-  $('.btn._flex._red._big, .btn._gray').off();
+    // Determine current form step
+    const isConfirmationStep = $form.find('input[name="verification_code"]').length > 0;
 
-  // Add single event handler for cancel buttons
-  $('.btn._flex._red._big, .btn._gray').on('click', function (e) {
-    e.preventDefault();
-    e.stopPropagation();
-    // Pass the button element to the cancel function
-    cancelPasswordUpdate(this);
-  });
+    // Initialize form validation
+    let validator = null;
+    try {
+      validator = initChangePasswordValidation($form, isConfirmationStep);
+      logger(
+        '[DEBUG] Change Password - Validator initialized',
+        {
+          validatorExists: !!validator,
+          rules: validator?.settings?.rules,
+          isConfirmationStep,
+        },
+        { debug: true }
+      );
+    } catch (error) {
+      logger(
+        '[DEBUG] Change Password - Validator initialization failed',
+        { error },
+        { debug: true }
+      );
+      // Continue without validation, but with warning
+      validator = null;
+    }
 
-  // Track touched fields for validation
-  const touchedFields = new Set();
+    // Form submission handler
+    $form.on('submit', async function (e) {
+      logger('[DEBUG] Change Password - Form submit triggered', { debug: true });
+      e.preventDefault();
 
-  // Initialize jQuery validation
-  form.validate({
-    rules: {
-      current_password: {
-        required: true,
-      },
-      password: {
-        required: true,
-        minlength: 8,
-      },
-      password_confirmation: {
-        required: true,
-        equalTo: 'input[name="password"]',
-      },
-      verification_code: {
-        required: true,
-        digits: true,
-        minlength: 6,
-        maxlength: 6,
-      },
-    },
-    messages: {
-      current_password: {
-        required: '',
-      },
-      password: {
-        required: '',
-        minlength: '',
-      },
-      password_confirmation: {
-        required: '',
-        equalTo: '',
-      },
-      verification_code: {
-        required: '',
-        digits: '',
-        minlength: '',
-        maxlength: '',
-      },
-    },
-    // Disable automatic validation
-    onfocusout: false,
-    onkeyup: false,
-    onclick: false,
-    errorClass: 'error',
-    validClass: 'valid',
-    errorPlacement: function (error, element) {
-      // Don't display error messages under fields
-      return false;
-    },
-    highlight: function (element, errorClass, validClass) {
-      $(element).addClass('error').removeClass(validClass);
-    },
-    unhighlight: function (element, errorClass, validClass) {
-      $(element).removeClass('error').addClass(validClass);
-    },
-    // Run validation only on form submission
-    invalidHandler: function (event, validator) {
-      // Mark all fields as touched when form submission is attempted
-      form.find('input, select, textarea').each(function () {
-        const fieldName = $(this).attr('name');
-        if (fieldName) {
-          touchedFields.add(fieldName);
-        }
-      });
-      validateAndToggleButton();
-    },
-  });
+      // Check if form is valid
+      if (validator) {
+        const isValid = validator.form();
+        logger('[DEBUG] Change Password - Form validation result', { isValid }, { debug: true });
 
-  // Function to validate and toggle submit button
-  const validateAndToggleButton = () => {
-    let isValid = true;
-
-    // Check each field with validation rules
-    $.each(form.validate().settings.rules, function (fieldName, _) {
-      const field = form.find(`[name="${fieldName}"]`);
-
-      // Only validate touched fields
-      if (touchedFields.has(fieldName)) {
-        if (!field.valid()) {
-          isValid = false;
+        if (!isValid) {
+          return false;
         }
       }
+
+      // Get form data
+      const formData = new FormData(this);
+
+      // Log form data for debugging
+      logger(
+        '[DEBUG] Change Password - Form data',
+        {
+          hasVerificationCode: formData.has('verification_code'),
+          verificationCode: formData.get('verification_code'),
+          formFields: Array.from(formData.entries()).map(([key, value]) => key),
+          isConfirmationStep,
+        },
+        { debug: true }
+      );
+
+      if (isConfirmationStep) {
+        // Handle confirmation submission
+        await confirmPasswordUpdate(formData);
+      } else {
+        // Handle initial password update request
+        await initiatePasswordUpdate(this, formData);
+      }
     });
+  }
 
-    const submitButton = form.find('button[type="submit"]');
-    if (submitButton.length) {
-      submitButton.prop('disabled', !isValid);
-    }
-  };
-
-  // Track field focus for touched state
-  form.find('input, select, textarea').on('focus', function () {
-    const fieldName = $(this).attr('name');
-    if (fieldName) {
-      touchedFields.add(fieldName);
-    }
-  });
-
-  // Validate touched fields on input/change
-  form.find('input, select, textarea').on('input change blur', function () {
-    const fieldName = $(this).attr('name');
-    if (fieldName && touchedFields.has(fieldName)) {
-      validateAndToggleButton();
-    }
-  });
-
-  // Handle form submission
-  form.on('submit', async function (e) {
-    e.preventDefault();
-
-    logger('[DEBUG] Change Password - Form submitted');
-
-    // Validate form before submission
-    if (!form.valid()) {
-      logger('[DEBUG] Change Password - Form validation failed');
-      return false;
-    }
-
-    const formData = new FormData(this);
-
-    // Determine if this is a confirmation form or initial form
-    const isConfirmationForm =
-      $(this).find('input[name="verification_code"]').length > 0 ||
-      $(this).attr('action').includes('confirm');
-
-    if (isConfirmationForm) {
-      logger('[DEBUG] Change Password - Handling confirmation form');
-      await confirmPasswordUpdate(formData);
-    } else {
-      logger('[DEBUG] Change Password - Handling initiation form');
-      await initiatePasswordUpdate(this, formData);
-    }
-  });
-
-  logger('[DEBUG] Change Password - Form handlers initialized successfully');
+  // Initialize cancel button
+  initCancelButton();
 };
 
 /**
  * Initialize change password form handling
  */
 const initChangePassword = () => {
-  logger('[DEBUG] Change Password - Initializing');
+  logger('[DEBUG] Change Password - Initializing', { debug: true });
   changePassword();
 };
 
