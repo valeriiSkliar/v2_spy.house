@@ -98,7 +98,7 @@ const confirmPasswordUpdate = async formData => {
           window.location.reload();
         }, 1500);
       }
-      
+
       checkNotifications();
       changePassword();
     } else {
@@ -173,10 +173,7 @@ const initiatePasswordUpdate = async (form, formData) => {
       }
     } else {
       handleChangePasswordValidationErrors(response, $form);
-      createAndShowToast(
-        response.message || 'Error updating password. Please try again.',
-        'error'
-      );
+      createAndShowToast(response.message || 'Error updating password. Please try again.', 'error');
     }
   } catch (error) {
     loggerError('[ERROR] Change Password - Error initiating update:', error);
@@ -199,10 +196,12 @@ const initiatePasswordUpdate = async (form, formData) => {
  * Initialize cancel button event listener
  */
 const initCancelButton = () => {
-  $('[data-action="cancel-password"]').off('click').on('click', function (e) {
-    e.preventDefault();
-    cancelPasswordUpdate();
-  });
+  $('[data-action="cancel-password-update"]')
+    .off('click')
+    .on('click', function (e) {
+      e.preventDefault();
+      cancelPasswordUpdate();
+    });
 };
 
 /**

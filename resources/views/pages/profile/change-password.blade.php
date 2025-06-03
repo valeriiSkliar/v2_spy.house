@@ -21,27 +21,6 @@ $isExpired = $updateExpiresAt && now()->isAfter($updateExpiresAt);
 <div id="change-password-form-container" class="section">
     <x-profile.change-password-form :confirmation-method="$updateMethod" :user="$user"
         :password-update-pending="$updateStep === 'confirmation'" />
-
-    {{-- @if (session('status'))
-    <div class="alert alert-info mb-25">
-        @switch(session('status'))
-        @case('password-code-sent')
-        {{ __('profile.security_settings.password_code_sent') }}
-        @break
-        @case('authenticator-required')
-        {{ __('profile.security_settings.authenticator_required') }}
-        @break
-        @case('password-updated')
-        {{ __('profile.security_settings.password_updated') }}
-        @break
-        @case('password-update-cancelled')
-        {{ __('profile.security_settings.password_update_cancelled') }}
-        @break
-        @default
-        {{ session('status') }}
-        @endswitch
-    </div>
-    @endif --}}
 </div>
 @endsection
 

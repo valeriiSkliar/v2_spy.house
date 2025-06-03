@@ -56,7 +56,7 @@
         <x-profile.submit-button formId="change-password-form" :label="__('profile.confirm_button')" />
         <div class="mb-20">
 
-            <button type="button" class="btn _flex _red _big">
+            <button data-action="cancel-password-update" type="button" class="btn _flex _red _big">
                 {{ __('profile.cancel_button') }}
             </button>
         </div>
