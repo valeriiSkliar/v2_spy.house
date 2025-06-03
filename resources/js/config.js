@@ -19,5 +19,5 @@ export const config = {
 };
 
 export const debagConfig = {
-  debug: false,
+  debug: true,
 };

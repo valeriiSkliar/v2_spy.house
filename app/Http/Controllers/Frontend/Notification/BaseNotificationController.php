@@ -36,7 +36,7 @@ class BaseNotificationController extends FrontendController
     /**
      * Get notifications from database.
      */
-    private function getNotifications($user, $perPage): array
+    protected function getNotifications($user, $perPage): array
     {
         $notifications = [];
         $dbNotifications = $user->notifications()->paginate($perPage);

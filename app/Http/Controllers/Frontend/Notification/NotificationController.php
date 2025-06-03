@@ -19,6 +19,48 @@ class NotificationController extends BaseNotificationController
     }
 
     /**
+     * AJAX endpoint for loading notifications.
+     */
+    public function ajaxList(Request $request)
+    {
+        if ($request->ajax()) {
+            $user = $request->user();
+            $perPage = request('per_page', 12);
+            $notificationsData = $this->getNotifications($user, $perPage);
+            $unreadCount = $user->unreadNotifications->count();
+
+            $notificationsHtml = '';
+            $paginationHtml = '';
+            $hasPagination = false;
+
+            if (count($notificationsData['items']) === 0) {
+                $notificationsHtml = view('components.notifications.empty-notifications')->render();
+            } else {
+                $notificationsHtml = view('components.notifications.notifications-list', [
+                    'notifications' => $notificationsData['items']
+                ])->render();
+            }
+
+            if ($notificationsData['pagination']->hasPages()) {
+                $paginationHtml = $notificationsData['pagination']->links()->render();
+                $hasPagination = true;
+            }
+
+            return response()->json([
+                'html' => $notificationsHtml,
+                'pagination' => $paginationHtml,
+                'hasPagination' => $hasPagination,
+                'currentPage' => $notificationsData['pagination']->currentPage(),
+                'totalPages' => $notificationsData['pagination']->lastPage(),
+                'count' => count($notificationsData['items']),
+                'unreadCount' => $unreadCount,
+            ]);
+        }
+
+        return $this->index($request);
+    }
+
+    /**
      * Mark notification as read.
      */
     public function markAsRead(Request $request, $id)
