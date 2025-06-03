@@ -19,7 +19,7 @@ class BaseRequest extends FormRequest
             throw new HttpResponseException(
                 response()->json([
                     'status' => 'error',
-                    'message' => __('Validation failed'),
+                    'message' => __('validation.validation_error'),
                     'errors' => $validator->errors()->toArray(),
                 ], 422)
             );
@@ -34,6 +34,7 @@ class BaseRequest extends FormRequest
             return '';
         }
         $input = trim($input);
+        $input = strtolower($input);
 
         return sanitize_input($input);
     }

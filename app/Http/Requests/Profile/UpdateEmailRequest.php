@@ -45,9 +45,9 @@ class UpdateEmailRequest extends BaseRequest
     public function messages(): array
     {
         return [
-            'new_email.unique' => __('profile.security_settings.email_taken'),
-            'password.current_password' => __('profile.security_settings.invalid_password'),
-            'verification_code.required_if' => __('profile.security_settings.verification_code_required'),
+            'new_email.unique' => __('validation.validation_error'),
+            'password.current_password' => __('validation.validation_error'),
+            'verification_code.required_if' => __('validation.validation_error'),
         ];
     }
 

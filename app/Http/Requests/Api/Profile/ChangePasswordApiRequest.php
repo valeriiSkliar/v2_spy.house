@@ -32,7 +32,7 @@ class ChangePasswordApiRequest extends FormRequest
         ];
     }
 
-    public function messages(): array // Опционально, для кастомных сообщений
+    public function messages(): array
     {
         return [
             'current_password.required' => __('validation.profile.current_password_required'),

@@ -46,7 +46,7 @@ class UpdateIpRestrictionRequest extends BaseRequest
 
                 foreach ($ips as $ip) {
                     if (! $this->isValidIp($ip)) {
-                        $validator->errors()->add('ip_restrictions', __('validation.ip', ['attribute' => 'IP address']));
+                        $validator->errors()->add('ip_restrictions', __('validation.ip_restrictions.invalid'));
                         break;
                     }
                 }
@@ -71,8 +71,8 @@ class UpdateIpRestrictionRequest extends BaseRequest
     public function messages()
     {
         return [
-            'password.required' => __('profile.validation.password_required'),
-            'password.current_password' => __('profile.validation.current_password_incorrect'),
+            'password.required' => __('validation.validation_error'),
+            'password.current_password' => __('validation.validation_error'),
         ];
     }
 }

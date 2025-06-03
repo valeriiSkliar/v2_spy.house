@@ -53,7 +53,7 @@ class LoginRequest extends FormRequest
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'email' => trans('validation.auth.failed'),
             ]);
         }
 
@@ -65,7 +65,7 @@ class LoginRequest extends FormRequest
             if (! $this->input('code')) {
                 Auth::logout();
                 throw ValidationException::withMessages([
-                    'code' => trans('auth.2fa_required'),
+                    'code' => trans('validation.auth.2fa_required'),
                 ]);
             }
 
@@ -77,7 +77,7 @@ class LoginRequest extends FormRequest
                 RateLimiter::hit($this->throttleKey('2fa'));
 
                 throw ValidationException::withMessages([
-                    'code' => trans('auth.2fa_failed'),
+                    'code' => trans('validation.auth.2fa_failed'),
                 ]);
             }
         }
@@ -151,7 +151,7 @@ class LoginRequest extends FormRequest
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
+            'email' => trans('validation.auth.throttle', [
                 'seconds' => $seconds,
                 'minutes' => ceil($seconds / 60),
             ]),
@@ -164,9 +164,9 @@ class LoginRequest extends FormRequest
     public function throttleKey(string $type = 'login'): string
     {
         if ($type === '2fa') {
-            return Str::transliterate(Str::lower($this->input('email')).'|2fa|'.$this->ip());
+            return Str::transliterate(Str::lower($this->input('email')) . '|2fa|' . $this->ip());
         }
 
-        return Str::transliterate(Str::lower($this->input('email')).'|'.$this->ip());
+        return Str::transliterate(Str::lower($this->input('email')) . '|' . $this->ip());
     }
 }
