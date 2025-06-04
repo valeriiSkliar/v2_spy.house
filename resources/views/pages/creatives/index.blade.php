@@ -5,16 +5,20 @@
 <div class="row align-items-center">
     <div class="col-12 col-md-auto mb-20 flex-grow-1">
         <div class="filter-push">
-            <a href="{{ route('creatives.index', ['type' => 'push']) }}" class="filter-push__item {{ $activeTab == 'push' ? 'active' : '' }}">
+            <a href="{{ route('creatives.index', ['type' => 'push']) }}"
+                class="filter-push__item {{ $activeTab == 'push' ? 'active' : '' }}">
                 Push <span class="filter-push__count">{{ $counts['push'] }}</span>
             </a>
-            <a href="{{ route('creatives.index', ['type' => 'inpage']) }}" class="filter-push__item {{ $activeTab == 'inpage' ? 'active' : '' }}">
+            <a href="{{ route('creatives.index', ['type' => 'inpage']) }}"
+                class="filter-push__item {{ $activeTab == 'inpage' ? 'active' : '' }}">
                 In Page <span class="filter-push__count">{{ $counts['inpage'] }}</span>
             </a>
-            <a href="{{ route('creatives.index', ['type' => 'facebook']) }}" class="filter-push__item {{ $activeTab == 'facebook' ? 'active' : '' }}">
+            <a href="{{ route('creatives.index', ['type' => 'facebook']) }}"
+                class="filter-push__item {{ $activeTab == 'facebook' ? 'active' : '' }}">
                 Facebook <span class="filter-push__count">{{ $counts['facebook'] }}</span>
             </a>
-            <a href="{{ route('creatives.index', ['type' => 'tiktok']) }}" class="filter-push__item {{ $activeTab == 'tiktok' ? 'active' : '' }}">
+            <a href="{{ route('creatives.index', ['type' => 'tiktok']) }}"
+                class="filter-push__item {{ $activeTab == 'tiktok' ? 'active' : '' }}">
                 TikTok <span class="filter-push__count">{{ $counts['tiktok'] }}</span>
             </a>
         </div>
@@ -22,12 +26,14 @@
     <div class="col-12 col-md-auto mb-2">
         <div class="row">
             <div class="col-12 col-md-auto mb-15">
-                <a href="#" class="btn justify-content-start _flex w-100 _medium _gray"><span class="icon-favorite-empty font-16 mr-2"></span>Favorites <span class="btn__count">31</span></a>
+                <a href="#" class="btn justify-content-start _flex w-100 _medium _gray"><span
+                        class="icon-favorite-empty font-16 mr-2"></span>Favorites <span class="btn__count">31</span></a>
             </div>
             <div class="col-12 col-md-auto mb-15">
                 <div class="base-select-icon">
                     <div class="base-select">
-                        <div class="base-select__trigger"><span class="base-select__value">On page — 12</span><span class="base-select__arrow"></span></div>
+                        <div class="base-select__trigger"><span class="base-select__value">On page — 12</span><span
+                                class="base-select__arrow"></span></div>
                         <ul class="base-select__dropdown" style="display: none;">
                             <li class="base-select__option is-selected">12</li>
                             <li class="base-select__option">24</li>
@@ -42,27 +48,29 @@
     </div>
 </div>
 
-@include('creatives.partials.filter')
+@include('components.creatives.filter')
 
 <div class="mb-20">
     <div class="search-count"><span>34 567</span> advertisements</div>
 </div>
 
 @if($activeTab == 'push')
-@include('creatives.partials.push')
+@include('components.creatives.push')
 @elseif($activeTab == 'inpage')
-@include('creatives.partials.inpage')
+@include('components.creatives.inpage')
 @elseif($activeTab == 'facebook' || $activeTab == 'tiktok')
-@include('creatives.partials.social', ['type' => $activeTab])
+@include('components.creatives.social', ['type' => $activeTab])
 @endif
 
 <nav class="pagination-nav" role="navigation" aria-label="pagination">
     <ul class="pagination-list">
-        <li><a class="pagination-link prev disabled" aria-disabled="true" href=""><span class="icon-prev"></span> <span class="pagination-link__txt">Previous</span></a></li>
+        <li><a class="pagination-link prev disabled" aria-disabled="true" href=""><span class="icon-prev"></span> <span
+                    class="pagination-link__txt">Previous</span></a></li>
         <li><a class="pagination-link active" href="#">1</a></li>
         <li><a class="pagination-link" href="#">2</a></li>
         <li><a class="pagination-link" href="#">3</a></li>
-        <li><a class="pagination-link next" aria-disabled="false" href="#"><span class="pagination-link__txt">Next</span> <span class="icon-next"></span></a></li>
+        <li><a class="pagination-link next" aria-disabled="false" href="#"><span
+                    class="pagination-link__txt">Next</span> <span class="icon-next"></span></a></li>
     </ul>
 </nav>
 @endsection
