@@ -21,30 +21,31 @@
     @endforeach
     @else
     <div class="details-table__row">
-        <div class="details-table__col">Advertising networks</div>
+        <div class="details-table__col">{{ __('creatives.card.network') }}</div>
         <div class="details-table__col"><a href="#" class="link _gray">{{ $network ?? 'Pushhouse' }}</a></div>
     </div>
     <div class="details-table__row">
-        <div class="details-table__col">Country</div>
+        <div class="details-table__col">{{ __('creatives.card.country') }}</div>
         <div class="details-table__col"><img src="{{ $flagIcon ?? '/img/flags/UA.svg' }}" alt="">{{ $country ??
             'Bangladesh' }}</div>
     </div>
     <div class="details-table__row">
-        <div class="details-table__col">Language</div>
+        <div class="details-table__col">{{ __('creatives.card.language') }}</div>
         <div class="details-table__col">{{ $language ?? 'English' }}</div>
     </div>
     <div class="details-table__row">
-        <div class="details-table__col">First display date</div>
-        <div class="details-table__col">{{ $firstDate ?? 'Mar 02, 2025' }}</div>
+        <div class="details-table__col">{{ __('creatives.card.first-display-date') }}</div>
+        <div class="details-table__col">{{ Carbon\Carbon::parse($firstDate ?? 'Mar 02, 2025')->format('d M Y') }}</div>
     </div>
     <div class="details-table__row">
-        <div class="details-table__col">Last display date</div>
-        <div class="details-table__col">{{ $lastDate ?? 'Mar 02, 2025' }}</div>
+        <div class="details-table__col">{{ __('creatives.card.last-display-date') }}</div>
+        <div class="details-table__col">{{ Carbon\Carbon::parse($lastDate ?? 'Mar 02, 2025')->format('d M Y') }}</div>
     </div>
     <div class="details-table__row">
-        <div class="details-table__col">Status</div>
+        <div class="details-table__col">{{ __('creatives.card.status') }}</div>
         <div class="details-table__col">
-            <div class="creative-status icon-dot">{{ $status ?? 'Active' }}</div>
+            <div class="creative-status icon-dot">{{ $status ? __('creatives.details.active') :
+                __('creatives.details.inactive') }}</div>
         </div>
     </div>
     @endif

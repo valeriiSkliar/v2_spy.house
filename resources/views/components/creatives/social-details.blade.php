@@ -18,33 +18,35 @@
                 <div class="row">
                     <div class="col-auto flex-grow-1 mb-10">
                         <a href="#" class="btn _flex _medium _green w-100"><span
-                                class="icon-download2 font-16 mr-2"></span>Download</a>
+                                class="icon-download2 font-16 mr-2"></span>{{ __('creatives.details.download') }}</a>
                     </div>
                     <div class="col-auto flex-grow-1 mb-10">
                         <a href="#" class="btn _flex _medium _gray w-100"><span
-                                class="icon-new-tab font-16 mr-2"></span>Open in tab</a>
+                                class="icon-new-tab font-16 mr-2"></span>{{ __('creatives.details.open-in-tab') }}</a>
                     </div>
                     <div class="col-auto flex-grow-1 mb-10 d-none d-md-block">
                         <button
                             class="btn _flex _gray _medium btn-favorite {{ isset($isFavorite) && $isFavorite ? 'active' : '' }} w-100">
                             <span
                                 class="icon-favorite{{ isset($isFavorite) && $isFavorite ? '' : '-empty' }} font-16 mr-2"></span>
-                            {{ isset($isFavorite) && $isFavorite ? 'Remove from favorites' : 'Add to favorites' }}
+                            {{ isset($isFavorite) && $isFavorite ? __('creatives.details.remove-from-favorites') :
+                            __('creatives.details.add-to-favorites') }}
                         </button>
                     </div>
                 </div>
             </div>
 
             <div class="creative-details__group">
-                <p class="mb-15 font-16 font-weight-600">Text</p>
+                <p class="mb-15 font-16 font-weight-600">{{ __('creatives.details.text') }}</p>
                 @include('components.creatives.text-with-copy', [
-                'label' => 'Title',
+                'label' => __('creatives.details.creative-title'),
                 'text' => $title ?? 'Area71 Eid Salami Offer 2025 – Scholarship + Bonus Gift!',
                 'fontWeight' => 'font-weight-500'
                 ])
                 <div class="mb-0">
                     <div class="mb-10 row align-items-center justify-content-between">
-                        <div class="col-auto"><span class="txt-gray">Description</span></div>
+                        <div class="col-auto"><span class="txt-gray">{{ __('creatives.details.description') }}</span>
+                        </div>
                         <div class="col-auto">
                             @include('components.ui.copy-button')
                         </div>
@@ -69,7 +71,12 @@
                 ])
 
                 @include('components.creatives.creative-details-table', [
-                'network' => ucfirst($type ?? 'facebook')
+                'network' => ucfirst($type ?? 'facebook'),
+                'country' => $country ?? 'Bangladesh',
+                'language' => $language ?? 'English',
+                'firstDate' => $firstDate ?? 'Mar 02, 2025',
+                'lastDate' => $lastDate ?? 'Mar 02, 2025',
+                'status' => $status ?? true
                 ])
             </div>
 
