@@ -34,11 +34,15 @@
                     </div>
                     <div class="col-12 col-md-6 col-lg-3 mb-10 w-lg-1 flex-grow-1">
                         {{-- TODO: refactor to x-ui.date-picker component syntax --}}
-                        @include('components.ui.date-picker', [
+                        {{-- @include('components.ui.date-picker', [
                         'name' => 'dateCreation',
                         'id' => 'dateCreation',
-                        'placeholder' => __('creatives.filter.date.date-of-creation')
-                        ])
+                        'placeholder' => __('creatives.filter.date.date-of-creation'),
+                        'label' => __('creatives.filter.date.date-of-creation')
+                        ]) --}}
+                        <x-common.date-piker.date-flatpicker-form-field :type="'date'"
+                            :label="__('creatives.filter.date.date-of-creation')" :name="'dateCreation'"
+                            :placeholder="__('creatives.filter.date.date-of-creation')" />
                     </div>
                     <div class="col-12 col-md-12 col-lg-3 mb-10 w-lg-1 flex-grow-1">
                         <x-common.base-select :placeholder="__('creatives.filter.sort.placeholder')" :options="[
@@ -61,10 +65,9 @@
             <div class="row">
                 <div class="col-12 col-md-6 col-lg-3 mb-15">
                     {{-- TODO: refactor to x-ui.date-picker component syntax --}}
-                    @include('components.ui.date-picker', [
-                    'name' => 'dateCreation',
-                    'placeholder' => __('creatives.filter.date.period-of-display')
-                    ])
+                    <x-common.date-piker.date-flatpicker-form-field :type="'date'"
+                        :label="__('creatives.filter.date.period-of-display')" :name="'dateCreation'"
+                        :placeholder="__('creatives.filter.date.period-of-display')" />
                 </div>
                 <div class="col-12 col-md-6 col-lg-3 mb-15">
                     {{-- TODO: refactor to x-ui.date-picker component syntax --}}

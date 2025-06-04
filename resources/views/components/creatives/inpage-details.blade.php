@@ -51,7 +51,14 @@
                     <input type="url" value="{{ $redirectLink ?? 'track.luxeprofit.pro' }}" readonly>
                     <a href="#" target="_blank" class="btn-icon _small _white"><span class="icon-new-tab"></span></a>
                 </div>
-                @include('components.creatives.creative-details-table')
+                @include('components.creatives.creative-details-table', [
+                'network' => $network ?? 'Pushhouse',
+                'country' => $country ?? 'Bangladesh',
+                'language' => $language ?? 'English',
+                'firstDate' => $firstDate ?? 'Mar 02, 2025',
+                'lastDate' => $lastDate ?? 'Mar 02, 2025',
+                'status' => $status ?? true
+                ])
             </div>
 
             @include('components.creatives.similar-creatives', [
