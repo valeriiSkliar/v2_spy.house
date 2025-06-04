@@ -1,6 +1,5 @@
 import {
   initAlsowInterestingArticlesCarousel,
-  initBlogSearch,
   initCommentPagination,
   initReadOftenArticlesCarousel,
   initReplyButtons,
@@ -9,176 +8,380 @@ import {
 import { hideInElement, showInElement } from '../components/loader';
 import { updateBrowserUrl } from '../helpers/update-browser-url';
 
+// Глобальные переменные для состояния
+let isLoading = false;
+let currentRequest = null;
+let retryCount = 0;
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000;
+
 /**
- * Global function to reload blog content
- * @param {HTMLElement} container - The blog container
- * @param {string} url - The AJAX URL to fetch data
- * @param {boolean} scrollToTop - Whether to scroll to top after loading
+ * Главная функция для перезагрузки контента блога
+ * Зачем: централизованная обработка всех AJAX запросов с retry логикой и валидацией
  */
-function reloadBlogContent(container, url, scrollToTop = true) {
-  console.log('Reloading blog content...', { url, scrollToTop });
+function reloadBlogContent(container, url, options = {}) {
+  const {
+    scrollToTop = true,
+    showLoader = true,
+    validateParams = true,
+    retryOnError = true,
+  } = options;
 
-  // Show loading state
-  const loader = showInElement(container);
+  // Предотвращаем множественные одновременные запросы
+  if (isLoading && currentRequest) {
+    currentRequest.abort();
+  }
 
-  // Build URL with the current query parameters
-  const requestUrl = new URL(window.location.href);
+  if (validateParams && !validateRequestParams()) {
+    console.warn('Invalid request parameters detected, redirecting to clean state');
+    cleanRedirect();
+    return;
+  }
 
-  // Make AJAX request
-  fetch(`${url}?${requestUrl.searchParams.toString()}`, {
+  console.log('Reloading blog content...', { url, options });
+
+  isLoading = true;
+  const loader = showLoader ? showInElement(container) : null;
+
+  // Строим URL с текущими параметрами
+  const requestUrl = buildRequestUrl(url);
+
+  // Создаем AbortController для возможности отмены запроса
+  const controller = new AbortController();
+  currentRequest = controller;
+
+  // Делаем AJAX запрос
+  fetch(requestUrl, {
+    method: 'GET',
     headers: {
       'X-Requested-With': 'XMLHttpRequest',
-      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+      'X-CSRF-TOKEN':
+        document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
     },
+    signal: controller.signal,
   })
     .then(response => {
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       return response.json();
     })
     .then(data => {
       console.log('AJAX response received:', data);
+      retryCount = 0; // Сбрасываем счетчик попыток при успехе
 
-      // Handle redirect response
+      // Обрабатываем редирект
       if (data.redirect) {
-        console.log('Handling redirect to:', data.url);
-
-        // Parse the redirect URL to update browser state
-        const redirectUrl = new URL(data.url);
-        const redirectParams = new URLSearchParams(redirectUrl.search);
-
-        // Update browser URL without page reload
-        window.history.pushState(
-          {
-            category: redirectParams.get('category') || '',
-            page: redirectParams.get('page') || '1',
-          },
-          '',
-          data.url
-        );
-
-        // Update sidebar state based on new URL
-        const categorySlug = redirectParams.get('category') || '';
-        updateCategorySidebarState(categorySlug);
-
-        // Reload content with the corrected URL
-        reloadBlogContent(container, url, scrollToTop);
-        updateBrowserUrl({ page: redirectParams.get('page') || '1' });
+        handleRedirectResponse(data, container, url, options);
         return;
       }
 
-      // Update content
-      container.innerHTML = data.html;
-
-      // Update pagination container
-      const paginationContainer = document.getElementById('blog-pagination-container');
-      if (paginationContainer) {
-        // If pagination data exists, show it
-        if (data.hasPagination && data.pagination) {
-          paginationContainer.innerHTML = data.pagination;
-          paginationContainer.style.display = 'block';
-          // Re-initialize pagination click handlers for new content
-          initPaginationClickHandlers();
-        } else {
-          // Otherwise hide the pagination container
-          paginationContainer.innerHTML = '';
-          paginationContainer.style.display = 'none';
-        }
+      // Обрабатываем ошибку валидации
+      if (data.error) {
+        console.error('Validation error:', data.error);
+        cleanRedirect();
+        return;
       }
 
-      // Re-initialize carousels if they exist in the new content
-      initAlsowInterestingArticlesCarousel();
-      initReadOftenArticlesCarousel();
-
-      // Scroll to top of blog container for better UX
-      if (scrollToTop) {
-        container.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+      // Обновляем контент
+      updatePageContent(data, container, scrollToTop);
     })
     .catch(error => {
+      if (error.name === 'AbortError') {
+        console.log('Request was aborted');
+        return;
+      }
+
       console.error('Error fetching blog articles:', error);
+
+      if (retryOnError && retryCount < MAX_RETRIES) {
+        retryCount++;
+        console.log(`Retrying request (${retryCount}/${MAX_RETRIES})...`);
+        setTimeout(() => {
+          reloadBlogContent(container, url, options);
+        }, RETRY_DELAY * retryCount);
+      } else {
+        showErrorMessage(container, error);
+      }
     })
     .finally(() => {
-      // Remove loading state
-      hideInElement(loader);
+      isLoading = false;
+      currentRequest = null;
+      if (loader) {
+        hideInElement(loader);
+      }
     });
 }
 
-// Store pagination click handler globally
+/**
+ * Валидация параметров запроса
+ * Зачем: предотвращение некорректных состояний URL
+ */
+function validateRequestParams() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const page = parseInt(urlParams.get('page')) || 1;
+  const category = urlParams.get('category');
+  const search = urlParams.get('search');
+
+  // Проверяем валидность номера страницы
+  if (page < 1 || page > 1000) {
+    return false;
+  }
+
+  // Проверяем длину поискового запроса
+  if (search && (search.length > 255 || search.length < 1)) {
+    return false;
+  }
+
+  // Проверяем валидность категории (базовая проверка на спецсимволы)
+  if (category && !/^[a-zA-Z0-9\-_]+$/.test(category)) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Построение URL запроса с валидацией
+ * Зачем: корректное формирование запросов к API
+ */
+function buildRequestUrl(baseUrl) {
+  const currentUrl = new URL(window.location.href);
+  const requestUrl = new URL(baseUrl, window.location.origin);
+
+  // Копируем только валидные параметры
+  const validParams = ['page', 'category', 'search'];
+  validParams.forEach(param => {
+    const value = currentUrl.searchParams.get(param);
+    if (value) {
+      requestUrl.searchParams.set(param, value);
+    }
+  });
+
+  return requestUrl.toString();
+}
+
+/**
+ * Обработка ответа с редиректом
+ * Зачем: корректная обработка серверных редиректов
+ */
+function handleRedirectResponse(data, container, url, options) {
+  console.log('Handling redirect to:', data.url);
+
+  const redirectUrl = new URL(data.url);
+  const redirectParams = new URLSearchParams(redirectUrl.search);
+
+  // Обновляем состояние браузера
+  const stateData = {
+    category: redirectParams.get('category') || '',
+    page: redirectParams.get('page') || '1',
+  };
+
+  window.history.pushState(stateData, '', data.url);
+
+  // Обновляем состояние сайдбара
+  updateCategorySidebarState(stateData.category);
+
+  // Перезагружаем контент с новым URL
+  reloadBlogContent(container, url, { ...options, showLoader: false });
+}
+
+/**
+ * Обновление контента страницы
+ * Зачем: безопасное обновление DOM с проверками
+ */
+function updatePageContent(data, container, scrollToTop) {
+  try {
+    // Обновляем основной контент
+    if (data.html) {
+      container.innerHTML = data.html;
+    }
+
+    // Обновляем пагинацию
+    updatePaginationContent(data);
+
+    // Переинициализируем компоненты
+    reinitializeComponents();
+
+    // Прокручиваем к началу если нужно
+    if (scrollToTop) {
+      container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // Обновляем URL для SEO
+    updateUrlForSEO(data);
+  } catch (error) {
+    console.error('Error updating page content:', error);
+    showErrorMessage(container, error);
+  }
+}
+
+/**
+ * Обновление контента пагинации
+ * Зачем: корректная работа с пагинацией без перезагрузки
+ */
+function updatePaginationContent(data) {
+  const paginationContainer = document.getElementById('blog-pagination-container');
+  if (!paginationContainer) return;
+
+  if (data.hasPagination && data.pagination) {
+    paginationContainer.innerHTML = data.pagination;
+    paginationContainer.style.display = 'block';
+    initPaginationClickHandlers();
+  } else {
+    paginationContainer.innerHTML = '';
+    paginationContainer.style.display = 'none';
+  }
+}
+
+/**
+ * Переинициализация компонентов после обновления DOM
+ * Зачем: восстановление функциональности после изменения контента
+ */
+function reinitializeComponents() {
+  try {
+    // Уничтожаем существующие slick карусели перед переинициализацией
+    destroyExistingCarousels();
+
+    // Переинициализируем карусели
+    setTimeout(() => {
+      initAlsowInterestingArticlesCarousel();
+      initReadOftenArticlesCarousel();
+    }, 100);
+  } catch (error) {
+    console.error('Error reinitializing components:', error);
+  }
+}
+
+/**
+ * Уничтожение существующих каруселей
+ * Зачем: предотвращение конфликтов при переинициализации
+ */
+function destroyExistingCarousels() {
+  const carousels = [
+    '#alsow-interesting-articles-carousel-container',
+    '#read-often-articles-carousel-container',
+  ];
+
+  carousels.forEach(selector => {
+    const $carousel = $(selector);
+    if ($carousel.length && $carousel.hasClass('slick-initialized')) {
+      try {
+        $carousel.slick('destroy');
+      } catch (error) {
+        console.warn(`Error destroying carousel ${selector}:`, error);
+      }
+    }
+  });
+}
+
+/**
+ * Чистый редирект без параметров
+ * Зачем: возврат к базовому состоянию при ошибках
+ */
+function cleanRedirect() {
+  const cleanUrl = new URL(window.location.pathname, window.location.origin);
+  window.history.pushState({}, '', cleanUrl.toString());
+  window.location.reload();
+}
+
+/**
+ * Показ сообщения об ошибке
+ * Зачем: информирование пользователя о проблемах
+ */
+function showErrorMessage(container, error) {
+  const errorHtml = `
+    <div class="blog-error-message">
+      <h3>Произошла ошибка при загрузке</h3>
+      <p>Пожалуйста, обновите страницу или попробуйте позже.</p>
+      <button onclick="window.location.reload()" class="btn btn-primary">Обновить страницу</button>
+    </div>
+  `;
+  container.innerHTML = errorHtml;
+}
+
+/**
+ * Обновление URL для SEO
+ * Зачем: поддержка корректных URL для поисковых систем
+ */
+function updateUrlForSEO(data) {
+  if (data.currentCategory) {
+    document.title = `${data.currentCategory.name} - Блог`;
+  } else if (data.totalCount !== undefined) {
+    document.title = `Блог - ${data.totalCount} статей`;
+  }
+}
+
+// Глобальная переменная для хранения обработчика пагинации
 let currentPaginationHandler = null;
 
 /**
- * Initialize pagination click handlers
+ * Инициализация обработчиков кликов по пагинации
+ * Зачем: обеспечение AJAX работы пагинации
  */
 function initPaginationClickHandlers() {
   const paginationLinks = document.querySelectorAll(
     '#blog-pagination-container .pagination-list a'
   );
+
   console.log('Found pagination links:', paginationLinks.length);
 
   paginationLinks.forEach(link => {
-    // Remove existing event listeners to prevent duplicates
+    // Удаляем старые обработчики
     if (currentPaginationHandler) {
       link.removeEventListener('click', currentPaginationHandler);
     }
-    // Add new event listener
+
+    // Добавляем новый обработчик
     link.addEventListener('click', handlePaginationClick);
   });
 
-  // Store current handler
   currentPaginationHandler = handlePaginationClick;
 }
 
 /**
- * Handle pagination link clicks
- * @param {Event} event - Click event
+ * Обработка кликов по ссылкам пагинации
+ * Зачем: AJAX навигация без перезагрузки страницы
  */
 function handlePaginationClick(event) {
-  console.log('Pagination link clicked:', event.target.href);
   event.preventDefault();
 
+  if (isLoading) {
+    console.log('Request already in progress, ignoring click');
+    return;
+  }
+
   const url = new URL(event.target.href);
-  const page = url.searchParams.get('page');
+  const page = parseInt(url.searchParams.get('page')) || 1;
+
+  // Валидация номера страницы
+  if (page < 1 || page > 1000) {
+    console.error('Invalid page number:', page);
+    return;
+  }
+
   const blogContainer = document.getElementById('blog-articles-container');
   const ajaxUrl = blogContainer?.getAttribute('data-blog-ajax-url');
 
-  if (page && ajaxUrl) {
-    console.log('Navigating to page:', page);
-    // Update browser URL
-    updateBrowserUrl({ page: page });
-
-    // Reload blog content
-    reloadBlogContent(blogContainer, ajaxUrl);
-  } else {
-    console.log('No page parameter found in URL:', event.target.href);
+  if (!ajaxUrl) {
+    console.error('No AJAX URL found');
+    return;
   }
+
+  console.log('Navigating to page:', page);
+
+  // Обновляем URL браузера
+  updateBrowserUrl({ page: page });
+
+  // Перезагружаем контент
+  reloadBlogContent(blogContainer, ajaxUrl);
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-  // Initialize blog pagination if on blog index page
-  initBlogPagination();
-
-  // Initialize category filtering
-  initCategoryFiltering();
-
-  // Initialize sidebar state based on current URL
-  initSidebarState();
-
-  // Initialize existing blog components
-  const commentForm = $('#universal-comment-form');
-  if (commentForm.length) {
-    initReplyButtons(commentForm);
-    initUniversalCommentForm(commentForm);
-  }
-  initCommentPagination();
-  initAlsowInterestingArticlesCarousel();
-  initReadOftenArticlesCarousel();
-  initBlogSearch();
-});
-
 /**
- * Initialize category filtering functionality
+ * Инициализация фильтрации по категориям
+ * Зачем: AJAX фильтрация без перезагрузки
  */
 function initCategoryFiltering() {
   const blogContainer = document.getElementById('blog-articles-container');
@@ -189,52 +392,67 @@ function initCategoryFiltering() {
     return;
   }
 
-  // Add event listeners to category links
+  // Используем делегирование событий для лучшей производительности
   document.addEventListener('click', function (event) {
     const categoryLink = event.target.closest('[data-ajax-category-link]');
     if (!categoryLink) return;
 
     event.preventDefault();
-    const categorySlug = categoryLink.getAttribute('data-category-slug');
+
+    if (isLoading) {
+      console.log('Request already in progress, ignoring category click');
+      return;
+    }
+
+    const categorySlug = categoryLink.getAttribute('data-category-slug') || '';
 
     console.log('Category clicked:', categorySlug || 'all');
 
-    // Update active state in sidebar
+    // Обновляем активное состояние в сайдбаре
     updateCategorySidebarState(categorySlug);
 
-    // Update URL and reload content
+    // Формируем новые параметры URL
     const urlParams = new URLSearchParams(window.location.search);
+
     if (categorySlug) {
       urlParams.set('category', categorySlug);
     } else {
       urlParams.delete('category');
     }
-    urlParams.delete('page'); // Reset to page 1 when changing category
 
-    // Update browser URL
+    urlParams.delete('page'); // Сбрасываем на первую страницу при смене категории
+
+    // Обновляем URL браузера
     const newUrl =
       window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
-    window.history.pushState({ category: categorySlug }, '', newUrl);
+    window.history.pushState(
+      {
+        category: categorySlug,
+        page: '1',
+      },
+      '',
+      newUrl
+    );
 
-    // Reload blog content
+    // Перезагружаем контент блога
     reloadBlogContent(blogContainer, ajaxUrl);
   });
 }
 
 /**
- * Update active state in category sidebar
- * @param {string} categorySlug - Selected category slug
+ * Обновление активного состояния в сайдбаре категорий
+ * Зачем: визуальная индикация выбранной категории
  */
 function updateCategorySidebarState(categorySlug) {
   const sidebar = document.querySelector('[data-blog-sidebar]');
   if (!sidebar) return;
 
-  // Remove active class from all items
+  // Убираем активный класс со всех элементов
   sidebar.querySelectorAll('.blog-nav li').forEach(li => {
     li.classList.remove('is-active');
   });
 
-  // Add active class to selected category
+  // Добавляем активный класс к выбранной категории
   const targetLink = sidebar.querySelector(`[data-category-slug="${categorySlug || ''}"]`);
   if (targetLink) {
     targetLink.closest('li').classList.add('is-active');
@@ -242,42 +460,237 @@ function updateCategorySidebarState(categorySlug) {
 }
 
 /**
- * Initialize blog pagination AJAX functionality
+ * Инициализация пагинации блога
+ * Зачем: настройка AJAX пагинации и навигации браузера
  */
 function initBlogPagination() {
   const blogContainer = document.getElementById('blog-articles-container');
   const ajaxUrl = blogContainer?.getAttribute('data-blog-ajax-url');
-  const useAjax = !!ajaxUrl;
 
-  console.log('Blog pagination init:', { blogContainer, ajaxUrl, useAjax });
+  console.log('Blog pagination init:', { blogContainer, ajaxUrl });
 
-  if (!useAjax) {
+  if (!ajaxUrl) {
     console.log('No AJAX URL found, pagination disabled');
     return;
   }
 
-  // Add popstate event listener to handle browser back/forward navigation
+  // Обработчик навигации браузера (кнопки назад/вперед)
   window.addEventListener('popstate', function (event) {
     if (blogContainer && ajaxUrl) {
-      // Update sidebar state based on current URL
+      // Предотвращаем обработку если уже идет загрузка
+      if (isLoading) {
+        return;
+      }
+
+      console.log('Popstate event triggered, reloading content');
+
+      // Обновляем состояние сайдбара на основе текущего URL
       const urlParams = new URLSearchParams(window.location.search);
       const categorySlug = urlParams.get('category') || '';
       updateCategorySidebarState(categorySlug);
 
-      // Reload content
-      reloadBlogContent(blogContainer, ajaxUrl);
+      // Перезагружаем контент
+      reloadBlogContent(blogContainer, ajaxUrl, { scrollToTop: false });
     }
   });
 
-  // Initialize pagination click handlers
+  // Инициализируем обработчики кликов по пагинации
   initPaginationClickHandlers();
 }
 
 /**
- * Initialize sidebar state based on current URL parameters
+ * Инициализация состояния сайдбара на основе URL
+ * Зачем: корректное отображение активной категории при загрузке страницы
  */
 function initSidebarState() {
   const urlParams = new URLSearchParams(window.location.search);
   const categorySlug = urlParams.get('category') || '';
   updateCategorySidebarState(categorySlug);
 }
+
+/**
+ * Оптимизированная инициализация поиска
+ * Зачем: интеграция поиска с общей системой состояний
+ */
+function initOptimizedBlogSearch() {
+  const searchForm = document.querySelector('.search-form form');
+  const searchInput = document.querySelector('.search-form input[type="search"]');
+
+  if (!searchForm || !searchInput) {
+    return;
+  }
+
+  // Обработчик изменения поискового запроса
+  let searchTimeout;
+  searchInput.addEventListener('input', function (e) {
+    const query = searchInput.value.trim();
+
+    // Очищаем предыдущий таймаут
+    clearTimeout(searchTimeout);
+
+    // Если запрос короткий, возвращаемся к обычному режиму
+    if (query.length < 3) {
+      const blogContainer = document.getElementById('blog-articles-container');
+      const ajaxUrl = blogContainer?.getAttribute('data-blog-ajax-url');
+
+      if (ajaxUrl) {
+        // Убираем параметр поиска из URL
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.delete('search');
+        const newUrl =
+          window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+        window.history.pushState({}, '', newUrl);
+
+        // Перезагружаем контент
+        reloadBlogContent(blogContainer, ajaxUrl);
+      }
+      return;
+    }
+
+    // Устанавливаем задержку для избежания частых запросов
+    searchTimeout = setTimeout(() => {
+      performIntegratedSearch(query);
+    }, 300);
+  });
+
+  // Обработчик отправки формы поиска
+  searchForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const query = searchInput.value.trim();
+
+    if (query.length >= 3) {
+      // Переходим на страницу поиска
+      const url = new URL(window.location.href);
+      url.pathname = '/blog/search';
+      url.searchParams.set('q', query);
+      window.location.href = url.toString();
+    }
+  });
+
+  // Обработчик ESC для сброса поиска
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && searchInput.value.trim()) {
+      searchInput.value = '';
+      const event = new Event('input');
+      searchInput.dispatchEvent(event);
+    }
+  });
+}
+
+/**
+ * Выполнение интегрированного поиска через основную систему
+ * Зачем: единая обработка всех типов запросов
+ */
+function performIntegratedSearch(query) {
+  const blogContainer = document.getElementById('blog-articles-container');
+  const ajaxUrl = blogContainer?.getAttribute('data-blog-ajax-url');
+
+  if (!ajaxUrl) return;
+
+  // Обновляем URL с параметром поиска
+  const urlParams = new URLSearchParams(window.location.search);
+  urlParams.set('search', query);
+  urlParams.delete('page'); // Сбрасываем страницу при поиске
+  urlParams.delete('category'); // Сбрасываем категорию при поиске
+
+  const newUrl = window.location.pathname + '?' + urlParams.toString();
+  window.history.pushState({ search: query }, '', newUrl);
+
+  // Сбрасываем состояние категорий
+  updateCategorySidebarState('');
+
+  // Перезагружаем контент
+  reloadBlogContent(blogContainer, ajaxUrl);
+}
+
+/**
+ * Инициализация обработчика изменения размера окна
+ * Зачем: корректная работа компонентов при изменении размера
+ */
+function initResponsiveHandlers() {
+  let resizeTimeout;
+
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(function () {
+      // Переинициализируем карусели при изменении размера
+      reinitializeComponents();
+    }, 250);
+  });
+}
+
+/**
+ * Инициализация системы предзагрузки
+ * Зачем: улучшение пользовательского опыта
+ */
+function initPreloadSystem() {
+  // Предзагрузка следующей страницы при наведении на ссылку пагинации
+  document.addEventListener(
+    'mouseenter',
+    function (e) {
+      // Add check for e.target and ensure it is a Node and has closest method
+      if (!e.target || typeof e.target.closest !== 'function') return;
+
+      const paginationLink = e.target.closest('#blog-pagination-container .pagination-list a');
+      if (!paginationLink || isLoading) return;
+
+      const url = new URL(paginationLink.href);
+      const page = url.searchParams.get('page');
+
+      if (page) {
+        // Простая предзагрузка через создание link тега
+        const linkTag = document.createElement('link');
+        linkTag.rel = 'prefetch';
+        linkTag.href = paginationLink.href;
+        document.head.appendChild(linkTag);
+
+        // Удаляем тег через 5 секунд
+        setTimeout(() => {
+          if (linkTag.parentNode) {
+            linkTag.parentNode.removeChild(linkTag);
+          }
+        }, 5000);
+      }
+    },
+    true
+  );
+}
+
+/**
+ * Основная функция инициализации
+ * Зачем: централизованная настройка всех компонентов
+ */
+document.addEventListener('DOMContentLoaded', function () {
+  console.log('Initializing blog functionality...');
+
+  // Инициализируем основные компоненты
+  initBlogPagination();
+  initCategoryFiltering();
+  initSidebarState();
+  initOptimizedBlogSearch();
+  initResponsiveHandlers();
+  initPreloadSystem();
+
+  // Инициализируем существующие компоненты блога
+  const commentForm = $('#universal-comment-form');
+  if (commentForm.length) {
+    initReplyButtons(commentForm);
+    initUniversalCommentForm(commentForm);
+  }
+
+  initCommentPagination();
+  initAlsowInterestingArticlesCarousel();
+  initReadOftenArticlesCarousel();
+
+  console.log('Blog functionality initialized successfully');
+});
+
+// Экспорт основных функций для внешнего использования
+export {
+  initBlogPagination,
+  initCategoryFiltering,
+  initPaginationClickHandlers,
+  reloadBlogContent,
+  updateCategorySidebarState,
+  validateRequestParams,
+};

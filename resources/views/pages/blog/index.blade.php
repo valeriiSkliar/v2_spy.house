@@ -17,12 +17,12 @@
     <x-blog.blog-no-results-found :query="$query" />
     @endif
 
-    <div class="full-width">
-        <a href="#" target="_blank" class="banner-item">
-            <img src="/img/665479769a2c02372b9aeb068bd2ba2a.gif" alt="">
-        </a>
-    </div>
+</div>
 
+<div class="full-width">
+    <a href="#" target="_blank" class="banner-item">
+        <img src="/img/665479769a2c02372b9aeb068bd2ba2a.gif" alt="">
+    </a>
 </div>
 
 {{-- AJAX container for pagination --}}

@@ -18,25 +18,30 @@ class BlogController extends BaseBlogController
     public function index(Request $request)
     {
 
-        $query = BlogPost::query()
+        $articlesQuery = BlogPost::query()
             ->with(['author', 'categories'])
             ->where('is_published', true);
-        $search = $request->input('search');
+        $searchQuery = $request->input('search');
 
-        if ($search) {
-            $search = $this->sanitizeInput($search);
-            $query->where('title', 'like', '%'.$search.'%');
+        if ($searchQuery) {
+            $searchQuery = $this->sanitizeInput($searchQuery);
+            $articlesQuery->where('title', 'like', '%' . $searchQuery . '%');
         }
+
+        $totalArticlesCount = $articlesQuery->count();
+
+        $paginatedArticles = $articlesQuery->paginate(12)->appends($request->all());
 
         return view($this->indexView, [
             'breadcrumbs' => [],
-            'heroArticle' => $query->first(),
-            'articles' => $query->paginate(12)->appends($request->all()),
+            'heroArticle' => $paginatedArticles->first(),
+            'articles' => $paginatedArticles,
             'categories' => $this->getSidebarData(),
             'currentCategory' => null,
             'filters' => $request->only(['search', 'category', 'sort']),
+            'query' => $searchQuery,
             'currentPage' => $request->get('page', 1),
-            'totalPages' => ceil($query->count() / 12),
+            'totalPages' => ceil($totalArticlesCount / 12),
         ]);
     }
 
@@ -317,7 +322,7 @@ class BlogController extends BaseBlogController
         $user = Auth::user();
         $commentsHtml = '';
         if ($comments->isEmpty()) {
-            $commentsHtml = '<div class="message _bg _with-border">'.__('blog.errors.no_comments_found').'</div>';
+            $commentsHtml = '<div class="message _bg _with-border">' . __('blog.errors.no_comments_found') . '</div>';
         } else {
             if ($user) {
                 $commentsHtml .= view('components.blog.comment.reply-form', [
