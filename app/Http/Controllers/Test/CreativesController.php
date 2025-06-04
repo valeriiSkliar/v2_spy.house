@@ -33,7 +33,7 @@ class CreativesController extends Controller
         $creativesData = $this->getMockCreativesData();
         $creatives = $creativesData[$activeTab] ?? []; // Get data for the active tab
 
-        return view('creatives.index', [
+        return view('pages.creatives.index', [
             'activeTab' => $activeTab,
             'counts' => $counts,
             'creatives' => $creatives, // Pass creatives data to the view
