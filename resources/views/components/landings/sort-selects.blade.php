@@ -19,7 +19,7 @@
             <div class="base-select-icon">
                 <x-common.base-select id="sort-by" :selected="$selectedSort" :options="$sortOptions"
                     :placeholder="$sortOptionsPlaceholder" :icon="'sort'" />
-                <span class="icon-sort"></span>
+                <span class="icon-sort remore_margin"></span>
                 <input type="hidden" name="sort" value="{{ $selectedSort['value'] ?? '' }}">
                 <input type="hidden" name="direction" value="{{ $selectedSort['order'] ?? '' }}">
             </div>
@@ -28,7 +28,7 @@
             <div class="base-select-icon">
                 <x-common.base-select :selected="$selectedPerPage" :options="$perPageOptions"
                     :placeholder="$perPageOptionsPlaceholder" id="items-per-page" :icon="'list'" />
-                <span class="icon-list"></span>
+                <span class="icon-list remore_margin"></span>
                 <input type="hidden" name="per_page" value="{{ $selectedPerPage['value'] ?? '' }}">
             </div>
         </div>

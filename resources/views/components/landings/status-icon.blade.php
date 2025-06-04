@@ -2,11 +2,11 @@
 
 @php
 $iconClass = match($status) {
-    'pending' => 'icon-reload spinning',
-    'in_progress' => 'icon-reload spinning',
-    'completed' => 'icon-check',
-    'failed' => 'icon-warning',
-    default => 'icon-help'
+'pending' => 'icon-reload remore_margin spinning',
+'in_progress' => 'icon-reload remore_margin spinning',
+'completed' => 'icon-check remore_margin',
+'failed' => 'icon-warning remore_margin',
+default => 'icon-help remore_margin'
 };
 @endphp
 

@@ -1,7 +1,7 @@
 <div class="filter">
     <div class="filter__trigger-mobile">
         <span class="btn-icon _dark _big _filter">
-            <span class="icon-filter"></span>
+            <span class="icon-filter remore_margin"></span>
             <span class="icon-up font-24"></span>
         </span>
         Filter

@@ -1,46 +1,28 @@
 @extends('layouts.authorized')
 
 @section('page-content')
-<h1>Creatives</h1>
+<h1>{{ __('creatives.title') }}</h1>
 <div class="row align-items-center">
     <div class="col-12 col-md-auto mb-20 flex-grow-1">
-        <div class="filter-push">
-            <a href="{{ route('creatives.index', ['type' => 'push']) }}"
-                class="filter-push__item {{ $activeTab == 'push' ? 'active' : '' }}">
-                Push <span class="filter-push__count">{{ $counts['push'] }}</span>
-            </a>
-            <a href="{{ route('creatives.index', ['type' => 'inpage']) }}"
-                class="filter-push__item {{ $activeTab == 'inpage' ? 'active' : '' }}">
-                In Page <span class="filter-push__count">{{ $counts['inpage'] }}</span>
-            </a>
-            <a href="{{ route('creatives.index', ['type' => 'facebook']) }}"
-                class="filter-push__item {{ $activeTab == 'facebook' ? 'active' : '' }}">
-                Facebook <span class="filter-push__count">{{ $counts['facebook'] }}</span>
-            </a>
-            <a href="{{ route('creatives.index', ['type' => 'tiktok']) }}"
-                class="filter-push__item {{ $activeTab == 'tiktok' ? 'active' : '' }}">
-                TikTok <span class="filter-push__count">{{ $counts['tiktok'] }}</span>
-            </a>
-        </div>
+        <x-ui.filter-tabs :activeTab="$activeTab" :counts="$counts" />
     </div>
     <div class="col-12 col-md-auto mb-2">
         <div class="row">
             <div class="col-12 col-md-auto mb-15">
                 <a href="#" class="btn justify-content-start _flex w-100 _medium _gray"><span
-                        class="icon-favorite-empty font-16 mr-2"></span>Favorites <span class="btn__count">31</span></a>
+                        class="icon-favorite-empty font-16 mr-2"></span>{{ __('creatives.favorites') }} <span {{-- TODO:
+                        BACKEND=> add favorites count --}}
+                        class="btn__count">31</span></a>
             </div>
             <div class="col-12 col-md-auto mb-15">
                 <div class="base-select-icon">
-                    <div class="base-select">
-                        <div class="base-select__trigger"><span class="base-select__value">On page — 12</span><span
-                                class="base-select__arrow"></span></div>
-                        <ul class="base-select__dropdown" style="display: none;">
-                            <li class="base-select__option is-selected">12</li>
-                            <li class="base-select__option">24</li>
-                            <li class="base-select__option">48</li>
-                            <li class="base-select__option">96</li>
-                        </ul>
-                    </div>
+                    <x-common.base-select id="creatives-per-page" :placeholder="__('creatives.filter.on-page')"
+                        :selected="['value' => '12', 'order' => '1', 'label' => '12']" :options="[
+                    ['value' => '12', 'order' => '1', 'label' => '12'],
+                    ['value' => '24', 'order' => '2', 'label' => '24'],
+                    ['value' => '48', 'order' => '3', 'label' => '48'],
+                    ['value' => '96', 'order' => '4', 'label' => '96']
+                    ]" />
                     <span class="icon-list"></span>
                 </div>
             </div>
@@ -51,7 +33,7 @@
 @include('components.creatives.filter')
 
 <div class="mb-20">
-    <div class="search-count"><span>34 567</span> advertisements</div>
+    <div class="search-count">{!! trans_choice('creatives.advertisements', 34567, ['count' => 34567]) !!}</div>
 </div>
 
 @if($activeTab == 'push')
@@ -62,17 +44,7 @@
 @include('components.creatives.social', ['type' => $activeTab])
 @endif
 
-<nav class="pagination-nav" role="navigation" aria-label="pagination">
-    <ul class="pagination-list">
-        <li><a class="pagination-link prev disabled" aria-disabled="true" href=""><span class="icon-prev"></span> <span
-                    class="pagination-link__txt">Previous</span></a></li>
-        <li><a class="pagination-link active" href="#">1</a></li>
-        <li><a class="pagination-link" href="#">2</a></li>
-        <li><a class="pagination-link" href="#">3</a></li>
-        <li><a class="pagination-link next" aria-disabled="false" href="#"><span
-                    class="pagination-link__txt">Next</span> <span class="icon-next"></span></a></li>
-    </ul>
-</nav>
+@include('components.ui.pagination')
 @endsection
 
 @section('scripts')
