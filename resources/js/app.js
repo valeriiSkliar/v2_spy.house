@@ -34,6 +34,9 @@ import './helpers';
 import '@/utils';
 import { initializeNotificationChecking } from './utils/notification-checker-usage';
 
+// Import localization utility
+import './utils/localization';
+
 // Additional imports
 import './libs/main';
 // import "./rating.js";

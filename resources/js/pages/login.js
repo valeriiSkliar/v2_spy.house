@@ -27,14 +27,14 @@ const handleLoginSubmit = async function (e) {
 
   // Базовая валидация
   if (!email || !password) {
-    createAndShowToast('Пожалуйста, заполните email и пароль', 'error');
+    createAndShowToast(trans('frontend.form.required_field'), 'error');
     return;
   }
 
   // Валидация reCAPTCHA
   const recaptchaResponse = window.grecaptcha?.getResponse();
   if (!recaptchaResponse) {
-    createAndShowToast('Пожалуйста, подтвердите, что вы не робот', 'error');
+    createAndShowToast(trans('frontend.form.recaptcha_required'), 'error');
     return;
   }
 
@@ -109,15 +109,15 @@ const handleLoginSubmit = async function (e) {
 
     // Проверяем специфичные ошибки
     if (error.message.includes('419') || error.message.includes('CSRF')) {
-      createAndShowToast('Ошибка безопасности. Обновите страницу и попробуйте снова.', 'error');
+      createAndShowToast(trans('frontend.errors.unauthorized'), 'error');
       // При CSRF ошибке перезагружаем страницу через 2 секунды
       setTimeout(() => {
         window.location.reload();
       }, 2000);
     } else if (error.message.includes('422')) {
-      createAndShowToast('Неверные данные для входа', 'error');
+      createAndShowToast(trans('frontend.errors.validation_failed'), 'error');
     } else {
-      createAndShowToast('Произошла ошибка при входе. Попробуйте еще раз.', 'error');
+      createAndShowToast(trans('frontend.errors.server_error'), 'error');
     }
 
     // Сбрасываем reCAPTCHA при ошибке
