@@ -20,7 +20,7 @@ class FinanceController extends Controller
                 'paymentMethod' => __('finances.payment_methods.tether'),
                 'amount' => '60',
                 'status' => __('finances.history_table.statuses.pending'),
-                'statusClass' => ''
+                'statusClass' => '',
             ],
             [
                 'date' => '08.04.2025 / 11:10',
@@ -28,7 +28,7 @@ class FinanceController extends Controller
                 'paymentMethod' => __('finances.payment_methods.tether'),
                 'amount' => '60',
                 'status' => __('finances.history_table.statuses.successful'),
-                'statusClass' => '_successful'
+                'statusClass' => '_successful',
             ],
             [
                 'date' => '08.04.2025 / 11:10',
@@ -36,8 +36,8 @@ class FinanceController extends Controller
                 'paymentMethod' => __('finances.payment_methods.tether'),
                 'amount' => '60',
                 'status' => __('finances.history_table.statuses.rejected'),
-                'statusClass' => '_rejected'
-            ]
+                'statusClass' => '_rejected',
+            ],
         ];
 
         return view('pages.finances.index', compact('transactions'));

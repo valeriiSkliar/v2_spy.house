@@ -2,18 +2,18 @@
 
 namespace App\Providers;
 
-use App\Events\User\UserRegistered;
 use App\Events\User\AccountConfirmationCodeRequested;
-use App\Events\User\EmailVerified;
 use App\Events\User\EmailUpdated;
+use App\Events\User\EmailVerified;
 use App\Events\User\PasswordChanged;
-use App\Listeners\Notifications\UserRegisteredListener;
-use App\Listeners\Notifications\AccountConfirmationCodeRequestedListener;
-use App\Listeners\Notifications\EmailVerifiedListener;
-use App\Listeners\Notifications\EmailUpdatedListener;
-use App\Listeners\Notifications\PasswordChangedListener;
-use App\Listeners\Notifications\NotificationMetricsListener;
+use App\Events\User\UserRegistered;
 use App\Listeners\DebugRegistrationListener;
+use App\Listeners\Notifications\AccountConfirmationCodeRequestedListener;
+use App\Listeners\Notifications\EmailUpdatedListener;
+use App\Listeners\Notifications\EmailVerifiedListener;
+use App\Listeners\Notifications\NotificationMetricsListener;
+use App\Listeners\Notifications\PasswordChangedListener;
+use App\Listeners\Notifications\UserRegisteredListener;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 class EventServiceProvider extends ServiceProvider
@@ -30,22 +30,22 @@ class EventServiceProvider extends ServiceProvider
 
         AccountConfirmationCodeRequested::class => [
             AccountConfirmationCodeRequestedListener::class,
-            NotificationMetricsListener::class . '@handle',
+            NotificationMetricsListener::class.'@handle',
         ],
 
         EmailVerified::class => [
             EmailVerifiedListener::class,
-            NotificationMetricsListener::class . '@handle',
+            NotificationMetricsListener::class.'@handle',
         ],
 
         EmailUpdated::class => [
             EmailUpdatedListener::class,
-            NotificationMetricsListener::class . '@handle',
+            NotificationMetricsListener::class.'@handle',
         ],
 
         PasswordChanged::class => [
             PasswordChangedListener::class,
-            NotificationMetricsListener::class . '@handle',
+            NotificationMetricsListener::class.'@handle',
         ],
 
         // Системные события Laravel

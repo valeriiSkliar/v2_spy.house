@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 use function App\Helpers\sanitize_input;
@@ -19,8 +19,8 @@ class BaseRequest extends FormRequest
             throw new HttpResponseException(
                 response()->json([
                     'status' => 'error',
-                    'message' => __('Validation failed'),
-                    'errors' => $validator->errors()->toArray()
+                    'message' => __('validation.validation_error'),
+                    'errors' => $validator->errors()->toArray(),
                 ], 422)
             );
         }
@@ -34,6 +34,7 @@ class BaseRequest extends FormRequest
             return '';
         }
         $input = trim($input);
+        $input = strtolower($input);
 
         return sanitize_input($input);
     }

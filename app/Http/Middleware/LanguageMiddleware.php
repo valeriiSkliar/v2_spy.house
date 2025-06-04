@@ -32,7 +32,7 @@ class LanguageMiddleware
         }
 
         // Приоритет 2: Локаль из сессии (если не установлена из профиля)
-        if (!$locale) {
+        if (! $locale) {
             $sessionLocale = Session::get('locale');
             if ($sessionLocale && array_key_exists($sessionLocale, $supportedLocales)) {
                 $locale = $sessionLocale;
@@ -45,12 +45,12 @@ class LanguageMiddleware
         }
 
         // Приоритет 3: Fallback локаль
-        if (!$locale) {
+        if (! $locale) {
             $locale = config('app.fallback_locale');
             Session::put('locale', $locale);
 
             // Обновляем профиль пользователя fallback локалью, если он авторизован и у него нет локали
-            if (Auth::check() && !Auth::user()->preferred_locale) {
+            if (Auth::check() && ! Auth::user()->preferred_locale) {
                 Auth::user()->update(['preferred_locale' => $locale]);
             }
         }

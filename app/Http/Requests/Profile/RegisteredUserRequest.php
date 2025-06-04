@@ -67,7 +67,7 @@ class RegisteredUserRequest extends BaseRequest
             'experience' => ['required', 'string', 'in:' . implode(',', UserExperience::names())],
             // Use values instead of names for validation
             'scope_of_activity' => ['required', 'string', 'in:' . implode(',', UserScopeOfActivity::names())],
-            'g-recaptcha-response' => ['required', new Recaptcha()],
+            'g-recaptcha-response' => ['required', new Recaptcha],
         ];
     }
 
@@ -103,11 +103,6 @@ class RegisteredUserRequest extends BaseRequest
         }
     }
 
-    protected function sanitizeInput($input): string
-    {
-        return trim($input);
-    }
-
     /**
      * Get the error messages for the defined validation rules.
      *
@@ -116,32 +111,32 @@ class RegisteredUserRequest extends BaseRequest
     public function messages(): array
     {
         return [
-            'login.required' => 'Логин обязателен',
-            'login.string' => 'Логин должен быть строкой',
-            'login.max' => 'Логин не должен превышать 255 символов',
-            'login.regex' => 'Логин должен содержать только латинские буквы, цифры и символ подчеркивания',
-            'login.unique' => 'Этот логин уже занят',
-            'messenger_type.required' => 'Тип мессенджера обязателен',
-            'messenger_type.string' => 'Тип мессенджера должен быть строкой',
-            'messenger_type.in' => 'Выбран недопустимый тип мессенджера',
-            'messenger_contact.required' => 'Контакт мессенджера обязателен',
-            'messenger_contact.string' => 'Контакт мессенджера должен быть строкой',
-            'messenger_contact.unique' => 'Этот контакт уже зарегистрирован с указанным типом мессенджера',
-            'email.required' => 'Email обязателен',
-            'email.string' => 'Email должен быть строкой',
-            'email.lowercase' => 'Email должен быть в нижнем регистре',
-            'email.email' => 'Введите корректный email адрес',
-            'email.max' => 'Email не должен превышать 255 символов',
-            'email.unique' => 'Этот email уже зарегистрирован',
-            'password.required' => 'Пароль обязателен',
-            'password.confirmed' => 'Пароли не совпадают',
-            'experience.required' => 'Опыт обязателен',
-            'experience.string' => 'Опыт должен быть строкой',
-            'experience.in' => 'Выбрано недопустимое значение опыта',
-            'scope_of_activity.required' => 'Сфера деятельности обязательна',
-            'scope_of_activity.string' => 'Сфера деятельности должна быть строкой',
-            'scope_of_activity.in' => 'Выбрано недопустимое значение сферы деятельности',
-            'g-recaptcha-response.required' => 'Пожалуйста, подтвердите, что вы не робот',
+            'login.required' => __('validation.registered_user.required'),
+            'login.string' => __('validation.registered_user.string'),
+            'login.max' => __('validation.registered_user.max'),
+            'login.regex' => __('validation.registered_user.regex'),
+            'login.unique' => __('validation.registered_user.unique'),
+            'messenger_type.required' => __('validation.registered_user.required'),
+            'messenger_type.string' => __('validation.registered_user.string'),
+            'messenger_type.in' => __('validation.registered_user.in'),
+            'messenger_contact.required' => __('validation.registered_user.required'),
+            'messenger_contact.string' => __('validation.registered_user.string'),
+            'messenger_contact.unique' => __('validation.registered_user.unique'),
+            'email.required' => __('validation.registered_user.required'),
+            'email.string' => __('validation.registered_user.string'),
+            'email.lowercase' => __('validation.registered_user.lowercase'),
+            'email.email' => __('validation.registered_user.email'),
+            'email.max' => __('validation.registered_user.max'),
+            'email.unique' => __('validation.registered_user.unique'),
+            'password.required' => __('validation.registered_user.required'),
+            'password.confirmed' => __('validation.registered_user.confirmed'),
+            'experience.required' => __('validation.registered_user.required'),
+            'experience.string' => __('validation.registered_user.string'),
+            'experience.in' => __('validation.registered_user.in'),
+            'scope_of_activity.required' => __('validation.registered_user.required'),
+            'scope_of_activity.string' => __('validation.registered_user.string'),
+            'scope_of_activity.in' => __('validation.registered_user.in'),
+            'g-recaptcha-response.required' => __('validation.registered_user.recaptcha'),
         ];
     }
 }

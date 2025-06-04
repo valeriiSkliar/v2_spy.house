@@ -136,10 +136,12 @@ const confirmPersonalGreetingUpdate = async formData => {
  * Initialize cancel button event listener
  */
 const initCancelButton = () => {
-  $('[data-action="cancel-personal-greeting"]').off('click').on('click', function (e) {
-    e.preventDefault();
-    cancelPersonalGreetingUpdate();
-  });
+  $('[data-action="cancel-personal-greeting"]')
+    .off('click')
+    .on('click', function (e) {
+      e.preventDefault();
+      cancelPersonalGreetingUpdate();
+    });
 };
 
 /**
@@ -150,7 +152,7 @@ const changePersonalGreeting = () => {
   const $formContainer = $('#personal-greeting-form-container');
   const $form = $formContainer.find('#personal-greeting-form');
 
-  logger('[DEBUG] Personal Greeting - Form found', { debug: true });
+  logger('[DEBUG] Personal Greeting - Form found');
 
   if ($form.length) {
     // Remove previous event handlers
@@ -163,34 +165,26 @@ const changePersonalGreeting = () => {
     let validator = null;
     try {
       validator = initChangePersonalGreetingValidation($form, isConfirmationStep);
-      logger(
-        '[DEBUG] Personal Greeting - Validator initialized',
-        {
-          validatorExists: !!validator,
-          rules: validator?.settings?.rules,
-          isConfirmationStep,
-        },
-        { debug: true }
-      );
+      logger('[DEBUG] Personal Greeting - Validator initialized', {
+        validatorExists: !!validator,
+        rules: validator?.settings?.rules,
+        isConfirmationStep,
+      });
     } catch (error) {
-      logger(
-        '[DEBUG] Personal Greeting - Validator initialization failed',
-        { error },
-        { debug: true }
-      );
+      logger('[DEBUG] Personal Greeting - Validator initialization failed', { error });
       // Continue without validation, but with warning
       validator = null;
     }
 
     // Form submission handler
     $form.on('submit', async function (e) {
-      logger('[DEBUG] Personal Greeting - Form submit triggered', { debug: true });
+      logger('[DEBUG] Personal Greeting - Form submit triggered');
       e.preventDefault();
 
       // Check if form is valid
       if (validator) {
         const isValid = validator.form();
-        logger('[DEBUG] Personal Greeting - Form validation result', { isValid }, { debug: true });
+        logger('[DEBUG] Personal Greeting - Form validation result', { isValid });
 
         if (!isValid) {
           return false;
@@ -201,17 +195,13 @@ const changePersonalGreeting = () => {
       const formData = new FormData(this);
 
       // Log form data for debugging
-      logger(
-        '[DEBUG] Personal Greeting - Form data',
-        {
-          hasVerificationCode: formData.has('verification_code'),
-          verificationCode: formData.get('verification_code'),
-          personalGreeting: formData.get('personal_greeting'),
-          formFields: Array.from(formData.entries()).map(([key, value]) => key),
-          isConfirmationStep,
-        },
-        { debug: true }
-      );
+      logger('[DEBUG] Personal Greeting - Form data', {
+        hasVerificationCode: formData.has('verification_code'),
+        verificationCode: formData.get('verification_code'),
+        personalGreeting: formData.get('personal_greeting'),
+        formFields: Array.from(formData.entries()).map(([key, value]) => key),
+        isConfirmationStep,
+      });
 
       if (isConfirmationStep) {
         // Handle confirmation submission
@@ -273,7 +263,7 @@ const changePersonalGreeting = () => {
  * Initialize personal greeting form handling
  */
 const initChangePersonalGreeting = () => {
-  logger('[DEBUG] Personal Greeting - Initializing', { debug: true });
+  logger('[DEBUG] Personal Greeting - Initializing');
   changePersonalGreeting();
 };
 

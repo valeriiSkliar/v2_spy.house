@@ -58,24 +58,25 @@ class ProfileUpdateRequest extends BaseRequest
 
                         if ($exists) {
                             $fail(__('validation.messenger_contact_taken'));
+
                             return;
                         }
 
                         // Format validation
                         switch ($messengerType) {
                             case 'telegram':
-                                if (!parent::validation_telegram_login($value)) {
-                                    $fail(__('validation.telegram_format'));
+                                if (! parent::validation_telegram_login($value)) {
+                                    $fail(__('validation.profile.telegram_format'));
                                 }
                                 break;
                             case 'viber':
-                                if (!parent::validation_viber_identifier($value)) {
-                                    $fail(__('validation.phone_format'));
+                                if (! parent::validation_viber_identifier($value)) {
+                                    $fail(__('validation.profile.phone_format'));
                                 }
                                 break;
                             case 'whatsapp':
-                                if (!parent::validation_whatsapp_identifier($value)) {
-                                    $fail(__('validation.phone_format'));
+                                if (! parent::validation_whatsapp_identifier($value)) {
+                                    $fail(__('validation.profile.phone_format'));
                                 }
                                 break;
                         }

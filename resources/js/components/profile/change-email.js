@@ -14,8 +14,11 @@ const cancelEmailUpdate = async () => {
   const $form = $formContainer.find('#change-email-form');
   let loader = null;
 
+  logger('[DEBUG] Change Email - Cancel update requested');
+
   try {
     loader = showInElement($formContainer[0]);
+
     const response = await ajaxFetcher.get(config.apiProfileEmailCancelEndpoint, null, {});
 
     if (response.success) {
@@ -107,11 +110,23 @@ const confirmEmailUpdate = async formData => {
   }
 };
 
+/**
+ * Initialize cancel button event listener
+ */
+const initCancelButton = () => {
+  $('[data-action="cancel-email-update"]')
+    .off('click')
+    .on('click', function (e) {
+      e.preventDefault();
+      cancelEmailUpdate();
+    });
+};
+
 const changeEmail = () => {
   let loader = null;
   const $formContainer = $('#change-email-form-container');
   const $form = $formContainer.find('#change-email-form');
-  logger('[DEBUG] Change Email - Form found', { debug: true });
+  logger('[DEBUG] Change Email - Form found');
 
   if ($form.length) {
     // Remove previous event handlers
@@ -124,29 +139,25 @@ const changeEmail = () => {
     let validator = null;
     try {
       validator = initChangeEmailValidation($form, isConfirmationStep);
-      logger(
-        '[DEBUG] Change Email - Validator initialized',
-        {
-          validatorExists: !!validator,
-          rules: validator?.settings?.rules,
-          isConfirmationStep,
-        },
-        { debug: true }
-      );
+      logger('[DEBUG] Change Email - Validator initialized', {
+        validatorExists: !!validator,
+        rules: validator?.settings?.rules,
+        isConfirmationStep,
+      });
     } catch (error) {
-      logger('[DEBUG] Change Email - Validator initialization failed', { error }, { debug: true });
+      logger('[DEBUG] Change Email - Validator initialization failed', { error });
       return;
     }
 
     // Form submission handler
     $form.on('submit', async function (e) {
-      logger('[DEBUG] Change Email - Form submit triggered', { debug: true });
+      logger('[DEBUG] Change Email - Form submit triggered');
       e.preventDefault();
 
       // Check if form is valid
       if (validator) {
         const isValid = validator.form();
-        logger('[DEBUG] Change Email - Form validation result', { isValid }, { debug: true });
+        logger('[DEBUG] Change Email - Form validation result', { isValid });
 
         if (!isValid) {
           return false;
@@ -157,16 +168,12 @@ const changeEmail = () => {
       const formData = new FormData(this);
 
       // Log form data for debugging
-      logger(
-        '[DEBUG] Change Email - Form data',
-        {
-          hasVerificationCode: formData.has('verification_code'),
-          verificationCode: formData.get('verification_code'),
-          formFields: Array.from(formData.entries()).map(([key, value]) => key),
-          isConfirmationStep,
-        },
-        { debug: true }
-      );
+      logger('[DEBUG] Change Email - Form data', {
+        hasVerificationCode: formData.has('verification_code'),
+        verificationCode: formData.get('verification_code'),
+        formFields: Array.from(formData.entries()).map(([key, value]) => key),
+        isConfirmationStep,
+      });
 
       // Validation should have already caught missing verification code
       // If we reach here, the form data should be valid
@@ -200,12 +207,7 @@ const changeEmail = () => {
               changeEmail();
 
               // Add event listener for cancel button
-              $('.btn._flex._red._big')
-                .off('click')
-                .on('click', function (e) {
-                  e.preventDefault();
-                  cancelEmailUpdate();
-                });
+              initCancelButton();
             }
           } else {
             handleChangeEmailValidationErrors(response, $form);
@@ -233,17 +235,12 @@ const changeEmail = () => {
     });
   }
 
-  // Add event listener for cancel button if it exists
-  $('.btn._flex._red._big')
-    .off('click')
-    .on('click', function (e) {
-      e.preventDefault();
-      cancelEmailUpdate();
-    });
+  // Initialize cancel button
+  initCancelButton();
 };
 
 const initChangeEmail = () => {
-  logger('[DEBUG] Change Email - Initializing', { debug: true });
+  logger('[DEBUG] Change Email - Initializing');
   changeEmail();
 };
 

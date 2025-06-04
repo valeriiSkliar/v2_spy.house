@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 
 use App\Models\User;
-use App\Services\EmailService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
@@ -36,8 +35,9 @@ class TestWelcomeEmail extends Command
             // Найдем пользователя или создадим тестовые данные
             $user = User::where('email', $email)->first();
 
-            if (!$user) {
+            if (! $user) {
                 $this->error("User with email {$email} not found!");
+
                 return 1;
             }
 
@@ -46,17 +46,18 @@ class TestWelcomeEmail extends Command
             // Тестируем отправку приветственного письма
             $user->sendWelcomeNotification();
 
-            $this->info("Welcome email sent successfully!");
-            $this->info("Check logs for details: tail -f storage/logs/laravel.log");
+            $this->info('Welcome email sent successfully!');
+            $this->info('Check logs for details: tail -f storage/logs/laravel.log');
 
             return 0;
         } catch (\Exception $e) {
-            $this->error("Error sending welcome email: " . $e->getMessage());
+            $this->error('Error sending welcome email: '.$e->getMessage());
             Log::error('TestWelcomeEmail command failed', [
                 'email' => $email,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return 1;
         }
     }

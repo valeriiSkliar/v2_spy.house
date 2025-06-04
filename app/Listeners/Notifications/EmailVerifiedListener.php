@@ -18,7 +18,7 @@ class EmailVerifiedListener
     public function handle(EmailVerified $event): void
     {
         Log::info('Processing EmailVerified event', [
-            'user_id' => $event->user->id
+            'user_id' => $event->user->id,
         ]);
 
         // Отправляем уведомление об успешном подтверждении

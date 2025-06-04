@@ -34,7 +34,8 @@
             <input type="hidden" name="confirmation_method" value="{{ $confirmationMethod }}">
         </div>
     </div>
-    <x-profile.submit-button formId="change-password-form" :label="__('profile.next_button')" />
+    <x-profile.submit-button :action="'cansel-email-update'" formId="change-password-form"
+        :label="__('profile.next_button')" />
     @else
     <div class="row _offset20 mb-20 ">
         @if ($confirmationMethod === 'authenticator')
@@ -55,7 +56,7 @@
         <x-profile.submit-button formId="change-password-form" :label="__('profile.confirm_button')" />
         <div class="mb-20">
 
-            <button type="button" class="btn _flex _red _big">
+            <button data-action="cancel-password" type="button" class="btn _flex _red _big">
                 {{ __('profile.cancel_button') }}
             </button>
         </div>

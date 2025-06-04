@@ -13,7 +13,6 @@ return [
 
     'audience_id' => env('RESEND_AUDIENCE_ID'),
 
-
     /*
     |--------------------------------------------------------------------------
     | Default Configuration
@@ -45,7 +44,6 @@ return [
     |--------------------------------------------------------------------------
     */
 
-
     'default_tags' => env('RESEND_DEFAULT_TAGS', []),
 
     'default_headers' => [
@@ -61,7 +59,7 @@ return [
 
     'auto_add_contacts' => env('RESEND_AUTO_ADD_CONTACTS', false),
 
-    'unsubscribe_url' => env('RESEND_UNSUBSCRIBE_URL', env('APP_URL') . '/unsubscribe'),
+    'unsubscribe_url' => env('RESEND_UNSUBSCRIBE_URL', env('APP_URL').'/unsubscribe'),
 
     /*
     |--------------------------------------------------------------------------

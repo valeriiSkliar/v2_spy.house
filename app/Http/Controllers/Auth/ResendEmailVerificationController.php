@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Events\User\AccountConfirmationCodeRequested;
 use App\Traits\App\HasAntiFloodProtection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,14 +23,14 @@ class ResendEmailVerificationController extends Controller
         if ($user->hasVerifiedEmail()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Email уже подтвержден'
+                'message' => 'Email уже подтвержден',
             ], 422);
         }
 
         $userId = $user->id;
 
         // Проверяем лимит 1 раз в 5 минут
-        if (!$this->checkAntiFlood($userId, 'resend_verification_5min', 1, 300)) {
+        if (! $this->checkAntiFlood($userId, 'resend_verification_5min', 1, 300)) {
             $firstRequestTime = $this->getAntiFloodTimestamp($userId, 'resend_verification_5min');
             $retryAfter = $firstRequestTime ? max(0, 300 - (time() - $firstRequestTime)) : 300;
 
@@ -39,15 +38,15 @@ class ResendEmailVerificationController extends Controller
                 'success' => false,
                 'message' => 'Слишком частые запросы, попробуйте через 5 минут',
                 'retry_after' => $retryAfter,
-                'unblock_time' => $firstRequestTime ? ($firstRequestTime + 300) * 1000 : (time() + 300) * 1000
+                'unblock_time' => $firstRequestTime ? ($firstRequestTime + 300) * 1000 : (time() + 300) * 1000,
             ], 429);
         }
 
         // Проверяем дневной лимит (5 раз в сутки)
-        if (!$this->checkAntiFlood($userId, 'resend_verification_daily', 5, 86400)) {
+        if (! $this->checkAntiFlood($userId, 'resend_verification_daily', 5, 86400)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Превышен дневной лимит отправки кода. Попробуйте завтра.'
+                'message' => 'Превышен дневной лимит отправки кода. Попробуйте завтра.',
             ], 429);
         }
 
@@ -55,7 +54,7 @@ class ResendEmailVerificationController extends Controller
         $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
         // Сохраняем код в кэш на 15 минут
-        Cache::put('email_verification_code:' . $user->id, $code, now()->addMinutes(15));
+        Cache::put('email_verification_code:'.$user->id, $code, now()->addMinutes(15));
 
         // Генерируем событие запроса кода
         $user->sendEmailVerificationNotification($code);
@@ -64,7 +63,7 @@ class ResendEmailVerificationController extends Controller
             'success' => true,
             'message' => 'Код подтверждения отправлен на ваш email',
             'unblock_time' => (time() + 300) * 1000,
-            'server_time' => time() * 1000
+            'server_time' => time() * 1000,
         ]);
     }
 }

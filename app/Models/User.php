@@ -7,16 +7,13 @@ use App\Enums\Frontend\NotificationType;
 use App\Models\Frontend\Rating;
 use App\Notifications\Auth\VerifyEmailNotification;
 use App\Notifications\Auth\WelcomeNotification;
-use App\Notifications\Profile\EmailUpdateConfirmationNotification;
-use App\Notifications\Profile\PasswordUpdateConfirmationNotification;
 use App\Notifications\WelcomeInAppNotification;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Support\Facades\Log;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -139,7 +136,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getFullPhoneNumber(): ?string
     {
         if ($this->phone_country_code && $this->phone) {
-            return '+' . $this->phone_country_code . $this->phone;
+            return '+'.$this->phone_country_code.$this->phone;
         }
 
         return null;
@@ -293,7 +290,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function sendWelcomeNotification(): void
     {
-        $this->notify(new WelcomeNotification());
+        $this->notify(new WelcomeNotification);
     }
 
     /**
@@ -301,6 +298,6 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function sendWelcomeInAppNotification(): void
     {
-        $this->notify(new WelcomeInAppNotification());
+        $this->notify(new WelcomeInAppNotification);
     }
 }

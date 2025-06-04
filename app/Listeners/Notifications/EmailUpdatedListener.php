@@ -21,7 +21,7 @@ class EmailUpdatedListener
         Log::info('Processing EmailUpdated event', [
             'user_id' => $event->user->id,
             'old_email' => $event->oldEmail,
-            'new_email' => $event->newEmail
+            'new_email' => $event->newEmail,
         ]);
 
         // Уведомление пользователю

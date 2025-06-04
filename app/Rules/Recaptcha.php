@@ -14,17 +14,18 @@ class Recaptcha implements ValidationRule
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         // Проверяем, включена ли reCAPTCHA
-        if (!config('captcha.enabled', true)) {
+        if (! config('captcha.enabled', true)) {
             return; // Пропускаем валидацию если reCAPTCHA отключена
         }
 
         // Если в режиме разработки и установлена переменная для отключения
-        if (app()->environment('local') && !config('captcha.enabled_in_local', true)) {
+        if (app()->environment('local') && ! config('captcha.enabled_in_local', true)) {
             return;
         }
 
         if (empty($value)) {
             $fail('Пожалуйста, подтвердите, что вы не робот.');
+
             return;
         }
 
@@ -34,14 +35,15 @@ class Recaptcha implements ValidationRule
             'remoteip' => request()->ip(),
         ]);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             $fail('Ошибка проверки reCAPTCHA. Попробуйте еще раз.');
+
             return;
         }
 
         $result = $response->json();
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             $fail('Проверка reCAPTCHA не пройдена. Попробуйте еще раз.');
         }
     }

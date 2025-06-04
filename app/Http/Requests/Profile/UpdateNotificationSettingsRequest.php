@@ -6,7 +6,7 @@ use App\Http\Requests\BaseRequest;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 
-class UpdateNotificationSettingsRequest extends FormRequest // Наследуемся от FormRequest, BaseRequest можно убрать если он не добавляет общую логику
+class UpdateNotificationSettingsRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

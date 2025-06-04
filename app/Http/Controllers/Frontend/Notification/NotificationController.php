@@ -37,7 +37,7 @@ class NotificationController extends BaseNotificationController
                 $notificationsHtml = view('components.notifications.empty-notifications')->render();
             } else {
                 $notificationsHtml = view('components.notifications.notifications-list', [
-                    'notifications' => $notificationsData['items']
+                    'notifications' => $notificationsData['items'],
                 ])->render();
             }
 

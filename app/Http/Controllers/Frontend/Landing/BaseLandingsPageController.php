@@ -27,9 +27,8 @@ class BaseLandingsPageController extends FrontendController
     ];
 
     protected $sortOptions;
+
     protected $perPageOptions;
-
-
 
     use AuthorizesRequests;
 

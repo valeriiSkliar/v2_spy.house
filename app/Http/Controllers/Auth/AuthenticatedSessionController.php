@@ -122,7 +122,7 @@ class AuthenticatedSessionController extends Controller
             ]);
 
             $tokenData = null;
-            if (!$hasValidToken) {
+            if (! $hasValidToken) {
                 Log::debug('Creating new tokens for user', ['user_id' => $user->id]);
 
                 // Get the token service to create a basic token with refresh token

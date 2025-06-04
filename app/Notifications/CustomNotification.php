@@ -16,7 +16,9 @@ class CustomNotification extends Notification implements ShouldQueue
     use HasNotificationType, Queueable;
 
     private array $data;
+
     private ?string $customTitle;
+
     private ?string $customMessage;
 
     public function __construct(NotificationType $type, array $data = [], ?string $title = null, ?string $message = null)
@@ -56,6 +58,7 @@ class CustomNotification extends Notification implements ShouldQueue
         }
 
         $typeModel = $this->getNotificationTypeModel();
+
         return $typeModel ? $typeModel->name : __('notifications.notification');
     }
 
@@ -66,6 +69,7 @@ class CustomNotification extends Notification implements ShouldQueue
         }
 
         $typeModel = $this->getNotificationTypeModel();
+
         return $typeModel ? $typeModel->description : __('notifications.you_have_a_new_notification');
     }
 

@@ -381,3 +381,11 @@ html {
     }
   }
 }
+
+// BLOG
+.blog-list {
+  &__no-results {
+    grid-template-columns: repeat(1, 1fr);
+  }
+  margin-bottom: 20px;
+}

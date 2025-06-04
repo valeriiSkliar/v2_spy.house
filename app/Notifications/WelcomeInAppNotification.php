@@ -34,13 +34,13 @@ class WelcomeInAppNotification extends Notification implements ShouldQueue
         return [
             'title' => __('notifications.welcome.title'),
             'message' => __('notifications.welcome.message', [
-                'name' => $notifiable->name ?? $notifiable->login
+                'name' => $notifiable->name ?? $notifiable->login,
             ]),
             'type' => NotificationType::WELCOME->value,
             'icon' => 'welcome',
             'data' => array_merge([
                 'registration_date' => $notifiable->created_at->format('Y-m-d H:i:s'),
-                'user_id' => $notifiable->id
+                'user_id' => $notifiable->id,
             ], $this->data),
         ];
     }

@@ -47,13 +47,13 @@ class ImageService
                 Log::info('Image successfully deleted', [
                     'original_path' => $imagePath,
                     'normalized_path' => $relativePath,
-                    'disk' => $disk
+                    'disk' => $disk,
                 ]);
             } else {
                 Log::warning('Failed to delete existing image', [
                     'original_path' => $imagePath,
                     'normalized_path' => $relativePath,
-                    'disk' => $disk
+                    'disk' => $disk,
                 ]);
             }
 
@@ -63,7 +63,7 @@ class ImageService
         Log::warning('Image file not found for deletion', [
             'original_path' => $imagePath,
             'normalized_path' => $relativePath,
-            'disk' => $disk
+            'disk' => $disk,
         ]);
 
         return false;

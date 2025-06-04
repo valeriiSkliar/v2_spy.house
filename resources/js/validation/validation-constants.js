@@ -55,6 +55,17 @@ export const PERSONAL_GREETING_CONFIG = {
   errorMessage: 'Personal greeting must be between 3 and 100 characters',
 };
 
+export const PASSWORD_CONFIG = {
+  minLength: 8,
+  errorMessage: 'Password must be at least 8 characters long',
+};
+
+export const IP_RESTRICTION_CONFIG = {
+  maxIpAddresses: 50,
+  errorMessage: 'Please enter valid IP addresses (one per line, max 50)',
+  ipv4Pattern: /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/,
+};
+
 /**
  * Unified validation methods
  */
@@ -194,5 +205,69 @@ export const ValidationMethods = {
       trimmedValue.length >= PERSONAL_GREETING_CONFIG.minLength &&
       trimmedValue.length <= PERSONAL_GREETING_CONFIG.maxLength
     );
+  },
+
+  /**
+   * Validate password strength
+   * @param {string} value - The value to validate
+   * @param {number} minLength - Minimum length (default from config)
+   * @returns {boolean} - True if valid
+   */
+  validatePasswordStrength(value, minLength = PASSWORD_CONFIG.minLength) {
+    if (!value || !value.trim()) return false; // Required field
+    return value.length >= minLength;
+  },
+
+  /**
+   * Validate password confirmation
+   * @param {string} password - The password value
+   * @param {string} confirmation - The confirmation value
+   * @returns {boolean} - True if they match
+   */
+  validatePasswordConfirmation(password, confirmation) {
+    if (!password || !confirmation) return false;
+    return password === confirmation;
+  },
+
+  /**
+   * Validate single IP address
+   * @param {string} ip - The IP address to validate
+   * @returns {boolean} - True if valid
+   */
+  validateIpAddress(ip) {
+    if (!ip || !ip.trim()) return false;
+    
+    const ipv4Match = ip.trim().match(IP_RESTRICTION_CONFIG.ipv4Pattern);
+    if (!ipv4Match) return false;
+
+    // Validate each octet
+    for (let i = 1; i <= 4; i++) {
+      const octet = parseInt(ipv4Match[i], 10);
+      if (octet < 0 || octet > 255) {
+        return false;
+      }
+    }
+
+    return true;
+  },
+
+  /**
+   * Validate multiple IP addresses
+   * @param {string} ipList - Newline-separated IP addresses
+   * @returns {boolean} - True if all are valid
+   */
+  validateIpAddressList(ipList) {
+    if (!ipList || !ipList.trim()) return true; // Empty is valid
+
+    const ips = ipList
+      .split('\n')
+      .map(ip => ip.trim())
+      .filter(ip => ip !== '');
+
+    if (ips.length > IP_RESTRICTION_CONFIG.maxIpAddresses) {
+      return false;
+    }
+
+    return ips.every(ip => this.validateIpAddress(ip));
   },
 };

@@ -6,8 +6,8 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Log;
 
 class WelcomeNotification extends Notification implements ShouldQueue
 {
@@ -45,7 +45,7 @@ class WelcomeNotification extends Notification implements ShouldQueue
             'template' => 'welcome',
             'subject' => __('emails.welcome.subject'),
             'user_locale' => $userLocale,
-            'current_locale' => $currentLocale
+            'current_locale' => $currentLocale,
         ]);
 
         $mailMessage = (new MailMessage)
@@ -53,13 +53,13 @@ class WelcomeNotification extends Notification implements ShouldQueue
             ->view('emails.welcome', [
                 'username' => $notifiable->login,
                 'user' => $notifiable,
-                'dashboardUrl' => config('app.url') . '/profile/settings',
-                'loginUrl' => config('app.url') . '/login',
+                'dashboardUrl' => config('app.url').'/profile/settings',
+                'loginUrl' => config('app.url').'/login',
                 'telegramUrl' => config('app.telegram_url', 'https://t.me/spyhouse'),
                 'supportEmail' => config('mail.support_email', 'support@spy.house'),
                 'unsubscribeUrl' => $notifiable->unsubscribe_hash
                     ? route('unsubscribe.show', $notifiable->unsubscribe_hash)
-                    : config('app.url') . '/unsubscribe'
+                    : config('app.url').'/unsubscribe',
             ]);
 
         // Восстанавливаем исходную локаль

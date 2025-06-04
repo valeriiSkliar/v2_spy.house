@@ -1,208 +1,187 @@
+import { logger, loggerError } from '@/helpers/logger';
+import { checkNotifications } from '@/helpers/notification-checker';
 import { createAndShowToast } from '@/utils';
 import { config } from '../../config';
 import { ajaxFetcher } from '../fetcher/ajax-fetcher';
 import { hideInElement, showInElement } from '../loader';
+import {
+  handleIpRestrictionValidationErrors,
+  initIpRestrictionValidation,
+} from './update-ip-restriction-validation';
 
 /**
- * Handle server validation errors
- * @param {Object} response - The error response from the server
+ * Initialize cancel button event listener
  */
-const handleServerValidationErrors = response => {
-  if (response.errors) {
-    // Clear previous errors
-    $('input, textarea').removeClass('error');
-    $('.error-message').remove();
-
-    // Add errors for each field
-    Object.keys(response.errors).forEach(field => {
-      const input = $(`[name="${field}"]`);
-      input.addClass('error');
+const initCancelButton = () => {
+  $('[data-action="cancel-ip-restriction"]')
+    .off('click')
+    .on('click', function (e) {
+      e.preventDefault();
+      cancelIpRestrictionUpdate();
     });
+};
 
-    // Show toast with the main error message
-    if (response.message) {
-      createAndShowToast(response.message, 'error');
+/**
+ * Cancel IP restriction update process
+ */
+const cancelIpRestrictionUpdate = async () => {
+  const $formContainer = $('#ip-restriction-form-container');
+  const $form = $formContainer.find('#ip-restriction-form');
+  let loader = null;
+
+  logger('[DEBUG] IP Restriction - Cancel update requested');
+
+  try {
+    loader = showInElement($formContainer[0]);
+
+    // For now, just reset the form since we don't have a two-step process yet
+    $form[0].reset();
+    $form.find('input, textarea').removeClass('error valid');
+
+    createAndShowToast('IP restriction update cancelled', 'success');
+  } catch (error) {
+    loggerError('[ERROR] IP Restriction - Error cancelling update:', error);
+    createAndShowToast('Error cancelling IP restriction update. Please try again.', 'error');
+  } finally {
+    if (loader) {
+      hideInElement(loader);
     }
+    checkNotifications();
   }
 };
 
 /**
- * Initialize jQuery validation for the IP restriction form
- * @param {jQuery} form - The form to validate
- */
-const initFormValidation = form => {
-  if (!form.length || !$.validator) return;
-
-  // Add custom IP validation method
-  $.validator.addMethod(
-    'validIpAddresses',
-    function (value, element) {
-      if (!value || value.trim() === '') {
-        return true; // Empty is valid (nullable)
-      }
-
-      // Split by newlines and check each line
-      const ips = value
-        .split('\n')
-        .map(ip => ip.trim())
-        .filter(ip => ip !== '');
-
-      for (const ip of ips) {
-        // Check for simple IP address format
-        const ipv4Regex = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
-        const ipv4Match = ip.match(ipv4Regex);
-
-        // If it's not a valid IP format, return false
-        if (!ipv4Match) {
-          return false;
-        }
-
-        // Validate each octet
-        for (let i = 1; i <= 4; i++) {
-          const octet = parseInt(ipv4Match[i], 10);
-          if (octet < 0 || octet > 255) {
-            return false;
-          }
-        }
-      }
-
-      return true;
-    },
-    'Please enter valid IP addresses (one per line)'
-  );
-
-  form.validate({
-    errorClass: 'error',
-    errorElement: 'div',
-    errorPlacement: function (error, element) {
-      error.addClass('error-message text-danger mt-1');
-    },
-    highlight: function (element) {
-      $(element).removeClass('valid');
-      $(element).addClass('error');
-    },
-    unhighlight: function (element) {
-      $(element).addClass('valid');
-      $(element).removeClass('error');
-    },
-    rules: {
-      ip_restrictions: {
-        validIpAddresses: true,
-      },
-      password: {
-        required: true,
-      },
-    },
-    messages: {
-      ip_restrictions: {
-        validIpAddresses: '',
-      },
-      password: {
-        required: '',
-      },
-    },
-  });
-};
-
-/**
- * Handles the IP restriction form submission
+ * Main form handler for IP restriction updates
  */
 const updateIpRestriction = () => {
-  if (typeof $ === 'undefined') {
-    console.error('jQuery is not loaded');
-    return;
-  }
+  let loader = null;
+  const $formContainer = $('#ip-restriction-form-container');
+  const $form = $formContainer.find('#ip-restriction-form');
 
-  const form = $('#ip-restriction-form');
-  if (!form.length) {
-    console.error('IP restriction form not found');
-    return;
-  }
+  logger('[DEBUG] IP Restriction - Form found');
 
-  // Ensure textareas auto-resize
-  const adjustHeight = element => {
-    element.style.height = 'auto';
-    element.style.height = element.scrollHeight + 'px';
-  };
+  if ($form.length) {
+    // Remove previous event handlers
+    $form.off('submit');
 
-  const textareas = document.querySelectorAll('.auto-resize');
-  textareas.forEach(textarea => {
-    textarea.addEventListener('input', function () {
-      adjustHeight(this);
-    });
-  });
-
-  // Initialize form validation
-  initFormValidation(form);
-
-  // Handle form submission
-  form.on('submit', async function (e) {
-    e.preventDefault();
-
-    // Check if form is valid before proceeding
-    if (!form.valid()) {
-      return;
-    }
-    const profileSettingsSection = form.closest('.profile-settings');
-    const formData = new FormData(this);
-    let formLoader = null;
-
+    // Initialize form validation
+    let validator = null;
     try {
-      if (profileSettingsSection.length) {
-        formLoader = showInElement(profileSettingsSection[0]);
-      }
-      const response = await ajaxFetcher.form(
-        config.apiProfileIpRestrictionUpdateEndpoint,
-        formData
-      );
-
-      if (response.success) {
-        createAndShowToast(response.message, 'success');
-
-        if (response.successFormHtml) {
-          $('#ip-restriction-form').replaceWith(response.successFormHtml);
-          updateIpRestriction();
-        }
-
-        $('input[name="password"]').val('');
-      } else {
-        // Handle server validation errors
-        handleServerValidationErrors(response);
-        createAndShowToast(response.message || 'Error updating IP restrictions', 'error');
-      }
+      validator = initIpRestrictionValidation($form, false);
+      logger('[DEBUG] IP Restriction - Validator initialized', {
+        validatorExists: !!validator,
+        rules: validator?.settings?.rules,
+      });
     } catch (error) {
-      console.error('Error updating IP restrictions:', error);
-
-      // Handle validation errors (code 422)
-      if (error.status === 422 && error.responseJSON) {
-        handleServerValidationErrors(error.responseJSON);
-
-        const errorData = error.responseJSON;
-        if (errorData.message) {
-          createAndShowToast(errorData.message, 'error');
-        } else if (errorData.errors) {
-          // If there are errors, form a message from the first error of each field
-          const errorMessages = Object.values(errorData.errors)
-            .map(fieldErrors => fieldErrors[0])
-            .join(', ');
-
-          createAndShowToast(errorMessages, 'error');
-        }
-      } else {
-        createAndShowToast('Error updating IP restrictions. Please try again.', 'error');
-      }
-    } finally {
-      if (formLoader) {
-        hideInElement(formLoader);
-      }
+      logger('[DEBUG] IP Restriction - Validator initialization failed', { error });
+      // Continue without validation, but with warning
+      validator = null;
     }
-  });
+
+    // Ensure textareas auto-resize
+    const adjustHeight = element => {
+      element.style.height = 'auto';
+      element.style.height = element.scrollHeight + 'px';
+    };
+
+    const textareas = $form.find('.auto-resize');
+    textareas.each(function () {
+      this.addEventListener('input', function () {
+        adjustHeight(this);
+      });
+    });
+
+    // Form submission handler
+    $form.on('submit', async function (e) {
+      logger('[DEBUG] IP Restriction - Form submit triggered');
+      e.preventDefault();
+
+      // Check if form is valid
+      if (validator) {
+        const isValid = validator.form();
+        logger('[DEBUG] IP Restriction - Form validation result', { isValid });
+
+        if (!isValid) {
+          return false;
+        }
+      }
+
+      // Get form data
+      const formData = new FormData(this);
+
+      // Log form data for debugging
+      logger('[DEBUG] IP Restriction - Form data', {
+        ipRestrictions: formData.get('ip_restrictions'),
+        formFields: Array.from(formData.entries()).map(([key, value]) => key),
+      });
+
+      // Handle form submission
+      await submitIpRestrictionUpdate(formData);
+    });
+  }
+
+  // Initialize cancel button
+  initCancelButton();
 };
 
-const initUpdateIpRestriction = () => {
-  if ($('#ip-restriction-form').length) {
-    updateIpRestriction();
+/**
+ * Handle IP restriction form submission
+ */
+const submitIpRestrictionUpdate = async formData => {
+  let loader = null;
+  const $formContainer = $('#ip-restriction-form-container');
+  const $form = $formContainer.find('#ip-restriction-form');
+
+  logger('[DEBUG] IP Restriction - Submit update started');
+
+  try {
+    loader = showInElement($formContainer[0]);
+
+    const response = await ajaxFetcher.form(config.apiProfileIpRestrictionUpdateEndpoint, formData);
+
+    logger('[DEBUG] IP Restriction - Submit response:', response);
+
+    if (response.success) {
+      createAndShowToast(response.message || 'IP restrictions updated successfully', 'success');
+
+      // Replace form with success form or refresh form
+      if (response.successFormHtml) {
+        $form.replaceWith(response.successFormHtml);
+        updateIpRestriction();
+      }
+
+      // Clear password field
+      $form.find('input[name="password"]').val('');
+
+      checkNotifications();
+    } else {
+      // Handle server validation errors
+      handleIpRestrictionValidationErrors(response, $form);
+      createAndShowToast(response.message || 'Error updating IP restrictions', 'error');
+    }
+  } catch (error) {
+    loggerError('[ERROR] IP Restriction - Error updating:', error);
+
+    if (error.status === 422 && error.responseJSON) {
+      handleIpRestrictionValidationErrors(error.responseJSON, $form);
+      createAndShowToast(error.responseJSON.message || 'Validation errors occurred', 'error');
+    } else {
+      createAndShowToast('Error updating IP restrictions. Please try again.', 'error');
+    }
+  } finally {
+    if (loader) {
+      hideInElement(loader);
+    }
+    checkNotifications();
   }
+};
+
+/**
+ * Initialize IP restriction form handling
+ */
+const initUpdateIpRestriction = () => {
+  logger('[DEBUG] IP Restriction - Initializing');
+  updateIpRestriction();
 };
 
 export { initUpdateIpRestriction, updateIpRestriction };

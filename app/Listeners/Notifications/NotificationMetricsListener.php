@@ -21,7 +21,7 @@ class NotificationMetricsListener
             'event' => $eventName,
             'user_id' => $userId,
             'timestamp' => now()->toISOString(),
-            'metadata' => $event->metadata ?? []
+            'metadata' => $event->metadata ?? [],
         ]);
 
         // Здесь можно добавить отправку метрик в внешние системы:

@@ -6,9 +6,9 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\App;
 
 class VerifyEmailNotification extends Notification implements ShouldQueue
 {
@@ -22,7 +22,7 @@ class VerifyEmailNotification extends Notification implements ShouldQueue
         $this->code = $code ?: str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
         Log::debug('VerifyEmailNotification created', [
-            'code_length' => strlen($this->code)
+            'code_length' => strlen($this->code),
         ]);
     }
 
@@ -47,11 +47,11 @@ class VerifyEmailNotification extends Notification implements ShouldQueue
         App::setLocale($userLocale);
 
         // Сохраняем код в кэш при отправке
-        Cache::put('email_verification_code:' . $notifiable->id, $this->code, now()->addMinutes(15));
+        Cache::put('email_verification_code:'.$notifiable->id, $this->code, now()->addMinutes(15));
 
         Log::debug('Verification code saved to cache', [
             'user_id' => $notifiable->id,
-            'code_length' => strlen($this->code)
+            'code_length' => strlen($this->code),
         ]);
 
         Log::debug('Sending verification email', [
@@ -61,7 +61,7 @@ class VerifyEmailNotification extends Notification implements ShouldQueue
             'template' => 'verification-account',
             'subject' => __('emails.verification.subject'),
             'user_locale' => $userLocale,
-            'current_locale' => $currentLocale
+            'current_locale' => $currentLocale,
         ]);
 
         $mailMessage = (new MailMessage)
@@ -70,12 +70,12 @@ class VerifyEmailNotification extends Notification implements ShouldQueue
                 'code' => $this->code,
                 'user' => $notifiable,
                 'emailType' => 'verification',
-                'loginUrl' => config('app.url') . '/login',
+                'loginUrl' => config('app.url').'/login',
                 'telegramUrl' => config('app.telegram_url', 'https://t.me/spyhouse'),
                 'supportEmail' => config('mail.support_email', 'support@spy.house'),
                 'unsubscribeUrl' => $notifiable->unsubscribe_hash
                     ? route('unsubscribe.show', $notifiable->unsubscribe_hash)
-                    : config('app.url') . '/unsubscribe'
+                    : config('app.url').'/unsubscribe',
             ]);
 
         // Восстанавливаем исходную локаль

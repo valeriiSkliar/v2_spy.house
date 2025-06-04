@@ -121,7 +121,6 @@ class AntiFloodService
      *
      * @param  mixed  $userId  Идентификатор пользователя
      * @param  string  $action  Идентификатор действия
-     * @return string
      */
     protected function getTimestampKey($userId, string $action): string
     {

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Frontend\ModalController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\Test\ApiController;
 use App\Http\Controllers\Test\CreativesController;
 use App\Http\Controllers\Test\FinanceController;
@@ -51,13 +52,25 @@ Route::post('/unsubscribe/{hash}', [UnsubscribeController::class, 'unsubscribe']
 Route::get('/unsubscribe-success', [UnsubscribeController::class, 'success'])
     ->name('unsubscribe.success');
 
-require __DIR__ . '/auth.php';
+// Sitemap routes
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.index');
+Route::get('/sitemap/{section}.xml', [SitemapController::class, 'section'])->name('sitemap.section');
+Route::get('/sitemapindex.xml', [SitemapController::class, 'sitemapIndex'])->name('sitemap.sitemapindex');
+
+// Robots.txt route
+Route::get('/robots.txt', function () {
+    $content = "User-agent: *\nDisallow:\n\nSitemap: ".url('/sitemap.xml');
+
+    return response($content, 200, ['Content-Type' => 'text/plain']);
+})->name('robots');
+
+require __DIR__.'/auth.php';
 // API routes are included directly in api.php with proper prefixing
-include __DIR__ . '/api.php';
-require __DIR__ . '/blog.php';
-require __DIR__ . '/profile.php';
-require __DIR__ . '/tariffs.php';
-require __DIR__ . '/landings.php';
-require __DIR__ . '/notifications.php';
-require __DIR__ . '/services.php';
-require __DIR__ . '/test.php';
+include __DIR__.'/api.php';
+require __DIR__.'/blog.php';
+require __DIR__.'/profile.php';
+require __DIR__.'/tariffs.php';
+require __DIR__.'/landings.php';
+require __DIR__.'/notifications.php';
+require __DIR__.'/services.php';
+require __DIR__.'/test.php';

@@ -25,7 +25,7 @@ class UpdatePersonalGreetingSettingsRequest extends FormRequest
             'confirmation_method' => [
                 'required',
                 'string',
-                Rule::in(['email', 'authenticator'])
+                Rule::in(['email', 'authenticator']),
             ],
         ];
     }
@@ -33,20 +33,20 @@ class UpdatePersonalGreetingSettingsRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'personal_greeting.required' => __('validation.required'),
-            'personal_greeting.string' => __('validation.string'),
-            'personal_greeting.min' => __('validation.min.string', ['min' => 3]),
-            'personal_greeting.max' => __('validation.max.string', ['max' => 100]),
-            'confirmation_method.required' => __('profile.security_settings.confirmation_method_required'),
-            'confirmation_method.in' => __('profile.security_settings.invalid_confirmation_method'),
+            'personal_greeting.required' => __('validation.personal_greeting.required'),
+            'personal_greeting.string' => __('validation.personal_greeting.string'),
+            'personal_greeting.min' => __('validation.personal_greeting.min', ['min' => 3]),
+            'personal_greeting.max' => __('validation.personal_greeting.max', ['max' => 100]),
+            'confirmation_method.required' => __('validation.confirmation_method.required'),
+            'confirmation_method.in' => __('validation.confirmation_method.in'),
         ];
     }
 
     public function attributes(): array
     {
         return [
-            'personal_greeting' => __('profile.personal_greeting_label'),
-            'confirmation_method' => __('profile.security_settings.confirmation_method_label'),
+            'personal_greeting' => __('validation.personal_greeting.label'),
+            'confirmation_method' => __('validation.confirmation_method.label'),
         ];
     }
 }

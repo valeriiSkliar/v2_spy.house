@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Rules\Recaptcha;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -12,7 +13,6 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use PragmaRX\Google2FA\Exceptions\Google2FAException;
 use PragmaRX\Google2FA\Google2FA;
-use App\Rules\Recaptcha;
 
 class LoginRequest extends FormRequest
 {
@@ -35,7 +35,7 @@ class LoginRequest extends FormRequest
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
             'code' => ['nullable', 'string', 'size:6'],
-            'g-recaptcha-response' => ['required', new Recaptcha()],
+            'g-recaptcha-response' => ['required', new Recaptcha],
         ];
     }
 
@@ -53,7 +53,7 @@ class LoginRequest extends FormRequest
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'email' => trans('validation.auth.failed'),
             ]);
         }
 
@@ -65,7 +65,7 @@ class LoginRequest extends FormRequest
             if (! $this->input('code')) {
                 Auth::logout();
                 throw ValidationException::withMessages([
-                    'code' => trans('auth.2fa_required'),
+                    'code' => trans('validation.auth.2fa_required'),
                 ]);
             }
 
@@ -77,7 +77,7 @@ class LoginRequest extends FormRequest
                 RateLimiter::hit($this->throttleKey('2fa'));
 
                 throw ValidationException::withMessages([
-                    'code' => trans('auth.2fa_failed'),
+                    'code' => trans('validation.auth.2fa_failed'),
                 ]);
             }
         }
@@ -151,7 +151,7 @@ class LoginRequest extends FormRequest
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
+            'email' => trans('validation.auth.throttle', [
                 'seconds' => $seconds,
                 'minutes' => ceil($seconds / 60),
             ]),

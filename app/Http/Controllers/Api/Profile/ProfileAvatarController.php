@@ -35,7 +35,6 @@ class ProfileAvatarController extends Controller
             // Process the avatar image
             $avatarFile = $request->file('avatar');
 
-
             $avatarPath = $imageService->replace(
                 $avatarFile,
                 $user->user_avatar,
@@ -51,11 +50,11 @@ class ProfileAvatarController extends Controller
                 'success' => true,
                 'message' => __('profile.success.photo_updated'),
                 'avatar' => [
-                    'url' => asset('storage/' . $avatarPath),
+                    'url' => asset('storage/'.$avatarPath),
                 ],
             ]);
         } catch (\Exception $e) {
-            Log::error('Error uploading avatar: ' . $e->getMessage(), [
+            Log::error('Error uploading avatar: '.$e->getMessage(), [
                 'user_id' => $request->user()->id ?? null,
                 'exception' => $e,
             ]);

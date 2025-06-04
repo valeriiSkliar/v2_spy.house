@@ -25,7 +25,7 @@ class EmailUpdateConfirmationNotification extends Notification implements Should
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        return ['mail'];
     }
 
     /**
@@ -38,7 +38,7 @@ class EmailUpdateConfirmationNotification extends Notification implements Should
             'user_id' => $notifiable->id ?? null,
             'email' => $notifiable->email,
             'template' => 'verification-account',
-            'subject' => __('emails.email_update_confirmation.subject')
+            'subject' => __('emails.email_update_confirmation.subject'),
         ]);
 
         return (new MailMessage)
@@ -52,7 +52,7 @@ class EmailUpdateConfirmationNotification extends Notification implements Should
                 'supportEmail' => config('mail.support_email', 'support@spy.house'),
                 'unsubscribeUrl' => $notifiable->unsubscribe_hash
                     ? route('unsubscribe.show', $notifiable->unsubscribe_hash)
-                    : config('app.url') . '/unsubscribe'
+                    : config('app.url') . '/unsubscribe',
             ]);
     }
 

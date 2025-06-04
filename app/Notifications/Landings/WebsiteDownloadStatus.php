@@ -7,9 +7,8 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\Facades\Lang;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Log;
 
 class WebsiteDownloadStatus extends Notification implements ShouldQueue
 {
@@ -61,7 +60,7 @@ class WebsiteDownloadStatus extends Notification implements ShouldQueue
             'url' => $this->url,
             'status' => $this->status,
             'user_locale' => $userLocale,
-            'current_locale' => $currentLocale
+            'current_locale' => $currentLocale,
         ]);
 
         $mailMessage = (new MailMessage)
@@ -69,7 +68,7 @@ class WebsiteDownloadStatus extends Notification implements ShouldQueue
             ->line($this->getMessage($notifiable));
 
         if ($this->error && $this->status === 'failed') {
-            $mailMessage->line(__('landings.download.error_details') . ': ' . $this->error);
+            $mailMessage->line(__('landings.download.error_details').': '.$this->error);
         }
 
         // Восстанавливаем исходную локаль
@@ -106,12 +105,12 @@ class WebsiteDownloadStatus extends Notification implements ShouldQueue
 
     protected function getTitle(object $notifiable): string
     {
-        return __('landings.download.status.' . $this->status . '.title', ['url' => $this->url]);
+        return __('landings.download.status.'.$this->status.'.title', ['url' => $this->url]);
     }
 
     protected function getMessage(object $notifiable): string
     {
-        return __('landings.download.status.' . $this->status . '.message', ['url' => $this->url]);
+        return __('landings.download.status.'.$this->status.'.message', ['url' => $this->url]);
     }
 
     protected function getIcon(): string

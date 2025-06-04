@@ -32,7 +32,7 @@ class StoreLandingRequest extends BaseRequest
                     $sanitizedUrl = sanitize_url($value);
                     $processedUrl = preg_replace('/\\{[^}]+\\}/', 'dummy', $sanitizedUrl);
                     if (! filter_var($processedUrl, FILTER_VALIDATE_URL)) {
-                        $fail(__('validation.url', ['attribute' => $attribute]));
+                        $fail(__('validation.landing.regex'));
                     }
                 },
             ],
@@ -57,9 +57,9 @@ class StoreLandingRequest extends BaseRequest
     public function messages(): array
     {
         return [
-            'url.required' => __('validation.required', ['attribute' => 'url']),
-            'url.string' => __('validation.string', ['attribute' => 'url']),
-            'url.max' => __('validation.max.string', ['attribute' => 'url', 'max' => 300]),
+            'url.required' => __('validation.landing.required'),
+            'url.string' => __('validation.landing.string'),
+            'url.max' => __('validation.landing.max', ['max' => 300]),
         ];
     }
 }

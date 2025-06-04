@@ -16,13 +16,14 @@ class NewsletterServiceTest extends TestCase
     use RefreshDatabase;
 
     private NewsletterService $service;
+
     private User $user;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->service = new NewsletterService();
+        $this->service = new NewsletterService;
 
         $this->user = User::factory()->create([
             'email' => 'test@example.com',

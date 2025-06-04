@@ -176,7 +176,6 @@ class ProfileSettingsController extends BaseProfileController
 
             SendEmailUpdateConfirmationJob::dispatch($user, (string) $verificationCode, $newEmail);
 
-
             return response()->json([
                 'success' => true,
                 'message' => __('profile.security_settings.email_code_sent'),
@@ -270,7 +269,7 @@ class ProfileSettingsController extends BaseProfileController
             if (! $isValid) {
                 return response()->json([
                     'success' => false,
-                    'message' => __('profile.error.invalid_verification_code'),
+                    'message' => __('validation.profile.invalid_verification_code'),
                 ], 422);
             }
 
@@ -282,7 +281,6 @@ class ProfileSettingsController extends BaseProfileController
             Cache::forget('email_update_code:' . $user->id);
 
             $user->sendEmailVerificationNotification();
-
 
             return response()->json([
                 'success' => true,
@@ -485,9 +483,9 @@ class ProfileSettingsController extends BaseProfileController
 
                     return response()->json([
                         'success' => false,
-                        'message' => __('profile.error.invalid_verification_code'),
+                        'message' => __('validation.profile.invalid_verification_code'),
                         'errors' => [
-                            'verification_code' => [__('profile.error.invalid_verification_code')],
+                            'verification_code' => [__('validation.profile.invalid_verification_code')],
                         ],
                     ], 422);
                 }
@@ -516,9 +514,9 @@ class ProfileSettingsController extends BaseProfileController
             if (! $isValid) {
                 return response()->json([
                     'success' => false,
-                    'message' => __('profile.error.invalid_verification_code'),
+                    'message' => __('validation.profile.invalid_verification_code'),
                     'errors' => [
-                        'verification_code' => [__('profile.error.invalid_verification_code')],
+                        'verification_code' => [__('validation.profile.invalid_verification_code')],
                     ],
                 ], 422);
             }
@@ -529,7 +527,6 @@ class ProfileSettingsController extends BaseProfileController
             Cache::forget('personal_greeting_update_code:' . $user->id);
 
             Log::info('Personal greeting updated successfully (API).', ['user_id' => $user->id]);
-
 
             return response()->json([
                 'success' => true,
@@ -638,8 +635,8 @@ class ProfileSettingsController extends BaseProfileController
                     'success' => false,
                     'message' => __('profile.error.current_password_incorrect'),
                     'errors' => [
-                        'current_password' => [__('profile.error.current_password_incorrect')]
-                    ]
+                        'current_password' => [__('profile.error.current_password_incorrect')],
+                    ],
                 ], 422);
             }
 
@@ -648,8 +645,8 @@ class ProfileSettingsController extends BaseProfileController
                     'success' => false,
                     'message' => __('profile.error.2fa_not_enabled'),
                     'errors' => [
-                        'confirmation_method' => [__('profile.error.2fa_not_enabled')]
-                    ]
+                        'confirmation_method' => [__('profile.error.2fa_not_enabled')],
+                    ],
                 ], 422);
             }
 
@@ -665,7 +662,6 @@ class ProfileSettingsController extends BaseProfileController
                     'expires_at' => now()->addMinutes(15),
                     'status' => 'pending',
                 ], now()->addMinutes(15));
-
 
                 return response()->json([
                     'success' => true,
@@ -686,7 +682,6 @@ class ProfileSettingsController extends BaseProfileController
             ], now()->addMinutes(15));
 
             SendPasswordUpdateConfirmationJob::dispatch($user, $verificationCode);
-
 
             return response()->json([
                 'success' => true,
@@ -767,8 +762,8 @@ class ProfileSettingsController extends BaseProfileController
                     'success' => false,
                     'message' => __('profile.security_settings.update_request_expired'),
                     'errors' => [
-                        'verification_code' => [__('profile.security_settings.update_request_expired')]
-                    ]
+                        'verification_code' => [__('profile.security_settings.update_request_expired')],
+                    ],
                 ], 422);
             }
 
@@ -779,8 +774,8 @@ class ProfileSettingsController extends BaseProfileController
                     'success' => false,
                     'message' => __('profile.security_settings.update_request_expired'),
                     'errors' => [
-                        'verification_code' => [__('profile.security_settings.update_request_expired')]
-                    ]
+                        'verification_code' => [__('profile.security_settings.update_request_expired')],
+                    ],
                 ], 422);
             }
 
@@ -788,12 +783,13 @@ class ProfileSettingsController extends BaseProfileController
             if ($pendingUpdate['method'] === 'authenticator') {
                 if (! $user->google_2fa_secret) {
                     Log::error('Password update 2FA confirmation failed (API): 2FA secret not found for user.', ['user_id' => $user->id]);
+
                     return response()->json([
                         'success' => false,
-                        'message' => __('profile.error.invalid_verification_code'),
+                        'message' => __('validation.profile.invalid_verification_code'),
                         'errors' => [
-                            'verification_code' => [__('profile.error.invalid_verification_code')]
-                        ]
+                            'verification_code' => [__('validation.profile.invalid_verification_code')],
+                        ],
                     ], 422);
                 }
 
@@ -811,22 +807,22 @@ class ProfileSettingsController extends BaseProfileController
                         'success' => false,
                         'message' => __('profile.2fa.error_decrypting_secret'),
                         'errors' => [
-                            'verification_code' => [__('profile.2fa.error_decrypting_secret')]
-                        ]
+                            'verification_code' => [__('profile.2fa.error_decrypting_secret')],
+                        ],
                     ], 500);
                 }
             } else {
                 // For email confirmation
-                $isValid = $otp === (string)$pendingUpdate['code'];
+                $isValid = $otp === (string) $pendingUpdate['code'];
             }
 
             if (! $isValid) {
                 return response()->json([
                     'success' => false,
-                    'message' => __('profile.error.invalid_verification_code'),
+                    'message' => __('validation.profile.invalid_verification_code'),
                     'errors' => [
-                        'verification_code' => [__('profile.error.invalid_verification_code')]
-                    ]
+                        'verification_code' => [__('validation.profile.invalid_verification_code')],
+                    ],
                 ], 422);
             }
 
@@ -837,7 +833,6 @@ class ProfileSettingsController extends BaseProfileController
 
             // Clear the pending update
             Cache::forget('password_update_code:' . $user->id);
-
 
             return response()->json([
                 'success' => true,

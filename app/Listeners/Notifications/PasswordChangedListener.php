@@ -18,7 +18,7 @@ class PasswordChangedListener
     public function handle(PasswordChanged $event): void
     {
         Log::info('Processing PasswordChanged event', [
-            'user_id' => $event->user->id
+            'user_id' => $event->user->id,
         ]);
 
         // Уведомление об успешной смене пароля

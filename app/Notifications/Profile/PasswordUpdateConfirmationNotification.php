@@ -25,7 +25,7 @@ class PasswordUpdateConfirmationNotification extends Notification implements Sho
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        return ['mail'];
     }
 
     /**
@@ -38,7 +38,7 @@ class PasswordUpdateConfirmationNotification extends Notification implements Sho
             'user_id' => $notifiable->id ?? null,
             'email' => $notifiable->email,
             'template' => 'verification-account',
-            'subject' => __('emails.password_update_confirmation.subject')
+            'subject' => __('emails.password_update_confirmation.subject'),
         ]);
 
         return (new MailMessage)
@@ -54,24 +54,24 @@ class PasswordUpdateConfirmationNotification extends Notification implements Sho
                 'supportEmail' => config('mail.support_email', 'support@spy.house'),
                 'unsubscribeUrl' => $notifiable->unsubscribe_hash
                     ? route('unsubscribe.show', $notifiable->unsubscribe_hash)
-                    : config('app.url') . '/unsubscribe'
+                    : config('app.url') . '/unsubscribe',
             ]);
     }
 
-    /**
-     * Get the array representation of the notification for database storage.
-     */
-    public function toDatabase(object $notifiable): array
-    {
-        return [
-            'title' => __('emails.password_update_confirmation.title'),
-            'message' => __('emails.password_update_confirmation.message', ['code' => $this->verificationCode]),
-            'type' => NotificationType::PASSWORD_RESET->value,
-            'icon' => 'lock',
-            'data' => [
-                'verification_code' => $this->verificationCode,
-                'expires_in' => 15,
-            ],
-        ];
-    }
+    // /**
+    //  * Get the array representation of the notification for database storage.
+    //  */
+    // public function toDatabase(object $notifiable): array
+    // {
+    //     return [
+    //         'title' => __('emails.password_update_confirmation.title'),
+    //         'message' => __('emails.password_update_confirmation.message', ['code' => $this->verificationCode]),
+    //         'type' => NotificationType::PASSWORD_RESET->value,
+    //         'icon' => 'lock',
+    //         'data' => [
+    //             'verification_code' => $this->verificationCode,
+    //             'expires_in' => 15,
+    //         ],
+    //     ];
+    // }
 }

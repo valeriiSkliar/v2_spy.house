@@ -10,11 +10,10 @@ use App\Services\SecurityAuditService;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 
 class NewPasswordController extends Controller
@@ -59,13 +58,13 @@ class NewPasswordController extends Controller
                     'token' => ['required'],
                     'email' => ['required', 'email'],
                     'password' => ['required', 'confirmed', 'min:8', 'max:64'],
-                    'g-recaptcha-response' => ['required', new Recaptcha()],
+                    'g-recaptcha-response' => ['required', new Recaptcha],
                 ]);
             } catch (\Illuminate\Validation\ValidationException $e) {
                 return response()->json([
                     'success' => false,
                     'errors' => $e->errors(),
-                    'message' => __('validation.failed')
+                    'message' => __('validation.failed'),
                 ], 422);
             }
 
@@ -105,7 +104,7 @@ class NewPasswordController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => __($status),
-                    'redirect' => route('login')
+                    'redirect' => route('login'),
                 ]);
             } else {
                 SecurityAuditService::logPasswordResetEvent(
@@ -118,7 +117,7 @@ class NewPasswordController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => __($status),
-                    'errors' => ['email' => [__($status)]]
+                    'errors' => ['email' => [__($status)]],
                 ], 422);
             }
         }
@@ -128,7 +127,7 @@ class NewPasswordController extends Controller
             'token' => ['required'],
             'email' => ['required', 'email'],
             'password' => ['required', 'confirmed', 'min:8', 'max:64'],
-            'g-recaptcha-response' => ['required', new Recaptcha()],
+            'g-recaptcha-response' => ['required', new Recaptcha],
         ]);
 
         // Here we will attempt to reset the user's password. If it is successful we
@@ -165,6 +164,7 @@ class NewPasswordController extends Controller
         // redirect them back to where they came from with their error message.
         if ($status == Password::PASSWORD_RESET) {
             Toast::success(__($status));
+
             return redirect()->route('login');
         } else {
             SecurityAuditService::logPasswordResetEvent(
@@ -175,6 +175,7 @@ class NewPasswordController extends Controller
             );
 
             Toast::error(__($status));
+
             return back()->withInput($request->only('email'));
         }
     }

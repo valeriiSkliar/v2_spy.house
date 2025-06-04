@@ -35,28 +35,28 @@ class ProfileSettingsUpdateRequest extends BaseRequest
                 switch ($messengerType) {
                     case 'telegram':
                         if ($value && ! $this->validation_telegram_login($value)) {
-                            $fail('Неверный формат имени пользователя Telegram. Должен начинаться с @ и содержать 5-32 символа (буквы, цифры, подчеркивание).');
+                            $fail(__('validation.profile.telegram_format'));
                         }
                         break;
                     case 'viber':
                         if ($value && ! $this->validation_viber_identifier($value)) {
-                            $fail('Неверный формат номера телефона Viber. Должен содержать 10-15 цифр.');
+                            $fail(__('validation.profile.phone_format'));
                         }
                         break;
                     case 'whatsapp':
                         if ($value && ! $this->validation_whatsapp_identifier($value)) {
-                            $fail('Неверный формат номера телефона WhatsApp. Должен содержать 10-15 цифр.');
+                            $fail(__('validation.profile.phone_format'));
                         }
                         break;
                     default:
-                        $fail('Неверный тип мессенджера. Должен быть один из: telegram, viber, whatsapp.');
+                        $fail(__('validation.validation_error'));
                         break;
                 }
             }],
             // Use values instead of names for validation - the dropdown sends value not enum name
-            'experience' => ['nullable', 'string', 'in:'.implode(',', UserExperience::names())],
+            'experience' => ['nullable', 'string', 'in:' . implode(',', UserExperience::names())],
             // Use values instead of names for validation
-            'scope_of_activity' => ['nullable', 'string', 'in:'.implode(',', UserScopeOfActivity::names())],
+            'scope_of_activity' => ['nullable', 'string', 'in:' . implode(',', UserScopeOfActivity::names())],
         ];
     }
 
@@ -83,22 +83,22 @@ class ProfileSettingsUpdateRequest extends BaseRequest
     public function messages(): array
     {
         return [
-            'login.required' => 'Логин обязателен',
-            'login.string' => 'Логин должен быть строкой',
-            'login.max' => 'Логин не должен превышать 255 символов',
-            'login.regex' => 'Логин должен содержать только латинские буквы, цифры и символ подчеркивания',
-            'login.unique' => 'Этот логин уже занят',
-            'messenger_type.required' => 'Тип мессенджера обязателен',
-            'messenger_type.string' => 'Тип мессенджера должен быть строкой',
-            'messenger_type.in' => 'Выбран недопустимый тип мессенджера',
-            'messenger_contact.required' => 'Контакт мессенджера обязателен',
-            'messenger_contact.string' => 'Контакт мессенджера должен быть строкой',
-            'experience.required' => 'Опыт обязателен',
-            'experience.string' => 'Опыт должен быть строкой',
-            'experience.in' => 'Выбрано недопустимое значение опыта',
-            'scope_of_activity.required' => 'Сфера деятельности обязательна',
-            'scope_of_activity.string' => 'Сфера деятельности должна быть строкой',
-            'scope_of_activity.in' => 'Выбрано недопустимое значение сферы деятельности',
+            'login.required' => __('validation.registered_user.required'),
+            'login.string' => __('validation.registered_user.string'),
+            'login.max' => __('validation.registered_user.max'),
+            'login.regex' => __('validation.registered_user.regex'),
+            'login.unique' => __('validation.registered_user.unique'),
+            'messenger_type.required' => __('validation.registered_user.required'),
+            'messenger_type.string' => __('validation.registered_user.string'),
+            'messenger_type.in' => __('validation.registered_user.in'),
+            'messenger_contact.required' => __('validation.registered_user.required'),
+            'messenger_contact.string' => __('validation.registered_user.string'),
+            'experience.required' => __('validation.registered_user.required'),
+            'experience.string' => __('validation.registered_user.string'),
+            'experience.in' => __('validation.registered_user.in'),
+            'scope_of_activity.required' => __('validation.registered_user.required'),
+            'scope_of_activity.string' => __('validation.registered_user.string'),
+            'scope_of_activity.in' => __('validation.registered_user.in'),
         ];
     }
 

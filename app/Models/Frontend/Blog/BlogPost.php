@@ -82,6 +82,14 @@ class BlogPost extends Model
         return $query->orderBy('views_count', 'desc');
     }
 
+    /**
+     * Scope to get only published posts
+     */
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->where('is_published', true);
+    }
+
     public function comments(): HasMany
     {
         return $this->hasMany(BlogComment::class, 'post_id');

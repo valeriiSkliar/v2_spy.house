@@ -31,14 +31,14 @@ class TestEmailVerification extends Command
         // Создаем или находим пользователя
         $user = User::where('email', $email)->first();
 
-        if (!$user) {
+        if (! $user) {
             $user = User::create([
                 'name' => 'Test User',
-                'login' => 'testuser_' . time(),
+                'login' => 'testuser_'.time(),
                 'email' => $email,
                 'password' => bcrypt('password'),
                 'messenger_type' => 'telegram',
-                'messenger_contact' => '@testuser_' . time(),
+                'messenger_contact' => '@testuser_'.time(),
                 'experience' => 'Beginner',
                 'scope_of_activity' => 'Gambling',
             ]);
@@ -52,7 +52,7 @@ class TestEmailVerification extends Command
             $user->sendEmailVerificationNotification();
             $this->info("Email verification sent successfully to: {$email}");
         } catch (\Exception $e) {
-            $this->error("Failed to send email verification: " . $e->getMessage());
+            $this->error('Failed to send email verification: '.$e->getMessage());
         }
     }
 }

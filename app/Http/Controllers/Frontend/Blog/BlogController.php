@@ -7,7 +7,6 @@ use App\Models\Frontend\Blog\BlogComment;
 use App\Models\Frontend\Blog\BlogPost;
 use App\Models\Frontend\Blog\PostCategory;
 use App\Models\Frontend\Rating;
-use App\Services\Frontend\Toast;
 use App\Traits\App\HasAntiFloodProtection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,25 +18,30 @@ class BlogController extends BaseBlogController
     public function index(Request $request)
     {
 
-        $query = BlogPost::query()
+        $articlesQuery = BlogPost::query()
             ->with(['author', 'categories'])
             ->where('is_published', true);
-        $search = $request->input('search');
+        $searchQuery = $request->input('search');
 
-        if ($search) {
-            $search = $this->sanitizeInput($search);
-            $query->where('title', 'like', '%' . $search . '%');
+        if ($searchQuery) {
+            $searchQuery = $this->sanitizeInput($searchQuery);
+            $articlesQuery->where('title', 'like', '%' . $searchQuery . '%');
         }
+
+        $totalArticlesCount = $articlesQuery->count();
+
+        $paginatedArticles = $articlesQuery->paginate(12)->appends($request->all());
 
         return view($this->indexView, [
             'breadcrumbs' => [],
-            'heroArticle' => $query->first(),
-            'articles' => $query->paginate(12)->appends($request->all()),
+            'heroArticle' => $paginatedArticles->first(),
+            'articles' => $paginatedArticles,
             'categories' => $this->getSidebarData(),
             'currentCategory' => null,
             'filters' => $request->only(['search', 'category', 'sort']),
+            'query' => $searchQuery,
             'currentPage' => $request->get('page', 1),
-            'totalPages' => ceil($query->count() / 12),
+            'totalPages' => ceil($totalArticlesCount / 12),
         ]);
     }
 
@@ -254,6 +258,7 @@ class BlogController extends BaseBlogController
                 if ($request->expectsJson()) {
                     return response()->json(['success' => false, 'message' => $errorMessage], 422);
                 }
+
                 return redirect()->back()->withErrors(['parent_id' => $errorMessage]);
             }
 
@@ -263,6 +268,7 @@ class BlogController extends BaseBlogController
                 if ($request->expectsJson()) {
                     return response()->json(['success' => false, 'message' => $errorMessage], 422);
                 }
+
                 return redirect()->back()->withErrors(['content' => $errorMessage]);
             }
         }

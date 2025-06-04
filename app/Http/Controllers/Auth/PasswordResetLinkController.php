@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Rules\Recaptcha;
 use App\Services\Frontend\Toast;
 use App\Services\SecurityAuditService;
-use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Password;
 use Illuminate\View\View;
 
 class PasswordResetLinkController extends Controller
@@ -35,13 +35,13 @@ class PasswordResetLinkController extends Controller
             try {
                 $request->validate([
                     'email' => ['required', 'email'],
-                    'g-recaptcha-response' => ['required', new Recaptcha()],
+                    'g-recaptcha-response' => ['required', new Recaptcha],
                 ]);
             } catch (\Illuminate\Validation\ValidationException $e) {
                 return response()->json([
                     'success' => false,
                     'errors' => $e->errors(),
-                    'message' => __('validation.failed')
+                    'message' => __('validation.failed'),
                 ], 422);
             }
 
@@ -59,10 +59,11 @@ class PasswordResetLinkController extends Controller
                     );
 
                     $remainingHours = 24 - $hoursSinceLastReset;
+
                     return response()->json([
                         'success' => false,
                         'message' => __('validation.password_reset_throttled', ['hours' => ceil($remainingHours)]),
-                        'errors' => ['email' => [__('validation.password_reset_throttled', ['hours' => ceil($remainingHours)])]]
+                        'errors' => ['email' => [__('validation.password_reset_throttled', ['hours' => ceil($remainingHours)])]],
                     ], 422);
                 }
             }
@@ -88,7 +89,7 @@ class PasswordResetLinkController extends Controller
 
                 return response()->json([
                     'success' => true,
-                    'message' => __($status)
+                    'message' => __($status),
                 ]);
             } else {
                 SecurityAuditService::logPasswordResetEvent(
@@ -101,7 +102,7 @@ class PasswordResetLinkController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => __($status),
-                    'errors' => ['email' => [__($status)]]
+                    'errors' => ['email' => [__($status)]],
                 ], 422);
             }
         }
@@ -109,7 +110,7 @@ class PasswordResetLinkController extends Controller
         // Стандартная обработка для не-AJAX запросов
         $request->validate([
             'email' => ['required', 'email'],
-            'g-recaptcha-response' => ['required', new Recaptcha()],
+            'g-recaptcha-response' => ['required', new Recaptcha],
         ]);
 
         // Проверяем, прошло ли 24 часа после последнего успешного сброса
@@ -127,6 +128,7 @@ class PasswordResetLinkController extends Controller
 
                 $remainingHours = 24 - $hoursSinceLastReset;
                 Toast::error(__('validation.password_reset_throttled', ['hours' => ceil($remainingHours)]));
+
                 return back()->withInput($request->only('email'));
             }
         }
@@ -151,6 +153,7 @@ class PasswordResetLinkController extends Controller
             );
 
             Toast::success(__($status));
+
             return back();
         } else {
             SecurityAuditService::logPasswordResetEvent(
@@ -161,6 +164,7 @@ class PasswordResetLinkController extends Controller
             );
 
             Toast::error(__($status));
+
             return back()->withInput($request->only('email'));
         }
     }
