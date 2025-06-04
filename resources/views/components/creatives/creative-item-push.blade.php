@@ -2,7 +2,7 @@
     <div class="creative-item__head">
         <div class="creative-item__txt">
             <div class="creative-item__active {{ isset($isActive) && $isActive ? 'icon-dot' : '' }}">{{ $activeText ??
-                'Active: 3 day' }}</div>
+                trans_choice('creatives.card.active', $activeDays ?? 3, ['count' => $activeDays ?? 3]) }}</div>
             <div class="text-with-copy">
                 <div class="text-with-copy__btn">
                     @include('components.ui.copy-button')

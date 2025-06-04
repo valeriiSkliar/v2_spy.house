@@ -7,7 +7,8 @@
             </div>
         </div>
         <div class="creative-item__txt">
-            <div class="creative-item__active icon-dot">{{ $activeText ?? 'Active: 3 day' }}</div>
+            <div class="creative-item__active icon-dot">{{ $activeText ?? trans_choice('creatives.card.active',
+                $activeDays ?? 3, ['count' => $activeDays ?? 3]) }}</div>
             <div class="text-with-copy">
                 <div class="text-with-copy__btn">
                     @include('components.ui.copy-button')

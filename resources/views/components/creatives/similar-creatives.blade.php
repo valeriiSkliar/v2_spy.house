@@ -1,8 +1,8 @@
 <div class="creative-details__group">
-    <h3 class="mb-20">Similar creatives</h3>
+    <h3 class="mb-20">{{ __('creatives.details.similar-creatives.title') }}</h3>
     <div class="promo-premium">
-        <p>Similar ads are available in the <strong>Premium plan</strong></p>
-        <a href="#" class="btn _flex _green _medium">Go</a>
+        <p>{!! __('creatives.details.similar-creatives.promo-premium') !!}</p>
+        <a href="#" class="btn _flex _green _medium">{!! __('creatives.details.similar-creatives.go') !!}</a>
     </div>
     <div class="similar-creatives {{ isset($socialClass) && $socialClass ? '_social' : '' }}">
         <div class="similar-creative-empty {{ isset($inpageClass) && $inpageClass ? '_inpage' : '' }}"><img
@@ -17,7 +17,7 @@
         @endif
     </div>
     <div class="d-flex justify-content-center pt-3">
-        <button class="btn _gray _flex _medium w-mob-100"><span class="icon-load-more font-16 mr-2"></span>Load
-            more</button>
+        <button class="btn _gray _flex _medium w-mob-100"><span class="icon-load-more font-16 mr-2"></span>{{
+            __('creatives.details.similar-creatives.load-more') }}</button>
     </div>
 </div>

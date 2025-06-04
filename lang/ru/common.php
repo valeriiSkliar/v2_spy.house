@@ -15,4 +15,8 @@ return [
         'new_token_created' => 'Операция выполнена успешно.',
         'current_token_revoked_successfully' => 'Операция выполнена успешно.',
     ],
+    'copy' => [
+        'copy' => 'Скопировать',
+        'copied' => 'Скопировано',
+    ],
 ];

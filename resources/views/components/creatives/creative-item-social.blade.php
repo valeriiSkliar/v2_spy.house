@@ -24,13 +24,17 @@
         </div>
     </div>
     <div class="creative-item__social">
-        <div class="creative-item__social-item"><strong>{{ $likes ?? '285' }}</strong> <span>Like</span></div>
-        <div class="creative-item__social-item"><strong>{{ $comments ?? '2' }}</strong> <span>Comments</span></div>
-        <div class="creative-item__social-item"><strong>{{ $shares ?? '7' }}</strong> <span>Shared</span></div>
+        <div class="creative-item__social-item"><strong>{{ $likes ?? '285' }}</strong> <span>{{
+                __('creatives.card.likes') }}</span></div>
+        <div class="creative-item__social-item"><strong>{{ $comments ?? '2' }}</strong> <span>{{
+                __('creatives.card.comments') }}</span></div>
+        <div class="creative-item__social-item"><strong>{{ $shares ?? '7' }}</strong> <span>{{
+                __('creatives.card.shares') }}</span></div>
     </div>
     <div class="creative-item__footer">
         <div class="creative-item__info">
-            <div class="creative-status icon-dot font-roboto">{{ $activeText ?? 'Active: 3 day' }}</div>
+            <div class="creative-status icon-dot font-roboto">{{ $activeText ?? trans_choice('creatives.card.active',
+                $activeDays ?? 3, ['count' => $activeDays ?? 3]) }}</div>
         </div>
         <div class="creative-item__btns">
             <div class="creative-item-info"><img src="{{ $flagIcon ?? '/img/flags/KZ.svg' }}" alt=""></div>
