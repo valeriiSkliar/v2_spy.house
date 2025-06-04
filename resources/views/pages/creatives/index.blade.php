@@ -1,4 +1,4 @@
-@extends('layouts.authorized')
+@extends('layouts.main')
 
 @section('page-content')
 <h1>{{ __('creatives.title') }}</h1>
@@ -47,7 +47,8 @@
 @include('components.ui.pagination')
 @endsection
 
-@section('scripts')
+@push('scripts')
+@vite(['resources/js/creatives/app.js'])
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Creative item details handling
@@ -111,4 +112,4 @@
         });
     });
 </script>
-@endsection
+@endpush

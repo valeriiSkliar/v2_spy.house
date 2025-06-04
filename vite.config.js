@@ -46,16 +46,16 @@ export default defineConfig({
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: true,
-        drop_debugger: true,
-        pure_funcs: [
+        drop_console: process.env.NODE_ENV === 'production',
+        drop_debugger: process.env.NODE_ENV === 'production',
+        pure_funcs: process.env.NODE_ENV === 'production' ? [
           'console.log',
           'console.info',
           'logger',
           'loggerError',
           'loggerWarn',
           'loggerSuccess',
-        ],
+        ] : [],
       },
       mangle: {
         safari10: true,
