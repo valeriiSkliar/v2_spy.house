@@ -196,10 +196,12 @@ const initiatePasswordUpdate = async (form, formData) => {
  * Initialize cancel button event listener
  */
 const initCancelButton = () => {
-  $('[data-action="cancel-password"]').off('click').on('click', function (e) {
-    e.preventDefault();
-    cancelPasswordUpdate();
-  });
+  $('[data-action="cancel-password"]')
+    .off('click')
+    .on('click', function (e) {
+      e.preventDefault();
+      cancelPasswordUpdate();
+    });
 };
 
 /**
@@ -210,7 +212,7 @@ const changePassword = () => {
   const $formContainer = $('#change-password-form-container');
   const $form = $formContainer.find('#change-password-form');
 
-  logger('[DEBUG] Change Password - Form found', { debug: true });
+  logger('[DEBUG] Change Password - Form found');
 
   if ($form.length) {
     // Remove previous event handlers
@@ -223,34 +225,26 @@ const changePassword = () => {
     let validator = null;
     try {
       validator = initChangePasswordValidation($form, isConfirmationStep);
-      logger(
-        '[DEBUG] Change Password - Validator initialized',
-        {
-          validatorExists: !!validator,
-          rules: validator?.settings?.rules,
-          isConfirmationStep,
-        },
-        { debug: true }
-      );
+      logger('[DEBUG] Change Password - Validator initialized', {
+        validatorExists: !!validator,
+        rules: validator?.settings?.rules,
+        isConfirmationStep,
+      });
     } catch (error) {
-      logger(
-        '[DEBUG] Change Password - Validator initialization failed',
-        { error },
-        { debug: true }
-      );
+      logger('[DEBUG] Change Password - Validator initialization failed', { error });
       // Continue without validation, but with warning
       validator = null;
     }
 
     // Form submission handler
     $form.on('submit', async function (e) {
-      logger('[DEBUG] Change Password - Form submit triggered', { debug: true });
+      logger('[DEBUG] Change Password - Form submit triggered');
       e.preventDefault();
 
       // Check if form is valid
       if (validator) {
         const isValid = validator.form();
-        logger('[DEBUG] Change Password - Form validation result', { isValid }, { debug: true });
+        logger('[DEBUG] Change Password - Form validation result', { isValid });
 
         if (!isValid) {
           return false;
@@ -261,16 +255,12 @@ const changePassword = () => {
       const formData = new FormData(this);
 
       // Log form data for debugging
-      logger(
-        '[DEBUG] Change Password - Form data',
-        {
-          hasVerificationCode: formData.has('verification_code'),
-          verificationCode: formData.get('verification_code'),
-          formFields: Array.from(formData.entries()).map(([key, value]) => key),
-          isConfirmationStep,
-        },
-        { debug: true }
-      );
+      logger('[DEBUG] Change Password - Form data', {
+        hasVerificationCode: formData.has('verification_code'),
+        verificationCode: formData.get('verification_code'),
+        formFields: Array.from(formData.entries()).map(([key, value]) => key),
+        isConfirmationStep,
+      });
 
       if (isConfirmationStep) {
         // Handle confirmation submission
@@ -290,7 +280,7 @@ const changePassword = () => {
  * Initialize change password form handling
  */
 const initChangePassword = () => {
-  logger('[DEBUG] Change Password - Initializing', { debug: true });
+  logger('[DEBUG] Change Password - Initializing');
   changePassword();
 };
 
