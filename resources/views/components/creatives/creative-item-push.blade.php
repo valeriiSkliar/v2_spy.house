@@ -20,15 +20,15 @@
         <div class="creative-item__icon thumb thumb-with-controls-small">
             <img src="{{ $icon ?? '/img/th-2.jpg' }}" alt="">
             <div class="thumb-controls">
-                <a href="#" class="btn-icon _black"><span class="icon-download2"></span></a>
+                <a href="#" class="btn-icon _black"><span class="icon-download2 remore_margin"></span></a>
             </div>
         </div>
     </div>
     <div class="creative-item__image thumb thumb-with-controls">
         <img src="{{ $image ?? '/img/th-3.jpg' }}" alt="">
         <div class="thumb-controls">
-            <a href="#" class="btn-icon _black"><span class="icon-download2"></span></a>
-            <a href="#" class="btn-icon _black"><span class="icon-new-tab"></span></a>
+            <a href="#" class="btn-icon _black"><span class="icon-download2 remore_margin"></span></a>
+            <a href="#" class="btn-icon _black"><span class="icon-new-tab remore_margin"></span></a>
         </div>
     </div>
     <div class="creative-item__footer">

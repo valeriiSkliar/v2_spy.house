@@ -6,9 +6,9 @@
         <img src="{{ $image }}" alt="" class="{{ isset($blurImage) ? 'thumb-contain' : '' }}">
         @if(isset($controls) && $controls)
         <div class="thumb-controls">
-            <a href="#" class="btn-icon _black"><span class="icon-download2"></span></a>
+            <a href="#" class="btn-icon _black"><span class="icon-download2 remore_margin"></span></a>
             @if(isset($showNewTab) && $showNewTab)
-            <a href="#" class="btn-icon _black"><span class="icon-new-tab"></span></a>
+            <a href="#" class="btn-icon _black"><span class="icon-new-tab remore_margin"></span></a>
             @endif
         </div>
         @endif
