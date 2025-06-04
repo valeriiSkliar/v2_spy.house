@@ -23,6 +23,9 @@ use Illuminate\Support\Facades\Auth;
 
     <!-- Scripts -->
     @vite(['resources/js/app.js', 'resources/scss/app.scss'])
+
+    <!-- Frontend Translations -->
+    <x-frontend-translations />
 </head>
 
 <body class="">

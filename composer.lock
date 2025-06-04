@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8dc148e794d497454ca5aa661fb0ae66",
+    "content-hash": "b008bc4a3830bc266934a6707ab85e3b",
     "packages": [
         {
             "name": "anhskohbo/no-captcha",
@@ -7985,6 +7985,99 @@
             "time": "2025-04-22T13:39:39+00:00"
         },
         {
+            "name": "mariuzzo/laravel-js-localization",
+            "version": "v2.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/rmariuzzo/Laravel-JS-Localization.git",
+                "reference": "9b632004968005067ac991529c4513c95c039a12"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/rmariuzzo/Laravel-JS-Localization/zipball/9b632004968005067ac991529c4513c95c039a12",
+                "reference": "9b632004968005067ac991529c4513c95c039a12",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/config": "*",
+                "illuminate/console": "^11.0|^12.0",
+                "illuminate/filesystem": "^11.0|^12.0",
+                "php": "^8.2",
+                "tedivm/jshrink": "~1.0"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^9.0|^10.0",
+                "pestphp/pest": "^3.7"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Mariuzzo\\LaravelJsLocalization\\LaravelJsLocalizationServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Mariuzzo\\LaravelJsLocalization\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Rubens Mariuzzo",
+                    "email": "rubens@mariuzzo.com",
+                    "homepage": "https://github.com/rmariuzzo",
+                    "role": "Developer"
+                },
+                {
+                    "name": "German Popoter",
+                    "email": "me@gpopoteur.com",
+                    "homepage": "https://github.com/gpopoteur",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Galievskiy Dmitriy",
+                    "homepage": "https://github.com/xAockd",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Ramon Ackermann",
+                    "homepage": "https://github.com/sboo",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Anton Komarev",
+                    "homepage": "https://github.com/antonkomarev",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Pascal Baljet",
+                    "homepage": "https://github.com/pascalbaljetmedia",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Laravel Localization in JavaScript",
+            "homepage": "https://github.com/rmariuzzo/laravel-js-localization",
+            "keywords": [
+                "JS",
+                "i18n",
+                "javascript",
+                "lang",
+                "laravel",
+                "laravel 12",
+                "localization"
+            ],
+            "support": {
+                "issues": "https://github.com/rmariuzzo/laravel-js-localization/issues",
+                "source": "https://github.com/rmariuzzo/laravel-js-localization"
+            },
+            "time": "2025-03-10T08:51:58+00:00"
+        },
+        {
             "name": "mockery/mockery",
             "version": "1.6.12",
             "source": {
@@ -9897,6 +9990,66 @@
             "time": "2025-03-03T07:12:39+00:00"
         },
         {
+            "name": "tedivm/jshrink",
+            "version": "v1.7.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tedious/JShrink.git",
+                "reference": "7a35f5a4651ca2ce77295eb8a3b4e133ba47e19e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tedious/JShrink/zipball/7a35f5a4651ca2ce77295eb8a3b4e133ba47e19e",
+                "reference": "7a35f5a4651ca2ce77295eb8a3b4e133ba47e19e",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.0|^8.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.14",
+                "php-coveralls/php-coveralls": "^2.5.0",
+                "phpunit/phpunit": "^9|^10"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "JShrink": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Robert Hafner",
+                    "email": "tedivm@tedivm.com"
+                }
+            ],
+            "description": "Javascript Minifier built in PHP",
+            "homepage": "http://github.com/tedious/JShrink",
+            "keywords": [
+                "javascript",
+                "minifier"
+            ],
+            "support": {
+                "issues": "https://github.com/tedious/JShrink/issues",
+                "source": "https://github.com/tedious/JShrink/tree/v1.7.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/tedivm",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/tedivm/jshrink",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2023-10-04T17:23:23+00:00"
+        },
+        {
             "name": "theseer/tokenizer",
             "version": "1.2.3",
             "source": {
@@ -9949,12 +10102,12 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.2"
     },
-    "platform-dev": [],
+    "platform-dev": {},
     "plugin-api-version": "2.6.0"
 }
