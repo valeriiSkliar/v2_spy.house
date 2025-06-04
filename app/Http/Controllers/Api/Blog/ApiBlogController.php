@@ -284,9 +284,9 @@ class ApiBlogController extends BaseBlogController
         $currentPage = (int) $request->get('page', 1);
 
         // Validate pagination: if no results or invalid page, redirect to page 1
-        if ($totalCount === 0 || ($currentPage > 1 && $totalCount === 0)) {
+        if ($totalCount === 0) {
             if ($request->ajax()) {
-                // For AJAX requests, redirect to page 1
+                // For AJAX requests, redirect to page 1 without page parameter
                 $redirectParams = $request->except('page');
                 $redirectUrl = route('blog.index', $redirectParams);
                 return response()->json([
@@ -307,14 +307,22 @@ class ApiBlogController extends BaseBlogController
         if ($currentPage > $maxPages && $maxPages > 0) {
             $redirectPage = $maxPages;
             if ($request->ajax()) {
-                $redirectParams = array_merge($request->except('page'), ['page' => $redirectPage]);
+                $redirectParams = $request->except('page');
+                // Only add page parameter if it's not page 1
+                if ($redirectPage > 1) {
+                    $redirectParams['page'] = $redirectPage;
+                }
                 $redirectUrl = route('blog.index', $redirectParams);
                 return response()->json([
                     'redirect' => true,
                     'url' => $redirectUrl
                 ]);
             }
-            return redirect()->route('blog.index', array_merge($request->except('page'), ['page' => $redirectPage]));
+            $redirectParams = $request->except('page');
+            if ($redirectPage > 1) {
+                $redirectParams['page'] = $redirectPage;
+            }
+            return redirect()->route('blog.index', $redirectParams);
         }
 
         // Get hero article only for first page

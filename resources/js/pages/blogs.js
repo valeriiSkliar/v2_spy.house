@@ -42,7 +42,29 @@ function reloadBlogContent(container, url, scrollToTop = true) {
 
       // Handle redirect response
       if (data.redirect) {
-        window.location.href = data.url;
+        console.log('Handling redirect to:', data.url);
+
+        // Parse the redirect URL to update browser state
+        const redirectUrl = new URL(data.url);
+        const redirectParams = new URLSearchParams(redirectUrl.search);
+
+        // Update browser URL without page reload
+        window.history.pushState(
+          {
+            category: redirectParams.get('category') || '',
+            page: redirectParams.get('page') || '1',
+          },
+          '',
+          data.url
+        );
+
+        // Update sidebar state based on new URL
+        const categorySlug = redirectParams.get('category') || '';
+        updateCategorySidebarState(categorySlug);
+
+        // Reload content with the corrected URL
+        reloadBlogContent(container, url, scrollToTop);
+        updateBrowserUrl({ page: redirectParams.get('page') || '1' });
         return;
       }
 
