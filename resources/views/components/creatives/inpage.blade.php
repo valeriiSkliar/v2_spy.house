@@ -1,15 +1,27 @@
 <div class="creatives-list">
     <div class="creatives-list__items">
+        @forelse($creatives as $creative)
         @include('components.creatives.creative-item-inpage', [
-        'icon' => '/img/th-2.jpg',
-        'activeText' => trans_choice('creatives.card.active', $activeDays ?? 3, ['count' => $activeDays ?? 3]),
+        'activeText' => $creative['status'] === 'Active'
+        ? trans_choice('creatives.card.active', $creative['active_days'], ['count' => $creative['active_days']])
+        : trans_choice('creatives.card.was-active', $creative['active_days'], ['count' => $creative['active_days']]),
+        'title' => $creative['title'] ?? '',
+        'description' => $creative['description'] ?? '',
+        'icon' => $creative['icon'] ?? '/img/th-2.jpg',
+        'network' => $creative['network'] ?? 'Push.house',
+        'country' => $creative['country_code'] ?? 'KZ',
+        'flagIcon' => '/img/flags/' . ($creative['country_code'] ?? 'KZ') . '.svg',
+        'deviceType' => strtolower($creative['platform']) === 'mob' ? 'phone' : 'pc',
+        'deviceText' => $creative['platform'] ?? 'PC'
         ])
-
-        @include('components.creatives.creative-item-inpage', [
-        'icon' => '/img/th-1.jpg',
-        'activeText' => trans_choice('creatives.card.was-active', $activeDays ?? 12, ['count' => $activeDays ?? 12]),
-        ])
+        @empty
+        <p>{{ __('creatives.no-data') }}</p>
+        @endforelse
     </div>
 
-    @include('components.creatives.inpage-details')
+    @if(isset($creatives[0]))
+    @include('components.creatives.inpage-details', [
+    'creative' => $creatives[0]
+    ])
+    @endif
 </div>

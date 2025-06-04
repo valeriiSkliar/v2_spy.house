@@ -1,25 +1,30 @@
 <div class="creatives-list">
     <div class="creatives-list__items">
+        @forelse($creatives as $creative)
         @include('components.creatives.creative-item-push', [
-        'isActive' => true,
-        'activeText' => trans_choice('creatives.card.active', $activeDays ?? 3, ['count' => $activeDays ?? 3]),
-        'icon' => '/img/th-2.jpg',
-        'image' => '/img/th-3.jpg',
-        'isFavorite' => true,
-        'deviceType' => 'pc',
-        'deviceText' => 'PC'
+        'isActive' => $creative['status'] === 'Active',
+        'activeText' => $creative['status'] === 'Active'
+        ? trans_choice('creatives.card.active', $creative['active_days'], ['count' => $creative['active_days']])
+        : trans_choice('creatives.card.was-active', $creative['active_days'], ['count' => $creative['active_days']]),
+        'title' => $creative['title'] ?? '',
+        'description' => $creative['description'] ?? '',
+        'icon' => $creative['icon'] ?? '/img/th-2.jpg',
+        'image' => $creative['image'] ?? '/img/th-3.jpg',
+        'isFavorite' => $creative['is_favorite'] ?? false,
+        'network' => $creative['network'] ?? 'Push.house',
+        'country' => $creative['country_code'] ?? 'KZ',
+        'flagIcon' => '/img/flags/' . ($creative['country_code'] ?? 'KZ') . '.svg',
+        'deviceType' => strtolower($creative['platform']) === 'mob' ? 'phone' : 'pc',
+        'deviceText' => $creative['platform'] ?? 'PC'
         ])
-
-        @include('components.creatives.creative-item-push', [
-        'isActive' => false,
-        'activeText' => trans_choice('creatives.card.was-active', $activeDays ?? 12, ['count' => $activeDays ?? 12]),
-        'icon' => '/img/th-1.jpg',
-        'image' => '/img/th-4.jpg',
-        'isFavorite' => false,
-        'deviceType' => 'phone',
-        'deviceText' => 'Mob'
-        ])
+        @empty
+        <p>{{ __('creatives.no-data') }}</p>
+        @endforelse
     </div>
 
-    @include('components.creatives.push-details')
+    @if(isset($creatives[0]))
+    @include('components.creatives.push-details', [
+    'creative' => $creatives[0]
+    ])
+    @endif
 </div>

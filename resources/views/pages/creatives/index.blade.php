@@ -37,11 +37,11 @@
 </div>
 
 @if($activeTab == 'push')
-@include('components.creatives.push')
+@include('components.creatives.push', ['creatives' => $creatives])
 @elseif($activeTab == 'inpage')
-@include('components.creatives.inpage')
+@include('components.creatives.inpage', ['creatives' => $creatives])
 @elseif($activeTab == 'facebook' || $activeTab == 'tiktok')
-@include('components.creatives.social', ['type' => $activeTab])
+@include('components.creatives.social', ['type' => $activeTab, 'creatives' => $creatives])
 @endif
 
 @include('components.ui.pagination')
