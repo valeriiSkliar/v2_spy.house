@@ -62,7 +62,6 @@ resources/js/creatives/
 
 #### Задачи:
 
-- [x] Установить Alpine.js пакеты: `npm install @alpinejs/persist @alpinejs/focus @alpinejs/intersect @alpinejs/store navigo lodash.debounce lodash.throttle`
 - [ ] Создать базовую структуру файлов
 - [ ] Настроить Vite для сборки Alpine.js компонентов
 - [ ] Создать Alpine Store для управления состоянием
