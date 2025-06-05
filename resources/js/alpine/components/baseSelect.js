@@ -12,6 +12,7 @@ export default function baseSelect(config) {
     // Новые свойства для интеграции со store
     storeKey: config.storeKey || null, // Ключ в Alpine store для синхронизации
     storePath: config.storePath || null, // Путь к свойству в store (например, 'creatives.perPage')
+    onChangeCallback: config.onChangeCallback || null, // Название callback метода в store
 
     init() {
       // Инициализируем выбранную опцию
@@ -150,23 +151,43 @@ export default function baseSelect(config) {
           valueToStore = Number(this.selectedOption.value);
         }
 
-        // Вызываем специальные методы в зависимости от поля
-        const fieldName = propertyPath[propertyPath.length - 1];
+        // Обновляем значение в store
+
+        console.log('baseSelect: updating store', {
+          storeKey,
+          propertyPath,
+          valueToStore,
+          onChangeCallback: this.onChangeCallback,
+        });
+
+        this.setStoreValue(storeKey, propertyPath, valueToStore);
+
+        // Выбираем способ уведомления store об изменении
         if (
-          fieldName === 'perPage' &&
+          this.onChangeCallback &&
           this.$store[storeKey] &&
-          typeof this.$store[storeKey].setPerPage === 'function'
+          typeof this.$store[storeKey][this.onChangeCallback] === 'function'
         ) {
-          // Для perPage вызываем setPerPage который сам обновляет store и делает запрос
-          this.$store[storeKey].setPerPage(valueToStore);
+          // Используем конкретный callback если указан
+          this.$store[storeKey][this.onChangeCallback](valueToStore);
+        } else if (
+          this.$store[storeKey] &&
+          typeof this.$store[storeKey].handleFieldChange === 'function'
+        ) {
+          // Используем универсальный handler
+          this.$store[storeKey].handleFieldChange(
+            propertyPath[propertyPath.length - 1],
+            valueToStore
+          );
         } else {
-          // Для других полей просто обновляем значение и сбрасываем пагинацию
-          this.setStoreValue(storeKey, propertyPath, valueToStore);
+          // Fallback: старая логика для обратной совместимости
+          const fieldName = propertyPath[propertyPath.length - 1];
           if (
+            fieldName === 'perPage' &&
             this.$store[storeKey] &&
-            typeof this.$store[storeKey].resetPagination === 'function'
+            typeof this.$store[storeKey].setPerPage === 'function'
           ) {
-            this.$store[storeKey].resetPagination();
+            this.$store[storeKey].setPerPage(valueToStore);
           }
         }
       }

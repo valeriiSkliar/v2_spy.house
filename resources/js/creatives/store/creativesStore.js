@@ -61,11 +61,14 @@ export const creativesStore = {
   // Новый метод для обновления perPage
   setPerPage(newPerPage) {
     const perPageInt = parseInt(newPerPage);
-    if (perPageInt && perPageInt > 0 && perPageInt !== this.perPage) {
+    if (perPageInt && perPageInt > 0) {
+      console.log('store: updating perPage to', perPageInt);
       this.perPage = perPageInt;
       this.resetPagination(); // Сбрасываем на первую страницу
       this.updateUrl();
       this.loadCreatives();
+    } else {
+      console.log('store: invalid perPage value');
     }
   },
 
@@ -286,6 +289,33 @@ export const creativesStore = {
       if (!this.getTabCountsFromWindow()) {
         console.warn('No tab counts available from API or window');
       }
+    }
+  },
+
+  // Централизованная обработка изменений полей из компонентов
+  handleFieldChange(fieldName, value) {
+    switch (fieldName) {
+      case 'perPage':
+        console.log('store.setPerPage called:', { newPerPage, currentPerPage: this.perPage });
+        this.setPerPage(value);
+        break;
+      case 'searchQuery':
+        this.updateSearchQuery(value);
+        break;
+      case 'selectedCountry':
+        this.updateSelectedCountry(value);
+        break;
+      case 'sortBy':
+        this.filters.sortBy = value;
+        this.resetPagination();
+        this.updateUrl();
+        this.loadCreatives();
+        break;
+      default:
+        // Для неизвестных полей просто сбрасываем пагинацию
+        this.resetPagination();
+        this.updateUrl();
+        this.loadCreatives();
     }
   },
 };

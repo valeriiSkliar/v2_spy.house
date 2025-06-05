@@ -26,6 +26,7 @@
 'icon' => null, // String name of the icon to display
 'placeholder' => '', // Placeholder text
 'storePath' => null, // Путь к свойству в Alpine store для автоматической синхронизации (например, 'creatives.perPage')
+'onChangeCallback' => null, // Название callback метода в store (например, 'setPerPage')
 ])
 
 <div x-data="baseSelect({
@@ -35,7 +36,8 @@
         useFlags: {{ $withFlag ? 'true' : 'false' }},
         iconClass: {{ $icon ? "'".$icon."'" : 'null' }},
         placeholderText: '{{ $placeholder }}',
-        storePath: {{ $storePath ? "'".$storePath."'" : 'null' }}
+        storePath: {{ $storePath ? "'".$storePath."'" : 'null' }},
+        onChangeCallback: {{ $onChangeCallback ? "'".$onChangeCallback."'" : 'null' }}
     })" x-init="init()" class="base-select" :class="{ 'base-select-icon': iconClass, 'active': open }" :id="elementId"
     @click.away="if(open) open = false">
     <div class="base-select__trigger" @click="toggleDropdown()">
