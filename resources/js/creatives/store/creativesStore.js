@@ -29,6 +29,8 @@ export const creativesStore = {
   init() {
     this.loadFiltersFromUrl();
     this.loadTabCounts();
+    // Загружаем начальные данные креативов
+    this.loadCreatives();
   },
 
   setLoading(loading) {
@@ -47,8 +49,8 @@ export const creativesStore = {
     if (this.availableTabs.includes(tab)) {
       this.currentTab = tab;
       this.resetPagination();
-      // Автозагрузка отключена пока нет API
-      // this.loadCreatives();
+      // Включаем автозагрузку при смене вкладки
+      this.loadCreatives();
     }
   },
 
@@ -87,8 +89,8 @@ export const creativesStore = {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
       this.updateUrl();
-      // Автозагрузка отключена пока нет API
-      // this.loadCreatives();
+      // Включаем автозагрузку при смене страницы
+      this.loadCreatives();
     }
   },
 
@@ -210,7 +212,6 @@ export const creativesStore = {
   },
 
   async loadTabCounts() {
-    // TODO: add logik on backend for tab counts
     // TODO: add loading state
     // TODO: add error handling
     // TODO: add fallback to window.creativesTabCounts

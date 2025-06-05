@@ -542,4 +542,84 @@ class CreativesController extends Controller
             return response()->json(['error' => 'Failed to load tab counts'], 500);
         }
     }
+
+    /**
+     * API endpoint for loading creatives with pagination and filtering
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function apiIndex(Request $request)
+    {
+        try {
+            $tab = $request->input('tab', 'push');
+            $page = max(1, (int) $request->input('page', 1));
+            $perPage = max(1, min(100, (int) $request->input('per_page', 20)));
+
+            // Validate tab
+            if (!in_array($tab, ['push', 'inpage', 'facebook', 'tiktok'])) {
+                $tab = 'push';
+            }
+
+            $creativesData = $this->getMockCreativesData();
+            $allCreatives = $creativesData[$tab] ?? [];
+
+            // Apply search filter if provided
+            $search = $request->input('search', '');
+            if (!empty($search)) {
+                $allCreatives = array_filter($allCreatives, function ($creative) use ($search) {
+                    return stripos($creative['title'], $search) !== false ||
+                        stripos($creative['description'], $search) !== false;
+                });
+                $allCreatives = array_values($allCreatives); // reindex array
+            }
+
+            // Apply category filter if provided
+            $category = $request->input('category', '');
+            if (!empty($category)) {
+                $allCreatives = array_filter($allCreatives, function ($creative) use ($category) {
+                    return isset($creative['category']) && $creative['category'] === $category;
+                });
+                $allCreatives = array_values($allCreatives);
+            }
+
+            // Apply date filters if provided
+            $dateFrom = $request->input('dateFrom', '');
+            $dateTo = $request->input('dateTo', '');
+            // Note: Date filtering would be implemented here in a real app
+
+            // Calculate pagination
+            $totalCount = count($allCreatives);
+            $totalPages = ceil($totalCount / $perPage);
+            $currentPage = min($page, max(1, $totalPages));
+
+            // Get page data
+            $offset = ($currentPage - 1) * $perPage;
+            $pageData = array_slice($allCreatives, $offset, $perPage);
+
+            // Get tab counts for all tabs
+            $tabCounts = [
+                'push' => count($creativesData['push'] ?? []),
+                'inpage' => count($creativesData['inpage'] ?? []),
+                'facebook' => count($creativesData['facebook'] ?? []),
+                'tiktok' => count($creativesData['tiktok'] ?? []),
+            ];
+
+            return response()->json([
+                'data' => $pageData,
+                'current_page' => $currentPage,
+                'last_page' => $totalPages,
+                'per_page' => $perPage,
+                'total' => $totalCount,
+                'from' => $totalCount > 0 ? $offset + 1 : 0,
+                'to' => min($offset + $perPage, $totalCount),
+                'tab_counts' => $tabCounts,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to load creatives',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

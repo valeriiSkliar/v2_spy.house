@@ -60,6 +60,11 @@ export const tabsComponent = () => ({
       const currentUrl = new URL(window.location);
       currentUrl.searchParams.set('tab', tabId);
       window.history.pushState({}, '', currentUrl);
+
+      // инициируем загрузку данных для новой вкладки
+      if (this.$store.creatives) {
+        this.$store.creatives.setTab(tabId);
+      }
     }
   },
 
