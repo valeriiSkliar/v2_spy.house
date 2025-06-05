@@ -66,6 +66,10 @@ export default function baseSelect(config) {
      * Получает значение из store по пути
      */
     getStoreValue(storeKey, propertyPath) {
+      if (!this.$store || !this.$store[storeKey]) {
+        return undefined;
+      }
+      
       let value = this.$store[storeKey];
       for (const prop of propertyPath) {
         if (value && typeof value === 'object' && prop in value) {
@@ -114,8 +118,8 @@ export default function baseSelect(config) {
         this.selectedOption = { ...foundOption }; // Use a copy to ensure reactivity
       } else if (valueStr !== null) {
         // If a value is provided but it's not in the options list,
-        // create a temporary selectedOption using the value itself as the label.
-        this.selectedOption = { value: valueToSelect, label: String(valueToSelect) };
+        // create a temporary selectedOption using the string value for consistency.
+        this.selectedOption = { value: valueStr, label: valueStr };
       } else {
         // No value provided or value is null/undefined, so no option is selected.
         // The placeholder will be shown if available.
@@ -136,6 +140,11 @@ export default function baseSelect(config) {
      * @param {object} option - The selected option object.
      */
     selectOption(option) {
+      // Validate that option is not null or undefined
+      if (!option || typeof option !== 'object') {
+        throw new Error('Invalid option: option must be a valid object');
+      }
+
       this.selectedOption = { ...option }; // Update internal state with a copy
       this.open = false; // Close the dropdown
 

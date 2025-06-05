@@ -157,7 +157,7 @@ export const creativesStore = {
   },
 
   setCache(key, data) {
-    if (this.cache.size > 50) {
+    if (this.cache.size >= 50) {
       const firstKey = this.cache.keys().next().value;
       this.cache.delete(firstKey);
     }
@@ -296,7 +296,7 @@ export const creativesStore = {
   handleFieldChange(fieldName, value) {
     switch (fieldName) {
       case 'perPage':
-        console.log('store.setPerPage called:', { newPerPage, currentPerPage: this.perPage });
+        console.log('store.setPerPage called:', { newPerPage: value, currentPerPage: this.perPage });
         this.setPerPage(value);
         break;
       case 'searchQuery':
