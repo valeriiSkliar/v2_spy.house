@@ -35,6 +35,7 @@ class WelcomeInAppNotification extends Notification implements ShouldQueue
             'title' => __('notifications.welcome.title'),
             'message' => __('notifications.welcome.message', [
                 'name' => $notifiable->name ?? $notifiable->login,
+                'app_name' => config('app.name'),
             ]),
             'type' => NotificationType::WELCOME->value,
             'icon' => 'welcome',
