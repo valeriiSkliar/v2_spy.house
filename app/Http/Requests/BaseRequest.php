@@ -34,7 +34,7 @@ class BaseRequest extends FormRequest
             return '';
         }
         $input = trim($input);
-        $input = strtolower($input);
+        // $input = strtolower($input);
 
         return sanitize_input($input);
     }
