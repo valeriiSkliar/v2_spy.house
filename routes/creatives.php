@@ -13,5 +13,5 @@ Route::prefix('api/creatives')
     ->name('api.creatives.')
     ->group(function () {
         Route::get('/tab-counts', [CreativesController::class, 'tabCounts'])->name('tabCounts');
-        Route::post('/', [CreativesController::class, 'apiIndex'])->name('index');
+        Route::get('/', [CreativesController::class, 'apiIndex'])->name('index');
     });

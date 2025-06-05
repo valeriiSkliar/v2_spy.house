@@ -29,6 +29,17 @@ class CreativesController extends Controller
             'tiktok' => '45.2m',
         ];
 
+        // Опции для селекта "На странице"
+        $perPageOptions = [
+            ['value' => '12', 'order' => '1', 'label' => '12'],
+            ['value' => '24', 'order' => '2', 'label' => '24'],
+            ['value' => '48', 'order' => '3', 'label' => '48'],
+            ['value' => '96', 'order' => '4', 'label' => '96'],
+        ];
+
+        // Получаем текущее значение perPage из запроса или устанавливаем по умолчанию
+        $perPage = $request->get('per_page', '12');
+
         // Mock data for creatives - replace with actual data retrieval later
         $creativesData = $this->getMockCreativesData();
         $creatives = $creativesData[$activeTab] ?? []; // Get data for the active tab
@@ -38,6 +49,8 @@ class CreativesController extends Controller
             'counts' => $counts,
             'creatives' => $creatives, // Pass creatives data to the view
             'tabs' => $activeTab, // Pass tabs for social partial
+            'perPageOptions' => $perPageOptions, // Опции для селекта "На странице"
+            'perPage' => $perPage, // Текущее значение количества элементов на странице
         ]);
     }
 
@@ -554,7 +567,7 @@ class CreativesController extends Controller
         try {
             $tab = $request->input('tab', 'push');
             $page = max(1, (int) $request->input('page', 1));
-            $perPage = max(1, min(100, (int) $request->input('per_page', 20)));
+            $perPage = max(1, min(100, (int) $request->input('per_page', 12)));
 
             // Validate tab
             if (!in_array($tab, ['push', 'inpage', 'facebook', 'tiktok'])) {
@@ -582,6 +595,10 @@ class CreativesController extends Controller
                 });
                 $allCreatives = array_values($allCreatives);
             }
+
+            // Apply sort filter if provided
+            $sortBy = $request->input('sortBy', 'created_at');
+            $sortOrder = $request->input('sortOrder', 'desc');
 
             // Apply date filters if provided
             $dateFrom = $request->input('dateFrom', '');

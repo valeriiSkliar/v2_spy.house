@@ -64,6 +64,38 @@
 
 - `pages/creatives/index.blade.php` - основная страница креативов
 
+### Компонент фильтрации (Alpine.js - `resources/js/creatives/components/filterComponent.js`)
+
+Данный Alpine.js компонент (`filterComponent`) отвечает за логику фильтрации и сортировки на странице креативов. Он интегрируется с хранилищем (`this.$store.creatives`) для обновления состояния фильтров и загрузки отфильтрованных данных.
+
+**Свойства компонента:**
+
+- `searchQuery` (String): Текстовый запрос для поиска.
+- `selectedCategory` (String): Выбранная категория для фильтрации.
+- `dateFrom` (String): Начальная дата для фильтрации (формат YYYY-MM-DD).
+- `dateTo` (String): Конечная дата для фильтрации (формат YYYY-MM-DD).
+- `sortBy` (String): Поле для сортировки (по умолчанию 'created_at').
+- `sortOrder` (String): Направление сортировки ('asc' или 'desc', по умолчанию 'desc').
+- `categories` (Array): Массив объектов категорий для выпадающего списка. Структура объекта: `{ value: 'string', label: 'string' }`.
+- `sortOptions` (Array): Массив объектов опций сортировки. Структура объекта: `{ value: 'string', label: 'string' }`.
+
+**Методы компонента:**
+
+- `init()`: Инициализирует компонент, загружает начальное состояние фильтров из хранилища и устанавливает наблюдателей за изменениями свойств фильтров.
+- `loadFromStore()`: Загружает текущие значения фильтров из `this.$store.creatives.filters`.
+- `handleFilterChange()`: Обрабатывает изменения в любом из фильтров. Обновляет фильтры в хранилище (`this.$store.creatives.updateFilters(filters)`) и инициирует перезагрузку креативов (`this.$store.creatives.loadCreatives()`).
+- `clearFilters()`: Сбрасывает все фильтры к значениям по умолчанию.
+- `toggleSortOrder()`: Переключает направление сортировки между 'asc' и 'desc'.
+- `applyQuickFilter(type, value)`: Применяет быстрые фильтры:
+  - `type: 'today'`: Устанавливает `dateFrom` на текущую дату.
+  - `type: 'week'`: Устанавливает `dateFrom` на дату 7 дней назад.
+  - `type: 'month'`: Устанавливает `dateFrom` на дату 1 месяц назад.
+  - `type: 'category'`: Устанавливает `selectedCategory` в указанное `value`.
+
+**Интеграция с Blade:**
+
+Предполагается, что данный Alpine.js компонент используется внутри Blade-шаблона, например, `filter.blade.php`, который отвечает за HTML-структуру фильтров.
+
 ## Примеры использования
 
 ### Подключение UI компонентов

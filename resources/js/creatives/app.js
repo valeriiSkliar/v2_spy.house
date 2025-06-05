@@ -1,5 +1,6 @@
 import Alpine from 'alpinejs';
 
+import baseSelect from '../alpine/components/baseSelect';
 import { creativeItemComponent } from './components/creativeItemComponent.js';
 import { creativesListComponent } from './components/creativesListComponent.js';
 import { detailsPanelComponent } from './components/detailsPanelComponent.js';
@@ -61,6 +62,7 @@ const registerComponents = () => {
     registerAlpineComponent('creativeItem', creativeItemComponent);
     registerAlpineComponent('detailsPanel', detailsPanelComponent);
     registerAlpineComponent('pagination', paginationComponent);
+    registerAlpineComponent('baseSelect', baseSelect);
 
     console.log('Creatives components registered successfully');
 
@@ -105,7 +107,12 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => {
         console.log('Initializing router...');
         if (window.Alpine && window.Alpine.store) {
-          routerService.init(window.Alpine.store('creatives'));
+          const store = window.Alpine.store('creatives');
+          routerService.init(store);
+          // Инициализируем store
+          if (typeof store.init === 'function') {
+            store.init();
+          }
         }
       }, 200);
     } else {

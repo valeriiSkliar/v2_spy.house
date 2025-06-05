@@ -8,7 +8,7 @@ export const creativesStore = {
   creatives: [],
   totalPages: 1,
   currentPage: 1,
-  perPage: 20,
+  perPage: 12, // Значение по умолчанию для фильтра "На странице"
   totalCount: 0,
   tabCounts: {},
 
@@ -20,6 +20,10 @@ export const creativesStore = {
     sortBy: 'created_at',
     sortOrder: 'desc',
   },
+
+  // Синхронизированные поля с фильтр компонентом
+  searchQuery: '',
+  selectedCountry: '',
 
   selectedCreative: null,
   detailsPanelOpen: false,
@@ -54,6 +58,17 @@ export const creativesStore = {
     }
   },
 
+  // Новый метод для обновления perPage
+  setPerPage(newPerPage) {
+    const perPageInt = parseInt(newPerPage);
+    if (perPageInt && perPageInt > 0 && perPageInt !== this.perPage) {
+      this.perPage = perPageInt;
+      this.resetPagination(); // Сбрасываем на первую страницу
+      this.updateUrl();
+      this.loadCreatives();
+    }
+  },
+
   setTabCounts(counts) {
     this.tabCounts = counts || {};
   },
@@ -71,7 +86,7 @@ export const creativesStore = {
     this.totalPages = data.last_page || 1;
     this.currentPage = data.current_page || 1;
     this.totalCount = data.total || 0;
-    this.perPage = data.per_page || 20;
+    this.perPage = data.per_page || this.perPage;
 
     // Обновляем счетчики вкладок если они пришли с сервера
     if (data.tab_counts) {
@@ -83,6 +98,22 @@ export const creativesStore = {
     this.filters = { ...this.filters, ...newFilters };
     this.resetPagination();
     this.updateUrl();
+  },
+
+  updateSearchQuery(value) {
+    this.searchQuery = value;
+    this.filters.search = value;
+    this.resetPagination();
+    this.updateUrl();
+    this.loadCreatives();
+  },
+
+  updateSelectedCountry(value) {
+    this.selectedCountry = value;
+    this.filters.category = value;
+    this.resetPagination();
+    this.updateUrl();
+    this.loadCreatives();
   },
 
   setPage(page) {
@@ -112,6 +143,7 @@ export const creativesStore = {
     const params = {
       tab: this.currentTab,
       page: this.currentPage,
+      perPage: this.perPage, // Добавляем perPage в ключ кэша
       ...this.filters,
     };
     return JSON.stringify(params);
@@ -148,7 +180,17 @@ export const creativesStore = {
       this.currentPage = page;
     }
 
+    // Загружаем perPage из URL или query параметра per_page
+    const perPage = parseInt(params.get('perPage') || params.get('per_page'));
+    if (perPage && perPage > 0) {
+      this.perPage = perPage;
+    }
+
     this.filters = { ...this.filters, ...filters };
+
+    // Синхронизируем с полями компонентов
+    this.searchQuery = filters.search || '';
+    this.selectedCountry = filters.category || '';
   },
 
   updateUrl() {
@@ -156,6 +198,7 @@ export const creativesStore = {
 
     params.set('tab', this.currentTab);
     params.set('page', this.currentPage.toString());
+    params.set('perPage', this.perPage.toString()); // Добавляем perPage в URL
 
     Object.entries(this.filters).forEach(([key, value]) => {
       if (value && value.toString().trim() !== '') {
@@ -180,20 +223,25 @@ export const creativesStore = {
     this.clearError();
 
     try {
-      const response = await fetch('/api/creatives', {
-        method: 'POST',
+      const params = new URLSearchParams({
+        tab: this.currentTab,
+        page: this.currentPage.toString(),
+        per_page: this.perPage.toString(),
+        ...Object.fromEntries(
+          Object.entries(this.filters).filter(
+            ([key, value]) => value && value.toString().trim() !== ''
+          )
+        ),
+      });
+
+      const response = await fetch(`/api/creatives?${params.toString()}`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           'X-CSRF-TOKEN': document
             .querySelector('meta[name="csrf-token"]')
             ?.getAttribute('content'),
         },
-        body: JSON.stringify({
-          tab: this.currentTab,
-          page: this.currentPage,
-          per_page: this.perPage,
-          ...this.filters,
-        }),
       });
 
       if (!response.ok) {
