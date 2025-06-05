@@ -27,3 +27,5 @@ yarn-error.log
 /old_users.sql
 /.prettierrc
 /intelephense.json
+/coverage
+/html
