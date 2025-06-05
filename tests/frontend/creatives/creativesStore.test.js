@@ -1,359 +1,34 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { creativesStore } from '../../../resources/js/creatives/store/creativesStore.js';
 
-describe('CreativesStore - Test Case 1: Initialization', () => {
-  let originalWindow;
-  let originalLocation;
+// Мокаем fetch
+global.fetch = vi.fn();
 
-  beforeEach(() => {
-    // Сохраняем оригинальные значения
-    originalWindow = global.window;
-    originalLocation = global.location;
-
-    // Мокаем window.location для URLSearchParams
-    global.window = {
-      ...originalWindow,
-      location: {
-        search: '',
-        pathname: '/creatives',
-      },
-      history: {
-        pushState: vi.fn(),
-      },
-    };
-
-    // Мокаем URLSearchParams
-    global.URLSearchParams = class URLSearchParams {
-      constructor(search = '') {
-        this.params = new Map();
-      }
-
-      get(key) {
-        return this.params.get(key) || null;
-      }
-
-      set(key, value) {
-        this.params.set(key, value);
-      }
-
-      toString() {
-        const pairs = [];
-        for (const [key, value] of this.params) {
-          pairs.push(`${key}=${encodeURIComponent(value)}`);
-        }
-        return pairs.join('&');
-      }
-    };
-
-    // Сбрасываем состояние store перед каждым тестом
-    Object.assign(creativesStore, {
-      loading: false,
-      error: null,
-      currentTab: 'push',
-      availableTabs: ['push', 'inpage', 'facebook', 'tiktok'],
-      creatives: [],
-      totalPages: 1,
-      currentPage: 1,
-      perPage: 20,
-      totalCount: 0,
-      tabCounts: {},
-      filters: {
-        search: '',
-        category: '',
-        dateFrom: '',
-        dateTo: '',
-        sortBy: 'created_at',
-        sortOrder: 'desc',
-      },
-      selectedCreative: null,
-      detailsPanelOpen: false,
-      cache: new Map(),
-    });
-  });
-
-  afterEach(() => {
-    // Восстанавливаем оригинальные значения
-    global.window = originalWindow;
-    global.location = originalLocation;
-  });
-
-  it('should initialize creativesStore with correct default values', () => {
-    // Steps:
-    // 1. Создать новый экземпляр creativesStore - он уже создан как объект
-    // 2. Проверить начальные значения состояния
-
-    // Expected Results проверки:
-
-    // loading равно false
-    expect(creativesStore.loading).toBe(false);
-
-    // error равно null
-    expect(creativesStore.error).toBe(null);
-
-    // currentTab равно 'push' (согласно реальной реализации, не 'facebook' как в документации)
-    expect(creativesStore.currentTab).toBe('push');
-
-    // currentPage равно 1
-    expect(creativesStore.currentPage).toBe(1);
-
-    // Остальные свойства установлены в значения по умолчанию:
-
-    // filters установлены в дефолтные значения
-    expect(creativesStore.filters).toEqual({
-      search: '',
-      category: '',
-      dateFrom: '',
-      dateTo: '',
-      sortBy: 'created_at',
-      sortOrder: 'desc',
-    });
-
-    // totalPages установлено в дефолтное значение
-    expect(creativesStore.totalPages).toBe(1);
-
-    // selectedCreative равно null
-    expect(creativesStore.selectedCreative).toBe(null);
-
-    // detailsPanelOpen равно false
-    expect(creativesStore.detailsPanelOpen).toBe(false);
-
-    // Дополнительные проверки других свойств:
-    expect(creativesStore.creatives).toEqual([]);
-    expect(creativesStore.perPage).toBe(20);
-    expect(creativesStore.totalCount).toBe(0);
-    expect(creativesStore.tabCounts).toEqual({});
-    expect(creativesStore.cache).toBeInstanceOf(Map);
-    expect(creativesStore.cache.size).toBe(0);
-
-    // Проверяем, что availableTabs содержит ожидаемые вкладки
-    expect(creativesStore.availableTabs).toEqual(['push', 'inpage', 'facebook', 'tiktok']);
-  });
-
-  it('should properly initialize cache as empty Map', () => {
-    // Проверяем, что кэш корректно инициализирован
-    expect(creativesStore.cache).toBeInstanceOf(Map);
-    expect(creativesStore.cache.size).toBe(0);
-  });
-
-  it('should have all required methods defined', () => {
-    // Проверяем, что все необходимые методы определены
-    expect(typeof creativesStore.init).toBe('function');
-    expect(typeof creativesStore.setLoading).toBe('function');
-    expect(typeof creativesStore.setError).toBe('function');
-    expect(typeof creativesStore.clearError).toBe('function');
-    expect(typeof creativesStore.setTab).toBe('function');
-    expect(typeof creativesStore.setCreatives).toBe('function');
-    expect(typeof creativesStore.updateFilters).toBe('function');
-    expect(typeof creativesStore.setPage).toBe('function');
-    expect(typeof creativesStore.resetPagination).toBe('function');
-    expect(typeof creativesStore.openDetails).toBe('function');
-    expect(typeof creativesStore.closeDetails).toBe('function');
-    expect(typeof creativesStore.getCacheKey).toBe('function');
-    expect(typeof creativesStore.getFromCache).toBe('function');
-    expect(typeof creativesStore.setCache).toBe('function');
-    expect(typeof creativesStore.loadFiltersFromUrl).toBe('function');
-    expect(typeof creativesStore.updateUrl).toBe('function');
-    expect(typeof creativesStore.loadCreatives).toBe('function');
-  });
+// Мокаем window объекты
+Object.defineProperty(window, 'location', {
+  value: {
+    pathname: '/creatives',
+    search: '',
+  },
+  writable: true,
 });
 
-describe('CreativesStore - Test Case 2: Tab Switching', () => {
-  let originalWindow;
-  let loadCreativesSpy;
-
-  beforeEach(() => {
-    // Сохраняем оригинальные значения
-    originalWindow = global.window;
-
-    // Мокаем window для тестов
-    global.window = {
-      location: {
-        search: '',
-        pathname: '/creatives',
-      },
-      history: {
-        pushState: vi.fn(),
-      },
-    };
-
-    // Мокаем URLSearchParams
-    global.URLSearchParams = class URLSearchParams {
-      constructor(search = '') {
-        this.params = new Map();
-      }
-
-      get(key) {
-        return this.params.get(key) || null;
-      }
-
-      set(key, value) {
-        this.params.set(key, value);
-      }
-
-      toString() {
-        const pairs = [];
-        for (const [key, value] of this.params) {
-          pairs.push(`${key}=${encodeURIComponent(value)}`);
-        }
-        return pairs.join('&');
-      }
-    };
-
-    // Сбрасываем состояние store
-    Object.assign(creativesStore, {
-      loading: false,
-      error: null,
-      currentTab: 'push',
-      availableTabs: ['push', 'inpage', 'facebook', 'tiktok'],
-      creatives: [],
-      totalPages: 1,
-      currentPage: 1,
-      perPage: 20,
-      totalCount: 0,
-      tabCounts: {},
-      filters: {
-        search: '',
-        category: '',
-        dateFrom: '',
-        dateTo: '',
-        sortBy: 'created_at',
-        sortOrder: 'desc',
-      },
-      selectedCreative: null,
-      detailsPanelOpen: false,
-      cache: new Map(),
-    });
-
-    // Создаем шпиона для метода loadCreatives
-    loadCreativesSpy = vi.spyOn(creativesStore, 'loadCreatives').mockImplementation(() => {});
-  });
-
-  afterEach(() => {
-    // Восстанавливаем оригинальные значения
-    global.window = originalWindow;
-    // Восстанавливаем оригинальный метод loadCreatives
-    loadCreativesSpy.mockRestore();
-  });
-
-  it('should switch tab to tiktok and reset pagination', () => {
-    // Steps:
-    // 1. Вызвать метод переключения вкладки на 'tiktok'
-
-    // Устанавливаем начальное состояние - не первая страница для проверки сброса
-    creativesStore.currentPage = 3;
-
-    // Переключаем вкладку
-    creativesStore.setTab('tiktok');
-
-    // Expected Results проверки:
-
-    // currentTab равно 'tiktok'
-    expect(creativesStore.currentTab).toBe('tiktok');
-
-    // currentPage сброшено на 1
-    expect(creativesStore.currentPage).toBe(1);
-
-    // В текущей реализации loadCreatives закомментирован,
-    // но мы проверяем что метод существует и может быть вызван
-    expect(typeof creativesStore.loadCreatives).toBe('function');
-  });
-
-  it('should only switch to valid tabs from availableTabs', () => {
-    // Проверяем переключение на валидные вкладки
-    const validTabs = ['push', 'inpage', 'facebook', 'tiktok'];
-
-    validTabs.forEach(tab => {
-      creativesStore.setTab(tab);
-      expect(creativesStore.currentTab).toBe(tab);
-    });
-  });
-
-  it('should not switch to invalid tab', () => {
-    // Устанавливаем начальную вкладку
-    const initialTab = creativesStore.currentTab;
-
-    // Пытаемся переключиться на невалидную вкладку
-    creativesStore.setTab('invalid_tab');
-
-    // Вкладка должна остаться прежней
-    expect(creativesStore.currentTab).toBe(initialTab);
-  });
-
-  it('should reset pagination when switching tabs', () => {
-    // Устанавливаем состояние не на первой странице
-    creativesStore.currentPage = 5;
-    creativesStore.totalPages = 10;
-
-    // Переключаем вкладку
-    creativesStore.setTab('facebook');
-
-    // Пагинация должна сброситься
-    expect(creativesStore.currentPage).toBe(1);
-  });
-
-  it('should preserve other state when switching tabs', () => {
-    // Устанавливаем некоторые данные в состоянии
-    const initialFilters = { search: 'test', category: 'video' };
-    const initialCreatives = [{ id: 1, title: 'Test' }];
-    const initialTotalCount = 100;
-
-    creativesStore.filters = { ...creativesStore.filters, ...initialFilters };
-    creativesStore.creatives = initialCreatives;
-    creativesStore.totalCount = initialTotalCount;
-
-    // Переключаем вкладку
-    creativesStore.setTab('tiktok');
-
-    // Другие данные должны сохраниться
-    expect(creativesStore.filters.search).toBe('test');
-    expect(creativesStore.filters.category).toBe('video');
-    expect(creativesStore.creatives).toEqual(initialCreatives);
-    expect(creativesStore.totalCount).toBe(initialTotalCount);
-  });
-
-  it('should call resetPagination method when switching tabs', () => {
-    // Создаем шпиона для метода resetPagination
-    const resetPaginationSpy = vi.spyOn(creativesStore, 'resetPagination');
-
-    // Переключаем вкладку
-    creativesStore.setTab('facebook');
-
-    // Проверяем что resetPagination был вызван
-    expect(resetPaginationSpy).toHaveBeenCalledOnce();
-
-    resetPaginationSpy.mockRestore();
-  });
+Object.defineProperty(window, 'history', {
+  value: {
+    pushState: vi.fn(),
+  },
+  writable: true,
 });
 
-describe('CreativesStore - Test Case 3: Tab Counts Management', () => {
-  let originalWindow;
-  let originalFetch;
+describe('CreativesStore', () => {
+  let store;
 
   beforeEach(() => {
-    // Сохраняем оригинальные значения
-    originalWindow = global.window;
-    originalFetch = global.fetch;
-
-    // Мокаем window
-    global.window = {
-      location: {
-        search: '',
-        pathname: '/creatives',
-      },
-      history: {
-        pushState: vi.fn(),
-      },
-    };
-
-    // Мокаем document для CSRF токена
-    global.document = {
-      querySelector: vi.fn().mockReturnValue({
-        getAttribute: vi.fn().mockReturnValue('test-csrf-token'),
-      }),
-    };
-
-    // Сбрасываем состояние store
-    Object.assign(creativesStore, {
+    // Создаем свежую копию store для каждого теста
+    store = Object.create(creativesStore);
+    
+    // Копируем начальные значения
+    Object.assign(store, {
       loading: false,
       error: null,
       currentTab: 'push',
@@ -361,7 +36,7 @@ describe('CreativesStore - Test Case 3: Tab Counts Management', () => {
       creatives: [],
       totalPages: 1,
       currentPage: 1,
-      perPage: 20,
+      perPage: 12,
       totalCount: 0,
       tabCounts: {},
       filters: {
@@ -372,228 +47,496 @@ describe('CreativesStore - Test Case 3: Tab Counts Management', () => {
         sortBy: 'created_at',
         sortOrder: 'desc',
       },
+      searchQuery: '',
+      selectedCountry: '',
       selectedCreative: null,
       detailsPanelOpen: false,
       cache: new Map(),
     });
+
+    // Очищаем моки
+    vi.clearAllMocks();
+    fetch.mockClear();
+
+    // Сбрасываем window объекты
+    window.location.search = '';
+    window.creativesTabCounts = undefined;
+
+    // Мокаем CSRF token
+    document.head.innerHTML = '<meta name="csrf-token" content="test-token">';
   });
 
   afterEach(() => {
-    // Восстанавливаем оригинальные значения
-    global.window = originalWindow;
-    global.fetch = originalFetch;
     vi.restoreAllMocks();
   });
 
-  describe('setTabCounts', () => {
-    it('should set tab counts with valid data', () => {
-      const testCounts = {
-        push: 10,
-        inpage: 5,
-        facebook: 3,
-        tiktok: 7,
-      };
-
-      creativesStore.setTabCounts(testCounts);
-
-      expect(creativesStore.tabCounts).toEqual(testCounts);
+  describe('Инициализация', () => {
+    it('должен иметь правильные начальные значения', () => {
+      expect(store.loading).toBe(false);
+      expect(store.error).toBe(null);
+      expect(store.currentTab).toBe('push');
+      expect(store.perPage).toBe(12);
+      expect(store.currentPage).toBe(1);
+      expect(store.creatives).toEqual([]);
     });
 
-    it('should handle null counts by setting empty object', () => {
-      creativesStore.setTabCounts(null);
+    it('должен загрузить фильтры из URL при инициализации', () => {
+      window.location.search = '?tab=facebook&page=2&perPage=24&search=test';
 
-      expect(creativesStore.tabCounts).toEqual({});
+      store.loadFiltersFromUrl();
+
+      expect(store.currentTab).toBe('facebook');
+      expect(store.currentPage).toBe(2);
+      expect(store.perPage).toBe(24);
+      expect(store.filters.search).toBe('test');
+      expect(store.searchQuery).toBe('test');
     });
 
-    it('should handle undefined counts by setting empty object', () => {
-      creativesStore.setTabCounts(undefined);
+    it('должен обрабатывать некорректные URL параметры', () => {
+      window.location.search = '?tab=invalid&page=abc&perPage=-5';
 
-      expect(creativesStore.tabCounts).toEqual({});
-    });
+      store.loadFiltersFromUrl();
 
-    it('should override existing tab counts', () => {
-      // Устанавливаем начальные значения
-      creativesStore.tabCounts = { push: 5, inpage: 3 };
-
-      const newCounts = { facebook: 10, tiktok: 2 };
-      creativesStore.setTabCounts(newCounts);
-
-      expect(creativesStore.tabCounts).toEqual(newCounts);
+      expect(store.currentTab).toBe('push'); // остается по умолчанию
+      expect(store.currentPage).toBe(1); // остается по умолчанию
+      expect(store.perPage).toBe(12); // остается по умолчанию
     });
   });
 
-  describe('getTabCountsFromWindow', () => {
-    it('should get tab counts from window and return true when available', () => {
-      const testCounts = {
-        push: 15,
-        inpage: 8,
-        facebook: 4,
-        tiktok: 12,
+  describe('Управление состоянием', () => {
+    it('должен устанавливать состояние загрузки', () => {
+      store.setLoading(true);
+      expect(store.loading).toBe(true);
+
+      store.setLoading(false);
+      expect(store.loading).toBe(false);
+    });
+
+    it('должен устанавливать и очищать ошибки', () => {
+      const error = 'Тестовая ошибка';
+
+      store.setError(error);
+      expect(store.error).toBe(error);
+
+      store.clearError();
+      expect(store.error).toBe(null);
+    });
+
+    it('должен устанавливать данные креативов', () => {
+      const testData = {
+        data: [{ id: 1 }, { id: 2 }],
+        last_page: 5,
+        current_page: 2,
+        total: 100,
+        per_page: 20,
+        tab_counts: { push: 50, inpage: 30 },
       };
 
-      global.window.creativesTabCounts = testCounts;
+      store.setCreatives(testData);
 
-      const result = creativesStore.getTabCountsFromWindow();
-
-      expect(result).toBe(true);
-      expect(creativesStore.tabCounts).toEqual(testCounts);
-    });
-
-    it('should return false when window.creativesTabCounts is not available', () => {
-      // Удаляем creativesTabCounts из window
-      delete global.window.creativesTabCounts;
-
-      const result = creativesStore.getTabCountsFromWindow();
-
-      expect(result).toBe(false);
-      // tabCounts должны остаться неизменными (пустой объект по умолчанию)
-      expect(creativesStore.tabCounts).toEqual({});
-    });
-
-    it('should return false when window.creativesTabCounts is null', () => {
-      global.window.creativesTabCounts = null;
-
-      const result = creativesStore.getTabCountsFromWindow();
-
-      expect(result).toBe(false);
-    });
-
-    it('should return false when window.creativesTabCounts is undefined', () => {
-      global.window.creativesTabCounts = undefined;
-
-      const result = creativesStore.getTabCountsFromWindow();
-
-      expect(result).toBe(false);
+      expect(store.creatives).toEqual(testData.data);
+      expect(store.totalPages).toBe(5);
+      expect(store.currentPage).toBe(2);
+      expect(store.totalCount).toBe(100);
+      expect(store.perPage).toBe(20);
+      expect(store.tabCounts).toEqual(testData.tab_counts);
     });
   });
 
-  describe('loadTabCounts', () => {
-    it('should load tab counts successfully from API', async () => {
-      const mockTabCounts = {
-        push: 20,
-        inpage: 15,
-        facebook: 8,
-        tiktok: 12,
+  describe('Управление вкладками', () => {
+    it('должен переключать вкладки', async () => {
+      // Мокаем loadCreatives
+      const loadCreativesSpy = vi.spyOn(store, 'loadCreatives').mockImplementation(() => {});
+
+      store.setTab('facebook');
+
+      expect(store.currentTab).toBe('facebook');
+      expect(store.currentPage).toBe(1); // должен сбросить пагинацию
+      expect(loadCreativesSpy).toHaveBeenCalled();
+    });
+
+    it('должен игнорировать некорректные вкладки', () => {
+      const originalTab = store.currentTab;
+
+      store.setTab('invalid-tab');
+
+      expect(store.currentTab).toBe(originalTab);
+    });
+  });
+
+  describe('Управление perPage', () => {
+    it('должен обновлять perPage и сбрасывать пагинацию', async () => {
+      const loadCreativesSpy = vi.spyOn(store, 'loadCreatives').mockImplementation(() => {});
+      const updateUrlSpy = vi.spyOn(store, 'updateUrl').mockImplementation(() => {});
+
+      store.currentPage = 3;
+      store.setPerPage('24');
+
+      expect(store.perPage).toBe(24);
+      expect(store.currentPage).toBe(1);
+      expect(updateUrlSpy).toHaveBeenCalled();
+      expect(loadCreativesSpy).toHaveBeenCalled();
+    });
+
+    it('должен обрабатывать некорректные значения perPage', () => {
+      const originalPerPage = store.perPage;
+
+      store.setPerPage('abc');
+      expect(store.perPage).toBe(originalPerPage);
+
+      store.setPerPage('-5');
+      expect(store.perPage).toBe(originalPerPage);
+
+      store.setPerPage('0');
+      expect(store.perPage).toBe(originalPerPage);
+    });
+
+    it('должен конвертировать строковые числа в числа', async () => {
+      vi.spyOn(store, 'loadCreatives').mockImplementation(() => {});
+      vi.spyOn(store, 'updateUrl').mockImplementation(() => {});
+
+      store.setPerPage('48');
+
+      expect(store.perPage).toBe(48);
+      expect(typeof store.perPage).toBe('number');
+    });
+  });
+
+  describe('Управление фильтрами', () => {
+    it('должен обновлять фильтры', () => {
+      const updateUrlSpy = vi.spyOn(store, 'updateUrl').mockImplementation(() => {});
+
+      const newFilters = {
+        search: 'test query',
+        category: 'test category',
       };
 
-      // Мокаем успешный fetch
-      global.fetch = vi.fn().mockResolvedValue({
+      store.updateFilters(newFilters);
+
+      expect(store.filters.search).toBe('test query');
+      expect(store.filters.category).toBe('test category');
+      expect(store.currentPage).toBe(1); // должен сбросить пагинацию
+      expect(updateUrlSpy).toHaveBeenCalled();
+    });
+
+    it('должен обновлять поисковый запрос', async () => {
+      const loadCreativesSpy = vi.spyOn(store, 'loadCreatives').mockImplementation(() => {});
+      const updateUrlSpy = vi.spyOn(store, 'updateUrl').mockImplementation(() => {});
+
+      store.updateSearchQuery('новый поиск');
+
+      expect(store.searchQuery).toBe('новый поиск');
+      expect(store.filters.search).toBe('новый поиск');
+      expect(store.currentPage).toBe(1);
+      expect(updateUrlSpy).toHaveBeenCalled();
+      expect(loadCreativesSpy).toHaveBeenCalled();
+    });
+
+    it('должен обновлять выбранную страну', async () => {
+      const loadCreativesSpy = vi.spyOn(store, 'loadCreatives').mockImplementation(() => {});
+      const updateUrlSpy = vi.spyOn(store, 'updateUrl').mockImplementation(() => {});
+
+      store.updateSelectedCountry('RU');
+
+      expect(store.selectedCountry).toBe('RU');
+      expect(store.filters.category).toBe('RU');
+      expect(store.currentPage).toBe(1);
+      expect(updateUrlSpy).toHaveBeenCalled();
+      expect(loadCreativesSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('Управление пагинацией', () => {
+    beforeEach(() => {
+      store.totalPages = 10;
+    });
+
+    it('должен устанавливать корректную страницу', async () => {
+      const loadCreativesSpy = vi.spyOn(store, 'loadCreatives').mockImplementation(() => {});
+      const updateUrlSpy = vi.spyOn(store, 'updateUrl').mockImplementation(() => {});
+
+      store.setPage(5);
+
+      expect(store.currentPage).toBe(5);
+      expect(updateUrlSpy).toHaveBeenCalled();
+      expect(loadCreativesSpy).toHaveBeenCalled();
+    });
+
+    it('должен игнорировать некорректные номера страниц', () => {
+      store.setPage(0);
+      expect(store.currentPage).toBe(1); // не должно измениться
+
+      store.setPage(15);
+      expect(store.currentPage).toBe(1); // не должно измениться
+
+      store.setPage(-1);
+      expect(store.currentPage).toBe(1); // не должно измениться
+    });
+
+    it('должен сбрасывать пагинацию', () => {
+      store.currentPage = 5;
+      store.resetPagination();
+      expect(store.currentPage).toBe(1);
+    });
+  });
+
+  describe('Управление деталями', () => {
+    it('должен открывать и закрывать панель деталей', () => {
+      const creative = { id: 1, title: 'Test Creative' };
+
+      store.openDetails(creative);
+      expect(store.selectedCreative).toEqual(creative);
+      expect(store.detailsPanelOpen).toBe(true);
+
+      store.closeDetails();
+      expect(store.selectedCreative).toBe(null);
+      expect(store.detailsPanelOpen).toBe(false);
+    });
+  });
+
+  describe('Кэширование', () => {
+    it('должен генерировать правильный ключ кэша', () => {
+      store.currentTab = 'facebook';
+      store.currentPage = 2;
+      store.perPage = 24;
+      store.filters = { search: 'test' };
+
+      const key = store.getCacheKey();
+      const expectedKey = JSON.stringify({
+        tab: 'facebook',
+        page: 2,
+        perPage: 24,
+        search: 'test',
+      });
+
+      expect(key).toBe(expectedKey);
+    });
+
+    it('должен управлять кэшем', () => {
+      const key = 'test-key';
+      const data = { test: 'data' };
+
+      store.setCache(key, data);
+      expect(store.getFromCache(key)).toEqual(data);
+
+      expect(store.getFromCache('non-existent')).toBeUndefined();
+    });
+
+    it('должен ограничивать размер кэша', () => {
+      // Заполняем кэш более чем 50 элементами
+      for (let i = 0; i < 55; i++) {
+        store.setCache(`key-${i}`, { data: i });
+      }
+
+      expect(store.cache.size).toBeLessThanOrEqual(50);
+      expect(store.getFromCache('key-0')).toBeUndefined(); // первые элементы должны быть удалены
+      expect(store.getFromCache('key-54')).toBeDefined(); // последние должны остаться
+    });
+  });
+
+  describe('Загрузка креативов', () => {
+    it('должен загружать креативы через API', async () => {
+      const mockResponse = {
+        data: [{ id: 1 }, { id: 2 }],
+        last_page: 3,
+        current_page: 1,
+        total: 50,
+        per_page: 12,
+      };
+
+      fetch.mockResolvedValueOnce({
         ok: true,
-        json: vi.fn().mockResolvedValue(mockTabCounts),
+        json: () => Promise.resolve(mockResponse),
       });
 
-      await creativesStore.loadTabCounts();
+      await store.loadCreatives();
 
-      expect(global.fetch).toHaveBeenCalledWith('/api/creatives/tab-counts', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': 'test-csrf-token',
-        },
-      });
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/creatives'),
+        expect.objectContaining({
+          method: 'GET',
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': 'test-token',
+          }),
+        })
+      );
 
-      expect(creativesStore.tabCounts).toEqual(mockTabCounts);
+      expect(store.creatives).toEqual(mockResponse.data);
+      expect(store.loading).toBe(false);
     });
 
-    it('should handle API error and fallback to window data', async () => {
-      const windowTabCounts = {
-        push: 5,
-        inpage: 3,
-        facebook: 2,
-        tiktok: 1,
-      };
+    it('должен использовать кэш если данные уже загружены', async () => {
+      const cachedData = { data: [{ id: 1 }] };
+      const cacheKey = store.getCacheKey();
+      store.setCache(cacheKey, cachedData);
 
-      // Мокаем неуспешный fetch
-      global.fetch = vi.fn().mockResolvedValue({
+      await store.loadCreatives();
+
+      expect(fetch).not.toHaveBeenCalled();
+      expect(store.creatives).toEqual(cachedData.data);
+    });
+
+    it('должен обрабатывать ошибки API', async () => {
+      fetch.mockRejectedValueOnce(new Error('Network error'));
+
+      await store.loadCreatives();
+
+      expect(store.error).toContain('Ошибка загрузки креативов');
+      expect(store.loading).toBe(false);
+    });
+
+    it('должен обрабатывать HTTP ошибки', async () => {
+      fetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
       });
 
-      // Устанавливаем данные в window для fallback
-      global.window.creativesTabCounts = windowTabCounts;
+      await store.loadCreatives();
 
-      // Мокаем console.error чтобы не засорять вывод тестов
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-      await creativesStore.loadTabCounts();
-
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Error loading tab counts:', expect.any(Error));
-
-      expect(creativesStore.tabCounts).toEqual(windowTabCounts);
-
-      consoleErrorSpy.mockRestore();
+      expect(store.error).toContain('Ошибка загрузки креативов');
+      expect(store.loading).toBe(false);
     });
 
-    it('should handle network error and fallback to window data', async () => {
-      const windowTabCounts = {
-        push: 10,
-        inpage: 7,
+    it('должен корректно формировать URL параметры', async () => {
+      store.currentTab = 'facebook';
+      store.currentPage = 2;
+      store.perPage = 24;
+      store.filters = {
+        search: 'test query',
+        category: 'RU',
+        sortBy: 'updated_at',
       };
 
-      // Мокаем fetch с сетевой ошибкой
-      global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
-
-      // Устанавливаем данные в window для fallback
-      global.window.creativesTabCounts = windowTabCounts;
-
-      // Мокаем console.error
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-      await creativesStore.loadTabCounts();
-
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Error loading tab counts:', expect.any(Error));
-
-      expect(creativesStore.tabCounts).toEqual(windowTabCounts);
-
-      consoleErrorSpy.mockRestore();
-    });
-
-    it('should log warning when neither API nor window data available', async () => {
-      // Мокаем неуспешный fetch
-      global.fetch = vi.fn().mockRejectedValue(new Error('API error'));
-
-      // Убираем данные из window
-      delete global.window.creativesTabCounts;
-
-      // Мокаем console методы
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-      await creativesStore.loadTabCounts();
-
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Error loading tab counts:', expect.any(Error));
-
-      expect(consoleWarnSpy).toHaveBeenCalledWith('No tab counts available from API or window');
-
-      expect(creativesStore.tabCounts).toEqual({});
-
-      consoleErrorSpy.mockRestore();
-      consoleWarnSpy.mockRestore();
-    });
-
-    it('should handle missing CSRF token gracefully', async () => {
-      // Мокаем document.querySelector чтобы вернуть null (нет CSRF токена)
-      global.document.querySelector.mockReturnValue(null);
-
-      const mockTabCounts = { push: 1, inpage: 2 };
-
-      // Мокаем успешный fetch
-      global.fetch = vi.fn().mockResolvedValue({
+      fetch.mockResolvedValueOnce({
         ok: true,
-        json: vi.fn().mockResolvedValue(mockTabCounts),
+        json: () => Promise.resolve({ data: [] }),
       });
 
-      await creativesStore.loadTabCounts();
+      await store.loadCreatives();
 
-      expect(global.fetch).toHaveBeenCalledWith('/api/creatives/tab-counts', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': undefined, // когда нет CSRF токена
-        },
+      const calledUrl = fetch.mock.calls[0][0];
+      expect(calledUrl).toContain('tab=facebook');
+      expect(calledUrl).toContain('page=2');
+      expect(calledUrl).toContain('per_page=24');
+      expect(calledUrl).toContain('search=test+query');
+      expect(calledUrl).toContain('category=RU');
+      expect(calledUrl).toContain('sortBy=updated_at');
+    });
+  });
+
+  describe('Загрузка счетчиков вкладок', () => {
+    it('должен загружать счетчики через API', async () => {
+      const mockCounts = { push: 100, inpage: 50, facebook: 25 };
+
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockCounts),
       });
 
-      expect(creativesStore.tabCounts).toEqual(mockTabCounts);
+      await store.loadTabCounts();
+
+      expect(fetch).toHaveBeenCalledWith('/api/creatives/tab-counts', expect.any(Object));
+      expect(store.tabCounts).toEqual(mockCounts);
+    });
+
+    it('должен использовать fallback из window при ошибке API', async () => {
+      window.creativesTabCounts = { push: 80, inpage: 40 };
+      fetch.mockRejectedValueOnce(new Error('Network error'));
+
+      await store.loadTabCounts();
+
+      expect(store.tabCounts).toEqual(window.creativesTabCounts);
+    });
+  });
+
+  describe('Централизованная обработка изменений', () => {
+    it('должен обрабатывать изменение perPage', async () => {
+      const setPerPageSpy = vi.spyOn(store, 'setPerPage').mockImplementation(() => {});
+
+      store.handleFieldChange('perPage', '24');
+
+      expect(setPerPageSpy).toHaveBeenCalledWith('24');
+    });
+
+    it('должен обрабатывать изменение searchQuery', async () => {
+      const updateSearchQuerySpy = vi
+        .spyOn(store, 'updateSearchQuery')
+        .mockImplementation(() => {});
+
+      store.handleFieldChange('searchQuery', 'test');
+
+      expect(updateSearchQuerySpy).toHaveBeenCalledWith('test');
+    });
+
+    it('должен обрабатывать изменение selectedCountry', async () => {
+      const updateSelectedCountrySpy = vi
+        .spyOn(store, 'updateSelectedCountry')
+        .mockImplementation(() => {});
+
+      store.handleFieldChange('selectedCountry', 'RU');
+
+      expect(updateSelectedCountrySpy).toHaveBeenCalledWith('RU');
+    });
+
+    it('должен обрабатывать неизвестные поля', async () => {
+      const resetPaginationSpy = vi.spyOn(store, 'resetPagination').mockImplementation(() => {});
+      const updateUrlSpy = vi.spyOn(store, 'updateUrl').mockImplementation(() => {});
+      const loadCreativesSpy = vi.spyOn(store, 'loadCreatives').mockImplementation(() => {});
+
+      store.handleFieldChange('unknownField', 'value');
+
+      expect(resetPaginationSpy).toHaveBeenCalled();
+      expect(updateUrlSpy).toHaveBeenCalled();
+      expect(loadCreativesSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('Обновление URL', () => {
+    it('должен корректно обновлять URL', () => {
+      store.currentTab = 'facebook';
+      store.currentPage = 3;
+      store.perPage = 24;
+      store.filters = {
+        search: 'test',
+        category: 'RU',
+        sortBy: 'created_at',
+      };
+
+      store.updateUrl();
+
+      expect(window.history.pushState).toHaveBeenCalledWith(
+        {},
+        '',
+        expect.stringContaining('tab=facebook')
+      );
+      expect(window.history.pushState).toHaveBeenCalledWith(
+        {},
+        '',
+        expect.stringContaining('page=3')
+      );
+      expect(window.history.pushState).toHaveBeenCalledWith(
+        {},
+        '',
+        expect.stringContaining('perPage=24')
+      );
+    });
+
+    it('должен пропускать пустые значения фильтров', () => {
+      store.filters = {
+        search: '',
+        category: 'RU',
+        dateFrom: null,
+        dateTo: undefined,
+      };
+
+      store.updateUrl();
+
+      const calledUrl = window.history.pushState.mock.calls[0][2];
+      expect(calledUrl).toContain('category=RU');
+      expect(calledUrl).not.toContain('search=');
+      expect(calledUrl).not.toContain('dateFrom=');
+      expect(calledUrl).not.toContain('dateTo=');
     });
   });
 });
