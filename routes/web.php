@@ -74,3 +74,4 @@ require __DIR__ . '/landings.php';
 require __DIR__ . '/notifications.php';
 require __DIR__ . '/services.php';
 require __DIR__ . '/test.php';
+require __DIR__ . '/creatives.php';

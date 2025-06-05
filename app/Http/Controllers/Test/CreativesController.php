@@ -516,4 +516,30 @@ class CreativesController extends Controller
             ],
         ];
     }
+
+    /**
+     * Get tab counts for creatives API
+     * Returns the count of creatives for each tab type
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function tabCounts()
+    {
+        // TODO: add cache in production app (redis / update cache 10 times a day)
+        try {
+            $creativesData = $this->getMockCreativesData();
+
+            // Count creatives for each tab
+            $tabCounts = [
+                'push' => count($creativesData['push'] ?? []),
+                'inpage' => count($creativesData['inpage'] ?? []),
+                'facebook' => count($creativesData['facebook'] ?? []),
+                'tiktok' => count($creativesData['tiktok'] ?? []),
+            ];
+
+            return response()->json($tabCounts);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to load tab counts'], 500);
+        }
+    }
 }
