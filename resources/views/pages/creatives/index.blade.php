@@ -49,7 +49,10 @@
 
 @push('scripts')
 @vite(['resources/js/creatives/app.js'])
-<script>
+<script type="module">
+    // Передаем счетчики табов в JavaScript для Alpine.js
+    window.creativesTabCounts = @json($counts);
+    
     document.addEventListener('DOMContentLoaded', function() {
         // Creative item details handling
         const showDetailsButtons = document.querySelectorAll('.js-show-details');

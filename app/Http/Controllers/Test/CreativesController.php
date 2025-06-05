@@ -8,20 +8,20 @@ use Illuminate\Http\Request;
 class CreativesController extends Controller
 {
     /**
-     * Display the creatives page with different layouts based on the type
+     * Display the creatives page with different layouts based on the tabs
      *
      * @return \Illuminate\View\View
      */
     public function index(Request $request)
     {
-        $activeTab = $request->get('type', 'push');
+        $activeTab = $request->get('tabs', 'push');
 
         // Validate that the tab is one of the allowed values
         if (! in_array($activeTab, ['push', 'facebook', 'tiktok', 'inpage'])) {
             $activeTab = 'push';
         }
 
-        // Get counts for each creative type (in a real app, these would come from the database)
+        // Get counts for each creative tabs (in a real app, these would come from the database)
         $counts = [
             'push' => '170k',
             'inpage' => '3.1k',
@@ -37,16 +37,16 @@ class CreativesController extends Controller
             'activeTab' => $activeTab,
             'counts' => $counts,
             'creatives' => $creatives, // Pass creatives data to the view
-            'type' => $activeTab, // Pass type for social partial
+            'tabs' => $activeTab, // Pass tabs for social partial
         ]);
     }
 
     /**
-     * Generate mock data for different creative types.
+     * Generate mock data for different creative tabs.
      * In a real application, this data would come from a database or service.
      */
     /**
-     * Generate mock data for different creative types.
+     * Generate mock data for different creative tabs.
      * In a real application, this data would come from a database or service.
      */
     private function getMockCreativesData(): array

@@ -28,6 +28,7 @@ export const creativesStore = {
 
   init() {
     this.loadFiltersFromUrl();
+    this.loadTabCounts();
   },
 
   setLoading(loading) {
@@ -49,6 +50,18 @@ export const creativesStore = {
       // Автозагрузка отключена пока нет API
       // this.loadCreatives();
     }
+  },
+
+  setTabCounts(counts) {
+    this.tabCounts = counts || {};
+  },
+
+  getTabCountsFromWindow() {
+    if (window.creativesTabCounts) {
+      this.setTabCounts(window.creativesTabCounts);
+      return true;
+    }
+    return false;
   },
 
   setCreatives(data) {
@@ -193,6 +206,37 @@ export const creativesStore = {
       this.setError('Ошибка загрузки креативов. Попробуйте позже.');
     } finally {
       this.setLoading(false);
+    }
+  },
+
+  async loadTabCounts() {
+    // TODO: add logik on backend for tab counts
+    // TODO: add loading state
+    // TODO: add error handling
+    // TODO: add fallback to window.creativesTabCounts
+    try {
+      const response = await fetch('/api/creatives/tab-counts', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document
+            .querySelector('meta[name="csrf-token"]')
+            ?.getAttribute('content'),
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      this.setTabCounts(data);
+    } catch (error) {
+      console.error('Error loading tab counts:', error);
+      // Fallback: пытаемся получить данные из window
+      if (!this.getTabCountsFromWindow()) {
+        console.warn('No tab counts available from API or window');
+      }
     }
   },
 };

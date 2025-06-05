@@ -324,3 +324,276 @@ describe('CreativesStore - Test Case 2: Tab Switching', () => {
     resetPaginationSpy.mockRestore();
   });
 });
+
+describe('CreativesStore - Test Case 3: Tab Counts Management', () => {
+  let originalWindow;
+  let originalFetch;
+
+  beforeEach(() => {
+    // Сохраняем оригинальные значения
+    originalWindow = global.window;
+    originalFetch = global.fetch;
+
+    // Мокаем window
+    global.window = {
+      location: {
+        search: '',
+        pathname: '/creatives',
+      },
+      history: {
+        pushState: vi.fn(),
+      },
+    };
+
+    // Мокаем document для CSRF токена
+    global.document = {
+      querySelector: vi.fn().mockReturnValue({
+        getAttribute: vi.fn().mockReturnValue('test-csrf-token'),
+      }),
+    };
+
+    // Сбрасываем состояние store
+    Object.assign(creativesStore, {
+      loading: false,
+      error: null,
+      currentTab: 'push',
+      availableTabs: ['push', 'inpage', 'facebook', 'tiktok'],
+      creatives: [],
+      totalPages: 1,
+      currentPage: 1,
+      perPage: 20,
+      totalCount: 0,
+      tabCounts: {},
+      filters: {
+        search: '',
+        category: '',
+        dateFrom: '',
+        dateTo: '',
+        sortBy: 'created_at',
+        sortOrder: 'desc',
+      },
+      selectedCreative: null,
+      detailsPanelOpen: false,
+      cache: new Map(),
+    });
+  });
+
+  afterEach(() => {
+    // Восстанавливаем оригинальные значения
+    global.window = originalWindow;
+    global.fetch = originalFetch;
+    vi.restoreAllMocks();
+  });
+
+  describe('setTabCounts', () => {
+    it('should set tab counts with valid data', () => {
+      const testCounts = {
+        push: 10,
+        inpage: 5,
+        facebook: 3,
+        tiktok: 7,
+      };
+
+      creativesStore.setTabCounts(testCounts);
+
+      expect(creativesStore.tabCounts).toEqual(testCounts);
+    });
+
+    it('should handle null counts by setting empty object', () => {
+      creativesStore.setTabCounts(null);
+
+      expect(creativesStore.tabCounts).toEqual({});
+    });
+
+    it('should handle undefined counts by setting empty object', () => {
+      creativesStore.setTabCounts(undefined);
+
+      expect(creativesStore.tabCounts).toEqual({});
+    });
+
+    it('should override existing tab counts', () => {
+      // Устанавливаем начальные значения
+      creativesStore.tabCounts = { push: 5, inpage: 3 };
+
+      const newCounts = { facebook: 10, tiktok: 2 };
+      creativesStore.setTabCounts(newCounts);
+
+      expect(creativesStore.tabCounts).toEqual(newCounts);
+    });
+  });
+
+  describe('getTabCountsFromWindow', () => {
+    it('should get tab counts from window and return true when available', () => {
+      const testCounts = {
+        push: 15,
+        inpage: 8,
+        facebook: 4,
+        tiktok: 12,
+      };
+
+      global.window.creativesTabCounts = testCounts;
+
+      const result = creativesStore.getTabCountsFromWindow();
+
+      expect(result).toBe(true);
+      expect(creativesStore.tabCounts).toEqual(testCounts);
+    });
+
+    it('should return false when window.creativesTabCounts is not available', () => {
+      // Удаляем creativesTabCounts из window
+      delete global.window.creativesTabCounts;
+
+      const result = creativesStore.getTabCountsFromWindow();
+
+      expect(result).toBe(false);
+      // tabCounts должны остаться неизменными (пустой объект по умолчанию)
+      expect(creativesStore.tabCounts).toEqual({});
+    });
+
+    it('should return false when window.creativesTabCounts is null', () => {
+      global.window.creativesTabCounts = null;
+
+      const result = creativesStore.getTabCountsFromWindow();
+
+      expect(result).toBe(false);
+    });
+
+    it('should return false when window.creativesTabCounts is undefined', () => {
+      global.window.creativesTabCounts = undefined;
+
+      const result = creativesStore.getTabCountsFromWindow();
+
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('loadTabCounts', () => {
+    it('should load tab counts successfully from API', async () => {
+      const mockTabCounts = {
+        push: 20,
+        inpage: 15,
+        facebook: 8,
+        tiktok: 12,
+      };
+
+      // Мокаем успешный fetch
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockTabCounts),
+      });
+
+      await creativesStore.loadTabCounts();
+
+      expect(global.fetch).toHaveBeenCalledWith('/api/creatives/tab-counts', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': 'test-csrf-token',
+        },
+      });
+
+      expect(creativesStore.tabCounts).toEqual(mockTabCounts);
+    });
+
+    it('should handle API error and fallback to window data', async () => {
+      const windowTabCounts = {
+        push: 5,
+        inpage: 3,
+        facebook: 2,
+        tiktok: 1,
+      };
+
+      // Мокаем неуспешный fetch
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+      });
+
+      // Устанавливаем данные в window для fallback
+      global.window.creativesTabCounts = windowTabCounts;
+
+      // Мокаем console.error чтобы не засорять вывод тестов
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await creativesStore.loadTabCounts();
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Error loading tab counts:', expect.any(Error));
+
+      expect(creativesStore.tabCounts).toEqual(windowTabCounts);
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('should handle network error and fallback to window data', async () => {
+      const windowTabCounts = {
+        push: 10,
+        inpage: 7,
+      };
+
+      // Мокаем fetch с сетевой ошибкой
+      global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
+
+      // Устанавливаем данные в window для fallback
+      global.window.creativesTabCounts = windowTabCounts;
+
+      // Мокаем console.error
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await creativesStore.loadTabCounts();
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Error loading tab counts:', expect.any(Error));
+
+      expect(creativesStore.tabCounts).toEqual(windowTabCounts);
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('should log warning when neither API nor window data available', async () => {
+      // Мокаем неуспешный fetch
+      global.fetch = vi.fn().mockRejectedValue(new Error('API error'));
+
+      // Убираем данные из window
+      delete global.window.creativesTabCounts;
+
+      // Мокаем console методы
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      await creativesStore.loadTabCounts();
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Error loading tab counts:', expect.any(Error));
+
+      expect(consoleWarnSpy).toHaveBeenCalledWith('No tab counts available from API or window');
+
+      expect(creativesStore.tabCounts).toEqual({});
+
+      consoleErrorSpy.mockRestore();
+      consoleWarnSpy.mockRestore();
+    });
+
+    it('should handle missing CSRF token gracefully', async () => {
+      // Мокаем document.querySelector чтобы вернуть null (нет CSRF токена)
+      global.document.querySelector.mockReturnValue(null);
+
+      const mockTabCounts = { push: 1, inpage: 2 };
+
+      // Мокаем успешный fetch
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockTabCounts),
+      });
+
+      await creativesStore.loadTabCounts();
+
+      expect(global.fetch).toHaveBeenCalledWith('/api/creatives/tab-counts', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': undefined, // когда нет CSRF токена
+        },
+      });
+
+      expect(creativesStore.tabCounts).toEqual(mockTabCounts);
+    });
+  });
+});
