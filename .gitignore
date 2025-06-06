@@ -29,3 +29,5 @@ yarn-error.log
 /intelephense.json
 /coverage
 /html
+/start-dev.sh
+/start-dev-tmux.sh
