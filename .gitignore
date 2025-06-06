@@ -27,3 +27,7 @@ yarn-error.log
 /old_users.sql
 /.prettierrc
 /intelephense.json
+/coverage
+/html
+/start-dev.sh
+/start-dev-tmux.sh

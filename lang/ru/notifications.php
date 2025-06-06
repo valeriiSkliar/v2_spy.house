@@ -7,6 +7,7 @@ return [
     'acquainted' => 'Ознакомлен',
     'you_have_a_new_notification' => 'У вас новое уведомление',
     'notification' => 'Уведомление',
+    'all_marked_as_read' => 'Все уведомления прочитаны',
     'notification_item' => [
         'new' => 'Новое',
         'read' => 'Прочитано',

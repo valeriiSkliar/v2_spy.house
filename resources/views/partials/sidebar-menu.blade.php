@@ -15,9 +15,8 @@
         </li>
         <li><a href="{{ route('finances.index') }}" class="{{ request()->routeIs('finances*') ? 'active' : '' }}"><span
                     class="icon-finance"></span> <span class="aside-menu__txt">{{__('sidebar.finance')}}</span></a></li>
-        {{-- <li><a href="{{ route('tariffs.index') }}"
-                class="{{ request()->routeIs('tariffs*') ? 'active' : '' }}"><span class="icon-tariffs"></span> <span
-                    class="aside-menu__txt">{{__('sidebar.tariffs')}}</span></a></li> --}}
+        <li><a href="{{ route('tariffs.index') }}" class="{{ request()->routeIs('tariffs*') ? 'active' : '' }}"><span
+                    class="icon-tariffs"></span> <span class="aside-menu__txt">{{__('sidebar.tariffs')}}</span></a></li>
         {{-- <li><a href="#"><span class="icon-program"
                     class="{{ request()->routeIs('referrals*') ? 'active' : '' }}"></span> <span
                     class="aside-menu__txt">{{__('sidebar.referrals')}}</span></a></li> --}}

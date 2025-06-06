@@ -6,16 +6,12 @@ window.$ = jQuery;
 
 import './bootstrap';
 
-import Alpine from 'alpinejs';
-window.Alpine = Alpine;
-Alpine.start();
-
 // Import the pages
 import '@pages';
 
 // Import the components
 import '@/components';
-import './base-select.js';
+import './base-select.js'; // need to disconnect this component ( after move clicking outside of select to initSelect component)
 
 // Import the modal system
 import './components/modal';

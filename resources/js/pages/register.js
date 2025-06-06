@@ -218,6 +218,9 @@ class RegistrationForm {
   }
 
   handleValidationErrors(errors) {
+    // Hide loader
+    loader.hide();
+    
     // Reset reCAPTCHA on validation errors
     if (window.grecaptcha) {
       window.grecaptcha.reset();

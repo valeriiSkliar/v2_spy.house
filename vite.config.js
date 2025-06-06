@@ -14,6 +14,7 @@ export default defineConfig({
         'resources/js/pages/verify-email.js',
         'resources/js/pages/reset-password.js',
         'resources/js/pages/forgot-password.js',
+        'resources/js/creatives/app.js',
         'resources/img/telegram.svg',
         'resources/img/viber.svg',
         'resources/img/whatsapp.svg',
@@ -27,11 +28,12 @@ export default defineConfig({
       '@img': '/resources/img',
       '@pages': '/resources/js/pages',
       '@scss': '/resources/scss',
+      '@creatives': '/resources/js/creatives',
       jquery: 'jquery/dist/jquery.js',
     },
   },
   optimizeDeps: {
-    include: ['jquery'],
+    include: ['jquery', 'alpinejs'],
   },
   build: {
     chunkSizeWarningLimit: 400,
@@ -44,16 +46,16 @@ export default defineConfig({
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: true,
-        drop_debugger: true,
-        pure_funcs: [
+        drop_console: process.env.NODE_ENV === 'production',
+        drop_debugger: process.env.NODE_ENV === 'production',
+        pure_funcs: process.env.NODE_ENV === 'production' ? [
           'console.log',
           'console.info',
           'logger',
           'loggerError',
           'loggerWarn',
           'loggerSuccess',
-        ],
+        ] : [],
       },
       mangle: {
         safari10: true,
@@ -93,6 +95,11 @@ export default defineConfig({
           // Слайдеры и карусели (только если используются)
           if (id.includes('swiper')) {
             return 'vendor-sliders';
+          }
+
+          // Alpine.js в отдельный чанк
+          if (id.includes('alpinejs')) {
+            return 'vendor-alpine';
           }
 
           // Остальные vendor библиотеки

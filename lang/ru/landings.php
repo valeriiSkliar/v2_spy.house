@@ -23,7 +23,7 @@ return [
     'table' => [
         'header' => [
             'id' => 'ID',
-            'downloadLink' => 'Ссылка на скачивание',
+            'downloadLink' => 'Ссылка на лендинг',
             'dateAdded' => 'Дата добавления',
         ],
         'confirmDelete' => [

@@ -1,82 +1,75 @@
-@extends('layouts.authorized')
+@extends('layouts.main')
 
 @section('page-content')
-<h1>Creatives</h1>
-<div class="row align-items-center">
-    <div class="col-12 col-md-auto mb-20 flex-grow-1">
-        <div class="filter-push">
-            <a href="{{ route('creatives.index', ['type' => 'push']) }}"
-                class="filter-push__item {{ $activeTab == 'push' ? 'active' : '' }}">
-                Push <span class="filter-push__count">{{ $counts['push'] }}</span>
-            </a>
-            <a href="{{ route('creatives.index', ['type' => 'inpage']) }}"
-                class="filter-push__item {{ $activeTab == 'inpage' ? 'active' : '' }}">
-                In Page <span class="filter-push__count">{{ $counts['inpage'] }}</span>
-            </a>
-            <a href="{{ route('creatives.index', ['type' => 'facebook']) }}"
-                class="filter-push__item {{ $activeTab == 'facebook' ? 'active' : '' }}">
-                Facebook <span class="filter-push__count">{{ $counts['facebook'] }}</span>
-            </a>
-            <a href="{{ route('creatives.index', ['type' => 'tiktok']) }}"
-                class="filter-push__item {{ $activeTab == 'tiktok' ? 'active' : '' }}">
-                TikTok <span class="filter-push__count">{{ $counts['tiktok'] }}</span>
-            </a>
+<div x-data="creativesFilter">
+    <h1>{{ __('creatives.title') }}</h1>
+    <div class="row align-items-center">
+        <div class="col-12 col-md-auto mb-20 flex-grow-1">
+            <x-ui.filter-tabs :activeTab="$activeTab" :counts="$counts" />
         </div>
-    </div>
-    <div class="col-12 col-md-auto mb-2">
-        <div class="row">
-            <div class="col-12 col-md-auto mb-15">
-                <a href="#" class="btn justify-content-start _flex w-100 _medium _gray"><span
-                        class="icon-favorite-empty font-16 mr-2"></span>Favorites <span class="btn__count">31</span></a>
-            </div>
-            <div class="col-12 col-md-auto mb-15">
-                <div class="base-select-icon">
-                    <div class="base-select">
-                        <div class="base-select__trigger"><span class="base-select__value">On page — 12</span><span
-                                class="base-select__arrow"></span></div>
-                        <ul class="base-select__dropdown" style="display: none;">
-                            <li class="base-select__option is-selected">12</li>
-                            <li class="base-select__option">24</li>
-                            <li class="base-select__option">48</li>
-                            <li class="base-select__option">96</li>
-                        </ul>
-                    </div>
-                    <span class="icon-list"></span>
+        <div class="col-12 col-md-auto mb-2">
+            <div class="row">
+                <div class="col-12 col-md-auto mb-15">
+                    <a href="#" class="btn justify-content-start _flex w-100 _medium _gray"><span
+                            class="icon-favorite-empty font-16 mr-2"></span>{{ __('creatives.favorites') }} <span {{--
+                            TODO: BACKEND=> add favorites count --}}
+                            class="btn__count">31</span></a>
+                </div>
+                <div class="col-12 col-md-auto mb-15">
+                    <x-common.base-select-alpina id="creatives-per-page" :options="$perPageOptions"
+                        :initial-selected-value="$perPage" placeholder="{{ __('creatives.filter.on-page') }}"
+                        icon="list" store-path="creatives.perPage" />
                 </div>
             </div>
         </div>
     </div>
+
+    @include('components.creatives.filter')
+
+    <div class="mb-20">
+        <div class="search-count" x-show="$store.creatives.totalCount > 0">
+            <span x-text="$store.creatives.totalCount"></span> {{ __('creatives.advertisements-found') }}
+        </div>
+        <div class="search-count" x-show="$store.creatives.totalCount === 0 && !$store.creatives.loading">
+            {{ __('creatives.no-results') }}
+        </div>
+    </div>
+
+    <!-- Loader -->
+    <div x-show="$store.creatives.loading" class="text-center py-4">
+        <div class="spinner-border" role="status">
+            <span class="sr-only">
+                {{-- {{ __('common.loading') }} --}}
+            </span>
+        </div>
+    </div>
+
+    <!-- Error State -->
+    <div x-show="$store.creatives.error && !$store.creatives.loading" class="alert alert-danger">
+        <span x-text="$store.creatives.error"></span>
+    </div>
+
+    <!-- Content -->
+    <div x-show="!$store.creatives.loading && !$store.creatives.error">
+        @if($activeTab == 'push')
+        @include('components.creatives.push', ['creatives' => $creatives])
+        @elseif($activeTab == 'inpage')
+        @include('components.creatives.inpage', ['creatives' => $creatives])
+        @elseif($activeTab == 'facebook' || $activeTab == 'tiktok')
+        @include('components.creatives.social', ['type' => $activeTab, 'creatives' => $creatives])
+        @endif
+    </div>
+
+    @include('components.ui.pagination')
 </div>
-
-@include('components.creatives.filter')
-
-<div class="mb-20">
-    <div class="search-count"><span>34 567</span> advertisements</div>
-</div>
-
-@if($activeTab == 'push')
-@include('components.creatives.push')
-@elseif($activeTab == 'inpage')
-@include('components.creatives.inpage')
-@elseif($activeTab == 'facebook' || $activeTab == 'tiktok')
-@include('components.creatives.social', ['type' => $activeTab])
-@endif
-
-<nav class="pagination-nav" role="navigation" aria-label="pagination">
-    <ul class="pagination-list">
-        <li><a class="pagination-link prev disabled" aria-disabled="true" href=""><span class="icon-prev"></span> <span
-                    class="pagination-link__txt">Previous</span></a></li>
-        <li><a class="pagination-link active" href="#">1</a></li>
-        <li><a class="pagination-link" href="#">2</a></li>
-        <li><a class="pagination-link" href="#">3</a></li>
-        <li><a class="pagination-link next" aria-disabled="false" href="#"><span
-                    class="pagination-link__txt">Next</span> <span class="icon-next"></span></a></li>
-    </ul>
-</nav>
 @endsection
 
-@section('scripts')
-<script>
+@push('scripts')
+@vite(['resources/js/creatives/app.js'])
+<script type="module">
+    // Передаем счетчики табов в JavaScript для Alpine.js
+    window.creativesTabCounts = @json($counts);
+    
     document.addEventListener('DOMContentLoaded', function() {
         // Creative item details handling
         const showDetailsButtons = document.querySelectorAll('.js-show-details');
@@ -85,13 +78,13 @@
 
         showDetailsButtons.forEach(button => {
             button.addEventListener('click', function() {
-                creativesListDetails.classList.add('show-details');
+                creativesListDetails?.classList.add('show-details');
             });
         });
 
         hideDetailsButtons.forEach(button => {
             button.addEventListener('click', function() {
-                creativesListDetails.classList.remove('show-details');
+                creativesListDetails?.classList.remove('show-details');
             });
         });
 
@@ -122,7 +115,7 @@
             if (playButton) {
                 playButton.addEventListener('click', function() {
                     const videoContent = element.querySelector('.creative-video__content');
-                    const videoSrc = videoContent.dataset.video;
+                    const videoSrc = videoContent?.dataset.video;
 
                     if (videoSrc) {
                         element.classList.add('_playing');
@@ -139,4 +132,4 @@
         });
     });
 </script>
-@endsection
+@endpush

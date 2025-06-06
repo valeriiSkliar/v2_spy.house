@@ -5,7 +5,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <button type="button" class="btn-icon _gray btn-close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true"><span class="icon-x"></span></span>
+                <span aria-hidden="true"><span class="icon-x remore_margin"></span></span>
             </button>
             <div class="subscription-activated">
                 <div class="subscription-activated-icon icon-check-circle">

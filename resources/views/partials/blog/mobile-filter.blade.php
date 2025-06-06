@@ -1,8 +1,8 @@
 <div class="filter d-xl-none">
     <div class="filter__trigger-mobile d-flex">
         <span class="btn-icon _green _big _filter">
-            <span class="icon-list"></span>
-            <span class="icon-up font-24"></span>
+            <span class="icon-list remore_margin"></span>
+            <span class="icon-up remore_margin font-24"></span>
         </span>
         {{ __('blog.category') }}
     </div>

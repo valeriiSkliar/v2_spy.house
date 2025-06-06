@@ -19,7 +19,7 @@
         <button id="add-landing-submit-button" type="submit"
             class="btn _flex _green w-100 d-flex justify-content-center align-items-center gap-2" style="height: 50px;"
             {{ $disabled ? 'disabled' : '' }}>
-            <span class="icon-download mr-2"></span>
+            <span class="icon-download remore_margin mr-2"></span>
             <span>{{ __('landings.form.submitButton') }}</span>
         </button>
     </div>
