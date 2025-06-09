@@ -53,4 +53,25 @@ enum PaymentMethod: string
             ->mapWithKeys(fn(self $case) => [$case->name => $case->translatedLabel()])
             ->all();
     }
+
+    /**
+     * Get payment methods that are valid for deposit payments.
+     *
+     * @return array<self>
+     */
+    public static function getValidForDeposits(): array
+    {
+        return [
+            self::USDT,
+            self::PAY2_HOUSE,
+        ];
+    }
+
+    /**
+     * Check if this payment method is valid for deposits.
+     */
+    public function isValidForDeposits(): bool
+    {
+        return in_array($this, self::getValidForDeposits());
+    }
 }
