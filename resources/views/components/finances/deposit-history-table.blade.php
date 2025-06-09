@@ -1,8 +1,9 @@
-@props(['transactions' => []])
+@props(['transactions'])
 
 <div class="c-table">
     <div class="inner">
         <table class="table thead-transparent no-wrap-table">
+            {{-- @dd($transactions) --}}
             <thead>
                 <tr>
                     <th>{{ __('finances.history_table.date') }}</th>
@@ -15,13 +16,12 @@
             <tbody>
                 @foreach($transactions as $transaction)
                 <tr>
-                    <td>{{ $transaction['date'] }}</td>
-                    <td><span class="font-weight-600">{{ $transaction['transactionNumber'] }}</span></td>
-                    <td>{{ $transaction['paymentMethod'] }}</td>
-                    <td><span class="font-weight-bold">${{ $transaction['amount'] }} </span></td>
+                    <td>{{ Carbon\Carbon::parse($transaction->created_at)->format('d.m.Y / H:i') }}</td>
+                    <td><span class="font-weight-600">{{ $transaction->transaction_number }}</span></td>
+                    <td>{{ $transaction->payment_method }}</td>
+                    <td><span class="font-weight-bold">${{ $transaction->amount }} </span></td>
                     <td>
-                        <x-finances.transaction-status :status="$transaction['status']"
-                            :statusClass="$transaction['statusClass']" />
+                        <x-finances.transaction-status :status="$transaction->status" />
                     </td>
                 </tr>
                 @endforeach

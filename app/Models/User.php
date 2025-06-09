@@ -323,6 +323,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(\App\Finance\Models\Payment::class);
     }
 
+    public function deposits(): HasMany
+    {
+        return $this->payments()->where('payment_type', \App\Enums\Finance\PaymentType::DEPOSIT);
+    }
+
     /**
      * Get successful payments for the user.
      */

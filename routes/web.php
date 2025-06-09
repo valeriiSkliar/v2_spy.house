@@ -24,8 +24,6 @@ Route::get('/terms', function () {
 Route::get('/modal/{tab}', [ModalController::class, 'loadModal'])->name('modal.load');
 
 Route::get('/api', [ApiController::class, 'index'])->name('api.index');
-Route::get('/finances', [FinanceController::class, 'index'])->name('finances.index');
-Route::post('/finances/deposit', [FinanceController::class, 'deposit'])->name('finances.deposit');
 
 // Route::get('/dashboard', function () {
 //     return view('dashboard');
@@ -75,3 +73,4 @@ require __DIR__ . '/notifications.php';
 require __DIR__ . '/services.php';
 require __DIR__ . '/test.php';
 require __DIR__ . '/creatives.php';
+require __DIR__ . '/finances.php';
