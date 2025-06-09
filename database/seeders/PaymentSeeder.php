@@ -18,6 +18,11 @@ class PaymentSeeder extends Seeder
      */
     public function run(): void
     {
+        // Удаляем некорректные депозиты с USER_BALANCE методом (если есть)
+        Payment::where('payment_type', PaymentType::DEPOSIT)
+            ->where('payment_method', PaymentMethod::USER_BALANCE)
+            ->delete();
+
         // Получаем пользователей и подписки
         $users = User::all();
         $subscriptions = Subscription::all();
@@ -119,7 +124,9 @@ class PaymentSeeder extends Seeder
         }
 
         // Создаем дополнительные случайные платежи
-        Payment::factory()->count(15)->create();
+        // Создаем депозиты и подписки отдельно для корректных комбинаций
+        Payment::factory()->count(8)->deposit()->create();
+        Payment::factory()->count(7)->directSubscription()->create();
 
         // Создаем несколько платежей с конкретными суммами (для удобства тестирования промокодов)
         $testAmounts = [100.00, 50.00, 200.00, 75.00, 150.00];

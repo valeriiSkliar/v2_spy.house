@@ -59,6 +59,16 @@ class Payment extends Model
         parent::boot();
 
         static::creating(function (Payment $payment) {
+            // Validate that deposit payments can only use valid payment methods
+            if (
+                $payment->payment_type === PaymentType::DEPOSIT &&
+                !$payment->payment_method->isValidForDeposits()
+            ) {
+                throw new \InvalidArgumentException(
+                    'Deposit payments can only use USDT or PAY2_HOUSE payment methods.'
+                );
+            }
+
             // Generate webhook token if not provided
             if (empty($payment->webhook_token)) {
                 $payment->webhook_token = Str::random(64);

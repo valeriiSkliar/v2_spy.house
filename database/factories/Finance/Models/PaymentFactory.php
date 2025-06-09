@@ -29,12 +29,19 @@ class PaymentFactory extends Factory
      */
     public function definition(): array
     {
+        $paymentType = $this->faker->randomElement(PaymentType::cases());
+
+        // For deposits, only allow USDT and PAY2_HOUSE
+        $paymentMethod = $paymentType === PaymentType::DEPOSIT
+            ? $this->faker->randomElement([PaymentMethod::USDT, PaymentMethod::PAY2_HOUSE])
+            : $this->faker->randomElement(PaymentMethod::cases());
+
         return [
             'user_id' => User::factory(),
             'amount' => $this->faker->randomFloat(2, 10, 1000),
-            'payment_type' => $this->faker->randomElement(PaymentType::cases()),
-            'subscription_id' => null,
-            'payment_method' => $this->faker->randomElement(PaymentMethod::cases()),
+            'payment_type' => $paymentType,
+            'subscription_id' => $paymentType === PaymentType::DIRECT_SUBSCRIPTION ? Subscription::factory() : null,
+            'payment_method' => $paymentMethod,
             'transaction_number' => $this->faker->unique()->numerify('TXN############'),
             'promocode_id' => null,
             'status' => $this->faker->randomElement(PaymentStatus::cases()),
@@ -49,6 +56,7 @@ class PaymentFactory extends Factory
         return $this->state(fn(array $attributes) => [
             'payment_type' => PaymentType::DEPOSIT,
             'subscription_id' => null,
+            'payment_method' => $this->faker->randomElement([PaymentMethod::USDT, PaymentMethod::PAY2_HOUSE]),
         ]);
     }
 
