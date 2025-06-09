@@ -88,6 +88,14 @@ class Payment extends Model
     }
 
     /**
+     * Get the promocode associated with the payment.
+     */
+    public function promocode(): BelongsTo
+    {
+        return $this->belongsTo(Promocode::class, 'promocode_id');
+    }
+
+    /**
      * Get the parent payment (for refunds).
      */
     public function parentPayment(): BelongsTo
