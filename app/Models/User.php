@@ -136,7 +136,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getFullPhoneNumber(): ?string
     {
         if ($this->phone_country_code && $this->phone) {
-            return '+'.$this->phone_country_code.$this->phone;
+            return '+' . $this->phone_country_code . $this->phone;
         }
 
         return null;
@@ -299,5 +299,45 @@ class User extends Authenticatable implements MustVerifyEmail
     public function sendWelcomeInAppNotification(): void
     {
         $this->notify(new WelcomeInAppNotification);
+    }
+
+    /**
+     * Get all payments for the user.
+     */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(\App\Finance\Models\Payment::class);
+    }
+
+    /**
+     * Get successful payments for the user.
+     */
+    public function successfulPayments(): HasMany
+    {
+        return $this->payments()->successful();
+    }
+
+    /**
+     * Get pending payments for the user.
+     */
+    public function pendingPayments(): HasMany
+    {
+        return $this->payments()->pending();
+    }
+
+    /**
+     * Get deposit payments for the user.
+     */
+    public function depositPayments(): HasMany
+    {
+        return $this->payments()->deposits();
+    }
+
+    /**
+     * Get subscription payments for the user.
+     */
+    public function subscriptionPayments(): HasMany
+    {
+        return $this->payments()->subscriptions();
     }
 }

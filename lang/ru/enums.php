@@ -28,4 +28,18 @@ return [
         'EDUCATION' => 'Образование',
         'TRAVEL' => 'Путешествия',
     ],
+    'PaymentMethod' => [
+        'UDST' => 'USDT',
+        'PAY2_HOUSE' => 'Pay2.House',
+        'USER_BALANCE' => 'Баланс пользователя',
+    ],
+    'PaymentType' => [
+        'DEPOSIT' => 'Пополнение',
+        'DIRECT_SUBSCRIPTION' => 'Покупка подписки',
+    ],
+    'PaymentStatus' => [
+        'PENDING' => 'В ожидании',
+        'SUCCESS' => 'Успешно',
+        'FAILED' => 'Неудачно',
+    ],
 ];

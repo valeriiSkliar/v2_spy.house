@@ -4,6 +4,7 @@ namespace App\Finance\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Subscription extends Model
 {
@@ -72,5 +73,21 @@ class Subscription extends Model
     public function getFormattedDiscountedAmount(): string
     {
         return '$' . number_format($this->getDiscountedAmount(), 2);
+    }
+
+    /**
+     * Get all payments for this subscription.
+     */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * Get successful payments for this subscription.
+     */
+    public function successfulPayments(): HasMany
+    {
+        return $this->payments()->successful();
     }
 }
