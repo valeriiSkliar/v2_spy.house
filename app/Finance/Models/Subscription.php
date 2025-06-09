@@ -32,8 +32,8 @@ class Subscription extends Model
     protected function casts(): array
     {
         return [
-            'amount' => 'decimal:2',
-            'early_discount' => 'decimal:2',
+            'amount' => 'float',
+            'early_discount' => 'float',
             'api_request_count' => 'integer',
             'search_request_count' => 'integer',
         ];

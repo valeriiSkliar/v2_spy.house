@@ -50,6 +50,14 @@ class User extends Authenticatable implements MustVerifyEmail
         'email_contact_id',
         'is_newsletter_subscribed',
         'unsubscribe_hash',
+        // Financial system fields
+        'available_balance',
+        'subscription_id',
+        'subscription_time_start',
+        'subscription_time_end',
+        'subscription_is_expired',
+        'queued_subscription_id',
+        'balance_version',
     ];
 
     /**
@@ -78,6 +86,12 @@ class User extends Authenticatable implements MustVerifyEmail
             'ip_restrictions' => 'array',
             'google_2fa_enabled' => 'boolean',
             'is_newsletter_subscribed' => 'boolean',
+            // Financial system casts
+            'available_balance' => 'decimal:2',
+            'subscription_time_start' => 'datetime',
+            'subscription_time_end' => 'datetime',
+            'subscription_is_expired' => 'boolean',
+            'balance_version' => 'integer',
         ];
     }
 

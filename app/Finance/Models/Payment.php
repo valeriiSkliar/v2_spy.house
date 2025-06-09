@@ -43,7 +43,7 @@ class Payment extends Model
     protected function casts(): array
     {
         return [
-            'amount' => 'decimal:2',
+            'amount' => 'float',
             'payment_type' => PaymentType::class,
             'payment_method' => PaymentMethod::class,
             'status' => PaymentStatus::class,

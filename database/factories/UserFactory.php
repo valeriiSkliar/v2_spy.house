@@ -33,11 +33,19 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'login' => fake()->unique()->safeEmail(),
             'messenger_type' => $messengerType,
-            'messenger_contact' => $messengerType === 'telegram' ? '@'.$this->faker->userName : $this->faker->e164PhoneNumber(),
+            'messenger_contact' => $messengerType === 'telegram' ? '@' . $this->faker->userName : $this->faker->e164PhoneNumber(),
             'scope_of_activity' => $this->faker->randomElement(UserScopeOfActivity::names()),
             'experience' => $this->faker->randomElement(UserExperience::names()),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            // Financial system fields with defaults
+            'available_balance' => 0.00,
+            'subscription_id' => null,
+            'subscription_time_start' => null,
+            'subscription_time_end' => null,
+            'subscription_is_expired' => false,
+            'queued_subscription_id' => null,
+            'balance_version' => 1,
         ];
     }
 
@@ -46,7 +54,7 @@ class UserFactory extends Factory
      */
     public function unverified(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'email_verified_at' => null,
         ]);
     }
