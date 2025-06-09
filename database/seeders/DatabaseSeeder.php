@@ -22,6 +22,9 @@ class DatabaseSeeder extends Seeder
             NotificationTypesSeeder::class,
             NotificationsSeeder::class,
             SubscriptionSeeder::class,
+            PaymentSeeder::class,
+            PromocodeSeeder::class,
+            PromocodeActivationSeeder::class,
             // Add other seeders here if needed
         ]);
     }

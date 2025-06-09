@@ -102,7 +102,7 @@ class PaymentFactory extends Factory
     public function usdt(): static
     {
         return $this->state(fn(array $attributes) => [
-            'payment_method' => PaymentMethod::UDST,
+            'payment_method' => PaymentMethod::USDT,
         ]);
     }
 
