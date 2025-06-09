@@ -203,7 +203,7 @@ class PaymentTest extends TestCase
         $payment = Payment::factory()->create([
             'amount' => 99.99,
             'payment_type' => PaymentType::DEPOSIT,
-            'payment_method' => PaymentMethod::UDST,
+            'payment_method' => PaymentMethod::USDT,
             'status' => PaymentStatus::SUCCESS,
         ]);
 

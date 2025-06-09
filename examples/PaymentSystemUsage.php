@@ -79,7 +79,7 @@ $user = User::find(1);
 $subscription = Subscription::where('status', 'active')->first();
 
 // Создаем депозитный платеж
-$depositPayment = createDepositPayment($user, 100.00, PaymentMethod::UDST);
+$depositPayment = createDepositPayment($user, 100.00, PaymentMethod::USDT);
 
 // Создаем платеж за подписку
 $subscriptionPayment = createSubscriptionPayment($user, $subscription, PaymentMethod::PAY2_HOUSE);

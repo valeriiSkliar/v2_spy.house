@@ -8,7 +8,7 @@ enum PaymentMethod: string
 {
     use EnumTrait;
 
-    case UDST = 'UDST';
+    case USDT = 'USDT';
     case PAY2_HOUSE = 'PAY2.HOUSE';
     case USER_BALANCE = 'USER_BALANCE';
 
@@ -28,7 +28,7 @@ enum PaymentMethod: string
     public function label(): string
     {
         return match ($this) {
-            self::UDST => 'USDT',
+            self::USDT => 'USDT',
             self::PAY2_HOUSE => 'Pay2.House',
             self::USER_BALANCE => 'User Balance',
         };
