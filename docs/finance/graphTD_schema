@@ -1,0 +1,188 @@
+graph TD
+    %% Основные таблицы
+    Users["`**users**
+    id, available_balance
+    subscription_id, subscription_time_start
+    subscription_time_end, subscription_is_expired
+    queued_subscription_id, balance_version`"]
+    
+    Payments["`**payments**
+    id, user_id, amount, payment_type
+    subscription_id, payment_method
+    transaction_number, promocode_id
+    status, webhook_token, webhook_processed_at
+    idempotency_key, parent_payment_id`"]
+    
+    Subscriptions["`**subscriptions**
+    id, name, amount, early_discount
+    api_request_count, search_request_count
+    status`"]
+    
+    Promocodes["`**promocodes**
+    id, promocode, discount, status
+    date_start, date_end, count_activation
+    max_per_user, created_by_user_id`"]
+    
+    PromocodeActivations["`**promocode_activations**
+    id, promocode_id, user_id
+    payment_id, ip_address
+    user_agent, created_at`"]
+
+    %% НОВЫЕ ТАБЛИЦЫ БЕЗОПАСНОСТИ И АУДИТА
+    
+    BalanceAudit["`**🆕 balance_audit**
+    id, user_id, amount
+    operation_type, payment_id
+    balance_before, balance_after
+    transaction_hash, created_at`"]
+    
+    WebhookLogs["`**🆕 webhook_logs**
+    id, payment_id, webhook_token
+    request_body, request_headers
+    ip_address, processed_at
+    response_status, nonce, signature_valid`"]
+    
+    SubscriptionAudit["`**🆕 subscription_audit**
+    id, user_id, subscription_id
+    action, previous_subscription_id
+    payment_id, created_at`"]
+    
+    FinancialReconciliation["`**🆕 financial_reconciliation**
+    id, date, payment_system
+    our_total_amount, external_total_amount
+    discrepancy, status, reconciled_at`"]
+    
+    RateLimiting["`**🆕 rate_limiting**
+    id, ip_address, endpoint
+    request_count, window_start
+    blocked_until`"]
+    
+    SecurityAlerts["`**🆕 security_alerts**
+    id, alert_type, user_id
+    payment_id, description
+    severity, resolved, created_at`"]
+
+    TransactionLimits["`**🆕 transaction_limits**
+    id, user_id, daily_limit
+    monthly_limit, current_daily_amount
+    current_monthly_amount, last_reset_daily
+    last_reset_monthly`"]
+
+    %% Связи основных таблиц
+    Users -->|subscription_id| Subscriptions
+    Payments -->|user_id| Users
+    Payments -->|subscription_id| Subscriptions
+    Payments -->|promocode_id| Promocodes
+    Payments -->|parent_payment_id| Payments
+    PromocodeActivations -->|promocode_id| Promocodes
+    PromocodeActivations -->|user_id| Users
+    PromocodeActivations -->|payment_id| Payments
+    
+    %% Связи новых таблиц
+    BalanceAudit -->|user_id| Users
+    BalanceAudit -->|payment_id| Payments
+    WebhookLogs -->|payment_id| Payments
+    SubscriptionAudit -->|user_id| Users
+    SubscriptionAudit -->|subscription_id| Subscriptions
+    SubscriptionAudit -->|payment_id| Payments
+    SecurityAlerts -->|user_id| Users
+    SecurityAlerts -->|payment_id| Payments
+    TransactionLimits -->|user_id| Users
+    
+    %% Улучшенные процессы
+    SecureDepositFlow["`🔒 **Безопасное пополнение**
+    Проверка лимитов → Optimistic locking
+    → Audit запись → Webhook с nonce
+    → Rate limiting проверка`"]
+    
+    SecureDirectSubFlow["`🔒 **Безопасная покупка подписки**
+    Валидация промокода + IP → Idempotency key
+    → Transaction limits → Audit trail
+    → Webhook безопасность`"]
+    
+    SecureBalanceSubFlow["`🔒 **Безопасная оплата с баланса**
+    SELECT FOR UPDATE блокировка
+    → Balance version проверка
+    → Двойная запись → Audit логирование`"]
+    
+    %% Внешние системы с улучшениями
+    EnhancedPaymentSystems["`🔒 **Платежные системы**
+    TetherUSDT + signature verification
+    Pay2.House + rate limiting
+    HMAC-SHA256 подписи + Timestamp validation`"]
+    
+    SecureWebhookEndpoint["`🔒 **Secure Webhook**
+    IP whitelist → HMAC signature validation
+    → Nonce replay защита → Rate limiting
+    → Полное логирование → Audit trail`"]
+    
+    EnhancedCronJobs["`🔒 **Улучшенные фоновые задачи**
+    Failover механизм + Dead letter queue
+    Alert система + Reconciliation проверки
+    Balance integrity checks`"]
+    
+    MonitoringSystem["`📊 **Система мониторинга**
+    Real-time alerts + Anomaly detection
+    Financial reconciliation + Performance metrics
+    Security monitoring`"]
+    
+    %% Потоки процессов
+    SecureDepositFlow --> Payments
+    SecureDepositFlow --> BalanceAudit
+    SecureDepositFlow --> TransactionLimits
+    
+    SecureDirectSubFlow --> Payments
+    SecureDirectSubFlow --> SubscriptionAudit
+    SecureDirectSubFlow --> SecurityAlerts
+    
+    SecureBalanceSubFlow --> Payments
+    SecureBalanceSubFlow --> BalanceAudit
+    SecureBalanceSubFlow --> SubscriptionAudit
+    
+    EnhancedPaymentSystems -->|secure webhook| SecureWebhookEndpoint
+    SecureWebhookEndpoint --> WebhookLogs
+    SecureWebhookEndpoint --> Payments
+    SecureWebhookEndpoint --> SecurityAlerts
+    
+    EnhancedCronJobs --> Users
+    EnhancedCronJobs --> FinancialReconciliation
+    EnhancedCronJobs --> SecurityAlerts
+    
+    MonitoringSystem --> FinancialReconciliation
+    MonitoringSystem --> SecurityAlerts
+    MonitoringSystem --> BalanceAudit
+    
+    %% Rate Limiting System
+    SecureWebhookEndpoint --> RateLimiting
+    SecureDepositFlow --> RateLimiting
+    
+    %% ENUM значения (расширенные)
+    PaymentTypes["`**payment_type ENUM**
+    DEPOSIT | DIRECT_SUBSCRIPTION
+    BALANCE_SUBSCRIPTION | REFUND | CHARGEBACK`"]
+    
+    PaymentMethods["`**payment_method ENUM**
+    TetherUSDT | Pay2.House
+    INTERNAL_BALANCE | ADMIN_ADJUSTMENT`"]
+    
+    PaymentStatuses["`**status ENUM**
+    PENDING | SUCCESS | FAILED
+    REFUNDED | DISPUTED | CANCELLED`"]
+
+    AlertTypes["`**alert_type ENUM**
+    SUSPICIOUS_ACTIVITY | DUPLICATE_WEBHOOK
+    BALANCE_MISMATCH | RATE_LIMIT_EXCEEDED
+    PROMOCODE_ABUSE | RECONCILIATION_ERROR`"]
+    
+    %% Стилизация
+    classDef tableStyle fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000
+    classDef newTableStyle fill:#e8f5e8,stroke:#2e7d32,stroke-width:3px,color:#000
+    classDef secureProcessStyle fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#000
+    classDef enumStyle fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#000
+    classDef systemStyle fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
+    
+    class Users,Payments,Subscriptions,Promocodes,PromocodeActivations tableStyle
+    class BalanceAudit,WebhookLogs,SubscriptionAudit,FinancialReconciliation,RateLimiting,SecurityAlerts,TransactionLimits newTableStyle
+    class SecureDepositFlow,SecureDirectSubFlow,SecureBalanceSubFlow,SecureWebhookEndpoint,EnhancedCronJobs,MonitoringSystem secureProcessStyle
+    class PaymentTypes,PaymentMethods,PaymentStatuses,AlertTypes enumStyle
+    class EnhancedPaymentSystems systemStyle
