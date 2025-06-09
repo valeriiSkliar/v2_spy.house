@@ -59,7 +59,6 @@ class DatabaseMigrationTest extends TestCase
             'webhook_token',
             'webhook_processed_at',
             'idempotency_key',
-            'parent_payment_id',
             'created_at',
             'updated_at'
         ];
@@ -76,7 +75,6 @@ class DatabaseMigrationTest extends TestCase
         $this->assertTrue(Schema::hasColumn('users', 'queued_subscription_id'));
         $this->assertTrue(Schema::hasColumn('payments', 'user_id'));
         $this->assertTrue(Schema::hasColumn('payments', 'subscription_id'));
-        $this->assertTrue(Schema::hasColumn('payments', 'parent_payment_id'));
     }
 
     public function test_indexes_exist_on_performance_critical_columns(): void

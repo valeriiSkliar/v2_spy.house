@@ -425,7 +425,6 @@ class BalanceOperationsTest extends TestCase
         $operations = [
             ['amount' => 100.00, 'type' => 'DEPOSIT'],
             ['amount' => -50.00, 'type' => 'SUBSCRIPTION_PAYMENT'],
-            ['amount' => 25.00, 'type' => 'REFUND'],
             ['amount' => -75.00, 'type' => 'WITHDRAWAL'],
         ];
 
@@ -452,7 +451,7 @@ class BalanceOperationsTest extends TestCase
             ->orderBy('created_at')
             ->get();
 
-        $this->assertCount(4, $auditRecords);
+        $this->assertCount(3, $auditRecords);
 
         // Проверяем что balance_before каждой операции равен balance_after предыдущей
         for ($i = 1; $i < count($auditRecords); $i++) {

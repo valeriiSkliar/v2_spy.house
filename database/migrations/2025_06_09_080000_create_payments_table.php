@@ -27,7 +27,6 @@ return new class extends Migration
             $table->string('webhook_token', 64)->unique()->nullable()->comment('Token for secure webhook processing');
             $table->timestamp('webhook_processed_at')->nullable()->comment('When webhook was processed');
             $table->string('idempotency_key')->unique()->nullable()->comment('Key to prevent duplicate payments');
-            $table->foreignId('parent_payment_id')->nullable()->constrained('payments')->onDelete('set null')->comment('Reference to parent payment for refunds');
             $table->timestamps();
 
             // Indexes for performance optimization

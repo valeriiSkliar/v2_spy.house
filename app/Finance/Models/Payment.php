@@ -32,7 +32,6 @@ class Payment extends Model
         'webhook_token',
         'webhook_processed_at',
         'idempotency_key',
-        'parent_payment_id',
     ];
 
     /**
@@ -105,13 +104,7 @@ class Payment extends Model
         return $this->belongsTo(Promocode::class, 'promocode_id');
     }
 
-    /**
-     * Get the parent payment (for refunds).
-     */
-    public function parentPayment(): BelongsTo
-    {
-        return $this->belongsTo(Payment::class, 'parent_payment_id');
-    }
+
 
     /**
      * Check if payment is successful

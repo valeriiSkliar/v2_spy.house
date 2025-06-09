@@ -3,12 +3,15 @@
 ## Основные принципы проектирования интерфейсов
 
 ### 1. Принцип единственной ответственности
+
 Каждый интерфейс отвечает за конкретную область финансовых операций
 
-### 2. Принцип инверсии зависимостей  
+### 2. Принцип инверсии зависимостей
+
 Основное приложение зависит от абстракций, а не от конкретных реализаций
 
 ### 3. Принцип открытости/закрытости
+
 Интерфейсы открыты для расширения, но закрыты для модификации
 
 ## Главный интерфейс финансового модуля
@@ -29,39 +32,39 @@ use Illuminate\Support\Collection;
 interface FinanceManagerInterface
 {
     // === ОПЕРАЦИИ С БАЛАНСОМ ===
-    
+
     /**
      * Получить текущий баланс пользователя
      */
     public function getBalance(int $userId): float;
-    
+
     /**
      * Пополнить баланс пользователя
      */
     public function depositFunds(
-        int $userId, 
-        float $amount, 
-        string $paymentMethod, 
+        int $userId,
+        float $amount,
+        string $paymentMethod,
         array $metadata = []
     ): PaymentResult;
-    
+
     /**
      * Списать средства с баланса
      */
     public function withdrawFunds(
-        int $userId, 
-        float $amount, 
+        int $userId,
+        float $amount,
         string $reason,
         array $metadata = []
     ): PaymentResult;
-    
+
     // === УПРАВЛЕНИЕ ПОДПИСКАМИ ===
-    
+
     /**
      * Получить активную подписку пользователя
      */
     public function getActiveSubscription(int $userId): ?SubscriptionInfo;
-    
+
     /**
      * Купить подписку (прямая оплата)
      */
@@ -72,7 +75,7 @@ interface FinanceManagerInterface
         ?string $promocode = null,
         array $metadata = []
     ): PaymentResult;
-    
+
     /**
      * Купить подписку за счет баланса
      */
@@ -81,31 +84,31 @@ interface FinanceManagerInterface
         int $subscriptionId,
         ?string $promocode = null
     ): PaymentResult;
-    
+
     /**
      * Отменить подписку
      */
     public function cancelSubscription(int $userId, string $reason = ''): bool;
-    
+
     // === ПРОМОКОДЫ ===
-    
+
     /**
      * Проверить валидность промокода
      */
     public function validatePromocode(string $promocode, int $userId): bool;
-    
+
     /**
      * Применить промокод
      */
     public function applyPromocode(string $promocode, int $userId, int $paymentId): float;
-    
+
     // === ИСТОРИЯ И АНАЛИТИКА ===
-    
+
     /**
      * История платежей пользователя
      */
     public function getPaymentHistory(int $userId, array $filters = []): Collection;
-    
+
     /**
      * История изменений баланса
      */
@@ -134,26 +137,23 @@ interface PaymentProcessorInterface
      * Инициировать платеж
      */
     public function initiatePayment(PaymentData $paymentData): PaymentResult;
-    
+
     /**
      * Обработать webhook от платежной системы
      */
     public function processWebhook(string $paymentMethod, array $payload): PaymentResult;
-    
+
     /**
      * Проверить статус платежа
      */
     public function checkPaymentStatus(string $paymentId): PaymentResult;
-    
+
     /**
      * Отменить платеж
      */
     public function cancelPayment(string $paymentId): bool;
-    
-    /**
-     * Сделать возврат
-     */
-    public function refundPayment(string $paymentId, float $amount): PaymentResult;
+
+
 }
 ```
 
@@ -175,22 +175,22 @@ interface BalanceManagerInterface
      * Получить баланс с блокировкой записи
      */
     public function getBalanceForUpdate(int $userId): float;
-    
+
     /**
      * Добавить средства на баланс
      */
     public function addFunds(int $userId, BalanceOperation $operation): bool;
-    
+
     /**
      * Списать средства с баланса
      */
     public function deductFunds(int $userId, BalanceOperation $operation): bool;
-    
+
     /**
      * Проверить достаточность средств
      */
     public function hasSufficientFunds(int $userId, float $amount): bool;
-    
+
     /**
      * Получить историю операций по балансу
      */
@@ -220,22 +220,22 @@ interface SubscriptionManagerInterface
         int $subscriptionId,
         int $paymentId
     ): SubscriptionInfo;
-    
+
     /**
      * Деактивировать подписку
      */
     public function deactivateSubscription(int $userId): bool;
-    
+
     /**
      * Продлить подписку
      */
     public function renewSubscription(int $userId): SubscriptionInfo;
-    
+
     /**
      * Проверить истечение подписки
      */
     public function checkSubscriptionExpiration(int $userId): bool;
-    
+
     /**
      * Получить информацию о доступных подписках
      */
@@ -259,22 +259,22 @@ interface FinanceSecurityInterface
      * Проверить лимиты транзакций для пользователя
      */
     public function checkTransactionLimits(int $userId, float $amount): bool;
-    
+
     /**
      * Проверить подозрительную активность
      */
     public function detectSuspiciousActivity(int $userId, array $context): bool;
-    
+
     /**
      * Валидировать webhook подпись
      */
     public function validateWebhookSignature(string $payload, string $signature, string $secret): bool;
-    
+
     /**
      * Генерировать ключ идемпотентности
      */
     public function generateIdempotencyKey(array $data): string;
-    
+
     /**
      * Проверить ключ идемпотентности
      */
@@ -305,7 +305,7 @@ readonly class PaymentResult
         public ?string $redirectUrl = null,
         public array $metadata = []
     ) {}
-    
+
     public static function success(
         string $message = 'Payment successful',
         ?string $paymentId = null,
@@ -316,7 +316,7 @@ readonly class PaymentResult
     ): self {
         return new self(true, $message, $paymentId, $externalId, $amount, $redirectUrl, $metadata);
     }
-    
+
     public static function failure(string $message, array $metadata = []): self
     {
         return new self(false, $message, metadata: $metadata);
@@ -416,7 +416,7 @@ use Illuminate\Queue\SerializesModels;
 class FundsDeposited
 {
     use Dispatchable, SerializesModels;
-    
+
     public function __construct(
         public int $userId,
         public float $amount,
@@ -428,7 +428,7 @@ class FundsDeposited
 class SubscriptionPurchased
 {
     use Dispatchable, SerializesModels;
-    
+
     public function __construct(
         public int $userId,
         public int $subscriptionId,
@@ -441,7 +441,7 @@ class SubscriptionPurchased
 class SubscriptionExpired
 {
     use Dispatchable, SerializesModels;
-    
+
     public function __construct(
         public int $userId,
         public int $subscriptionId
@@ -466,18 +466,18 @@ class UserDashboardController extends Controller
     public function __construct(
         private FinanceManagerInterface $finance
     ) {}
-    
+
     public function dashboard()
     {
         $userId = auth()->id();
-        
+
         return view('dashboard', [
             'balance' => $this->finance->getBalance($userId),
             'subscription' => $this->finance->getActiveSubscription($userId),
             'recentPayments' => $this->finance->getPaymentHistory($userId, ['limit' => 5])
         ]);
     }
-    
+
     public function purchaseSubscription(Request $request)
     {
         $result = $this->finance->purchaseSubscription(
@@ -486,14 +486,14 @@ class UserDashboardController extends Controller
             paymentMethod: $request->payment_method,
             promocode: $request->promocode
         );
-        
+
         if ($result->success) {
             return response()->json([
                 'success' => true,
                 'redirect_url' => $result->redirectUrl
             ]);
         }
-        
+
         return response()->json([
             'success' => false,
             'message' => $result->message
@@ -517,15 +517,15 @@ class CheckSubscription
     public function __construct(
         private FinanceManagerInterface $finance
     ) {}
-    
+
     public function handle($request, Closure $next)
     {
         $subscription = $this->finance->getActiveSubscription(auth()->id());
-        
+
         if (!$subscription || $subscription->isExpired) {
             return redirect()->route('subscription.plans');
         }
-        
+
         return $next($request);
     }
 }
@@ -545,13 +545,13 @@ class ApiRequestService
     public function __construct(
         private FinanceManagerInterface $finance
     ) {}
-    
+
     public function canMakeRequest(int $userId): bool
     {
         $subscription = $this->finance->getActiveSubscription($userId);
-        
-        return $subscription && 
-               !$subscription->isExpired && 
+
+        return $subscription &&
+               !$subscription->isExpired &&
                $subscription->apiRequestsLeft > 0;
     }
 }
@@ -573,10 +573,10 @@ class FinanceServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(FinanceManagerInterface::class, FinanceManager::class);
-        
+
         // Другие привязки интерфейсов...
     }
-    
+
     public function boot(): void
     {
         // Загрузка миграций, роутов и т.д.
