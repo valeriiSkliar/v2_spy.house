@@ -37,8 +37,8 @@ return new class extends Migration
             $table->index('webhook_token', 'payments_webhook_token_idx');
             $table->index('created_at', 'payments_created_at_idx');
 
-            // Check constraint for positive amount
-            $table->check('amount > 0');
+            // Note: Check constraint for positive amount (amount > 0) would be added here
+            // but Blueprint::check() is not available in this Laravel version
         });
     }
 

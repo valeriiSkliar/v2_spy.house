@@ -43,8 +43,8 @@ return new class extends Migration
         DB::statement('ALTER TABLE post_categories ADD COLUMN name_ru VARCHAR(255) GENERATED ALWAYS AS (JSON_UNQUOTE(JSON_EXTRACT(name, "$.ru"))) STORED');
 
         // Add indexes on generated columns in post_categories
-        DB::statement('ALTER TABLE post_categories ADD INDEX idx_name_en (name_en)');
-        DB::statement('ALTER TABLE post_categories ADD INDEX idx_name_ru (name_ru)');
+        DB::statement('CREATE INDEX idx_name_en ON post_categories (name_en)');
+        DB::statement('CREATE INDEX idx_name_ru ON post_categories (name_ru)');
 
         // Create blog posts table
         Schema::create('blog_posts', function (Blueprint $table) {
@@ -72,8 +72,8 @@ return new class extends Migration
         DB::statement('ALTER TABLE blog_posts ADD COLUMN title_ru VARCHAR(255) GENERATED ALWAYS AS (JSON_UNQUOTE(JSON_EXTRACT(title, "$.ru"))) STORED');
 
         // Add indexes on generated columns in blog_posts
-        DB::statement('ALTER TABLE blog_posts ADD INDEX idx_title_en (title_en)');
-        DB::statement('ALTER TABLE blog_posts ADD INDEX idx_title_ru (title_ru)');
+        DB::statement('CREATE INDEX idx_title_en ON blog_posts (title_en)');
+        DB::statement('CREATE INDEX idx_title_ru ON blog_posts (title_ru)');
 
         // Create blog comments table
         Schema::create('blog_comments', function (Blueprint $table) {
