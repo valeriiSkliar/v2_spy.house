@@ -29,7 +29,7 @@ class UserFactory extends Factory
 
         return [
             'name' => fake()->name(),
-            'email' => 'test@test.com',
+            'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'login' => fake()->unique()->safeEmail(),
             'messenger_type' => $messengerType,
