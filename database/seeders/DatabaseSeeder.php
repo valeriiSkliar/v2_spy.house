@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             ServiceSeeder::class,
             NotificationTypesSeeder::class,
             NotificationsSeeder::class,
+            SubscriptionSeeder::class,
             // Add other seeders here if needed
         ]);
     }
