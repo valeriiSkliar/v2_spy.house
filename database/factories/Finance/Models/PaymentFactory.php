@@ -36,11 +36,18 @@ class PaymentFactory extends Factory
             ? $this->faker->randomElement([PaymentMethod::USDT, PaymentMethod::PAY2_HOUSE])
             : $this->faker->randomElement(PaymentMethod::cases());
 
+        // Use existing subscription instead of creating new one
+        $subscriptionId = null;
+        if ($paymentType === PaymentType::DIRECT_SUBSCRIPTION) {
+            $existingSubscription = Subscription::inRandomOrder()->first();
+            $subscriptionId = $existingSubscription ? $existingSubscription->id : null;
+        }
+
         return [
             'user_id' => User::factory(),
             'amount' => $this->faker->randomFloat(2, 10, 1000),
             'payment_type' => $paymentType,
-            'subscription_id' => $paymentType === PaymentType::DIRECT_SUBSCRIPTION ? Subscription::factory() : null,
+            'subscription_id' => $subscriptionId,
             'payment_method' => $paymentMethod,
             'transaction_number' => $this->faker->unique()->numerify('TXN############'),
             'promocode_id' => null,
@@ -65,10 +72,13 @@ class PaymentFactory extends Factory
      */
     public function directSubscription(): static
     {
-        return $this->state(fn(array $attributes) => [
-            'payment_type' => PaymentType::DIRECT_SUBSCRIPTION,
-            'subscription_id' => Subscription::factory(),
-        ]);
+        return $this->state(function (array $attributes) {
+            $existingSubscription = Subscription::inRandomOrder()->first();
+            return [
+                'payment_type' => PaymentType::DIRECT_SUBSCRIPTION,
+                'subscription_id' => $existingSubscription ? $existingSubscription->id : null,
+            ];
+        });
     }
 
     /**

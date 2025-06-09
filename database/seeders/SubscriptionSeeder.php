@@ -14,8 +14,23 @@ class SubscriptionSeeder extends Seeder
      */
     public function run(): void
     {
-        // Clear existing subscriptions
+        // Check if subscriptions already exist to prevent duplication
+        if (Subscription::count() > 0) {
+            $this->command->info('Subscriptions already exist. Skipping...');
+            return;
+        }
+
+        // Disable foreign key checks temporarily
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+
+        // Clear existing subscriptions completely
         DB::table('subscriptions')->delete();
+
+        // Reset auto increment to start from 1
+        DB::statement('ALTER TABLE subscriptions AUTO_INCREMENT = 1');
+
+        // Re-enable foreign key checks
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $subscriptions = [
             [
@@ -25,6 +40,8 @@ class SubscriptionSeeder extends Seeder
                 'api_request_count' => 100,
                 'search_request_count' => 50,
                 'status' => 'active',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'name' => 'Start',
@@ -33,6 +50,8 @@ class SubscriptionSeeder extends Seeder
                 'api_request_count' => 1000,
                 'search_request_count' => 500,
                 'status' => 'active',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'name' => 'Basic',
@@ -41,6 +60,8 @@ class SubscriptionSeeder extends Seeder
                 'api_request_count' => 5000,
                 'search_request_count' => 2500,
                 'status' => 'active',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'name' => 'Premium',
@@ -49,6 +70,8 @@ class SubscriptionSeeder extends Seeder
                 'api_request_count' => 15000,
                 'search_request_count' => 7500,
                 'status' => 'active',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'name' => 'Enterprise',
@@ -57,12 +80,13 @@ class SubscriptionSeeder extends Seeder
                 'api_request_count' => 50000,
                 'search_request_count' => 25000,
                 'status' => 'active',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
         ];
 
-        foreach ($subscriptions as $subscription) {
-            Subscription::create($subscription);
-        }
+        // Bulk insert for better performance
+        Subscription::insert($subscriptions);
 
         $this->command->info('Created ' . count($subscriptions) . ' subscription plans');
     }
