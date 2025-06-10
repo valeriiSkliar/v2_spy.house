@@ -9,7 +9,8 @@
         <button class="btn _flex _gray _medium w-100 active" data-tub="month" data-group="pay">For a Month</button>
     </div>
     <div class="col-6 col-lg-auto mb-15">
-        <button class="btn _flex _gray _medium w-100" data-tub="year" data-group="pay">For a year <span class="btn__count">Sale</span></button>
+        <button class="btn _flex _gray _medium w-100" data-tub="year" data-group="pay">For a year <span
+                class="btn__count">Sale</span></button>
     </div>
 </div>
 <div class="sep _h10"></div>
@@ -49,7 +50,8 @@
             </div>
         </div>
         <div class="rate-item-bottom _fixed">
-            <button type="button" class="btn _flex _medium _gray js-toggle-rate" data-show="Показать все" data-hide="Скрыть">
+            <button type="button" class="btn _flex _medium _gray js-toggle-rate" data-show="Показать все"
+                data-hide="Скрыть">
                 <span class="icon-down font-18 mr-2"></span>
                 <span class="btn__text">Показать все</span>
             </button>
@@ -81,7 +83,8 @@
                     <div class="rate-item-body__hidden">
                         @foreach(array_slice($tariff['features'], 7) as $feature)
                         <div class="rate-item-body__row">
-                            @if($loop->last && $tariff['css_class'] === 'premium' || $tariff['css_class'] === 'enterprise')
+                            @if($loop->last && $tariff['css_class'] === 'premium' || $tariff['css_class'] ===
+                            'enterprise')
                             <span>Приоритетная</span>
                             @else
                             <span class="icon-check"></span>
@@ -94,7 +97,8 @@
                     @if($currentTariff['id'] === $tariff['id'])
                     <button type="button" class="btn w-100 _flex _medium _border-green">Продлить</button>
                     @else
-                    <a href="{{ route('tariffs.payment', $tariff['slug']) }}" class="btn w-100 _flex _medium _green">Выбрать</a>
+                    <a href="{{ route('tariffs.payment', $tariff['slug']) }}"
+                        class="btn w-100 _flex _medium _green">Выбрать</a>
                     @endif
                 </div>
             </div>
@@ -136,11 +140,13 @@
 </div>
 <nav class="pagination-nav" role="navigation" aria-label="pagination">
     <ul class="pagination-list">
-        <li><a class="pagination-link prev disabled" aria-disabled="true" href=""><span class="icon-prev"></span> <span class="pagination-link__txt">Previous</span></a></li>
+        <li><a class="pagination-link prev disabled" aria-disabled="true" href=""><span class="icon-prev"></span> <span
+                    class="pagination-link__txt">Previous</span></a></li>
         <li><a class="pagination-link active" href="#">1</a></li>
         <li><a class="pagination-link" href="#">2</a></li>
         <li><a class="pagination-link" href="#">3</a></li>
-        <li><a class="pagination-link next" aria-disabled="false" href="#"><span class="pagination-link__txt">Next</span> <span class="icon-next"></span></a></li>
+        <li><a class="pagination-link next" aria-disabled="false" href="#"><span
+                    class="pagination-link__txt">Next</span> <span class="icon-next"></span></a></li>
     </ul>
 </nav>
 @endsection
