@@ -31,3 +31,4 @@ yarn-error.log
 /html
 /start-dev.sh
 /start-dev-tmux.sh
+/creds

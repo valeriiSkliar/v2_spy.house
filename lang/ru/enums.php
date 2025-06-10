@@ -29,7 +29,7 @@ return [
         'TRAVEL' => 'Путешествия',
     ],
     'PaymentMethod' => [
-        'UDST' => 'USDT',
+        'USDT' => 'Tether USDT',
         'PAY2_HOUSE' => 'Pay2.House',
         'USER_BALANCE' => 'Баланс пользователя',
     ],
