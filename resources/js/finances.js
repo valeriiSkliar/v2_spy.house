@@ -1,32 +1,8 @@
 import { ajaxFetcher } from './components/fetcher/ajax-fetcher.js';
 import { hideInElement, showInElement } from './components/loader.js';
 import { logger, loggerError } from './helpers/logger.js';
+import { updateUrlWithoutReload } from './helpers/url-helpers.js';
 import { createAndShowToast } from './utils/uiHelpers.js';
-
-/**
- * Обновляет URL браузера без перезагрузки страницы
- */
-function updateBrowserUrl(params) {
-  const url = new URL(window.location.href);
-  const searchParams = new URLSearchParams(url.search);
-
-  // Обновляем параметры
-  Object.keys(params).forEach(key => {
-    if (params[key] !== null && params[key] !== '') {
-      searchParams.set(key, params[key]);
-    } else {
-      searchParams.delete(key);
-    }
-  });
-
-  // Удаляем page=1 для чистоты URL
-  if (searchParams.get('page') === '1') {
-    searchParams.delete('page');
-  }
-
-  const newUrl = `${url.pathname}${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
-  window.history.pushState({}, '', newUrl);
-}
 
 /**
  * Обновляет контейнер пагинации
@@ -110,7 +86,7 @@ function createPaginationClickHandler(container, url) {
 
     if (page) {
       logger('Переход на страницу:', { page });
-      updateBrowserUrl({ page: page });
+      updateUrlWithoutReload({ page: page });
       reloadTransactionsContent(container, url);
     }
   };
