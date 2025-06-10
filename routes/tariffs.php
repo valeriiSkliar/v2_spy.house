@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Test\TariffController;
+use App\Finance\Http\Controllers\TariffController;
 use Illuminate\Support\Facades\Route;
 
 // Тарифы

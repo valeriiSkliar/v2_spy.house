@@ -359,4 +359,19 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->payments()->subscriptions();
     }
+
+    /**
+     * Get all active subscriptions for the user.
+     */
+    public function activeSubscriptions()
+    {
+        return $this->successfulPayments()
+            ->with('subscription')
+            ->whereHas('subscription', function ($query) {
+                $query->where('status', 'active');
+            })
+            ->get()
+            ->pluck('subscription')
+            ->unique('id');
+    }
 }
