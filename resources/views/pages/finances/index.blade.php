@@ -23,7 +23,7 @@
 @if ($transactions->isNotEmpty())
 <x-finances.deposit-history-table :transactions="$transactions" />
 @if ($transactions->hasPages())
-{{ $transactions->links('components.pagination') }}
+{{ $transactions->links() }}
 @endif
 @else
 <p>{{ __('finances.deposit_history_empty') }}</p>
