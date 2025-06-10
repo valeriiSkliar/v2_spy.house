@@ -18,7 +18,7 @@ class TariffController extends Controller
      */
     public function index(Request $request)
     {
-        $user = $request->user();
+        $user = $request->user()->load('subscription');
         $tariffs = Subscription::where('status', 'active')
             ->where('amount', '>', 0)
             ->where('name', '!=', 'free')

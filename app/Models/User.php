@@ -95,15 +95,34 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
     }
 
+    /**
+     * Get user's current subscription
+     */
+    public function subscription()
+    {
+        return $this->belongsTo(\App\Finance\Models\Subscription::class);
+    }
+
     public function currentTariff()
     {
-        // For the demo, return Enterprise tariff
+        if (!$this->subscription_id || !$this->subscription) {
+            return [
+                'id' => null,
+                'name' => 'Free',
+                'css_class' => 'free',
+                'expires_at' => null,
+                'status' => 'Не активно'
+            ];
+        }
+
+        $isActive = $this->subscription_time_end && $this->subscription_time_end > now() && !$this->subscription_is_expired;
+
         return [
-            'id' => 4,
-            'name' => 'Enterprise',
-            'css_class' => 'enterprise',
-            'expires_at' => '12.06.2024',
-            'status' => 'Активная', // or 'Не активно'
+            'id' => $this->subscription->id,
+            'name' => $this->subscription->name,
+            'css_class' => strtolower($this->subscription->name),
+            'expires_at' => $this->subscription_time_end ? $this->subscription_time_end->format('d.m.Y') : null,
+            'status' => $isActive ? 'Активная' : 'Не активно'
         ];
     }
 
