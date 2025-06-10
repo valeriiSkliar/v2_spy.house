@@ -23,3 +23,11 @@ export function updateUrlWithoutReload(params) {
   const newUrl = `${url.pathname}${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
   window.history.pushState({}, '', newUrl);
 }
+
+/**
+ * Обновляет URL браузера полным URL
+ * @param {string} newUrl - Новый URL
+ */
+export function updateBrowserUrl(newUrl) {
+  window.history.pushState({}, '', newUrl);
+}

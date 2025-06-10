@@ -9,3 +9,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/tariffs/payment/{slug}', [TariffController::class, 'payment'])->name('tariffs.payment');
     Route::post('/tariffs/process-payment', [TariffController::class, 'processPayment'])->name('tariffs.process-payment');
 });
+
+// API роуты для AJAX
+Route::prefix('api')->middleware('auth')->group(function () {
+    Route::get('/tariffs/payments', [TariffController::class, 'ajaxPayments'])->name('api.tariffs.payments');
+});

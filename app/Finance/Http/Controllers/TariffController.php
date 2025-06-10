@@ -33,4 +33,44 @@ class TariffController extends Controller
             'activeSubscriptions' => $user->activeSubscriptions(),
         ]);
     }
+
+    /**
+     * AJAX endpoint for payments pagination.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function ajaxPayments(Request $request)
+    {
+        $view = $this->index($request);
+
+        if ($request->ajax()) {
+            $data = $view->getData();
+            $payments = $data['payments'];
+
+            // Render payments table HTML
+            $paymentsHtml = view('components.tariffs.payments-list', ['payments' => $payments])->render();
+
+            // Render pagination HTML  
+            $paginationHtml = '';
+            $hasPagination = $payments->hasPages();
+            if ($hasPagination) {
+                $paginationHtml = view('components.tariffs.payments-pagination', [
+                    'currentPage' => $payments->currentPage(),
+                    'totalPages' => $payments->lastPage(),
+                    'pagination' => $payments
+                ])->render();
+            }
+
+            return response()->json([
+                'html' => $paymentsHtml,
+                'pagination' => $paginationHtml,
+                'hasPagination' => $hasPagination,
+                'currentPage' => $payments->currentPage(),
+                'totalPages' => $payments->lastPage(),
+                'count' => $payments->count(),
+            ]);
+        }
+
+        return $view;
+    }
 }

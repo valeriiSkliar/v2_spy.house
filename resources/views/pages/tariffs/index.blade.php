@@ -18,5 +18,16 @@
 </div>
 <div class="sep _h60"></div>
 <x-tariffs.payments-table :payments="$payments" />
-<x-tariffs.pagination />
+
+{{-- Контейнер для пагинации --}}
+<div id="payments-pagination-container" data-pagination-container>
+    @if ($payments->hasPages())
+    <x-tariffs.payments-pagination :currentPage="$payments->currentPage()" :totalPages="$payments->lastPage()"
+        :pagination="$payments" />
+    @endif
+</div>
 @endsection
+
+@push('scripts')
+@vite(['resources/js/tariffs-payments.js'])
+@endpush
