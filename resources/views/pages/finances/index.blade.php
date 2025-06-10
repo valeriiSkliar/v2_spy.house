@@ -20,12 +20,20 @@
 <x-separator height="50" />
 
 <h2>{{ __('finances.deposit_history_title') }}</h2>
-@if ($transactions->isNotEmpty())
-<x-finances.deposit-history-table :transactions="$transactions" />
-@if ($transactions->hasPages())
-{{ $transactions->links() }}
-@endif
-@else
-<p>{{ __('finances.deposit_history_empty') }}</p>
-@endif
+
+{{-- Контейнер для AJAX контента --}}
+<div id="transactions-container" data-transactions-ajax-url="{{ route('api.finances.list') }}">
+    <x-finances.transactions-list :transactions="$transactions" />
+</div>
+
+{{-- Контейнер для пагинации --}}
+<div id="transactions-pagination-container" data-pagination-container>
+    @if ($transactions->hasPages())
+    {{ $transactions->links() }}
+    @endif
+</div>
 @endsection
+
+@push('scripts')
+@vite(['resources/js/finances.js'])
+@endpush

@@ -23,6 +23,45 @@ class FinanceController extends Controller
     }
 
     /**
+     * AJAX endpoint для асинхронной загрузки истории транзакций
+     */
+    public function ajaxList(Request $request)
+    {
+        // Переиспользование логики index()
+        $view = $this->index($request);
+
+        if ($request->ajax()) {
+            $transactions = $view->getData()['transactions'];
+
+            // Рендерим HTML фрагменты
+            $transactionsHtml = view('components.finances.transactions-list', [
+                'transactions' => $transactions
+            ])->render();
+
+            $paginationHtml = '';
+            $hasPagination = $transactions->hasPages();
+            if ($hasPagination) {
+                $paginationHtml = $transactions->links()->render();
+            }
+
+            // Возврат JSON в формате совместимом с ajaxFetcher
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'html' => $transactionsHtml,
+                    'pagination' => $paginationHtml,
+                    'hasPagination' => $hasPagination,
+                    'currentPage' => $transactions->currentPage(),
+                    'totalPages' => $transactions->lastPage(),
+                    'count' => $transactions->count(),
+                ]
+            ]);
+        }
+
+        return $view;
+    }
+
+    /**
      * Обработка запроса на депозит
      */
     public function deposit(Request $request)
