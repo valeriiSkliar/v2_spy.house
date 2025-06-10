@@ -215,4 +215,22 @@ class Payment extends Model
     {
         return $query->where('payment_type', PaymentType::DIRECT_SUBSCRIPTION);
     }
+
+    /**
+     * Scope to exclude payments with free subscriptions (amount = 0)
+     */
+    public function scopeExcludingFreeSubscriptions($query)
+    {
+        return $query->whereHas('subscription', function ($subQuery) {
+            $subQuery->where('amount', '>', 0);
+        });
+    }
+
+    /**
+     * Scope for paid subscription payments only
+     */
+    public function scopePaidSubscriptionsOnly($query)
+    {
+        return $query->subscriptions()->excludingFreeSubscriptions();
+    }
 }

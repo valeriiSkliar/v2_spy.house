@@ -6,6 +6,7 @@ use App\Enums\Finance\PaymentMethod;
 use App\Enums\Finance\PaymentStatus;
 use App\Enums\Finance\PaymentType;
 use App\Finance\Models\Payment;
+use App\Finance\Models\Subscription;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -62,6 +63,15 @@ class AddTestPayments extends Command
             return 1;
         }
 
+        // For subscription payments, ensure we have subscriptions available
+        if ($paymentType === PaymentType::DIRECT_SUBSCRIPTION) {
+            $subscriptionCount = Subscription::where('status', 'active')->where('amount', '>', 0)->count();
+            if ($subscriptionCount === 0) {
+                $this->info('No active subscriptions found. Running subscription seeder...');
+                $this->call('db:seed', ['--class' => 'SubscriptionSeeder']);
+            }
+        }
+
         $this->info("Adding {$count} test {$type} payments for user {$userId}...");
 
         DB::transaction(function () use ($user, $paymentType, $count) {
@@ -98,10 +108,22 @@ class AddTestPayments extends Command
             PaymentStatus::FAILED,
         ]);
 
+        // For subscription payments, select random active subscription
+        $subscriptionId = null;
+        if ($paymentType === PaymentType::DIRECT_SUBSCRIPTION) {
+            $subscription = Subscription::where('status', 'active')->inRandomOrder()->first();
+            $subscriptionId = $subscription ? $subscription->id : null;
+
+            if (!$subscriptionId) {
+                throw new \Exception('No active subscriptions available for DIRECT_SUBSCRIPTION payment');
+            }
+        }
+
         Payment::create([
             'user_id' => $user->id,
             'amount' => $amount,
             'payment_type' => $paymentType,
+            'subscription_id' => $subscriptionId,
             'payment_method' => $paymentMethod,
             'status' => $status,
             'transaction_number' => 'TEST_' . fake()->uuid(),

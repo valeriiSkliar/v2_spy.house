@@ -24,10 +24,12 @@ class TariffController extends Controller
             ->where('name', '!=', 'free')
             ->get();
 
+        $payments = $user->subscriptionPayments()->with('subscription')->paginate(10);
+        // dd($payments);
         return view('pages.tariffs.index', [
             'currentTariff' => $user->currentTariff(),
             'tariffs' => $tariffs,
-            'payments' => $user->subscriptionPayments()->paginate(10),
+            'payments' => $payments,
             'activeSubscriptions' => $user->activeSubscriptions(),
         ]);
     }

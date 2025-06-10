@@ -25,8 +25,8 @@
                 <tr>
                     <td>{{ Carbon\Carbon::parse($payment->created_at)->format('d.m.Y / H:i') }}</td>
                     <td>
-                        <div class="tariff-name _{{ strtolower($payment->subscription->name) }} _small">{{
-                            $payment->subscription->name }}</div>
+                        <div class="tariff-name _{{ strtolower($payment->subscription?->name) }} _small">{{
+                            $payment->subscription?->name }}</div>
                     </td>
                     <td>{{ $payment->payment_type->translatedLabel() }}</td>
                     <td>{{ $payment->payment_method->translatedLabel() }}</td>
