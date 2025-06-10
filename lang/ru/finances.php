@@ -32,7 +32,7 @@ return [
     'history_table' => [
         'date' => 'Дата',
         'transaction_number' => 'Номер транзакции',
-        'payment_method' => 'Способ оплаты',
+        'payment_method' => 'Метод оплаты',
         'amount' => 'Сумма',
         'status' => 'Статус',
         'statuses' => [

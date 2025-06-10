@@ -16,9 +16,16 @@ default => PaymentStatus::PENDING
 $paymentStatus = $status instanceof PaymentStatus ? $status : PaymentStatus::PENDING;
 }
 
-$statusKey = strtolower($paymentStatus->name);
+$statusKey = $paymentStatus->value;
+
+$status_classes = [
+'PENDING' => 'warning',
+'SUCCESS' => 'successful',
+'FAILED' => 'rejected',
+];
+
 @endphp
 
-<span class="table-status {{ $statusClass }}">
+<span class="table-status _{{ $status_classes[$statusKey] }}">
     {{ $paymentStatus->translatedLabel() }}
 </span>
