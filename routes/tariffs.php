@@ -3,6 +3,10 @@
 use App\Finance\Http\Controllers\TariffController;
 use Illuminate\Support\Facades\Route;
 
+// Возврат с платежной системы (без auth middleware)
+Route::get('/tariffs/payment/success', [TariffController::class, 'paymentSuccess'])->name('tariffs.payment.success');
+Route::get('/tariffs/payment/cancel', [TariffController::class, 'paymentCancel'])->name('tariffs.payment.cancel');
+
 // Тарифы
 Route::middleware('auth')->group(function () {
     Route::get('/tariffs', [TariffController::class, 'index'])->name('tariffs.index');

@@ -13,12 +13,13 @@
         </div>
     </div>
     <div class="col-12 col-md-6 col-lg-5">
-        <form action="{{ route('tariffs.process-payment') }}" method="POST">
+        <form id="subscription-payment-form" action="{{ route('tariffs.process-payment') }}" method="POST">
             @csrf
             <input type="hidden" name="tariff_id" value="{{ $tariff->id }}">
             <input type="hidden" name="billing_type" value="{{ $billingType }}">
             <input type="hidden" name="is_renewal" value="{{ $isRenewal ? '1' : '0' }}">
-            <input type="hidden" name="payment_method" id="selected_payment_method" value="Tether">
+            <input type="hidden" name="payment_method" id="selected_payment_method"
+                value="{{  App\Enums\Finance\PaymentMethod::USDT }}">
 
             <div class="form-item mb-25">
                 <label class="d-block mb-10 font-weight-600">Promo Code</label>

@@ -32,3 +32,4 @@ yarn-error.log
 /start-dev.sh
 /start-dev-tmux.sh
 /creds
+/resources/js/pay2_test_server

@@ -20,6 +20,12 @@ return Application::configure(basePath: dirname(__DIR__))
             '2fa' => Google2FALaravelMiddleware::class,
             'blog.validate.params' => \App\Http\Middleware\Frontend\BlogParametersValidation::class,
         ]);
+
+        // Исключаем webhook из CSRF проверки
+        $middleware->validateCsrfTokens(except: [
+            'api/pay2/webhook',
+        ]);
+
         $middleware->web(
             append: [
                 LanguageMiddleware::class,

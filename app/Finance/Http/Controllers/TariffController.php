@@ -4,13 +4,22 @@ namespace App\Finance\Http\Controllers;
 
 use App\Enums\Finance\PaymentMethod;
 use App\Finance\Models\Subscription;
+use App\Finance\Services\Pay2Service;
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class TariffController extends Controller
 {
     use AuthorizesRequests;
+
+    protected $pay2Service;
+
+    public function __construct(Pay2Service $pay2Service)
+    {
+        $this->pay2Service = $pay2Service;
+    }
 
     /**
      * Display a listing of the resource.
@@ -62,19 +71,56 @@ class TariffController extends Controller
             return response()->json(['error' => 'Tariff not found'], 404);
         }
 
-        // Подготавливаем данные для обработки
+        $user = $request->user();
+
+        // Вычисляем сумму платежа
+        $amount = $tariff->amount;
+        if ($billingType === 'year') {
+            $amount = $tariff->amount * 12 * 0.8; // 20% скидка за годовую подписку
+        }
+
+        // Подготавливаем данные для Pay2.House
         $paymentData = [
-            'tariff_id' => $tariffId,
-            'billing_type' => $billingType,
-            'is_renewal' => $isRenewal,
-            'payment_method' => $paymentMethod,
-            'promo_code' => $promoCode,
-            'user_id' => $request->user()->id,
+            'external_number' => $this->pay2Service->generateExternalNumber($user->id, $tariff->id),
+            'amount' => $amount,
+            'currency_code' => 'USD',
+            'description' => "Оплата тарифа {$tariff->name} ({$billingType})",
+            'payer_email' => $user->email,
         ];
 
-        // TODO: Добавить логику обработки платежа
+        // Создаем платеж через Pay2.House
+        $paymentResult = $this->pay2Service->createPayment($paymentData);
 
-        return response()->json(['success' => true, 'data' => $paymentData]);
+        if (!$paymentResult['success']) {
+            Log::error('TariffController: Ошибка создания платежа', [
+                'user_id' => $user->id,
+                'tariff_id' => $tariffId,
+                'error' => $paymentResult['error']
+            ]);
+
+            return response()->json([
+                'error' => 'Failed to create payment',
+                'details' => $paymentResult['error']
+            ], 500);
+        }
+
+        // Сохраняем информацию о платеже в локальной базе данных
+        // TODO: Создать модель Payment и сохранить данные
+
+        Log::info('TariffController: Платеж создан успешно', [
+            'user_id' => $user->id,
+            'tariff_id' => $tariffId,
+            'external_number' => $paymentData['external_number'],
+            'invoice_number' => $paymentResult['data']['invoice_number'],
+            'amount' => $amount
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'payment_url' => $paymentResult['data']['approval_url'],
+            'invoice_number' => $paymentResult['data']['invoice_number'],
+            'external_number' => $paymentData['external_number']
+        ]);
     }
 
     /**
@@ -107,6 +153,46 @@ class TariffController extends Controller
             'billingType' => $billingType,
             'isRenewal' => $isRenewal,
             'paymentMethods' => $paymentMethods,
+        ]);
+    }
+
+    /**
+     * Handle successful payment return from Pay2.House
+     */
+    public function paymentSuccess(Request $request)
+    {
+        $invoiceNumber = $request->get('invoice_number');
+
+        if ($invoiceNumber) {
+            // Получаем детали платежа
+            $paymentDetails = $this->pay2Service->getPaymentDetails($invoiceNumber);
+
+            if ($paymentDetails['success']) {
+                Log::info('TariffController: Успешное возвращение с платежа', [
+                    'invoice_number' => $invoiceNumber,
+                    'payment_data' => $paymentDetails['data']
+                ]);
+            }
+        }
+
+        return view('pages.tariffs.payment-success', [
+            'invoice_number' => $invoiceNumber
+        ]);
+    }
+
+    /**
+     * Handle cancelled payment return from Pay2.House
+     */
+    public function paymentCancel(Request $request)
+    {
+        $invoiceNumber = $request->get('invoice_number');
+
+        Log::info('TariffController: Отмена платежа', [
+            'invoice_number' => $invoiceNumber
+        ]);
+
+        return view('pages.tariffs.payment-cancel', [
+            'invoice_number' => $invoiceNumber
         ]);
     }
 
