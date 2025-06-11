@@ -29,5 +29,5 @@
 @endsection
 
 @push('scripts')
-@vite(['resources/js/tariffs-payments.js'])
+@vite(['resources/js/tariffs-payments.js', 'resources/js/tariffs.js'])
 @endpush
