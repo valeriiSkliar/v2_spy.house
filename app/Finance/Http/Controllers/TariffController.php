@@ -40,10 +40,41 @@ class TariffController extends Controller
      */
     public function processPayment(Request $request)
     {
-        $requestData = $request->all();
-        $requestData['billing_type'] = $request->get('billing_type', 'month');
+        // Получаем данные из запроса
+        $tariffId = $request->get('tariff_id');
+        $billingType = $request->get('billing_type', 'month');
+        $isRenewal = (bool) $request->get('is_renewal', false);
+        $paymentMethod = $request->get('payment_method');
+        $promoCode = $request->get('promo_code');
 
-        dd($requestData);
+        // Валидация основных полей
+        if (!$tariffId) {
+            return response()->json(['error' => 'Tariff ID is required'], 400);
+        }
+
+        if (!$paymentMethod) {
+            return response()->json(['error' => 'Payment method is required'], 400);
+        }
+
+        // Проверяем существование тарифа
+        $tariff = Subscription::find($tariffId);
+        if (!$tariff) {
+            return response()->json(['error' => 'Tariff not found'], 404);
+        }
+
+        // Подготавливаем данные для обработки
+        $paymentData = [
+            'tariff_id' => $tariffId,
+            'billing_type' => $billingType,
+            'is_renewal' => $isRenewal,
+            'payment_method' => $paymentMethod,
+            'promo_code' => $promoCode,
+            'user_id' => $request->user()->id,
+        ];
+
+        // TODO: Добавить логику обработки платежа
+
+        return response()->json(['success' => true, 'data' => $paymentData]);
     }
 
     /**

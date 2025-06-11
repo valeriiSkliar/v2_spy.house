@@ -102,8 +102,8 @@ document.addEventListener('DOMContentLoaded', function () {
   if (paymentMethods.length > 0 && hiddenInput) {
     paymentMethods.forEach(method => {
       method.addEventListener('change', function () {
-        const methodName = this.closest('.payment-method').querySelector('span > span').textContent;
-        hiddenInput.value = methodName.trim();
+        const methodName = this.value;
+        hiddenInput.value = methodName;
       });
     });
   }
