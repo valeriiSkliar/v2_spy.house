@@ -1,6 +1,6 @@
 <form action="{{ route('finances.deposit') }}" method="POST" class="max-w-400">
     @csrf
-    <input type="hidden" name="payment_method" id="selected_payment_method" value="Tether">
+    <input type="hidden" name="payment_method" id="selected_payment_method" value="USDT">
 
     <div class="row _offset20">
         <div class="col-12 col-md-auto w-md-1 flex-grow-1">
@@ -32,8 +32,8 @@
 
         paymentMethods.forEach(method => {
             method.addEventListener('change', function() {
-                const methodName = this.closest('.payment-method').querySelector('span > span').textContent;
-                selectedMethodInput.value = methodName;
+                // Берем value из радио-кнопки, а не текст из span
+                selectedMethodInput.value = this.value;
             });
         });
     });

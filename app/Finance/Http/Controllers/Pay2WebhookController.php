@@ -135,12 +135,18 @@ class Pay2WebhookController extends Controller
         Log::info('Pay2WebhookController: Статус платежа обновлен', [
             'payment_id' => $payment->id,
             'user_id' => $payment->user_id,
+            'payment_type' => $payment->payment_type->value,
             'subscription_id' => $payment->subscription_id,
             'amount' => $payment->amount
         ]);
 
-        // Активируем подписку пользователя
-        $this->activateUserSubscription($payment, $data);
+        // Обрабатываем в зависимости от типа платежа
+        if ($payment->isDeposit()) {
+            $this->processDepositPayment($payment, $data);
+        } elseif ($payment->isDirectSubscription()) {
+            $this->activateUserSubscription($payment, $data);
+        }
+
         // TODO: Отправить уведомление пользователю
     }
 
@@ -242,6 +248,43 @@ class Pay2WebhookController extends Controller
             'start_time' => $startTime->toDateTimeString(),
             'end_time' => $endTime->toDateTimeString(),
             'payment_id' => $payment->id
+        ]);
+    }
+
+    /**
+     * Process deposit payment - increase user balance
+     *
+     * @param Payment $payment
+     * @param array $webhookData
+     * @return void
+     */
+    protected function processDepositPayment(Payment $payment, array $webhookData): void
+    {
+        $user = $payment->user;
+
+        if (!$user) {
+            Log::warning('Pay2WebhookController: Не удалось обработать депозит - пользователь не найден', [
+                'payment_id' => $payment->id,
+                'user_id' => $payment->user_id
+            ]);
+            return;
+        }
+
+        // Увеличиваем баланс пользователя
+        $previousBalance = $user->available_balance;
+        $newBalance = $previousBalance + $payment->amount;
+
+        $user->update([
+            'available_balance' => $newBalance
+        ]);
+
+        Log::info('Pay2WebhookController: Баланс пользователя пополнен', [
+            'user_id' => $user->id,
+            'payment_id' => $payment->id,
+            'deposit_amount' => $payment->amount,
+            'previous_balance' => $previousBalance,
+            'new_balance' => $newBalance,
+            'invoice_number' => $payment->invoice_number
         ]);
     }
 }

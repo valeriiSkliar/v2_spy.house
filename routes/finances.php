@@ -8,7 +8,10 @@ Route::middleware('auth')
     ->name('finances.')
     ->group(function () {
         Route::get('/', [FinanceController::class, 'index'])->name('index');
+        Route::get('/deposit', [FinanceController::class, 'depositForm'])->name('deposit.form');
         Route::post('/deposit', [FinanceController::class, 'deposit'])->name('deposit');
+        Route::get('/deposit/success', [FinanceController::class, 'depositSuccess'])->name('deposit.success');
+        Route::get('/deposit/cancel', [FinanceController::class, 'depositCancel'])->name('deposit.cancel');
     });
 
 
