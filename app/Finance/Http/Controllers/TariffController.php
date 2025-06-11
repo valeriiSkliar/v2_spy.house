@@ -3,7 +3,10 @@
 namespace App\Finance\Http\Controllers;
 
 use App\Enums\Finance\PaymentMethod;
+use App\Enums\Finance\PaymentType;
+use App\Enums\Finance\PaymentStatus;
 use App\Finance\Models\Subscription;
+use App\Finance\Models\Payment;
 use App\Finance\Services\Pay2Service;
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -87,7 +90,7 @@ class TariffController extends Controller
             'description' => "Оплата тарифа {$tariff->name} ({$billingType})",
             'payer_email' => $user->email,
             'payment_method' => $paymentMethod,
-            'handling_fee' => 0, // Дополнительная комиссия, если необходимо
+            'handling_fee' => 0,
         ];
 
         // Создаем платеж через Pay2.House
@@ -107,7 +110,16 @@ class TariffController extends Controller
         }
 
         // Сохраняем информацию о платеже в локальной базе данных
-        // TODO: Создать модель Payment и сохранить данные
+        $payment = Payment::create([
+            'user_id' => $user->id,
+            'amount' => $amount,
+            'payment_type' => PaymentType::DIRECT_SUBSCRIPTION,
+            'subscription_id' => $tariff->id,
+            'payment_method' => PaymentMethod::from($paymentMethod),
+            'status' => PaymentStatus::PENDING,
+            'invoice_number' => $paymentResult['data']['invoice_number'],
+            'external_number' => $paymentData['external_number'],
+        ]);
 
         Log::info('TariffController: Платеж создан успешно', [
             'user_id' => $user->id,

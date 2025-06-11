@@ -1,8 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Finance\Http\Controllers;
 
 use App\Finance\Services\Pay2Service;
+use App\Finance\Models\Payment;
+use App\Models\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -115,24 +117,31 @@ class Pay2WebhookController extends Controller
     {
         Log::info('Pay2WebhookController: Обработка успешного платежа', $data);
 
-        // TODO: Обновить статус платежа в базе данных
-        // TODO: Активировать подписку пользователя
-        // TODO: Отправить уведомление пользователю
+        $invoiceNumber = $data['invoice_number'];
 
-        // Парсим external_number для получения user_id и tariff_id
-        $externalNumber = $data['external_number'];
-        if (preg_match('/tariff_(\d+)_(\d+)_\d+/', $externalNumber, $matches)) {
-            $userId = $matches[1];
-            $tariffId = $matches[2];
+        // Находим платеж по invoice_number
+        $payment = Payment::where('invoice_number', $invoiceNumber)->first();
 
-            Log::info('Pay2WebhookController: Извлечены данные из external_number', [
-                'user_id' => $userId,
-                'tariff_id' => $tariffId,
-                'external_number' => $externalNumber
+        if (!$payment) {
+            Log::warning('Pay2WebhookController: Платеж не найден', [
+                'invoice_number' => $invoiceNumber
             ]);
-
-            // TODO: Активировать подписку для пользователя
+            return;
         }
+
+        // Обновляем статус платежа
+        $payment->markAsSuccessful();
+
+        Log::info('Pay2WebhookController: Статус платежа обновлен', [
+            'payment_id' => $payment->id,
+            'user_id' => $payment->user_id,
+            'subscription_id' => $payment->subscription_id,
+            'amount' => $payment->amount
+        ]);
+
+        // Активируем подписку пользователя
+        $this->activateUserSubscription($payment, $data);
+        // TODO: Отправить уведомление пользователю
     }
 
     /**
@@ -145,7 +154,18 @@ class Pay2WebhookController extends Controller
     {
         Log::info('Pay2WebhookController: Обработка отмененного платежа', $data);
 
-        // TODO: Обновить статус платежа в базе данных
+        $invoiceNumber = $data['invoice_number'];
+
+        // Находим платеж по invoice_number
+        $payment = Payment::where('invoice_number', $invoiceNumber)->first();
+
+        if ($payment) {
+            $payment->markAsFailed();
+            Log::info('Pay2WebhookController: Платеж отменен', [
+                'payment_id' => $payment->id
+            ]);
+        }
+
         // TODO: Отправить уведомление пользователю об отмене
     }
 
@@ -159,7 +179,69 @@ class Pay2WebhookController extends Controller
     {
         Log::error('Pay2WebhookController: Ошибка платежа', $data);
 
-        // TODO: Обновить статус платежа в базе данных
+        $invoiceNumber = $data['invoice_number'];
+
+        // Находим платеж по invoice_number
+        $payment = Payment::where('invoice_number', $invoiceNumber)->first();
+
+        if ($payment) {
+            $payment->markAsFailed();
+            Log::error('Pay2WebhookController: Платеж завершился ошибкой', [
+                'payment_id' => $payment->id
+            ]);
+        }
+
         // TODO: Отправить уведомление пользователю об ошибке
+    }
+
+    /**
+     * Activate user subscription after successful payment
+     *
+     * @param Payment $payment
+     * @param array $webhookData
+     * @return void
+     */
+    protected function activateUserSubscription(Payment $payment, array $webhookData): void
+    {
+        $user = $payment->user;
+        $subscription = $payment->subscription;
+
+        if (!$user || !$subscription) {
+            Log::warning('Pay2WebhookController: Не удалось активировать подписку - отсутствуют данные', [
+                'payment_id' => $payment->id,
+                'user_id' => $payment->user_id,
+                'subscription_id' => $payment->subscription_id
+            ]);
+            return;
+        }
+
+        // Определяем период подписки из описания платежа
+        $description = $webhookData['description'] ?? '';
+        $billingType = str_contains($description, '(year)') ? 'year' : 'month';
+
+        // Рассчитываем время начала и окончания подписки
+        $startTime = now();
+        $endTime = $billingType === 'year'
+            ? $startTime->copy()->addYear()
+            : $startTime->copy()->addMonth();
+
+        // Обновляем данные пользователя
+        $user->update([
+            'subscription_id' => $subscription->id,
+            'subscription_time_start' => $startTime,
+            'subscription_time_end' => $endTime,
+            'subscription_is_expired' => false,
+            'queued_subscription_id' => null, // Очищаем очередь
+        ]);
+
+        Log::info('Pay2WebhookController: Подписка активирована', [
+            'user_id' => $user->id,
+            'subscription_id' => $subscription->id,
+            'subscription_name' => $subscription->name,
+            'billing_type' => $billingType,
+            'start_time' => $startTime->toDateTimeString(),
+            'end_time' => $endTime->toDateTimeString(),
+            'payment_id' => $payment->id
+        ]);
     }
 }

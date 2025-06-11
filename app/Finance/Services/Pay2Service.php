@@ -182,6 +182,6 @@ class Pay2Service
      */
     public function generateExternalNumber(int $userId, int $tariffId)
     {
-        return 'TN' . $userId . $tariffId . time();
+        return 'TN' . $userId  . $tariffId . '' . time();
     }
 }

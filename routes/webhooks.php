@@ -1,7 +1,6 @@
 <?php
 
-use App\Finance\Http\Controllers\WebhookController;
-use App\Http\Controllers\Api\Pay2WebhookController;
+use App\Finance\Http\Controllers\Pay2WebhookController;
 use Illuminate\Support\Facades\Route;
 
 // Pay2.House webhook (без middleware auth, так как это внешний вызов)

@@ -32,6 +32,8 @@ class Payment extends Model
         'webhook_token',
         'webhook_processed_at',
         'idempotency_key',
+        'invoice_number',
+        'external_number',
     ];
 
     /**
