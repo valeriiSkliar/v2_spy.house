@@ -42,6 +42,8 @@ class Pay2Service
             'cancel_url' => $paymentData['cancel_url'] ?? $this->config['cancel_url'],
             'payer_email' => $paymentData['payer_email'] ?? null,
             'deadline_seconds' => $this->config['payment_deadline_seconds'],
+            'payment_method' => $paymentData['payment_method'] ?? 'ALL',
+            'handling_fee' => $paymentData['handling_fee'] ?? 0,
         ];
 
         // Добавляем подпись для данных

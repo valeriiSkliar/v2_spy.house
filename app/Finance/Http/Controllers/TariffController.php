@@ -86,6 +86,8 @@ class TariffController extends Controller
             'currency_code' => 'USD',
             'description' => "Оплата тарифа {$tariff->name} ({$billingType})",
             'payer_email' => $user->email,
+            'payment_method' => $paymentMethod,
+            'handling_fee' => 0, // Дополнительная комиссия, если необходимо
         ];
 
         // Создаем платеж через Pay2.House
@@ -112,7 +114,8 @@ class TariffController extends Controller
             'tariff_id' => $tariffId,
             'external_number' => $paymentData['external_number'],
             'invoice_number' => $paymentResult['data']['invoice_number'],
-            'amount' => $amount
+            'amount' => $amount,
+            'payment_result' => $paymentResult
         ]);
 
         return response()->json([
