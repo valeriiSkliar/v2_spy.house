@@ -3,10 +3,10 @@
 @section('page-content')
 {{-- @dd($tariff) --}}
 <x-tariffs.payment-header />
-<x-tariffs.payment-info :tariff="$tariff" :billingType="$billingType" />
+<x-tariffs.payment-info :tariff="$tariff" :billingType="$billingType" :isRenewal="$isRenewal" />
 <div class="section">
     <x-tariffs.payment-methods :paymentMethods="$paymentMethods" />
-    <x-tariffs.payment-form :tariff="$tariff" :billingType="$billingType" />
+    <x-tariffs.payment-form :tariff="$tariff" :billingType="$billingType" :isRenewal="$isRenewal" />
 </div>
 @endsection
 

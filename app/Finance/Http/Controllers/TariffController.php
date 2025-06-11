@@ -64,11 +64,17 @@ class TariffController extends Controller
             $billingType = 'month';
         }
 
+        // Определяем является ли это продлением текущей подписки
+        $user = $request->user();
+        $currentTariff = $user->currentTariff();
+        $isRenewal = $currentTariff && $currentTariff['id'] === $tariff->id;
+
         $paymentMethods = PaymentMethod::cases();
 
         return view('pages.tariffs.payment', [
             'tariff' => $tariff,
             'billingType' => $billingType,
+            'isRenewal' => $isRenewal,
             'paymentMethods' => $paymentMethods,
         ]);
     }

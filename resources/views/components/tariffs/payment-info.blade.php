@@ -6,8 +6,13 @@
             </div>
         </div>
         <div class="col-auto">
-            <div class="tariff-pay__info">Срок действия: <strong>1 {{ $tariff->getBillingPeriodName($billingType)
-                    }}</strong></div>
+            <div class="tariff-pay__info">
+                @if($isRenewal ?? false)
+                Продление на: <strong>1 {{ $tariff->getBillingPeriodName($billingType) }}</strong>
+                @else
+                Срок действия: <strong>1 {{ $tariff->getBillingPeriodName($billingType) }}</strong>
+                @endif
+            </div>
         </div>
         <div class="col-auto">
             <div class="tariff-pay__info">Стоимость: <strong>{{ $tariff->getFormattedAmountByBillingType($billingType)

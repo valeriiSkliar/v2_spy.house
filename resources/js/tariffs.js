@@ -48,6 +48,17 @@ document.addEventListener('DOMContentLoaded', function () {
             selectBtn.href = newUrl;
             selectBtn.setAttribute('data-billing-type', period);
           }
+
+          // Update tariff renew button URL for this specific card
+          const renewBtn = rateItem.querySelector('.tariff-renew-btn');
+          if (renewBtn) {
+            const tariffId = renewBtn.getAttribute('data-tariff-id');
+            const baseUrl = window.location.origin + '/tariffs/payment/' + tariffId;
+            const newUrl = baseUrl + '?billing_type=' + period;
+
+            renewBtn.href = newUrl;
+            renewBtn.setAttribute('data-billing-type', period);
+          }
         } else {
           // Глобальное переключение (кнопки в header)
           // Обновляем активные состояния всех табов
@@ -67,6 +78,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
             selectBtn.href = newUrl;
             selectBtn.setAttribute('data-billing-type', period);
+          });
+
+          // Обновляем все кнопки "Продлить"
+          const allRenewBtns = document.querySelectorAll('.tariff-renew-btn');
+          allRenewBtns.forEach(renewBtn => {
+            const tariffId = renewBtn.getAttribute('data-tariff-id');
+            const baseUrl = window.location.origin + '/tariffs/payment/' + tariffId;
+            const newUrl = baseUrl + '?billing_type=' + period;
+
+            renewBtn.href = newUrl;
+            renewBtn.setAttribute('data-billing-type', period);
           });
         }
       });
