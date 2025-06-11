@@ -93,13 +93,15 @@ graph TD
     TransactionLimits -.->|user_id| Users
     
     %% ✅ РЕАЛИЗОВАННЫЕ ПРОЦЕССЫ (Текущий функционал)
-    CurrentDirectSubFlow["`✅ **Текущая покупка подписки**
+    CurrentDirectSubFlow["`✅ **Полный цикл покупки подписки**
     1. Выбор тарифа → TariffController::processPayment
     2. Генерация external_number → Pay2Service::createPayment  
     3. Создание Payment записи со статусом PENDING
-    4. Редирект на Pay2.House → Оплата
-    5. Возврат на success/cancel страницы
-    (ПРОБЛЕМА: подписка НЕ активируется автоматически!)`"]
+    4. Редирект на Pay2.House → Оплата пользователем
+    5. Pay2.House отправляет webhook → Pay2WebhookController::handle
+    6. Проверка подписи → Обновление статуса платежа
+    7. Автоматическая активация подписки пользователя
+    8. Возврат на success/cancel страницы`"]
     
     CurrentPromocodeFlow["`✅ **Система промокодов**
     1. PromocodeService::validatePromocode
@@ -125,15 +127,21 @@ graph TD
     ❌ TetherUSDT не реализован
     ❌ Rate limiting отсутствует`"]
     
-    CurrentWebhookEndpoint["`❌ **Webhook система** (ЗАГЛУШКА!)
-    ❌ WebhookController::pay2house содержит только dd($data)
-    ❌ Автоматическое обновление статусов НЕ РАБОТАЕТ
-    ❌ Подписки НЕ активируются после оплаты`"]
+    Pay2WebhookController["`✅ **Pay2WebhookController** (РЕАЛИЗОВАН!)
+    ✅ Pay2WebhookController::handle() обрабатывает webhook'и
+    ✅ Проверка HMAC подписи (в продакшн режиме)
+    ✅ Автоматическое обновление статусов платежей
+    ✅ Автоматическая активация подписок после оплаты
+    ✅ Поддержка статусов: paid, cancelled, error
+    ✅ Логирование всех операций`"]
     
     %% ✅ ТЕКУЩИЕ ПОТОКИ ПРОЦЕССОВ  
     CurrentDirectSubFlow --> Payments
+    CurrentDirectSubFlow --> Users
     CurrentPromocodeFlow --> PromocodeActivations
-    CurrentPaymentSystems -->|broken webhook| CurrentWebhookEndpoint
+    CurrentPaymentSystems -->|working webhook| Pay2WebhookController
+    Pay2WebhookController --> Payments
+    Pay2WebhookController --> Users
     
     %% ❌ ПЛАНИРУЕМЫЕ ПОТОКИ (НЕ РЕАЛИЗОВАНЫ)
     PlannedDepositFlow -.-> BalanceAudit
@@ -178,7 +186,7 @@ graph TD
     
     %% ✅ Реализованные компоненты
     class Users,Payments,Subscriptions,Promocodes,PromocodeActivations implementedStyle
-    class CurrentDirectSubFlow,CurrentPromocodeFlow implementedStyle
+    class CurrentDirectSubFlow,CurrentPromocodeFlow,Pay2WebhookController implementedStyle
     class PaymentTypesActual,PaymentMethodsActual,PaymentStatusesActual,PromocodeStatusesActual enumImplementedStyle
     
     %% 🔄 Частично реализованные
@@ -186,5 +194,5 @@ graph TD
     
     %% ❌ Не реализованные компоненты  
     class BalanceAudit,WebhookLogs,SubscriptionAudit,FinancialReconciliation,RateLimiting,SecurityAlerts,TransactionLimits notImplementedStyle
-    class PlannedDepositFlow,PlannedBalanceSubFlow,CurrentWebhookEndpoint notImplementedStyle
+    class PlannedDepositFlow,PlannedBalanceSubFlow notImplementedStyle
     class PaymentTypesPlanned,PaymentMethodsPlanned,PaymentStatusesPlanned,AlertTypesPlanned enumPlannedStyle
