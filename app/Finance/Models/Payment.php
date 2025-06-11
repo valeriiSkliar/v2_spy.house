@@ -235,4 +235,14 @@ class Payment extends Model
     {
         return $query->subscriptions()->excludingFreeSubscriptions();
     }
+
+    /**
+     * Scope for user subscription payments
+     */
+    public function scopeForUserSubscription($query, $userId, $subscriptionId)
+    {
+        return $query->where('user_id', $userId)
+            ->where('subscription_id', $subscriptionId)
+            ->where('payment_type', PaymentType::DIRECT_SUBSCRIPTION);
+    }
 }

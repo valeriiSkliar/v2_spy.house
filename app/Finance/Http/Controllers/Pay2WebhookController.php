@@ -135,17 +135,12 @@ class Pay2WebhookController extends Controller
         Log::info('Pay2WebhookController: Статус платежа обновлен', [
             'payment_id' => $payment->id,
             'user_id' => $payment->user_id,
-            'payment_type' => $payment->payment_type->value,
             'subscription_id' => $payment->subscription_id,
             'amount' => $payment->amount
         ]);
 
-        // Обрабатываем в зависимости от типа платежа
-        if ($payment->isDeposit()) {
-            $this->processDepositPayment($payment, $data);
-        } elseif ($payment->isDirectSubscription()) {
-            $this->activateUserSubscription($payment, $data);
-        }
+        // Активируем подписку пользователя
+        $this->activateUserSubscription($payment, $data);
 
         // TODO: Отправить уведомление пользователю
     }
@@ -225,11 +220,20 @@ class Pay2WebhookController extends Controller
         $description = $webhookData['description'] ?? '';
         $billingType = str_contains($description, '(year)') ? 'year' : 'month';
 
-        // Рассчитываем время начала и окончания подписки
-        $startTime = now();
-        $endTime = $billingType === 'year'
-            ? $startTime->copy()->addYear()
-            : $startTime->copy()->addMonth();
+        // Логика расчета времени
+        if ($this->isRenewal($user, $subscription)) {
+            // Продление: добавляем к существующему времени окончания
+            $startTime = $user->subscription_time_end ?? now();
+            $endTime = $billingType === 'year'
+                ? $startTime->copy()->addYear()
+                : $startTime->copy()->addMonth();
+        } else {
+            // Новая подписка или апгрейд: начинаем с текущего момента
+            $startTime = now();
+            $endTime = $billingType === 'year'
+                ? $startTime->copy()->addYear()
+                : $startTime->copy()->addMonth();
+        }
 
         // Обновляем данные пользователя
         $user->update([
@@ -247,44 +251,22 @@ class Pay2WebhookController extends Controller
             'billing_type' => $billingType,
             'start_time' => $startTime->toDateTimeString(),
             'end_time' => $endTime->toDateTimeString(),
-            'payment_id' => $payment->id
+            'payment_id' => $payment->id,
+            'is_renewal' => $this->isRenewal($user, $subscription)
         ]);
     }
 
     /**
-     * Process deposit payment - increase user balance
+     * Check if this is a renewal of current subscription
      *
-     * @param Payment $payment
-     * @param array $webhookData
-     * @return void
+     * @param User $user
+     * @param $subscription
+     * @return bool
      */
-    protected function processDepositPayment(Payment $payment, array $webhookData): void
+    private function isRenewal(User $user, $subscription): bool
     {
-        $user = $payment->user;
-
-        if (!$user) {
-            Log::warning('Pay2WebhookController: Не удалось обработать депозит - пользователь не найден', [
-                'payment_id' => $payment->id,
-                'user_id' => $payment->user_id
-            ]);
-            return;
-        }
-
-        // Увеличиваем баланс пользователя
-        $previousBalance = $user->available_balance;
-        $newBalance = $previousBalance + $payment->amount;
-
-        $user->update([
-            'available_balance' => $newBalance
-        ]);
-
-        Log::info('Pay2WebhookController: Баланс пользователя пополнен', [
-            'user_id' => $user->id,
-            'payment_id' => $payment->id,
-            'deposit_amount' => $payment->amount,
-            'previous_balance' => $previousBalance,
-            'new_balance' => $newBalance,
-            'invoice_number' => $payment->invoice_number
-        ]);
+        return $user->subscription_id === $subscription->id
+            && $user->subscription_time_end
+            && $user->subscription_time_end > now();
     }
 }

@@ -156,10 +156,11 @@ class TariffController extends Controller
             $billingType = 'month';
         }
 
-        // Определяем является ли это продлением текущей подписки
+        // Определить тип операции
         $user = $request->user();
         $currentTariff = $user->currentTariff();
         $isRenewal = $currentTariff && $currentTariff['id'] === $tariff->id;
+        $isUpgrade = $currentTariff && $currentTariff['id'] !== $tariff->id && $currentTariff['id'] !== null;
 
         $paymentMethods = PaymentMethod::cases();
 
@@ -167,6 +168,8 @@ class TariffController extends Controller
             'tariff' => $tariff,
             'billingType' => $billingType,
             'isRenewal' => $isRenewal,
+            'isUpgrade' => $isUpgrade,
+            'currentEndDate' => $user->subscription_time_end,
             'paymentMethods' => $paymentMethods,
         ]);
     }

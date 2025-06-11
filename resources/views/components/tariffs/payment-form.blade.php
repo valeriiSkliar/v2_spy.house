@@ -18,6 +18,7 @@
             <input type="hidden" name="tariff_id" value="{{ $tariff->id }}">
             <input type="hidden" name="billing_type" value="{{ $billingType }}">
             <input type="hidden" name="is_renewal" value="{{ $isRenewal ? '1' : '0' }}">
+            <input type="hidden" name="is_upgrade" value="{{ ($isUpgrade ?? false) ? '1' : '0' }}">
             <input type="hidden" name="payment_method" id="selected_payment_method"
                 value="{{  App\Enums\Finance\PaymentMethod::USDT }}">
 
