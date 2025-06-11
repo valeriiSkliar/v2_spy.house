@@ -90,4 +90,44 @@ class Subscription extends Model
     {
         return $this->payments()->successful();
     }
+
+    /**
+     * Get yearly amount with discount
+     */
+    public function getYearlyAmount(): float
+    {
+        return $this->amount * 12 * (1 - $this->early_discount / 100);
+    }
+
+    /**
+     * Get formatted yearly amount
+     */
+    public function getFormattedYearlyAmount(): string
+    {
+        return '$' . number_format($this->getYearlyAmount(), 2);
+    }
+
+    /**
+     * Get amount by billing type
+     */
+    public function getAmountByBillingType(string $billingType): float
+    {
+        return $billingType === 'year' ? $this->getYearlyAmount() : $this->amount;
+    }
+
+    /**
+     * Get formatted amount by billing type
+     */
+    public function getFormattedAmountByBillingType(string $billingType): string
+    {
+        return '$' . number_format($this->getAmountByBillingType($billingType), 2);
+    }
+
+    /**
+     * Get billing period name
+     */
+    public function getBillingPeriodName(string $billingType): string
+    {
+        return $billingType === 'year' ? 'год' : 'месяц';
+    }
 }

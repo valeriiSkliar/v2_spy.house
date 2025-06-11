@@ -2,6 +2,7 @@
 
 namespace App\Finance\Http\Controllers;
 
+use App\Enums\Finance\PaymentMethod;
 use App\Finance\Models\Subscription;
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -31,6 +32,44 @@ class TariffController extends Controller
             'tariffs' => $tariffs,
             'payments' => $payments,
             'activeSubscriptions' => $user->activeSubscriptions(),
+        ]);
+    }
+
+    /**
+     * Process the payment for a specific tariff
+     */
+    public function processPayment(Request $request)
+    {
+        $requestData = $request->all();
+        $requestData['billing_type'] = $request->get('billing_type', 'month');
+
+        dd($requestData);
+    }
+
+    /**
+     * Show the payment page for a specific tariff
+     */
+    public function payment($slug, Request $request)
+    {
+        $tariff = Subscription::where('id', $slug)->first();
+
+        if (! $tariff) {
+            abort(404);
+        }
+
+        $billingType = $request->get('billing_type', 'month'); // По умолчанию месячная подписка
+
+        // Проверяем корректность типа подписки
+        if (!in_array($billingType, ['month', 'year'])) {
+            $billingType = 'month';
+        }
+
+        $paymentMethods = PaymentMethod::cases();
+
+        return view('pages.tariffs.payment', [
+            'tariff' => $tariff,
+            'billingType' => $billingType,
+            'paymentMethods' => $paymentMethods,
         ]);
     }
 

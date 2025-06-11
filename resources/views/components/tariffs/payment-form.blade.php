@@ -3,7 +3,8 @@
         <div class="message mb-25">
             <span class="icon-i"></span>
             <div class="message__txt">Your account will be activated after payment confirmation. <br>This usually takes
-                <strong>5 minutes</strong>.</div>
+                <strong>5 minutes</strong>.
+            </div>
         </div>
         <div class="message _bg _red mb-25">
             <span class="icon-i"></span>
@@ -14,7 +15,8 @@
     <div class="col-12 col-md-6 col-lg-5">
         <form action="{{ route('tariffs.process-payment') }}" method="POST">
             @csrf
-            <input type="hidden" name="tariff_id" value="{{ $tariff['id'] }}">
+            <input type="hidden" name="tariff_id" value="{{ $tariff->id }}">
+            <input type="hidden" name="billing_type" value="{{ $billingType }}">
             <input type="hidden" name="payment_method" id="selected_payment_method" value="Tether">
 
             <div class="form-item mb-25">

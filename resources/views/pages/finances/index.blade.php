@@ -1,4 +1,4 @@
-@extends('layouts.authorized')
+@extends('layouts.main')
 
 @section('page-content')
 <h1 class="mb-25">{{ __('finances.title') }}</h1>
@@ -19,6 +19,7 @@
 
 <x-separator height="50" />
 
+@if (isset($transactions))
 <h2>{{ __('finances.deposit_history_title') }}</h2>
 
 {{-- Контейнер для AJAX контента --}}
@@ -32,6 +33,7 @@
     {{ $transactions->links() }}
     @endif
 </div>
+@endif
 @endsection
 
 @push('scripts')

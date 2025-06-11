@@ -38,7 +38,50 @@
     @if($currentTariff['id'] === $tariff->id)
     <button type="button" class="btn w-100 _flex _medium _border-green">Продлить</button>
     @else
-    <a href="{{ route('tariffs.payment', $tariff->id) }}" class="btn w-100 _flex _medium _green">Выбрать</a>
+    <a href="{{ route('tariffs.payment', ['slug' => $tariff->id, 'billing_type' => 'month']) }}"
+        class="btn w-100 _flex _medium _green tariff-select-btn" data-tariff-id="{{ $tariff->id }}"
+        data-billing-type="month">Выбрать</a>
     @endif
 </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    // Обработка переключения между месяцем и годом для каждой карточки
+    const rateItems = document.querySelectorAll('.rate-item');
+    
+    rateItems.forEach(rateItem => {
+        const monthTab = rateItem.querySelector('[data-tub="month"]');
+        const yearTab = rateItem.querySelector('[data-tub="year"]');
+        const selectBtn = rateItem.querySelector('.tariff-select-btn');
+        
+        if (!selectBtn) return; // Если кнопка "Продлить", то пропускаем
+        
+        // Обработчики кликов на табы
+        [monthTab, yearTab].forEach(tab => {
+            if (tab) {
+                tab.addEventListener('click', function() {
+                    const billingType = this.getAttribute('data-tub');
+                    
+                    // Убираем активный класс у всех табов в этой карточке
+                    rateItem.querySelectorAll('[data-group="pay"]').forEach(t => {
+                        t.classList.remove('active');
+                    });
+                    
+                    // Добавляем активный класс к выбранному табу
+                    this.classList.add('active');
+                    
+                    // Обновляем ссылку кнопки
+                    const tariffId = selectBtn.getAttribute('data-tariff-id');
+                    const newUrl = "{{ route('tariffs.payment', ['slug' => ':tariff_id', 'billing_type' => ':billing_type']) }}"
+                        .replace(':tariff_id', tariffId)
+                        .replace(':billing_type', billingType);
+                    
+                    selectBtn.href = newUrl;
+                    selectBtn.setAttribute('data-billing-type', billingType);
+                });
+            }
+        });
+    });
+});
+</script>

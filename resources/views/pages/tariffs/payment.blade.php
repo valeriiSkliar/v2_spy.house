@@ -1,11 +1,12 @@
 @extends('layouts.authorized')
 
 @section('page-content')
+{{-- @dd($tariff) --}}
 <x-tariffs.payment-header />
-<x-tariffs.payment-info :tariff="$tariff" />
+<x-tariffs.payment-info :tariff="$tariff" :billingType="$billingType" />
 <div class="section">
     <x-tariffs.payment-methods :paymentMethods="$paymentMethods" />
-    <x-tariffs.payment-form :tariff="$tariff" />
+    <x-tariffs.payment-form :tariff="$tariff" :billingType="$billingType" />
 </div>
 @endsection
 
