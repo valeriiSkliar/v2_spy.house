@@ -5,6 +5,8 @@ namespace App\Finance\Services;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Config;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 
 class Pay2Service
 {
@@ -23,6 +25,13 @@ class Pay2Service
      */
     public function createPayment(array $paymentData)
     {
+        $payment_method = match ($paymentData['payment_method']) {
+            'USDT' => 'USDT_TRC20',
+            'PAY2.HOUSE' => 'PAY2_HOUSE',
+            'CARDS' => 'CARDS',
+            default => 'ALL',
+        };
+
         $apiUrl = $this->config['test_mode']
             ? $this->config['test_api_url']
             : $this->config['api_url'];
@@ -35,24 +44,30 @@ class Pay2Service
                 ? $this->config['test_merchant_id']
                 : $this->config['merchant_id'],
             'description' => $paymentData['description'],
-            'api_key' => $this->config['test_mode']
-                ? $this->config['test_api_key']
-                : $this->config['api_key'],
             'return_url' => $paymentData['return_url'] ?? $this->config['return_url'],
             'cancel_url' => $paymentData['cancel_url'] ?? $this->config['cancel_url'],
             'payer_email' => $paymentData['payer_email'] ?? null,
             'deadline_seconds' => $this->config['payment_deadline_seconds'],
-            'payment_method' => $paymentData['payment_method'] ?? 'ALL',
+            'payment_method' => $payment_method,
             'handling_fee' => $paymentData['handling_fee'] ?? 0,
         ];
 
-        // Добавляем подпись для данных
-        $requestData['sign_token'] = $this->createSignToken($requestData);
+        // Добавляем API ключ (требуется в обоих режимах)
+        $requestData['api_key'] = $this->config['test_mode']
+            ? $this->config['test_api_key']
+            : $this->config['api_key'];
+
+        // Создаем JWT токен для данных (исключая sign_token)
+        $dataForJWT = $requestData;
+        unset($dataForJWT['sign_token']); // Исключаем sign_token из JWT payload
+
+        $requestData['sign_token'] = $this->createSignToken($dataForJWT);
 
         Log::info('Pay2Service: Создание платежа', [
             'external_number' => $requestData['external_number'],
             'amount' => $requestData['amount'],
             'api_url' => $apiUrl,
+            'merchant_id' => $this->config['merchant_id'],
             'test_mode' => $this->config['test_mode']
         ]);
 
@@ -61,19 +76,30 @@ class Pay2Service
 
             if ($response->successful()) {
                 $result = $response->json();
+                Log::info('Pay2Service: Получен ответ от API', $result);
+
+                // Проверяем статус в ответе API
+                if (isset($result['status']) && $result['status'] === 'error') {
+                    Log::error('Pay2Service: API вернул ошибку', $result);
+                    return [
+                        'success' => false,
+                        'error' => 'API Error: ' . ($result['msg'] ?? $result['code'] ?? 'Unknown error')
+                    ];
+                }
+
                 Log::info('Pay2Service: Платеж создан успешно', $result);
                 return [
                     'success' => true,
                     'data' => $result
                 ];
             } else {
-                Log::error('Pay2Service: Ошибка создания платежа', [
+                Log::error('Pay2Service: Ошибка HTTP запроса', [
                     'status' => $response->status(),
                     'body' => $response->body()
                 ]);
                 return [
                     'success' => false,
-                    'error' => 'Payment creation failed: ' . $response->body()
+                    'error' => 'HTTP Error ' . $response->status() . ': ' . $response->body()
                 ];
             }
         } catch (\Exception $e) {
@@ -137,22 +163,29 @@ class Pay2Service
     }
 
     /**
-     * Создание токена подписи для данных
+     * Создание JWT токена для аутентификации запросов
      *
      * @param array $data
      * @return string
      */
     protected function createSignToken(array $data)
     {
-        $secretKey = $this->config['test_mode']
-            ? $this->config['test_secret_key']
-            : $this->config['api_key']; // В продакшене используем api_key
+        $privateKeyPath = $this->config['private_key_path'];
 
-        // Исключаем sign_token из подписи
-        unset($data['sign_token']);
+        if (!file_exists($privateKeyPath)) {
+            throw new \Exception("Private key file not found: {$privateKeyPath}");
+        }
 
-        $jsonData = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        return hash_hmac('sha256', $jsonData, $secretKey);
+        $privateKey = file_get_contents($privateKeyPath);
+        $currentTime = time();
+
+        $payload = [
+            'iss' => $this->config['key_id'], // YOUR_KEY_ID
+            'iat' => $currentTime,
+            'data' => $data
+        ];
+
+        return JWT::encode($payload, openssl_pkey_get_private($privateKey), 'RS256');
     }
 
     /**

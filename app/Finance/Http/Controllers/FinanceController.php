@@ -152,6 +152,19 @@ class FinanceController extends Controller
             ]);
         }
 
+        // Проверяем что в ответе есть необходимые данные
+        if (!isset($paymentResult['data']['invoice_number']) || !isset($paymentResult['data']['approval_url'])) {
+            Log::error('FinanceController: Неполный ответ от API', [
+                'user_id' => $user->id,
+                'amount' => $amount,
+                'response_data' => $paymentResult['data'] ?? 'no data'
+            ]);
+
+            return back()->withErrors([
+                'amount' => 'Некорректный ответ от платежной системы. Попробуйте позже.'
+            ]);
+        }
+
         // Сохраняем информацию о платеже в локальной базе данных
         $payment = Payment::create([
             'user_id' => $user->id,

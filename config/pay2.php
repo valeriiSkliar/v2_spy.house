@@ -11,9 +11,18 @@ return [
     */
 
     'api_key' => env('PAY2_HOUSE_API_KEY', '1jdnsdfnjkdnskfnksdnkfdksfkdQopTIC9Zf8UDx0RtZKNGeobEwdL1yyC5Q'),
-    'api_url' => env('PAY2_HOUSE_API_URL', 'https://api.pay2.house'),
+    'api_url' => env('PAY2_HOUSE_API_URL', 'https://pay2.house'),
     'key_id' => env('PAY2_KEY_ID', 'KN2508182990'),
-    'merchant_id' => env('PAY2_HOUSE_MERCHANT_ID', 'SN2633804563mk'),
+    'merchant_id' => env('PAY2_HOUSE_MERCHANT_ID', 'SN2633804563'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | JWT Keys Configuration
+    |--------------------------------------------------------------------------
+    */
+
+    'private_key_path' => env('PAY2_PRIVATE_KEY_PATH', base_path('creds/177e23bf78de5cee3d2f8f9d4ef8bd9dad2f0978bcd8aea1b103a47e1b91963a.pem')),
+    'public_key_path' => env('PAY2_PUBLIC_KEY_PATH', base_path('creds/53ad7c0dd8cf80c90759f7c8574fd0d1e61031734ceb38fadad20a62c5e72e2e.pem')),
 
     /*
     |--------------------------------------------------------------------------
