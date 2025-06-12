@@ -33,3 +33,4 @@ yarn-error.log
 /start-dev-tmux.sh
 /creds
 /resources/js/pay2_test_server
+/settings_for_tunel_VPS_to_localhost
