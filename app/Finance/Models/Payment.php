@@ -70,6 +70,16 @@ class Payment extends Model
                 );
             }
 
+            // Validate that USER_BALANCE can only be used for subscription payments
+            if (
+                $payment->payment_method === PaymentMethod::USER_BALANCE &&
+                $payment->payment_type !== PaymentType::DIRECT_SUBSCRIPTION
+            ) {
+                throw new \InvalidArgumentException(
+                    'USER_BALANCE payment method can only be used for direct subscription payments.'
+                );
+            }
+
             // Generate webhook token if not provided
             if (empty($payment->webhook_token)) {
                 $payment->webhook_token = Str::random(64);

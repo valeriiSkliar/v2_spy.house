@@ -29,9 +29,13 @@ class FinanceController extends Controller
     public function index(Request $request)
     {
         $transactions = $request->user()->deposits()->orderBy('created_at', 'desc')->paginate(10);
-
+        $paymentMethods = collect(PaymentMethod::getForFrontend())
+            ->filter(fn($method) => $method['value'] !== 'USER_BALANCE')
+            ->values()
+            ->all();
         return view('pages.finances.index', [
             'transactions' => $transactions,
+            'paymentMethods' => $paymentMethods,
         ]);
     }
 
@@ -79,12 +83,15 @@ class FinanceController extends Controller
      */
     public function depositForm(Request $request)
     {
-        // $paymentMethods = PaymentMethod::cases();
+        $paymentMethods = collect(PaymentMethod::getForFrontend())
+            ->filter(fn($method) => $method['value'] !== 'USER_BALANCE')
+            ->values()
+            ->all();
 
-        // return view('pages.finances.index', [
-        //     'paymentMethods' => $paymentMethods,
-        // ]);
-        return redirect()->route('finances.index');
+
+        return view('pages.finances.deposit', [
+            'paymentMethods' => $paymentMethods,
+        ]);
     }
 
     /**

@@ -6,8 +6,10 @@ use App\Enums\Finance\PaymentMethod;
 use App\Enums\Finance\PaymentType;
 use App\Enums\Finance\PaymentStatus;
 use App\Finance\Models\Subscription;
+use App\Models\User;
 use App\Finance\Models\Payment;
 use App\Finance\Services\Pay2Service;
+use App\Finance\Services\BalanceService;
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
@@ -18,10 +20,12 @@ class TariffController extends Controller
     use AuthorizesRequests;
 
     protected $pay2Service;
+    protected $balanceService;
 
-    public function __construct(Pay2Service $pay2Service)
+    public function __construct(Pay2Service $pay2Service, BalanceService $balanceService)
     {
         $this->pay2Service = $pay2Service;
+        $this->balanceService = $balanceService;
     }
 
     /**
@@ -44,6 +48,7 @@ class TariffController extends Controller
             'tariffs' => $tariffs,
             'payments' => $payments,
             'activeSubscriptions' => $user->activeSubscriptions(),
+            'userBalance' => $user->available_balance,
         ]);
     }
 
@@ -76,7 +81,12 @@ class TariffController extends Controller
 
         $user = $request->user();
 
-        // Вычисляем сумму платежа
+        // Обрабатываем платеж с баланса пользователя
+        if ($paymentMethod === 'USER_BALANCE') {
+            return $this->processBalancePayment($user, $tariff, $billingType);
+        }
+
+        // Вычисляем сумму платежа для внешних платежных систем
         $amount = $tariff->amount;
         if ($billingType === 'year') {
             $amount = $tariff->amount * 12 * 0.8; // 20% скидка за годовую подписку
@@ -139,6 +149,54 @@ class TariffController extends Controller
     }
 
     /**
+     * Обработка платежа с баланса пользователя
+     *
+     * @param User $user
+     * @param Subscription $tariff
+     * @param string $billingType
+     * @return \Illuminate\Http\JsonResponse
+     */
+    protected function processBalancePayment($user, $tariff, string $billingType)
+    {
+        Log::info('TariffController: Начало обработки платежа с баланса', [
+            'user_id' => $user->id,
+            'tariff_id' => $tariff->id,
+            'billing_type' => $billingType,
+            'user_balance' => $user->available_balance
+        ]);
+
+        // Обрабатываем платеж через BalanceService
+        $result = $this->balanceService->processSubscriptionPaymentFromBalance($user, $tariff, $billingType);
+
+        if (!$result['success']) {
+            Log::warning('TariffController: Ошибка платежа с баланса', [
+                'user_id' => $user->id,
+                'tariff_id' => $tariff->id,
+                'error' => $result['error']
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => $result['error']
+            ], 400);
+        }
+
+        Log::info('TariffController: Платеж с баланса выполнен успешно', [
+            'user_id' => $user->id,
+            'tariff_id' => $tariff->id,
+            'payment_id' => $result['payment']->id,
+            'message' => $result['message']
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => $result['message'],
+            'payment_id' => $result['payment']->id,
+            'redirect_url' => route('tariffs.payment.success', ['invoice_number' => $result['payment']->invoice_number])
+        ]);
+    }
+
+    /**
      * Show the payment page for a specific tariff
      */
     public function payment($slug, Request $request)
@@ -162,7 +220,12 @@ class TariffController extends Controller
         $isRenewal = $currentTariff && $currentTariff['id'] === $tariff->id;
         $isUpgrade = $currentTariff && $currentTariff['id'] !== $tariff->id && $currentTariff['id'] !== null;
 
-        $paymentMethods = PaymentMethod::cases();
+        $paymentMethods = PaymentMethod::getForFrontend();
+
+        // Вычисляем стоимость подписки
+        $monthlyAmount = $tariff->amount;
+        $yearlyAmount = $tariff->amount * 12 * 0.8; // 20% скидка
+        $selectedAmount = $billingType === 'year' ? $yearlyAmount : $monthlyAmount;
 
         return view('pages.tariffs.payment', [
             'tariff' => $tariff,
@@ -171,6 +234,11 @@ class TariffController extends Controller
             'isUpgrade' => $isUpgrade,
             'currentEndDate' => $user->subscription_time_end,
             'paymentMethods' => $paymentMethods,
+            'userBalance' => $user->available_balance,
+            'monthlyAmount' => $monthlyAmount,
+            'yearlyAmount' => $yearlyAmount,
+            'selectedAmount' => $selectedAmount,
+            'hasInsufficientBalance' => $user->available_balance < $selectedAmount,
         ]);
     }
 
