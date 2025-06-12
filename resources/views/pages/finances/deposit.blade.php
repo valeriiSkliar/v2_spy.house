@@ -39,10 +39,10 @@
                                             id="payment_method" name="payment_method" required>
                                             <option value="">Выберите способ оплаты</option>
                                             @foreach($paymentMethods as $method)
-                                            @if(in_array($method->value, ['USDT', 'PAY2.HOUSE']))
-                                            <option value="{{ $method->value }}" {{ old('payment_method')==$method->
-                                                value ? 'selected' : '' }}>
-                                                {{ $method->label() }}
+                                            @if(in_array($method['value'], ['USDT', 'PAY2.HOUSE']))
+                                            <option value="{{ $method['value'] }}" {{
+                                                old('payment_method')==$method['value'] ? 'selected' : '' }}>
+                                                {{ $method['name'] }}
                                             </option>
                                             @endif
                                             @endforeach
