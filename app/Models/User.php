@@ -103,7 +103,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsTo(\App\Finance\Models\Subscription::class);
     }
 
-    public function currentTariff()
+    public function currentTariff(): array
     {
         if (!$this->subscription_id || !$this->subscription) {
             return [
@@ -111,39 +111,68 @@ class User extends Authenticatable implements MustVerifyEmail
                 'name' => 'Free',
                 'css_class' => 'free',
                 'expires_at' => null,
-                'status' => 'Не активно'
+                'status' => 'Не активно',
+                'is_active' => false
             ];
         }
 
-        $isActive = $this->subscription_time_end && $this->subscription_time_end > now() && !$this->subscription_is_expired;
+        $isActive = $this->hasActiveSubscription();
 
         return [
             'id' => $this->subscription->id,
             'name' => $this->subscription->name,
             'css_class' => strtolower($this->subscription->name),
             'expires_at' => $this->subscription_time_end ? $this->subscription_time_end->format('d.m.Y') : null,
-            'status' => $isActive ? 'Активная' : 'Не активно'
+            'status' => $isActive ? 'Активная' : 'Не активно',
+            'is_active' => $isActive
         ];
     }
 
     /**
-     * Check if tariff is active
+     * Check if user has active subscription (new method for subscription system)
      */
-    public function hasTariff($tariffId = null)
+    public function hasActiveSubscription(): bool
     {
-        if ($tariffId) {
-            return $this->tariff_id == $tariffId && $this->tariff_expires_at > now();
-        }
-
-        return $this->tariff_id && $this->tariff_expires_at > now();
+        return $this->subscription_id
+            && $this->subscription_time_end
+            && $this->subscription_time_end > now()
+            && !$this->subscription_is_expired;
     }
 
     /**
-     * Get tariff expiration date
+     * Check if user has specific subscription or any active subscription
      */
-    public function tariffExpiresAt()
+    public function hasTariff($subscriptionId = null): bool
     {
-        return $this->tariff_expires_at ? $this->tariff_expires_at->format('d.m.Y') : null;
+        if ($subscriptionId) {
+            return $this->subscription_id == $subscriptionId && $this->hasActiveSubscription();
+        }
+
+        return $this->hasActiveSubscription();
+    }
+
+    /**
+     * Get subscription expiration date
+     */
+    public function tariffExpiresAt(): ?string
+    {
+        return $this->subscription_time_end ? $this->subscription_time_end->format('d.m.Y') : null;
+    }
+
+    /**
+     * Get formatted balance with currency
+     */
+    public function getFormattedBalance(): string
+    {
+        return '$' . number_format($this->available_balance, 2);
+    }
+
+    /**
+     * Check if user has sufficient balance for amount
+     */
+    public function hasSufficientBalance(float $amount): bool
+    {
+        return $this->available_balance >= $amount;
     }
 
     public function ratings(): HasMany

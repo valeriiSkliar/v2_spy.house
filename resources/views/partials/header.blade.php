@@ -8,17 +8,33 @@
         <a href="/" class="header__logo"><img src="/img/logo.svg" alt="" width="142" height="36"></a>
     </div>
     <div class="header__right">
-        <div class="header__tariff">
-            <div class="header__tariff">
-                @if(auth()->check() && auth()->user()->hasTariff())
-                <x-tariff-link :type="auth()->user()->currentTariff()['css_class']">
-                    {{ auth()->user()->currentTariff()['name'] }}
-                </x-tariff-link>
-                @else
-                <x-tariff-link>{{ __('tariffs.free') }}</x-tariff-link>
-                @endif
-            </div>
+        @auth
+        @php
+        $user = auth()->user();
+        $currentTariff = $user->currentTariff();
+        @endphp
+
+        {{-- User Balance --}}
+        @if($user->available_balance > 0)
+        <div class="header__balance">
+            <span class="header__balance-label">Баланс:</span>
+            <span class="header__balance-amount">{{ $user->getFormattedBalance() }}</span>
         </div>
+        @endif
+
+        {{-- Current Subscription --}}
+        <div class="header__tariff">
+            <x-tariff-link :type="$currentTariff['css_class']">
+                {{ $currentTariff['name'] }}
+            </x-tariff-link>
+        </div>
+        @else
+        {{-- Guest User --}}
+        <div class="header__tariff">
+            <x-tariff-link>{{ __('tariffs.free') }}</x-tariff-link>
+        </div>
+        @endauth
+
         <div class="header__lang">
             <x-frontend.language-selector />
         </div>
