@@ -18,7 +18,7 @@ $status_classes = [
     <td><span class="font-weight-600">{{ $payment->external_number }}</span></td>
     <td>{{ $payment->payment_type->translatedLabel() }}</td>
     <td>{{ $payment->payment_method->translatedLabel() }}</td>
-    <td><span class="font-weight-bold">${{ $payment->amount }} </span></td>
+    <td><span class="font-weight-600">${{ $payment->amount }} </span></td>
     <td><span class="table-status _{{ $status_classes[$payment->status->value] }}">{{
             $payment->status->translatedLabel()
             }}</span>

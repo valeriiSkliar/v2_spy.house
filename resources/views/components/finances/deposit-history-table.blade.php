@@ -19,7 +19,7 @@
                     <td>{{ Carbon\Carbon::parse($transaction->created_at)->format('d.m.Y / H:i') }}</td>
                     <td><span class="font-weight-600">{{ $transaction->external_number }}</span></td>
                     <td>{{ $transaction->payment_method->translatedLabel() }}</td>
-                    <td><span class="font-weight-bold">${{ $transaction->amount }} </span></td>
+                    <td><span class="font-weight-600">${{ $transaction->amount }} </span></td>
                     <td>
                         <x-finances.transaction-status :status="$transaction->status" />
                     </td>
