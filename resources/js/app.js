@@ -16,6 +16,9 @@ import './base-select.js'; // need to disconnect this component ( after move cli
 // Import the modal system
 import './components/modal';
 
+// Import the current subscription modal
+import './components/current-subscription-modal';
+
 // Import the toast system
 import './components/toasts';
 

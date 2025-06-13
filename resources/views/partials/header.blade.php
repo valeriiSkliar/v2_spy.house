@@ -24,10 +24,14 @@
 
         {{-- Current Subscription --}}
         <div class="header__tariff">
-            <x-tariff-link :type="$currentTariff['css_class']">
+            <x-tariff-link :type="$currentTariff['css_class']" data-toggle="modal"
+                data-target="#modal-current-subscription" style="cursor: pointer;">
                 {{ $currentTariff['name'] }}
             </x-tariff-link>
         </div>
+
+        {{-- Current Subscription Modal --}}
+        <x-modals.subscribtion-activated :currentTariff="$currentTariff" />
         @else
         {{-- Guest User --}}
         <div class="header__tariff">
