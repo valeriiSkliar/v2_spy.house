@@ -82,6 +82,7 @@ use Illuminate\Support\Facades\Auth;
         };
     </script>
     @stack('scripts')
+    @stack('modals')
 </body>
 
 </html>

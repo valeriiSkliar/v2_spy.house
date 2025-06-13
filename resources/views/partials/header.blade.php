@@ -30,8 +30,10 @@
             </x-tariff-link>
         </div>
 
-        {{-- Current Subscription Modal --}}
+        {{-- Push modal to global stack --}}
+        @push('modals')
         <x-modals.subscribtion-activated :currentTariff="$currentTariff" />
+        @endpush
         @else
         {{-- Guest User --}}
         <div class="header__tariff">

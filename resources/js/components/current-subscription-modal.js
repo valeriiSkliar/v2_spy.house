@@ -1,50 +1,64 @@
 /**
  * Current Subscription Modal Component
- * Простой показ модального окна с информацией о подписке
+ * Унифицированная система через глобальные модальные окна
  */
 
-class CurrentSubscriptionModal {
-  constructor() {
-    this.modalElement = document.getElementById('modal-current-subscription');
-    this.bindEvents();
-    console.log('Current Subscription Modal initialized');
-  }
-
-  bindEvents() {
-    // Привязка к триггерам
-    document.querySelectorAll('[data-target="#modal-current-subscription"]').forEach(trigger => {
-      trigger.addEventListener('click', e => {
-        e.preventDefault();
-        this.show();
-      });
-    });
-
-    // События модального окна
-    if (this.modalElement) {
-      this.modalElement.addEventListener('shown.bs.modal', () => {
-        console.log('Current subscription modal shown');
-      });
+document.addEventListener('DOMContentLoaded', function () {
+  // Очистка дублированных backdrop'ов при показе модального окна
+  function clearDuplicateBackdrops() {
+    const backdrops = document.querySelectorAll('.modal-backdrop');
+    if (backdrops.length > 1) {
+      // Удаляем все backdrop'ы кроме последнего
+      for (let i = 0; i < backdrops.length - 1; i++) {
+        backdrops[i].remove();
+      }
     }
   }
 
-  show() {
-    if (this.modalElement && window.bootstrap) {
-      const modal = new window.bootstrap.Modal(this.modalElement);
-      modal.show();
-    }
-  }
+  // Инициализация обработчиков для показа модального окна подписки
+  document.addEventListener('click', function (e) {
+    // Обработка ТОЛЬКО элементов с data-target (не data-toggle)
+    const target = e.target.closest(
+      '[data-target="#modal-current-subscription"]:not([data-toggle])'
+    );
 
-  hide() {
-    if (this.modalElement && window.bootstrap) {
-      const modal = window.bootstrap.Modal.getInstance(this.modalElement);
-      if (modal) modal.hide();
-    }
-  }
-}
+    if (target) {
+      e.preventDefault();
+      e.stopPropagation(); // Останавливаем всплытие для предотвращения двойного срабатывания
 
-// Простая инициализация
-document.addEventListener('DOMContentLoaded', () => {
-  new CurrentSubscriptionModal();
+      // Используем глобальную систему модальных окон
+      if (window.Modal) {
+        window.Modal.showCurrentSubscription();
+
+        // Очищаем дублированные backdrop'ы через небольшую задержку
+        setTimeout(clearDuplicateBackdrops, 100);
+      }
+    }
+  });
+
+  // Слушаем событие показа модального окна для очистки backdrop'ов
+  document.addEventListener('shown.bs.modal', function (e) {
+    if (e.target && e.target.id === 'modal-current-subscription') {
+      clearDuplicateBackdrops();
+    }
+  });
+
+  console.log('Current Subscription Modal unified system initialized');
 });
 
-export default CurrentSubscriptionModal;
+// Экспорт функции для внешнего использования
+window.showCurrentSubscriptionModal = function () {
+  if (window.Modal) {
+    window.Modal.showCurrentSubscription();
+
+    // Очищаем дублированные backdrop'ы
+    setTimeout(() => {
+      const backdrops = document.querySelectorAll('.modal-backdrop');
+      if (backdrops.length > 1) {
+        for (let i = 0; i < backdrops.length - 1; i++) {
+          backdrops[i].remove();
+        }
+      }
+    }, 100);
+  }
+};
