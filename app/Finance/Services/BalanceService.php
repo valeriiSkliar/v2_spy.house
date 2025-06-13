@@ -142,7 +142,7 @@ class BalanceService
             'subscription_id' => $subscription->id,
             'payment_method' => PaymentMethod::USER_BALANCE,
             'status' => PaymentStatus::PENDING,
-            'external_number' => 'BAL_' . $user->id . '_' . $subscription->id . '_' . time(),
+            'external_number' => 'TN' . $user->id . $subscription->id . time(),
             'invoice_number' => 'BALANCE_' . Str::random(10),
             'webhook_token' => Str::random(64),
             'idempotency_key' => Str::uuid(),
