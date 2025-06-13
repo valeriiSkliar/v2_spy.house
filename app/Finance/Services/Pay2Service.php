@@ -216,7 +216,7 @@ class Pay2Service
     public function generateExternalNumber(int $userId, int $tariffId)
     {
         // Префикс DP для депозитов, TN для тарифов/подписок
-        $prefix = $tariffId === 0 ? 'DP' : 'TN';
+        $prefix = 'TN';
         return $prefix . $userId . $tariffId . time();
     }
 }
