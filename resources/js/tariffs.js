@@ -140,9 +140,20 @@ document.addEventListener('DOMContentLoaded', function () {
         const result = await response.json();
 
         if (response.ok && result.success) {
-          // Success - redirect to payment URL
+          // Success - handle different payment methods
           console.log('Payment created successfully:', result);
-          window.location.href = result.payment_url;
+          
+          // For USER_BALANCE payments, redirect to success page
+          if (result.redirect_url) {
+            window.location.href = result.redirect_url;
+          } 
+          // For external payments, redirect to payment gateway
+          else if (result.payment_url) {
+            window.location.href = result.payment_url;
+          }
+          else {
+            showPaymentError('Неожиданный ответ сервера');
+          }
         } else {
           // Error - show message
           console.error('Payment creation failed:', result);
