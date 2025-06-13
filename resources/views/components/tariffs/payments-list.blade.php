@@ -15,6 +15,7 @@ $status_classes = [
         <div class="tariff-name _{{ strtolower($payment->subscription?->name) }} _small">{{
             $payment->subscription?->name }}</div>
     </td>
+    <td><span class="font-weight-600">{{ $payment->external_number }}</span></td>
     <td>{{ $payment->payment_type->translatedLabel() }}</td>
     <td>{{ $payment->payment_method->translatedLabel() }}</td>
     <td><span class="font-weight-bold">${{ $payment->amount }} </span></td>

@@ -7,6 +7,7 @@
                     <tr>
                         <th>Дата</th>
                         <th>Название</th>
+                        <th>{{ __('finances.history_table.transaction_number') }}</th>
                         <th>Тип</th>
                         <th>Метод оплаты</th>
                         <th>Сумма</th>
