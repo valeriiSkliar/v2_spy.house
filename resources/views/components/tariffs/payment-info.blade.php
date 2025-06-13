@@ -43,7 +43,7 @@
         </div>
         <div class="col-auto">
             <div class="tariff-pay__info">Стоимость: <strong>{{ $tariff->getFormattedAmountByBillingType($billingType)
-                    }} USD</strong></div>
+                    }}</strong></div>
         </div>
         @if($billingType === 'year' && $tariff->early_discount > 0)
         <div class="col-auto">
