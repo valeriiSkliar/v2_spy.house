@@ -35,7 +35,7 @@ return [
     ],
     'PaymentType' => [
         'DEPOSIT' => 'Пополнение',
-        'DIRECT_SUBSCRIPTION' => 'Покупка подписки',
+        'DIRECT_SUBSCRIPTION' => 'Оплата подписки',
     ],
     'PaymentStatus' => [
         'PENDING' => 'В ожидании',
