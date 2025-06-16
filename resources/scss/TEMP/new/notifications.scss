@@ -1,0 +1,38 @@
+.notification-item{
+  border-radius: 10px;
+  background: #FFF;
+  margin-bottom: 10px;
+  padding: 15px 25px 10px 35px;
+  position: relative;
+  line-height: 1.25;
+  @media screen and (max-width: 767px) {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  p{
+    margin: 0;
+  }
+  .notification-item__date{
+    text-align: right;
+    color: #676C75;
+    margin-bottom: 9px;
+  }
+  .notification-item__label{
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-radius: 10px 0px;
+    background: $main;
+    color: #fff;
+    font-weight: 500;
+    padding: 6px 15px;
+  }
+
+  &._read{
+    color: #6D737E;
+    .notification-item__label{
+      background: #F4F4F6;
+      color: #818792;
+    }
+  }
+}

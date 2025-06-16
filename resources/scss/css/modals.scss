@@ -1,0 +1,714 @@
+.modal-content {
+  background: #FFFFFF;
+  @include border-radius(10px);
+  border: none;
+  padding: 40px;
+}
+.modal .close {
+  display: block;
+  width: 40px;
+  height: 40px;
+  @include border-radius(50%);
+  background: url("../images/close.svg") center center no-repeat #F5F5F5;
+  opacity: 1;
+  &:hover,&:active,&:focus {
+    outline: none;
+    @include box-shadow(none);
+  }
+}
+.close:not(:disabled):not(.disabled):focus, .close:not(:disabled):not(.disabled):hover {
+  opacity: 1;
+}
+.modal-header {
+  border: none;
+  .close {
+    margin: -.7rem 0 0 auto;
+  }
+}
+.modal-title {
+  font-weight: bold;
+  font-size: 18px;
+  line-height: 22px;
+  color: #3B4A51;
+}
+.modal-backdrop.show {
+  background-color: #242F34;
+  opacity: .7;
+}
+#saveFilterModal {
+  .formBLock {
+    label {
+      display: block;
+      .text {
+        display: block;
+        font-weight: 500;
+        font-size: 14px;
+        line-height: 17px;
+        color: #3B4A51;
+        margin-bottom: 11px;
+      }
+      input {
+        width: 100%;
+      }
+    }
+  }
+  .emptyFiltersBlock {
+    background: #FAFAFA;
+    border: 1px solid #E4EBEF;
+    @include border-radius(5px);
+    height: 110px;
+    @include flexbox();
+    @include align-items(center);
+    @include justify-content(center);
+    margin: 14px 0 21px 0;
+    .text {
+      font-size: 14px;
+      color: #738289;
+    }
+  }
+  .buttonsBlock {
+    @include flexbox();
+    @include align-items(center);
+    @include justify-content(flex-start);
+    .btn {
+      height: 46px;
+      line-height: 46px;
+      margin-right: 10px;
+      padding: 0 30px;
+      font-weight: 600;
+      font-size: 14px;
+      color: #FFFFFF;
+
+      &.btnCancel {
+        background-color: #F1F5F8;
+        font-weight: 500;
+        color: #748791;
+      }
+    }
+  }
+}
+
+@media (max-width: 571px) {
+  #saveFilterModal .emptyFiltersBlock {
+    padding: 10px;
+    text-align: center;
+  }
+  .modal-content {
+    padding: 23px 10px;
+    min-width: 330px;
+  }
+  .modal-dialog {
+    margin: .5rem 15px;
+  }
+  .modal-header {
+    position: relative;
+  }
+  .modal-header .close {
+
+    top: 0;
+    right: 0;
+    position: absolute;
+  }
+  .modal-title {
+    text-align: center;
+    font-weight: bold;
+    font-size: 18px;
+    line-height: 22px;
+    color: #3B4A51;
+  }
+  #saveFilterModal {
+    .modal-title {
+      max-width: 220px;
+      margin: 0 auto;
+      .blockOnMobile {
+        display: block;
+      }
+    }
+    .formBLock label .text {
+      max-width: 220px;
+      margin: 0 auto;
+      text-align: center;
+      margin-bottom: 21px;
+      font-weight: 500;
+      font-size: 14px;
+      line-height: 17px;
+      color: #3B4A51;
+
+    }
+  }
+}
+@media (max-width: 500px) {
+  #saveFilterModal .buttonsBlock {
+    @include justify-content(space-between);
+  }
+  #saveFilterModal .buttonsBlock .btn {
+    margin-right: 0;
+  }
+}
+
+#imgModal {
+  .modal-content {
+    .modal-body {
+      padding: 0;
+    }
+    width: 414px;
+    max-width: 90%;
+    padding: 13px 15px;
+    position: relative;
+  }
+  .close {
+    position: absolute;
+    top: 16px;
+    right: 17px;
+  }
+  .imageBlock {
+    @include border-radius(10px);
+    overflow: hidden;
+    img {
+      width: 100%;
+      height: auto;
+    }
+  }
+  .buttonsBlock {
+    margin-top: 18px;
+    @include flexbox();
+    @include justify-content(space-between);
+    .btn {
+      font-weight: 600;
+      font-size: 14px;
+      line-height: 46px;
+      height: 46px;
+      color: #FFFFFF;
+      width: 122px;
+      min-width: 122px;
+      text-align: left;
+      padding-left: 54px;
+      background: url("../images/img_icon.svg") left 23px center no-repeat;
+      @include border-radius(2px);
+      &.btnBlue {
+        background-color: #4F5DDA;
+      }
+      &.btnYellow {
+        background-color: #ECAA47;
+      }
+      &.btnRed {
+        background-color: #DA4F4F;
+      }
+    }
+  }
+}
+
+@media (max-width: 475px) {
+  #imgModal .buttonsBlock {
+    @include flex-direction(column);
+    @include align-items(center);
+    .btn {
+      margin-bottom: 10px;
+    }
+
+  }
+}
+
+#crModal {
+  padding-right: 0 !important;
+  .modal-dialog {
+    width: 1200px;
+    max-width: 90%;
+    margin: 0 0 0 auto;
+  }
+  .modal-content {
+    @include border-radius(0);
+    background: #F6F8F9;
+    padding: 0;
+  }
+  .close {
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    width: 32px;
+    height: 32px;
+  }
+  .btngoTo {
+    position: absolute;
+    top: 10px;
+    right: 100px;
+    width: 32px;
+    height: 32px;
+    display: block;
+    @include border-radius(50%);
+    background: url(../images/modalLink.svg) center center no-repeat #F5F5F5;
+  }
+  .modal-body {
+    padding: 0;
+  }
+  .mainModalMenuBl {
+    @include flexbox();
+    @include flex-wrap(wrap);
+    position: relative;
+    padding: 0px  130px 0 50px;
+    background: #FFFFFF;
+    @include box-shadow(0, 2px, 0 ,#EEF1F2);
+    .currentElem {
+      display: none;
+    }
+
+    .tabTarget  {
+      font-weight: 500;
+      white-space: nowrap;
+      position: relative;
+      z-index: 2;
+      top: 2px;
+      font-size: 13px;
+      line-height: 50px;
+      height: 50px;
+      margin-right: 20px;
+      cursor: pointer;
+      -webkit-transition: all .3s;
+      -moz-transition: all .3s;
+      -ms-transition: all .3s;
+      -o-transition: all .3s;
+      transition: all .3s;
+      &.active {
+        color: #3DC98A;
+        //font-weight: 600;
+        border-bottom: 2px solid #3DC98A;
+      }
+      &:hover {
+        color: #3DC98A;
+        border-bottom: 2px solid #3DC98A;
+      }
+    }
+  }
+
+  .modalMainContent {
+    padding: 30px 50px 50px 50px;
+    @include flexbox();
+    .modalLeft {
+      @include flex(auto);
+      background: #FFFFFF;
+      border-radius: 5px;
+      @include border-radius(5px);
+      @include box-shadow(0, 10px, 50px, rgba(215, 218, 220, 0.6));
+      padding: 20px;
+    }
+    .modalRight {
+      width: 196px;
+      min-width: 196px;
+      margin-left: 18px;
+    }
+  }
+
+  .modalTabs {
+    .tab {
+      display: none;
+      &.active {
+        display: block;
+      }
+    }
+  }
+
+  .contentAboutBlock {
+    @include flexbox();
+    .cLeft {
+      min-width: 50%;
+      width: 50%;
+      .mainImageBlock {
+        img {
+          width: 100%;
+        }
+      }
+      .buttonsBlock {
+        margin-top: 13px;
+        .btn {
+          width: 100%;
+          text-align: center;
+          background: #3DC98A;
+          @include border-radius(2px);
+          height: 36px;
+          line-height: 36px;
+          font-weight: 600;
+          font-size: 12px;
+          color: #FFFFFF;
+          margin-top: 10px;
+          &:first-child {
+            margin-top: 0;
+          }
+          &.btnBlue {
+            background: #2196F3;
+          }
+        }
+      }
+      .subButtonsBlock {
+        margin-top: 11px;
+        .btn {
+          background: #F1F5F8;
+          @include border-radius(2px);
+          height: 30px;
+          line-height: 30px;
+          font-weight: 500;
+          font-size: 12px;
+          color: #748791;
+          padding: 0 8px;
+          margin-bottom: 8px;
+          margin-right: 10px;
+        }
+      }
+    }
+    .cRight {
+      min-width: 48%;
+      width: 48%;
+      margin-left: 2%;
+      .statBl {
+        margin-top: 20px;
+        .statRow {
+          @include flexbox();
+          @include justify-content(space-between);
+          padding:  6px 0;
+
+          border-bottom: 1px solid #E2E6E8;
+          .statName {
+            font-size: 12px;
+            color: #3B4A51;
+          }
+          .statVal {
+            font-weight: 600;
+            font-size: 12px;
+            text-align: right;
+            color: #3B4A51;
+          }
+        }
+      }
+
+      .countriesBl {
+        margin-top: 22px;
+        .heading {
+          background: #3B4A51;
+          text-align: center;
+          font-weight: 500;
+          font-size: 12px;
+          color: #FFFFFF;
+          padding: 10px;
+        }
+        table {
+          width: 100%;
+          text-align: center;
+          th {
+            width: 33.33%;
+          }
+          th:first-child, td:first-child {
+            text-align: left;
+            padding-left: 10px;
+          }
+          td:first-child {
+            font-weight: 500;
+            font-size: 10px;
+            color: #3B4A51;
+          }
+          th:last-child, td:last-child {
+            padding-right: 10px;
+          }
+          th {
+            font-weight: 500;
+            font-size: 10px;
+            color: #3B4A51;
+            background-color: #F6F8F9;
+            padding-top:10px;
+            padding-bottom: 10px;
+          }
+          td {
+            border-bottom: 1px solid #E2E6E8;
+            padding-top:10px;
+            padding-bottom: 10px;
+            font-size: 10px;
+            color: #3B4A51;
+          }
+        }
+      }
+    }
+  }
+
+  .advBlock {
+    background: #FFFFFF;
+    @include box-shadow(0, 10px, 50px, rgba(215, 218, 220, 0.6));
+    @include border-radius(5px);
+    padding: 12px 18px 30px 18px;
+    .heading {
+      font-weight: 600;
+      font-size: 13px;
+      color: #3B4A51;
+    }
+    .logoBlock {
+      margin-top: 35px;
+      display: block;
+      text-align: center;
+      img {
+        max-width: 100%;
+      }
+    }
+    .text {
+      display: block;
+      margin-top: 16px;
+      font-size: 11px;
+      line-height: 13px;
+      text-align: center;
+      color: #217094;
+    }
+  }
+
+  .modalAdd {
+    margin-top: 19px;
+    .addsList {
+      .singleAddBlock {
+        .inner {
+          height: auto;
+          &:hover {
+            @include box-shadow(none);
+          }
+          .addHeading {
+            height: auto;
+            font-weight: 600;
+            font-size: 13px;
+            color: #3B4A51;
+            margin-bottom: 17px;
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  #crModal {
+    .close {
+      right: 14px;
+      top: 12px;
+    }
+    .btngoTo {
+      right: 60px;
+      top: 12px;
+    }
+    .modal-dialog {
+      margin: 1.75rem auto;
+    }
+    .modalHeader {
+      position: relative;
+      background: #FFFFFF;
+      @include box-shadow(0, 2px, 0, #EEF1F2);
+      height: 56px;
+      width: 100%;
+
+    }
+    .modal-content {
+      overflow: hidden;
+      @include border-radius(5px);
+
+    }
+    .mainModalMenuBl {
+      display: block;
+      width: 207px;
+      position: absolute;
+
+      @include box-shadow(none);
+      padding: 0;
+      top: 9px;
+      left: 18px;
+      height: 37px;
+      overflow: hidden;
+      &.visible {
+        height: auto;
+        background: #f7f8f9;
+        @include border-radius(5px);
+        @include box-shadow(2px,2px,10px 0,#bdbbbb);
+
+      }
+      .tabTarget{
+        font-weight: 500;
+        font-size: 14px;
+        letter-spacing: 0.03em;
+        color: #6E7B81;
+        border-bottom: none;
+        display: block;
+        white-space: nowrap;
+        height: 37px;
+        line-height: 37px;
+        top: 0;
+        padding: 0 15px;
+        &.active {
+          border: none;
+        }
+      }
+
+      .currentElem {
+        display: block;
+        background: #F7F8F9;
+        border: 1px solid #F2F5F8;
+        @include border-radius(5px);
+        padding: 0 35px 0 13px;
+        position: relative;
+        &:after {
+          content: '';
+          display: block;
+          position: absolute;
+          right: 6px;
+          top: 50%;
+          margin-top: -13px;
+          width: 21px;
+          height: 26px;
+          cursor: pointer;
+          opacity: 0.7;
+          @include border-radius(3px);
+          @include box-shadow(0, 2px, 30px, rgba(44, 52, 60, 0.1));
+          background: url("../images/modalDropDown.svg") center center no-repeat #fff;
+        }
+        .tabTarget,.tabTarget.active {
+          padding: 0;
+          font-weight: 500;
+          font-size: 14px;
+          letter-spacing: 0.03em;
+          color: #6E7B81;
+          border-bottom: none;
+          display: block;
+          white-space: nowrap;
+          height: 37px;
+          line-height: 37px;
+          top: 0;
+        }
+      }
+    }
+
+    .modalMainContent {
+      padding: 30px 15px;
+      @include flex-direction(column);
+
+      .modalRight {
+        margin:  20px 0;
+        width: 100%;
+        .advBlock {
+          background: transparent;
+          @include box-shadow(none);
+          .heading {
+            text-align: center;
+            font-weight: 600;
+            font-size: 16px;
+            color: #3B4A51;
+          }
+        }
+      }
+    }
+    .modalAdd .addsList .singleAddBlock {
+      margin: 0 auto;
+      .inner {
+        width: 196px;
+        .addHeading {
+          font-weight: 600;
+          font-size: 16px;
+          color: #3B4A51;
+        }
+
+      }
+
+    }
+    .modalAdd {
+      margin-top: -25px;
+    }
+    .afterShadow {
+      height: 52px;
+      background: linear-gradient(180deg, #636B6F 0%, rgba(99, 107, 111, 0) 100%);
+      opacity: 0.1;
+      margin: 0 -15px;
+    }
+  }
+
+}
+
+@media (max-width: 800px) {
+  #crModal {
+    .contentAboutBlock {
+      @include flex-direction(column);
+      .cLeft,.cRight {
+        @include flex(auto);
+        min-width: 100%;
+        width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+      }
+      .cRight {
+        margin-top: 30px;
+      }
+    }
+  }
+}
+
+#tgModal {
+  .modal-body {
+
+  }
+  .modal-content {
+    background: url("../images/tg_bg.png") left top no-repeat #fff;
+    background-size: contain;
+    @include border-radius(20px);
+    position: relative;
+    padding: 0;
+  }
+  .modal-dialog {
+    width: 459px;
+    max-width: 90%;
+  }
+  .close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+  }
+  .icon {
+    display: block;
+    position: absolute;
+    top: 70px;
+    left: 50%;
+    margin-left: -63px;
+    width: 126px;
+    height: 126px;
+    background: url("../images/tg_logo.svg") left top no-repeat;
+    background-size: contain;
+  }
+  .modalMainContent {
+    margin-top: 185px;
+    .heading {
+      font-weight: 800;
+      font-size: 35px;
+      line-height: 80px;
+      text-align: center;
+      color: #3B4A51;
+    }
+    .text {
+      font-weight: 300;
+      font-size: 18px;
+      line-height: 24px;
+      text-align: center;
+      color: #3B4A51;
+      span {
+        font-weight: 500;
+        color: #3B4A51;
+        background: #DFF9ED;
+      }
+    }
+    .btnBlock {
+      text-align: center;
+      margin-top: 20px;
+      margin-bottom: 30px;
+      .btnTg {
+        background: linear-gradient(85.16deg, #3DC98A 0%, #3DC1C9 99.3%);
+        @include border-radius(5px);
+
+        font-weight: bold;
+        font-size: 20px;
+        height: 72px;
+        line-height: 72px;
+        padding: 0 63px;
+        color: #FFFFFF;
+
+      }
+    }
+  }
+
+
+}

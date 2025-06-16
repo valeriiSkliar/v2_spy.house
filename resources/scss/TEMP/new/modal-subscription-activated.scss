@@ -1,0 +1,32 @@
+.modal-subscription-activated{
+  .modal-dialog{
+    max-width: 460px;
+  }
+}
+.subscription-activated{
+  text-align: center;
+  padding: 20px 0;
+  p{
+    line-height: 1.6;
+  }
+  .icon-clock{
+    display: inline-block;
+    font-size: 18px;
+    vertical-align: middle;
+  }
+  strong{
+    font-weight: 600;
+  }
+}
+.subscription-activated-icon{
+  &:before{
+    font-size: 136px;
+    color: #F3F5F6;
+  }
+  .tariff-name{
+    min-width: 95px;
+    justify-content: center;
+    transform: translateY(-30px);
+    font-size: 18px;
+  }
+}

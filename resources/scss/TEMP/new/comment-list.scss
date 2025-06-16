@@ -1,0 +1,133 @@
+.comments{
+  h2{
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    .comment-count{
+      border-radius: 10px;
+      background: #F3F5F6;
+      color: #6E8087;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 7px 11px;
+    }
+  }
+  .pagination-nav{
+    margin-bottom: 25px;
+  }
+}
+
+.comment-list{
+  margin-bottom: 25px;
+  .comment{
+    margin-top: 45px;
+    max-width: 610px;
+  }
+
+  .comment-main{
+    @media screen and (min-width: 1201px){
+      padding-right: 40px;
+    }
+  }
+
+  .reply,
+  .comment-main{
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    .avatar{
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+    }
+    .reply-content,
+    .comment-content{
+      flex-basis: 100px;
+      flex-grow: 1;
+      p{
+        border-radius: 10px;
+        background: #F6F8F9;
+        line-height: 1.45;
+        padding: 15px 25px;
+        margin: 0;
+      }
+    }
+    header{
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      margin-bottom: 7px;
+      h4{
+        font-size: 12px;
+        font-weight: 600;
+        margin: 0;
+      }
+      time{
+        color: #ACB4BB;
+        font-weight: 500;
+        margin-right: auto;
+      }
+    }
+    .reply-btn{
+      background: 0;
+      appearance: none;
+      border: 0;
+      font-weight: 600;
+      color: $main;
+      transition: color .3s;
+      outline: none;
+      &:hover{
+        color: var(--color-primary-dark);;
+      }
+    }
+    .reply-form{
+      margin-top: 20px;
+    }
+  }
+  .replies{
+    padding-left: 50px;
+    @media screen and (max-width: 767px) {
+      padding-left: 20px;
+    }
+  }
+  .reply{
+    margin-top: 20px;
+    .reply-content{
+      p{
+        background: #FBFBFB;
+      }
+    }
+  }
+}
+
+
+.reply-form,
+.comment-form{
+  .comment-form__author{
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin-bottom: 15px;
+    img{
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+    }
+  }
+  textarea{
+    height: 115px;
+    width: 100%;
+  }
+  span{
+    display: inline-block;
+  }
+  .icon-reply{
+    display: inline-block;
+    font-size: 20px;
+    color: #99A7AE;
+    vertical-align: middle;
+    margin: 0 5px;
+  }
+}

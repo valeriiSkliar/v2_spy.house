@@ -14,13 +14,7 @@
         $currentTariff = $user->currentTariff();
         @endphp
 
-        {{-- User Balance --}}
-        @if($user->available_balance > 0)
-        <div class="header__balance">
-            <span class="header__balance-label">Баланс:</span>
-            <span class="header__balance-amount">{{ $user->getFormattedBalance() }}</span>
-        </div>
-        @endif
+
 
         {{-- Current Subscription --}}
         <div class="header__tariff">
@@ -29,6 +23,16 @@
                 {{ $currentTariff['name'] }}
             </x-tariff-link>
         </div>
+
+        {{-- User Balance --}}
+        @if($user->available_balance > 0)
+        <div class="header__balance">
+            <a href="#" class="user-balance">
+                <span class="user-balance__currency">$</span>
+                <span class="user-balance__val">{{ $user->getFormattedBalanceWithoutCurrency() }}</span>
+            </a>
+        </div>
+        @endif
 
         {{-- Push modal to global stack --}}
         @push('modals')

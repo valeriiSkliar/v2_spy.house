@@ -164,7 +164,14 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function getFormattedBalance(): string
     {
-        return '$'.number_format($this->available_balance, 2);
+        return '$' . number_format($this->available_balance, 2);
+    }
+    /**
+     * Get formatted balance with currency
+     */
+    public function getFormattedBalanceWithoutCurrency(): string
+    {
+        return number_format($this->available_balance, 2);
     }
 
     /**
@@ -198,7 +205,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getFullPhoneNumber(): ?string
     {
         if ($this->phone_country_code && $this->phone) {
-            return '+'.$this->phone_country_code.$this->phone;
+            return '+' . $this->phone_country_code . $this->phone;
         }
 
         return null;

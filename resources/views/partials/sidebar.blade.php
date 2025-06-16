@@ -4,12 +4,31 @@
             <x-frontend.language-selector />
         </div>
         <div class="aside__tariff">
-            @if(auth()->check() && auth()->user()->hasTariff())
-            <x-tariff-link :type="auth()->user()->currentTariff()['css_class']">
-                {{ auth()->user()->currentTariff()['name'] }}
+            @auth
+            @php
+            $user = auth()->user();
+            $currentTariff = $user->currentTariff();
+            @endphp
+
+            <x-tariff-link :type="$currentTariff['css_class']" data-toggle="modal"
+                data-target="#modal-current-subscription" style="cursor: pointer;">
+                {{ $currentTariff['name'] }}
             </x-tariff-link>
+
+            {{-- Push modal to global stack --}}
+            @push('modals')
+            <x-modals.subscribtion-activated :currentTariff="$currentTariff" />
+            @endpush
             @else
             <x-tariff-link>{{ __('tariffs.free') }}</x-tariff-link>
+            @endauth
+        </div>
+        <div class="aside__balance">
+            @if($user->available_balance > 0)
+            <a href="#" class="user-balance">
+                <span class="user-balance__currency">$</span>
+                <span class="user-balance__val">{{ $user->getFormattedBalanceWithoutCurrency() }}</span>
+            </a>
             @endif
         </div>
     </div>
