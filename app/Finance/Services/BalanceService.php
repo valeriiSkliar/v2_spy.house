@@ -201,8 +201,11 @@ class BalanceService
      */
     protected function activateSubscription(User $user, Subscription $subscription, string $billingType): void
     {
+        $isRenewal = $this->isRenewal($user, $subscription);
+        $compensatedTime = 0;
+
         // Определяем время активации
-        if ($this->isRenewal($user, $subscription)) {
+        if ($isRenewal) {
             // Продление: добавляем к существующему времени окончания
             $startTime = $user->subscription_time_end ?? now();
             $endTime = $billingType === 'year'
@@ -214,6 +217,19 @@ class BalanceService
             $endTime = $billingType === 'year'
                 ? $startTime->copy()->addYear()
                 : $startTime->copy()->addMonth();
+
+            // Рассчитываем компенсацию времени при апгрейде (кроме Enterprise)
+            if ($user->subscription_id && !$subscription->isEnterprise()) {
+                $compensatedTime = $this->calculateTimeCompensation($user, $subscription);
+                if ($compensatedTime > 0) {
+                    $endTime->addSeconds($compensatedTime);
+                    Log::info('BalanceService: Применена компенсация времени', [
+                        'user_id' => $user->id,
+                        'compensated_seconds' => $compensatedTime,
+                        'compensated_days' => round($compensatedTime / 86400, 2)
+                    ]);
+                }
+            }
         }
 
         // Обновляем подписку пользователя
@@ -232,8 +248,64 @@ class BalanceService
             'billing_type' => $billingType,
             'start_time' => $startTime->toDateTimeString(),
             'end_time' => $endTime->toDateTimeString(),
-            'is_renewal' => $this->isRenewal($user, $subscription)
+            'is_renewal' => $isRenewal,
+            'compensated_time_seconds' => $compensatedTime
         ]);
+    }
+
+    /**
+     * Рассчитать компенсацию времени при апгрейде тарифа
+     *
+     * @param User $user
+     * @param Subscription $newSubscription  
+     * @return int Компенсированное время в секундах
+     */
+    protected function calculateTimeCompensation(User $user, Subscription $newSubscription): int
+    {
+        // Проверяем наличие текущей подписки
+        if (!$user->subscription_id || !$user->subscription_time_end) {
+            return 0;
+        }
+
+        $currentSubscription = $user->subscription;
+        if (!$currentSubscription) {
+            return 0;
+        }
+
+        // Проверяем что это апгрейд (не понижение)
+        if (!$newSubscription->isHigherTierThan($currentSubscription)) {
+            Log::info('BalanceService: Пропуск компенсации - не апгрейд', [
+                'user_id' => $user->id,
+                'current_subscription' => $currentSubscription->name,
+                'new_subscription' => $newSubscription->name
+            ]);
+            return 0;
+        }
+
+        // Вычисляем оставшееся время текущей подписки
+        $now = now();
+        $timeLeft = $user->subscription_time_end->diffInSeconds($now, false);
+
+        if ($timeLeft <= 0) {
+            return 0;
+        }
+
+        // Вычисляем коэффициент компенсации на основе цен
+        $compensationRatio = $newSubscription->getTimeCompensationRatio($currentSubscription);
+        $compensatedTime = (int) ($timeLeft * $compensationRatio);
+
+        Log::info('BalanceService: Расчет компенсации времени', [
+            'user_id' => $user->id,
+            'current_subscription' => $currentSubscription->name,
+            'new_subscription' => $newSubscription->name,
+            'time_left_seconds' => $timeLeft,
+            'time_left_days' => round($timeLeft / 86400, 2),
+            'compensation_ratio' => $compensationRatio,
+            'compensated_time_seconds' => $compensatedTime,
+            'compensated_time_days' => round($compensatedTime / 86400, 2)
+        ]);
+
+        return $compensatedTime;
     }
 
     /**
@@ -310,5 +382,18 @@ class BalanceService
 
             return false;
         }
+    }
+
+    /**
+     * Активировать подписку пользователя (публичный метод для webhook'ов)
+     *
+     * @param User $user
+     * @param Subscription $subscription
+     * @param string $billingType
+     * @return void
+     */
+    public function activateSubscriptionPublic(User $user, Subscription $subscription, string $billingType): void
+    {
+        $this->activateSubscription($user, $subscription, $billingType);
     }
 }

@@ -130,4 +130,58 @@ class Subscription extends Model
     {
         return $billingType === 'year' ? 'год' : 'месяц';
     }
+
+    /**
+     * Get tariff priority for upgrade/downgrade logic
+     * Higher value = higher tier tariff
+     */
+    public function getTariffPriority(): int
+    {
+        $priorities = [
+            'Free' => 0,
+            'Start' => 1,
+            'Basic' => 2,
+            'Premium' => 3,
+            'Enterprise' => 4,
+        ];
+
+        return $priorities[$this->name] ?? 0;
+    }
+
+    /**
+     * Check if this subscription is higher tier than another
+     */
+    public function isHigherTierThan(Subscription $other): bool
+    {
+        return $this->getTariffPriority() > $other->getTariffPriority();
+    }
+
+    /**
+     * Check if this subscription is lower tier than another
+     */
+    public function isLowerTierThan(Subscription $other): bool
+    {
+        return $this->getTariffPriority() < $other->getTariffPriority();
+    }
+
+    /**
+     * Check if this is Enterprise subscription
+     */
+    public function isEnterprise(): bool
+    {
+        return $this->name === 'Enterprise';
+    }
+
+    /**
+     * Get time compensation ratio when upgrading from another subscription
+     * Based on price differences
+     */
+    public function getTimeCompensationRatio(Subscription $fromSubscription): float
+    {
+        if ($fromSubscription->amount <= 0) {
+            return 0.0;
+        }
+
+        return $fromSubscription->amount / $this->amount;
+    }
 }

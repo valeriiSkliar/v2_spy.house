@@ -227,7 +227,7 @@ class Pay2WebhookController extends Controller
             "Пополнение баланса (платеж #{$payment->id})"
         );
 
-        if ($result['success']) {
+        if ($result) {
             Log::info('Pay2WebhookController: Депозит успешно зачислен на баланс', [
                 'payment_id' => $payment->id,
                 'user_id' => $user->id,
@@ -239,7 +239,7 @@ class Pay2WebhookController extends Controller
                 'payment_id' => $payment->id,
                 'user_id' => $user->id,
                 'amount' => $payment->amount,
-                'error' => $result['error'] ?? 'Unknown error'
+                'error' => 'Неизвестная ошибка'
             ]);
         }
     }
@@ -269,53 +269,35 @@ class Pay2WebhookController extends Controller
         $description = $webhookData['description'] ?? '';
         $billingType = str_contains($description, '(year)') ? 'year' : 'month';
 
-        // Логика расчета времени
-        if ($this->isRenewal($user, $subscription)) {
-            // Продление: добавляем к существующему времени окончания
-            $startTime = $user->subscription_time_end ?? now();
-            $endTime = $billingType === 'year'
-                ? $startTime->copy()->addYear()
-                : $startTime->copy()->addMonth();
-        } else {
-            // Новая подписка или апгрейд: начинаем с текущего момента
-            $startTime = now();
-            $endTime = $billingType === 'year'
-                ? $startTime->copy()->addYear()
-                : $startTime->copy()->addMonth();
-        }
-
-        // Обновляем данные пользователя
-        $user->update([
-            'subscription_id' => $subscription->id,
-            'subscription_time_start' => $startTime,
-            'subscription_time_end' => $endTime,
-            'subscription_is_expired' => false,
-            'queued_subscription_id' => null, // Очищаем очередь
-        ]);
-
-        Log::info('Pay2WebhookController: Подписка активирована', [
+        Log::info('Pay2WebhookController: Начало активации подписки', [
+            'payment_id' => $payment->id,
             'user_id' => $user->id,
             'subscription_id' => $subscription->id,
-            'subscription_name' => $subscription->name,
-            'billing_type' => $billingType,
-            'start_time' => $startTime->toDateTimeString(),
-            'end_time' => $endTime->toDateTimeString(),
-            'payment_id' => $payment->id,
-            'is_renewal' => $this->isRenewal($user, $subscription)
+            'billing_type' => $billingType
         ]);
-    }
 
-    /**
-     * Check if this is a renewal of current subscription
-     *
-     * @param User $user
-     * @param $subscription
-     * @return bool
-     */
-    private function isRenewal(User $user, $subscription): bool
-    {
-        return $user->subscription_id === $subscription->id
-            && $user->subscription_time_end
-            && $user->subscription_time_end > now();
+        try {
+            // Используем BalanceService для активации подписки с поддержкой пересчета времени
+            $balanceService = app(\App\Finance\Services\BalanceService::class);
+
+            // Вызываем публичный метод активации подписки
+            $balanceService->activateSubscriptionPublic($user, $subscription, $billingType);
+
+            Log::info('Pay2WebhookController: Подписка активирована через BalanceService', [
+                'payment_id' => $payment->id,
+                'user_id' => $user->id,
+                'subscription_id' => $subscription->id,
+                'subscription_name' => $subscription->name,
+                'billing_type' => $billingType
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Pay2WebhookController: Ошибка активации подписки', [
+                'payment_id' => $payment->id,
+                'user_id' => $user->id,
+                'subscription_id' => $subscription->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
     }
 }
