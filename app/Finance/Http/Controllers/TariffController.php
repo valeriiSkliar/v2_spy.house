@@ -161,6 +161,7 @@ class TariffController extends Controller
             'status' => PaymentStatus::PENDING,
             'invoice_number' => $paymentResult['data']['invoice_number'],
             'external_number' => $paymentData['external_number'],
+            'approval_url' => $paymentResult['data']['approval_url'],
         ]);
 
         Log::info('TariffController: Платеж создан успешно', [

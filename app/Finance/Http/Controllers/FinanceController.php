@@ -30,7 +30,7 @@ class FinanceController extends Controller
     {
         $transactions = $request->user()->deposits()->orderBy('created_at', 'desc')->paginate(10);
         $paymentMethods = collect(PaymentMethod::getForFrontend())
-            ->filter(fn ($method) => $method['value'] !== 'USER_BALANCE')
+            ->filter(fn($method) => $method['value'] !== 'USER_BALANCE')
             ->values()
             ->all();
 
@@ -85,7 +85,7 @@ class FinanceController extends Controller
     public function depositForm(Request $request)
     {
         $paymentMethods = collect(PaymentMethod::getForFrontend())
-            ->filter(fn ($method) => $method['value'] !== 'USER_BALANCE')
+            ->filter(fn($method) => $method['value'] !== 'USER_BALANCE')
             ->values()
             ->all();
 
@@ -182,6 +182,7 @@ class FinanceController extends Controller
             'status' => PaymentStatus::PENDING,
             'invoice_number' => $paymentResult['data']['invoice_number'],
             'external_number' => $paymentData['external_number'],
+            'approval_url' => $paymentResult['data']['approval_url'],
         ]);
 
         Log::info('FinanceController: Депозит создан успешно', [

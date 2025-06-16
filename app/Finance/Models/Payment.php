@@ -34,6 +34,7 @@ class Payment extends Model
         'idempotency_key',
         'invoice_number',
         'external_number',
+        'approval_url',
     ];
 
     /**
@@ -161,7 +162,7 @@ class Payment extends Model
      */
     public function getFormattedAmount(): string
     {
-        return '$'.number_format($this->amount, 2);
+        return '$' . number_format($this->amount, 2);
     }
 
     /**
