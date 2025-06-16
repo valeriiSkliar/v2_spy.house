@@ -6,7 +6,6 @@ use App\Finance\Models\Payment;
 use App\Finance\Models\Promocode;
 use App\Finance\Models\PromocodeActivation;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class PromocodeActivationSeeder extends Seeder
@@ -22,6 +21,7 @@ class PromocodeActivationSeeder extends Seeder
 
         if ($promocodes->isEmpty()) {
             $this->command->warn('No promocodes found. Please run PromocodeSeeder first.');
+
             return;
         }
 
@@ -131,7 +131,7 @@ class PromocodeActivationSeeder extends Seeder
         // Дополнительные случайные активации
         PromocodeActivation::factory()->count(20)->create();
 
-        $this->command->info('Created ' . PromocodeActivation::count() . ' promocode activations');
+        $this->command->info('Created '.PromocodeActivation::count().' promocode activations');
         $this->command->info('Test data includes:');
         $this->command->info('- Regular user activations');
         $this->command->info('- Multiple uses of same promocode');

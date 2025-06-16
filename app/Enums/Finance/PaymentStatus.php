@@ -39,7 +39,7 @@ enum PaymentStatus: string
      */
     public function translatedLabel(): string
     {
-        return __('enums.PaymentStatus.' . $this->name);
+        return __('enums.PaymentStatus.'.$this->name);
     }
 
     /**
@@ -50,7 +50,7 @@ enum PaymentStatus: string
     public static function getTranslatedList(): array
     {
         return collect(self::cases())
-            ->mapWithKeys(fn(self $case) => [$case->name => $case->translatedLabel()])
+            ->mapWithKeys(fn (self $case) => [$case->name => $case->translatedLabel()])
             ->all();
     }
 

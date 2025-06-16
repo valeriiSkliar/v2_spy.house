@@ -39,7 +39,7 @@ class SubscriptionFactory extends Factory
      */
     public function active(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => 'active',
         ]);
     }
@@ -49,7 +49,7 @@ class SubscriptionFactory extends Factory
      */
     public function inactive(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => 'inactive',
         ]);
     }
@@ -57,9 +57,9 @@ class SubscriptionFactory extends Factory
     /**
      * Indicate that the subscription has early discount.
      */
-    public function withDiscount(float $discount = null): static
+    public function withDiscount(?float $discount = null): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'early_discount' => $discount ?? $this->faker->randomFloat(2, 10, 30),
         ]);
     }
@@ -69,7 +69,7 @@ class SubscriptionFactory extends Factory
      */
     public function withoutDiscount(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'early_discount' => null,
         ]);
     }

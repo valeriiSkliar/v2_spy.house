@@ -81,7 +81,7 @@ class LandingsPageApiController extends BaseLandingsPageController
             $existingDownloads = WebsiteDownloadMonitor::where('user_id', Auth::id())
                 ->where(function ($query) use ($sanitizedUrl) {
                     $query->where('url', $sanitizedUrl)
-                        ->orWhere('url', 'like', '%' . parse_url($sanitizedUrl, PHP_URL_HOST) . '%');
+                        ->orWhere('url', 'like', '%'.parse_url($sanitizedUrl, PHP_URL_HOST).'%');
                 })
                 ->whereIn('status', ['pending', 'in_progress', 'completed'])
                 ->first();
@@ -108,7 +108,7 @@ class LandingsPageApiController extends BaseLandingsPageController
                 $this->checkWebsiteAvailability($sanitizedUrl);
                 Log::info('Website availability check passed', ['url' => $sanitizedUrl, 'user_id' => Auth::id()]);
             } catch (\Exception $e) {
-                Log::error('Failed to check website availability for ajaxStore: ' . $e->getMessage(), ['url' => $sanitizedUrl, 'user_id' => Auth::id()]);
+                Log::error('Failed to check website availability for ajaxStore: '.$e->getMessage(), ['url' => $sanitizedUrl, 'user_id' => Auth::id()]);
 
                 return response()->json([
                     'success' => false,
@@ -128,7 +128,7 @@ class LandingsPageApiController extends BaseLandingsPageController
             $uuid = Str::uuid();
             $monitor = WebsiteDownloadMonitor::create([
                 'url' => $sanitizedUrl,
-                'output_path' => 'private/website-downloads/' . $uuid,
+                'output_path' => 'private/website-downloads/'.$uuid,
                 'user_id' => Auth::id(),
                 'status' => 'pending',
                 'progress' => 0,
@@ -227,12 +227,12 @@ class LandingsPageApiController extends BaseLandingsPageController
                 // If HEAD fails, try GET (some servers might not support HEAD properly)
                 $response = Http::timeout(10)->withoutVerifying()->get($url);
                 if (! $response->successful()) {
-                    throw new \Exception('Website returned status code: ' . $response->status());
+                    throw new \Exception('Website returned status code: '.$response->status());
                 }
             }
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
 
-            throw new \Exception('Failed to connect to website: ' . $e->getMessage());
+            throw new \Exception('Failed to connect to website: '.$e->getMessage());
         } catch (\Exception $e) {
             // Catching the re-thrown exception from the block above or other general exceptions
             Log::error('Website availability check failed (General Exception)', [
@@ -370,7 +370,7 @@ class LandingsPageApiController extends BaseLandingsPageController
                 ],
             ]);
         } catch (\Exception $e) {
-            Log::error('Error preparing landing download via AJAX: ' . $e->getMessage(), [
+            Log::error('Error preparing landing download via AJAX: '.$e->getMessage(), [
                 'exception' => $e,
                 'landing_id' => $landing->getKey(),
                 'trace' => $e->getTraceAsString(),

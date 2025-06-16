@@ -14,7 +14,6 @@ Route::middleware('auth')
         Route::get('/deposit/cancel', [FinanceController::class, 'depositCancel'])->name('deposit.cancel');
     });
 
-
 // Public API routes with web middleware and auth
 Route::middleware(['web', 'auth'])->group(function () {
     Route::get('finances/list', [FinanceController::class, 'ajaxList'])->name('api.finances.list');

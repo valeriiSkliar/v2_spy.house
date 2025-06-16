@@ -3,24 +3,25 @@
 namespace App\Finance\Http\Controllers;
 
 use App\Enums\Finance\PaymentMethod;
-use App\Enums\Finance\PaymentType;
 use App\Enums\Finance\PaymentStatus;
-use App\Finance\Models\Subscription;
-use App\Models\User;
+use App\Enums\Finance\PaymentType;
 use App\Finance\Models\Payment;
-use App\Finance\Services\Pay2Service;
+use App\Finance\Models\Subscription;
 use App\Finance\Services\BalanceService;
+use App\Finance\Services\Pay2Service;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TariffController extends Controller
 {
     use AuthorizesRequests;
 
     protected $pay2Service;
+
     protected $balanceService;
 
     public function __construct(Pay2Service $pay2Service, BalanceService $balanceService)
@@ -43,6 +44,7 @@ class TariffController extends Controller
             ->get();
 
         $payments = $user->subscriptionPayments()->with('subscription')->paginate(10);
+
         // dd($payments);
         return view('pages.tariffs.index', [
             'currentTariff' => $user->currentTariff(),
@@ -75,24 +77,27 @@ class TariffController extends Controller
             'payment_method' => $paymentMethod,
             'promo_code' => $promoCode,
             'current_subscription_id' => $user->subscription_id ?? null,
-            'current_subscription_end' => $user->subscription_time_end ?? null
+            'current_subscription_end' => $user->subscription_time_end ?? null,
         ]);
 
         // Валидация основных полей
-        if (!$tariffId) {
+        if (! $tariffId) {
             Log::warning('TariffController: Tariff ID отсутствует', ['user_id' => $user->id]);
+
             return response()->json(['error' => 'Tariff ID is required'], 400);
         }
 
-        if (!$paymentMethod) {
+        if (! $paymentMethod) {
             Log::warning('TariffController: Payment method отсутствует', ['user_id' => $user->id, 'tariff_id' => $tariffId]);
+
             return response()->json(['error' => 'Payment method is required'], 400);
         }
 
         // Проверяем существование тарифа
         $tariff = Subscription::find($tariffId);
-        if (!$tariff) {
+        if (! $tariff) {
             Log::error('TariffController: Тариф не найден', ['user_id' => $user->id, 'tariff_id' => $tariffId]);
+
             return response()->json(['error' => 'Tariff not found'], 404);
         }
 
@@ -116,7 +121,7 @@ class TariffController extends Controller
             'billing_type' => $billingType,
             'base_amount' => $tariff->amount,
             'calculated_amount' => $amount,
-            'discount_applied' => $billingType === 'year' ? '20%' : 'none'
+            'discount_applied' => $billingType === 'year' ? '20%' : 'none',
         ]);
 
         // Подготавливаем данные для Pay2.House
@@ -133,16 +138,16 @@ class TariffController extends Controller
         // Создаем платеж через Pay2.House
         $paymentResult = $this->pay2Service->createPayment($paymentData);
 
-        if (!$paymentResult['success']) {
+        if (! $paymentResult['success']) {
             Log::error('TariffController: Ошибка создания платежа', [
                 'user_id' => $user->id,
                 'tariff_id' => $tariffId,
-                'error' => $paymentResult['error']
+                'error' => $paymentResult['error'],
             ]);
 
             return response()->json([
                 'error' => 'Failed to create payment',
-                'details' => $paymentResult['error']
+                'details' => $paymentResult['error'],
             ], 500);
         }
 
@@ -164,14 +169,14 @@ class TariffController extends Controller
             'payment_id' => $payment->id,
             'external_number' => $paymentData['external_number'],
             'invoice_number' => $paymentResult['data']['invoice_number'],
-            'amount' => $amount
+            'amount' => $amount,
         ]);
 
         return response()->json([
             'success' => true,
             'payment_url' => $paymentResult['data']['approval_url'],
             'invoice_number' => $paymentResult['data']['invoice_number'],
-            'external_number' => $paymentData['external_number']
+            'external_number' => $paymentData['external_number'],
         ]);
     }
 
@@ -184,22 +189,24 @@ class TariffController extends Controller
         $currentSubscriptionEnd = $user->subscription_time_end;
         $currentTime = time();
 
-        if (!$currentSubscriptionId) {
+        if (! $currentSubscriptionId) {
             Log::info('TariffController: Первая покупка тарифа', [
                 'user_id' => $user->id,
                 'new_tariff_id' => $newTariff->id,
-                'new_tariff_name' => $newTariff->name
+                'new_tariff_name' => $newTariff->name,
             ]);
+
             return;
         }
 
         $currentSubscription = Subscription::find($currentSubscriptionId);
-        if (!$currentSubscription) {
+        if (! $currentSubscription) {
             Log::warning('TariffController: Текущий тариф не найден в базе', [
                 'user_id' => $user->id,
                 'current_subscription_id' => $currentSubscriptionId,
-                'new_tariff_id' => $newTariff->id
+                'new_tariff_id' => $newTariff->id,
             ]);
+
             return;
         }
 
@@ -215,29 +222,29 @@ class TariffController extends Controller
                 'id' => $currentSubscription->id,
                 'name' => $currentSubscription->name,
                 'amount' => $currentSubscription->amount,
-                'priority' => $currentSubscription->getTariffPriority()
+                'priority' => $currentSubscription->getTariffPriority(),
             ],
             'new_subscription' => [
                 'id' => $newTariff->id,
                 'name' => $newTariff->name,
                 'amount' => $newTariff->amount,
-                'priority' => $newTariff->getTariffPriority()
+                'priority' => $newTariff->getTariffPriority(),
             ],
             'change_type' => $isRenewal ? 'renewal' : ($isUpgrade ? 'upgrade' : ($isDowngrade ? 'downgrade' : 'same_tier')),
             'time_left_seconds' => $timeLeft,
             'time_left_days' => round($timeLeft / 86400, 2),
-            'current_subscription_end' => $currentSubscriptionEnd
+            'current_subscription_end' => $currentSubscriptionEnd,
         ]);
 
         // Расчет компенсации времени если есть оставшееся время
-        if ($timeLeft > 0 && !$isRenewal) {
+        if ($timeLeft > 0 && ! $isRenewal) {
             Log::info('TariffController: Компенсация времени будет рассчитана в BalanceService', [
                 'user_id' => $user->id,
                 'time_left_seconds' => $timeLeft,
                 'time_left_days' => round($timeLeft / 86400, 2),
                 'is_upgrade' => $isUpgrade,
                 'current_subscription' => $currentSubscription->name,
-                'new_subscription' => $newTariff->name
+                'new_subscription' => $newTariff->name,
             ]);
         }
     }
@@ -245,9 +252,8 @@ class TariffController extends Controller
     /**
      * Обработка платежа с баланса пользователя
      *
-     * @param User $user
-     * @param Subscription $tariff
-     * @param string $billingType
+     * @param  User  $user
+     * @param  Subscription  $tariff
      * @return \Illuminate\Http\JsonResponse
      */
     protected function processBalancePayment($user, $tariff, string $billingType)
@@ -256,23 +262,23 @@ class TariffController extends Controller
             'user_id' => $user->id,
             'tariff_id' => $tariff->id,
             'billing_type' => $billingType,
-            'user_balance' => $user->available_balance
+            'user_balance' => $user->available_balance,
         ]);
 
         try {
             // Обрабатываем платеж через BalanceService (который уже содержит логику компенсации времени)
             $result = $this->balanceService->processSubscriptionPaymentFromBalance($user, $tariff, $billingType);
 
-            if (!$result['success']) {
+            if (! $result['success']) {
                 Log::warning('TariffController: Ошибка платежа с баланса', [
                     'user_id' => $user->id,
                     'tariff_id' => $tariff->id,
-                    'error' => $result['error']
+                    'error' => $result['error'],
                 ]);
 
                 return response()->json([
                     'success' => false,
-                    'error' => $result['error']
+                    'error' => $result['error'],
                 ], 400);
             }
 
@@ -280,14 +286,14 @@ class TariffController extends Controller
                 'user_id' => $user->id,
                 'tariff_id' => $tariff->id,
                 'payment_id' => $result['payment']->id,
-                'message' => $result['message']
+                'message' => $result['message'],
             ]);
 
             return response()->json([
                 'success' => true,
                 'message' => $result['message'],
                 'payment_id' => $result['payment']->id,
-                'redirect_url' => route('tariffs.payment.success', ['invoice_number' => $result['payment']->invoice_number])
+                'redirect_url' => route('tariffs.payment.success', ['invoice_number' => $result['payment']->invoice_number]),
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -296,17 +302,15 @@ class TariffController extends Controller
                 'user_id' => $user->id,
                 'tariff_id' => $tariff->id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'error' => 'Payment processing failed'
+                'error' => 'Payment processing failed',
             ], 500);
         }
     }
-
-
 
     /**
      * Show the payment page for a specific tariff
@@ -322,7 +326,7 @@ class TariffController extends Controller
         $billingType = $request->get('billing_type', 'month'); // По умолчанию месячная подписка
 
         // Проверяем корректность типа подписки
-        if (!in_array($billingType, ['month', 'year'])) {
+        if (! in_array($billingType, ['month', 'year'])) {
             $billingType = 'month';
         }
 
@@ -368,13 +372,13 @@ class TariffController extends Controller
             if ($paymentDetails['success']) {
                 Log::info('TariffController: Успешное возвращение с платежа', [
                     'invoice_number' => $invoiceNumber,
-                    'payment_data' => $paymentDetails['data']
+                    'payment_data' => $paymentDetails['data'],
                 ]);
             }
         }
 
         return view('pages.tariffs.payment-success', [
-            'invoice_number' => $invoiceNumber
+            'invoice_number' => $invoiceNumber,
         ]);
     }
 
@@ -386,11 +390,11 @@ class TariffController extends Controller
         $invoiceNumber = $request->get('invoice_number');
 
         Log::info('TariffController: Отмена платежа', [
-            'invoice_number' => $invoiceNumber
+            'invoice_number' => $invoiceNumber,
         ]);
 
         return view('pages.tariffs.payment-cancel', [
-            'invoice_number' => $invoiceNumber
+            'invoice_number' => $invoiceNumber,
         ]);
     }
 
@@ -410,14 +414,14 @@ class TariffController extends Controller
             // Render payments table HTML
             $paymentsHtml = view('components.tariffs.payments-list', ['payments' => $payments])->render();
 
-            // Render pagination HTML  
+            // Render pagination HTML
             $paginationHtml = '';
             $hasPagination = $payments->hasPages();
             if ($hasPagination) {
                 $paginationHtml = view('components.tariffs.payments-pagination', [
                     'currentPage' => $payments->currentPage(),
                     'totalPages' => $payments->lastPage(),
-                    'pagination' => $payments
+                    'pagination' => $payments,
                 ])->render();
             }
 

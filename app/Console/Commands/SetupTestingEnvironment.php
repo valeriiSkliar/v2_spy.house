@@ -32,23 +32,23 @@ class SetupTestingEnvironment extends Command
         $this->info('Setting up testing environment...');
 
         // Check if we're in testing environment
-        if (!app()->environment('testing')) {
+        if (! app()->environment('testing')) {
             $this->warn('This command should be run in testing environment.');
-            if (!$this->confirm('Do you want to continue anyway?', false)) {
+            if (! $this->confirm('Do you want to continue anyway?', false)) {
                 return 1;
             }
         }
 
         // Create database directory if it doesn't exist
         $databasePath = database_path();
-        if (!File::exists($databasePath)) {
+        if (! File::exists($databasePath)) {
             File::makeDirectory($databasePath, 0755, true);
             $this->info('Created database directory.');
         }
 
         // Setup SQLite database file for testing (not in-memory)
         $testDbPath = database_path('testing.sqlite');
-        if (!File::exists($testDbPath)) {
+        if (! File::exists($testDbPath)) {
             File::put($testDbPath, '');
             $this->info('Created testing SQLite database file.');
         }

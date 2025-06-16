@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Carbon\Carbon;
 
 class Promocode extends Model
 {
@@ -74,7 +73,7 @@ class Promocode extends Model
      */
     public function isValid(): bool
     {
-        if (!$this->status->isUsable()) {
+        if (! $this->status->isUsable()) {
             return false;
         }
 
@@ -97,7 +96,7 @@ class Promocode extends Model
      */
     public function canBeUsedByUser(int $userId): bool
     {
-        if (!$this->isValid()) {
+        if (! $this->isValid()) {
             return false;
         }
 

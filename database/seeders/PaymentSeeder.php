@@ -8,7 +8,6 @@ use App\Enums\Finance\PaymentType;
 use App\Finance\Models\Payment;
 use App\Finance\Models\Subscription;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class PaymentSeeder extends Seeder
@@ -34,6 +33,7 @@ class PaymentSeeder extends Seeder
 
         if ($subscriptions->isEmpty()) {
             $this->command->warn('No subscriptions found. Please run SubscriptionSeeder first.');
+
             return;
         }
 
@@ -143,13 +143,13 @@ class PaymentSeeder extends Seeder
             ]);
         }
 
-        $this->command->info('Created ' . Payment::count() . ' payments');
+        $this->command->info('Created '.Payment::count().' payments');
         $this->command->info('Payment types created:');
-        $this->command->info('- Direct subscription payments: ' . Payment::where('payment_type', PaymentType::DIRECT_SUBSCRIPTION)->count());
-        $this->command->info('- Deposit payments: ' . Payment::where('payment_type', PaymentType::DEPOSIT)->count());
-        $this->command->info('- Balance subscription payments: ' . Payment::where('payment_method', PaymentMethod::USER_BALANCE)->count());
-        $this->command->info('- Successful payments: ' . Payment::where('status', PaymentStatus::SUCCESS)->count());
-        $this->command->info('- Pending payments: ' . Payment::where('status', PaymentStatus::PENDING)->count());
-        $this->command->info('- Failed payments: ' . Payment::where('status', PaymentStatus::FAILED)->count());
+        $this->command->info('- Direct subscription payments: '.Payment::where('payment_type', PaymentType::DIRECT_SUBSCRIPTION)->count());
+        $this->command->info('- Deposit payments: '.Payment::where('payment_type', PaymentType::DEPOSIT)->count());
+        $this->command->info('- Balance subscription payments: '.Payment::where('payment_method', PaymentMethod::USER_BALANCE)->count());
+        $this->command->info('- Successful payments: '.Payment::where('status', PaymentStatus::SUCCESS)->count());
+        $this->command->info('- Pending payments: '.Payment::where('status', PaymentStatus::PENDING)->count());
+        $this->command->info('- Failed payments: '.Payment::where('status', PaymentStatus::FAILED)->count());
     }
 }

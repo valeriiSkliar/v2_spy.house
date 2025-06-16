@@ -2,11 +2,11 @@
 
 namespace App\Finance\Services;
 
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Config;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class Pay2Service
 {
@@ -20,7 +20,6 @@ class Pay2Service
     /**
      * Создание платежа в системе Pay2.House
      *
-     * @param array $paymentData
      * @return array
      */
     public function createPayment(array $paymentData)
@@ -68,11 +67,11 @@ class Pay2Service
             'amount' => $requestData['amount'],
             'api_url' => $apiUrl,
             'merchant_id' => $this->config['merchant_id'],
-            'test_mode' => $this->config['test_mode']
+            'test_mode' => $this->config['test_mode'],
         ]);
 
         try {
-            $response = Http::timeout(30)->post($apiUrl . '/api/create_payment', $requestData);
+            $response = Http::timeout(30)->post($apiUrl.'/api/create_payment', $requestData);
 
             if ($response->successful()) {
                 $result = $response->json();
@@ -81,35 +80,39 @@ class Pay2Service
                 // Проверяем статус в ответе API
                 if (isset($result['status']) && $result['status'] === 'error') {
                     Log::error('Pay2Service: API вернул ошибку', $result);
+
                     return [
                         'success' => false,
-                        'error' => 'API Error: ' . ($result['msg'] ?? $result['code'] ?? 'Unknown error')
+                        'error' => 'API Error: '.($result['msg'] ?? $result['code'] ?? 'Unknown error'),
                     ];
                 }
 
                 Log::info('Pay2Service: Платеж создан успешно', $result);
+
                 return [
                     'success' => true,
-                    'data' => $result
+                    'data' => $result,
                 ];
             } else {
                 Log::error('Pay2Service: Ошибка HTTP запроса', [
                     'status' => $response->status(),
-                    'body' => $response->body()
+                    'body' => $response->body(),
                 ]);
+
                 return [
                     'success' => false,
-                    'error' => 'HTTP Error ' . $response->status() . ': ' . $response->body()
+                    'error' => 'HTTP Error '.$response->status().': '.$response->body(),
                 ];
             }
         } catch (\Exception $e) {
             Log::error('Pay2Service: Исключение при создании платежа', [
                 'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return [
                 'success' => false,
-                'error' => 'Payment creation error: ' . $e->getMessage()
+                'error' => 'Payment creation error: '.$e->getMessage(),
             ];
         }
     }
@@ -117,7 +120,6 @@ class Pay2Service
     /**
      * Получение информации о платеже
      *
-     * @param string $invoiceNumber
      * @return array
      */
     public function getPaymentDetails(string $invoiceNumber)
@@ -137,27 +139,28 @@ class Pay2Service
         ];
 
         try {
-            $response = Http::timeout(30)->post($apiUrl . '/api/show_payment_details', $requestData);
+            $response = Http::timeout(30)->post($apiUrl.'/api/show_payment_details', $requestData);
 
             if ($response->successful()) {
                 return [
                     'success' => true,
-                    'data' => $response->json()
+                    'data' => $response->json(),
                 ];
             } else {
                 return [
                     'success' => false,
-                    'error' => 'Failed to get payment details: ' . $response->body()
+                    'error' => 'Failed to get payment details: '.$response->body(),
                 ];
             }
         } catch (\Exception $e) {
             Log::error('Pay2Service: Ошибка получения данных платежа', [
                 'invoice_number' => $invoiceNumber,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ]);
+
             return [
                 'success' => false,
-                'error' => 'Error getting payment details: ' . $e->getMessage()
+                'error' => 'Error getting payment details: '.$e->getMessage(),
             ];
         }
     }
@@ -165,14 +168,13 @@ class Pay2Service
     /**
      * Создание JWT токена для аутентификации запросов
      *
-     * @param array $data
      * @return string
      */
     protected function createSignToken(array $data)
     {
         $privateKeyPath = $this->config['private_key_path'];
 
-        if (!file_exists($privateKeyPath)) {
+        if (! file_exists($privateKeyPath)) {
             throw new \Exception("Private key file not found: {$privateKeyPath}");
         }
 
@@ -182,7 +184,7 @@ class Pay2Service
         $payload = [
             'iss' => $this->config['key_id'], // YOUR_KEY_ID
             'iat' => $currentTime,
-            'data' => $data
+            'data' => $data,
         ];
 
         return JWT::encode($payload, openssl_pkey_get_private($privateKey), 'RS256');
@@ -192,8 +194,6 @@ class Pay2Service
      * Проверка webhook подписи Pay2.House
      * Официальная документация: https://pay2.house/docs/api (Webhook Events)
      *
-     * @param string $signature
-     * @param array $data
      * @return bool
      */
     public function verifyWebhookSignature(string $signature, array $data)
@@ -206,14 +206,15 @@ class Pay2Service
 
             Log::info('Pay2Service: Проверка webhook подписи', [
                 'test_mode' => $this->config['test_mode'],
-                'signature' => substr($signature, 0, 100) . '...',
-                'data' => $data
+                'signature' => substr($signature, 0, 100).'...',
+                'data' => $data,
             ]);
 
             // Декодируем base64
             $decoded_data = base64_decode($signature);
             if ($decoded_data === false) {
                 Log::error('Pay2Service: Ошибка декодирования base64 подписи');
+
                 return false;
             }
 
@@ -222,24 +223,26 @@ class Pay2Service
             if (count($parts) !== 3) {
                 Log::error('Pay2Service: Неверный формат подписи webhook', [
                     'parts_count' => count($parts),
-                    'signature' => substr($signature, 0, 100) . '...'
+                    'signature' => substr($signature, 0, 100).'...',
                 ]);
+
                 return false;
             }
 
-            list($iv, $hmac_signature, $encrypted_data) = $parts;
+            [$iv, $hmac_signature, $encrypted_data] = $parts;
 
             // Вычисляем HMAC подпись для проверки целостности (по официальной документации)
-            $hmac_data = $iv . '|' . $encrypted_data;
+            $hmac_data = $iv.'|'.$encrypted_data;
             $calculated_signature = hash_hmac('sha256', $hmac_data, $secretKey);
 
             // Проверяем подпись
-            if (!hash_equals($calculated_signature, $hmac_signature)) {
+            if (! hash_equals($calculated_signature, $hmac_signature)) {
                 Log::warning('Pay2Service: Подпись webhook не совпадает', [
                     'calculated' => $calculated_signature,
                     'received' => $hmac_signature,
-                    'hmac_data' => substr($hmac_data, 0, 100) . '...'
+                    'hmac_data' => substr($hmac_data, 0, 100).'...',
                 ]);
+
                 return false;
             }
 
@@ -254,6 +257,7 @@ class Pay2Service
 
             if ($decrypted_data === false) {
                 Log::error('Pay2Service: Ошибка расшифровки AES-256-CBC');
+
                 return false;
             }
 
@@ -261,21 +265,23 @@ class Pay2Service
             $webhook_data = json_decode($decrypted_data, true);
             if ($webhook_data === null) {
                 Log::error('Pay2Service: Ошибка парсинга JSON из расшифрованных данных', [
-                    'decrypted_data' => $decrypted_data
+                    'decrypted_data' => $decrypted_data,
                 ]);
+
                 return false;
             }
 
             Log::info('Pay2Service: Webhook подпись успешно проверена', [
-                'webhook_data' => $webhook_data
+                'webhook_data' => $webhook_data,
             ]);
 
             return true;
         } catch (\Exception $e) {
             Log::error('Pay2Service: Исключение при проверке webhook подписи', [
                 'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return false;
         }
     }
@@ -283,44 +289,43 @@ class Pay2Service
     /**
      * Генерация уникального номера заказа
      *
-     * @param int $userId
-     * @param int $tariffId
      * @return string
      */
     public function generateExternalNumber(int $userId, int $tariffId)
     {
         // Префикс DP для депозитов, TN для тарифов/подписок
         $prefix = 'TN';
-        return $prefix . $userId . $tariffId . time();
+
+        return $prefix.$userId.$tariffId.time();
     }
 
     /**
      *  decrypt_webhook из final_webhook_validator.php
      */
-    public function decrypt_webhook($data = NULL, $secret_key = NULL)
+    public function decrypt_webhook($data = null, $secret_key = null)
     {
         if (empty($data) || empty($secret_key)) {
-            return FALSE;
+            return false;
         }
 
         // Шаг 1: Декодирование Base64
         $decoded_data = base64_decode($data);
-        if ($decoded_data === FALSE) {
-            return FALSE;
+        if ($decoded_data === false) {
+            return false;
         }
 
         // Шаг 2: Разделение на части iv|signature|encrypted_data
         $parts = explode('|', $decoded_data);
         if (count($parts) !== 3) {
-            return FALSE;
+            return false;
         }
 
-        list($iv, $signature, $encrypted_data) = $parts;
+        [$iv, $signature, $encrypted_data] = $parts;
 
         // Шаг 3: Проверка HMAC подписи
-        $calculated_signature = hash_hmac('sha256', $iv . '|' . $encrypted_data, $secret_key);
-        if (!hash_equals($calculated_signature, $signature)) {
-            return FALSE;
+        $calculated_signature = hash_hmac('sha256', $iv.'|'.$encrypted_data, $secret_key);
+        if (! hash_equals($calculated_signature, $signature)) {
+            return false;
         }
 
         // Шаг 4: Расшифровка AES-256-CBC данных
@@ -332,11 +337,11 @@ class Pay2Service
             hex2bin(bin2hex(hex2bin($iv)))
         );
 
-        if ($decoded_encrypted_data !== FALSE) {
+        if ($decoded_encrypted_data !== false) {
             return $decoded_encrypted_data;
         }
 
-        return FALSE;
+        return false;
     }
 
     /**
@@ -348,45 +353,55 @@ class Pay2Service
             'valid' => false,
             'payload_data' => null,
             'webhook_data' => null,
-            'error' => null
+            'error' => null,
         ];
 
         try {
             if ($debug) {
                 echo "🔍 Начинаю валидацию webhook Pay2.House\n";
-                echo "📝 Подпись: " . substr($signature, 0, 50) . "...\n";
-                echo "📦 Payload: " . json_encode($payload) . "\n";
-                echo "🔑 API ключ: " . substr($api_key, 0, 20) . "...\n\n";
+                echo '📝 Подпись: '.substr($signature, 0, 50)."...\n";
+                echo '📦 Payload: '.json_encode($payload)."\n";
+                echo '🔑 API ключ: '.substr($api_key, 0, 20)."...\n\n";
             }
 
             // Проверяем наличие необходимых данных
             if (empty($signature)) {
                 $result['error'] = 'Отсутствует подпись Pay2-House-Signature';
+
                 return $result;
             }
 
             if (empty($api_key)) {
                 $result['error'] = 'Отсутствует API ключ';
+
                 return $result;
             }
 
             // Расшифровываем подпись
-            if ($debug) echo "🔐 Расшифровываю подпись...\n";
+            if ($debug) {
+                echo "🔐 Расшифровываю подпись...\n";
+            }
 
             $decrypted_webhook = $this->decrypt_webhook($signature, $api_key);
 
-            if ($decrypted_webhook === FALSE) {
+            if ($decrypted_webhook === false) {
                 $result['error'] = 'Не удалось расшифровать подпись webhook';
-                if ($debug) echo "❌ Ошибка расшифровки подписи\n";
+                if ($debug) {
+                    echo "❌ Ошибка расшифровки подписи\n";
+                }
+
                 return $result;
             }
 
-            if ($debug) echo "✅ Подпись успешно расшифрована\n";
+            if ($debug) {
+                echo "✅ Подпись успешно расшифрована\n";
+            }
 
             // Парсим JSON из подписи
             $webhook_data = json_decode($decrypted_webhook, true);
             if ($webhook_data === null) {
                 $result['error'] = 'Неверный формат JSON в расшифрованной подписи';
+
                 return $result;
             }
 
@@ -402,13 +417,15 @@ class Pay2Service
             $required_fields = ['invoice_number', 'external_number', 'amount', 'currency_code', 'status'];
 
             foreach ($required_fields as $field) {
-                if (!isset($payload[$field]) || !isset($webhook_data[$field])) {
+                if (! isset($payload[$field]) || ! isset($webhook_data[$field])) {
                     $result['error'] = "Отсутствует обязательное поле: $field";
+
                     return $result;
                 }
 
                 if ($payload[$field] != $webhook_data[$field]) {
                     $result['error'] = "Несоответствие поля $field: payload={$payload[$field]}, webhook={$webhook_data[$field]}";
+
                     return $result;
                 }
             }
@@ -418,12 +435,17 @@ class Pay2Service
             $result['payload_data'] = $payload;
             $result['webhook_data'] = $webhook_data;
 
-            if ($debug) echo "🎉 Webhook успешно валидирован!\n";
+            if ($debug) {
+                echo "🎉 Webhook успешно валидирован!\n";
+            }
 
             return $result;
         } catch (\Exception $e) {
-            $result['error'] = 'Исключение при валидации: ' . $e->getMessage();
-            if ($debug) echo "❌ Исключение: " . $e->getMessage() . "\n";
+            $result['error'] = 'Исключение при валидации: '.$e->getMessage();
+            if ($debug) {
+                echo '❌ Исключение: '.$e->getMessage()."\n";
+            }
+
             return $result;
         }
     }

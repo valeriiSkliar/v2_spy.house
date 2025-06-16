@@ -276,7 +276,7 @@ class PromocodeActivationTest extends TestCase
 
         $this->assertNotNull($activation->created_at);
         $this->assertNotNull($activation->updated_at);
-        
+
         // Проверяем что timestamps находятся в разумных пределах (в течение последней минуты)
         $this->assertTrue(
             $activation->created_at->diffInSeconds(now()) < 60,
@@ -286,7 +286,7 @@ class PromocodeActivationTest extends TestCase
             $activation->updated_at->diffInSeconds(now()) < 60,
             'Updated at timestamp should be recent'
         );
-        
+
         // Проверяем что created_at и updated_at одинаковы при создании
         $this->assertEquals(
             $activation->created_at->toDateTimeString(),
@@ -373,7 +373,7 @@ class PromocodeActivationTest extends TestCase
         $activations = collect();
         for ($i = 0; $i < 100; $i++) { // Уменьшаем количество для стабильности теста
             $user = User::factory()->create([
-                'messenger_contact' => '@test_user_' . $i, // Обеспечиваем уникальность
+                'messenger_contact' => '@test_user_'.$i, // Обеспечиваем уникальность
             ]);
             $activations->push(PromocodeActivation::factory()->create([
                 'promocode_id' => $promocode->id,

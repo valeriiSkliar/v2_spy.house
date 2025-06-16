@@ -92,14 +92,14 @@ class ConcurrentOperationsTest extends TestCase
             'max_per_user' => 1,
         ]);
 
-        $service = new PromocodeService();
+        $service = new PromocodeService;
         $results = [];
         $exceptions = [];
 
         // Симулируем 5 одновременных попыток активировать промокод
         for ($i = 0; $i < 5; $i++) {
             try {
-                DB::transaction(function () use ($service, $user, $i, &$results) {
+                DB::transaction(function () use ($user, $i, &$results) {
                     // Проверяем количество активаций для пользователя с блокировкой
                     $activationsCount = DB::table('promocode_activations')
                         ->where('promocode_id', 1) // ID промокода LIMITED
@@ -174,7 +174,7 @@ class ConcurrentOperationsTest extends TestCase
         $this->assertNotNull($payment->webhook_processed_at);
 
         // Только одна операция должна быть успешной
-        $successfulUpdates = collect($results)->filter(fn($result) => str_contains($result, 'successful'));
+        $successfulUpdates = collect($results)->filter(fn ($result) => str_contains($result, 'successful'));
         $this->assertCount(1, $successfulUpdates);
     }
 
@@ -196,7 +196,7 @@ class ConcurrentOperationsTest extends TestCase
 
         // Симулируем одновременные попытки активировать подписку
         foreach ($payments as $index => $payment) {
-            $results[$index] = DB::transaction(function () use ($user, $subscription, $payment, $index) {
+            $results[$index] = DB::transaction(function () use ($user, $subscription, $index) {
                 // Получаем пользователя с блокировкой
                 $currentUser = DB::table('users')
                     ->where('id', $user->id)
@@ -228,7 +228,7 @@ class ConcurrentOperationsTest extends TestCase
         $this->assertFalse($user->subscription_is_expired);
 
         // Только одна операция должна быть успешной
-        $successfulActivations = collect($results)->filter(fn($result) => str_contains($result, 'successful'));
+        $successfulActivations = collect($results)->filter(fn ($result) => str_contains($result, 'successful'));
         $this->assertCount(1, $successfulActivations);
     }
 
@@ -373,7 +373,7 @@ class ConcurrentOperationsTest extends TestCase
         $this->assertEquals(1000.00, $user->available_balance); // 500 + (5 * 100)
 
         // Все job'ы должны быть обработаны успешно
-        $successfulJobs = collect($results)->filter(fn($result) => str_contains($result, 'successfully'));
+        $successfulJobs = collect($results)->filter(fn ($result) => str_contains($result, 'successfully'));
         $this->assertCount(5, $successfulJobs);
     }
 
@@ -431,7 +431,7 @@ class ConcurrentOperationsTest extends TestCase
         $executionTime = ($endTime - $startTime) * 1000;
 
         // Все операции должны завершиться успешно
-        $successfulOperations = collect($results)->filter(fn($result) => str_contains($result, 'successful'));
+        $successfulOperations = collect($results)->filter(fn ($result) => str_contains($result, 'successful'));
         $this->assertCount(10, $successfulOperations);
 
         // Операции должны выполняться достаточно быстро даже под нагрузкой

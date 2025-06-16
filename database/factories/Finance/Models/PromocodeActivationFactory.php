@@ -41,7 +41,7 @@ class PromocodeActivationFactory extends Factory
      */
     public function withPayment(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'payment_id' => Payment::factory(),
         ]);
     }
@@ -51,7 +51,7 @@ class PromocodeActivationFactory extends Factory
      */
     public function forPromocode(Promocode $promocode): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'promocode_id' => $promocode->id,
         ]);
     }
@@ -61,7 +61,7 @@ class PromocodeActivationFactory extends Factory
      */
     public function forUser(User $user): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'user_id' => $user->id,
         ]);
     }
@@ -71,7 +71,7 @@ class PromocodeActivationFactory extends Factory
      */
     public function fromIp(string $ipAddress): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'ip_address' => $ipAddress,
         ]);
     }
@@ -81,7 +81,7 @@ class PromocodeActivationFactory extends Factory
      */
     public function createdAt(string $timestamp): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'created_at' => $timestamp,
         ]);
     }

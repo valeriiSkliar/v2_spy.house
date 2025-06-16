@@ -39,7 +39,7 @@ enum PaymentMethod: string
      */
     public function translatedLabel(): string
     {
-        return __('enums.PaymentMethod.' . $this->name);
+        return __('enums.PaymentMethod.'.$this->name);
     }
 
     /**
@@ -74,7 +74,7 @@ enum PaymentMethod: string
     public static function getForFrontend(): array
     {
         return collect(self::cases())
-            ->map(fn(self $case) => [
+            ->map(fn (self $case) => [
                 'name' => $case->translatedLabel(),
                 'id' => $case->htmlId(),
                 'value' => $case->value,
@@ -91,7 +91,7 @@ enum PaymentMethod: string
     public static function getTranslatedList(): array
     {
         return collect(self::cases())
-            ->mapWithKeys(fn(self $case) => [$case->name => $case->translatedLabel()])
+            ->mapWithKeys(fn (self $case) => [$case->name => $case->translatedLabel()])
             ->all();
     }
 

@@ -2,16 +2,16 @@
 
 namespace Tests\Feature\Finance;
 
-use Tests\TestCase;
-use App\Models\User;
-use App\Finance\Models\Subscription;
-use App\Finance\Models\Payment;
-use App\Finance\Services\BalanceService;
-use App\Enums\Finance\PaymentType;
 use App\Enums\Finance\PaymentMethod;
 use App\Enums\Finance\PaymentStatus;
+use App\Enums\Finance\PaymentType;
+use App\Finance\Models\Payment;
+use App\Finance\Models\Subscription;
+use App\Finance\Services\BalanceService;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Tests\TestCase;
 
 class BalanceServiceTest extends TestCase
 {

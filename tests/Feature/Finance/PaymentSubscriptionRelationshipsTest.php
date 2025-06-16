@@ -16,7 +16,7 @@ class PaymentSubscriptionRelationshipsTest extends TestCase
         $subscription = Subscription::factory()->create();
 
         Payment::factory()->directSubscription()->count(3)->create([
-            'subscription_id' => $subscription->id
+            'subscription_id' => $subscription->id,
         ]);
 
         $this->assertCount(3, $subscription->payments);
@@ -27,13 +27,13 @@ class PaymentSubscriptionRelationshipsTest extends TestCase
         $subscription = Subscription::factory()->create();
 
         Payment::factory()->directSubscription()->successful()->count(2)->create([
-            'subscription_id' => $subscription->id
+            'subscription_id' => $subscription->id,
         ]);
         Payment::factory()->directSubscription()->pending()->create([
-            'subscription_id' => $subscription->id
+            'subscription_id' => $subscription->id,
         ]);
         Payment::factory()->directSubscription()->failed()->create([
-            'subscription_id' => $subscription->id
+            'subscription_id' => $subscription->id,
         ]);
 
         $this->assertCount(2, $subscription->successfulPayments);
@@ -43,7 +43,7 @@ class PaymentSubscriptionRelationshipsTest extends TestCase
     {
         $subscription = Subscription::factory()->create();
         $payment = Payment::factory()->directSubscription()->create([
-            'subscription_id' => $subscription->id
+            'subscription_id' => $subscription->id,
         ]);
 
         $this->assertInstanceOf(Subscription::class, $payment->subscription);
@@ -63,7 +63,7 @@ class PaymentSubscriptionRelationshipsTest extends TestCase
     {
         $subscription = Subscription::factory()->create();
         $payment = Payment::factory()->directSubscription()->create([
-            'subscription_id' => $subscription->id
+            'subscription_id' => $subscription->id,
         ]);
 
         // According to migration, subscription_id should be set to null on delete
@@ -81,17 +81,17 @@ class PaymentSubscriptionRelationshipsTest extends TestCase
         // Create successful payments
         Payment::factory()->directSubscription()->successful()->create([
             'subscription_id' => $subscription->id,
-            'amount' => 100.00
+            'amount' => 100.00,
         ]);
         Payment::factory()->directSubscription()->successful()->create([
             'subscription_id' => $subscription->id,
-            'amount' => 150.00
+            'amount' => 150.00,
         ]);
 
         // Create failed payment (should not be counted)
         Payment::factory()->directSubscription()->failed()->create([
             'subscription_id' => $subscription->id,
-            'amount' => 200.00
+            'amount' => 200.00,
         ]);
 
         $totalRevenue = $subscription->successfulPayments()->sum('amount');
@@ -103,13 +103,13 @@ class PaymentSubscriptionRelationshipsTest extends TestCase
     {
         $subscription = Subscription::factory()->create();
         $payment = Payment::factory()->directSubscription()->create([
-            'subscription_id' => $subscription->id
+            'subscription_id' => $subscription->id,
         ]);
 
         // Verify the foreign key constraint exists
         $this->assertDatabaseHas('payments', [
             'id' => $payment->id,
-            'subscription_id' => $subscription->id
+            'subscription_id' => $subscription->id,
         ]);
 
         // Verify the relationship works

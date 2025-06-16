@@ -21,8 +21,6 @@ class PaymentMethodTest extends TestCase
         $this->assertEquals('User Balance', PaymentMethod::USER_BALANCE->label());
     }
 
-
-
     public function test_enum_has_all_expected_cases(): void
     {
         $cases = PaymentMethod::cases();

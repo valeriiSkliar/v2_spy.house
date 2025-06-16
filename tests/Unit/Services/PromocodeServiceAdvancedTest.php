@@ -22,7 +22,7 @@ class PromocodeServiceAdvancedTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new PromocodeService();
+        $this->service = new PromocodeService;
     }
 
     // === SECURITY AND ABUSE DETECTION TESTS ===
@@ -123,7 +123,7 @@ class PromocodeServiceAdvancedTest extends TestCase
             'created_at' => now()->subHours(1),
         ]);
 
-        // checkForAbuse вызывается только если метод реализован в сервисе 
+        // checkForAbuse вызывается только если метод реализован в сервисе
         // В текущей реализации сервиса checkForAbuse вызывается отдельно
         $isAbuse = $this->service->checkForAbuse($suspiciousIP, $user->id);
         $this->assertTrue($isAbuse);
@@ -151,7 +151,7 @@ class PromocodeServiceAdvancedTest extends TestCase
         // Создаем много промокодов без пользователей (чтобы избежать constraint violations)
         for ($i = 0; $i < 100; $i++) { // Уменьшаем количество для стабильности
             Promocode::factory()->create([
-                'promocode' => 'PERF_' . $i,
+                'promocode' => 'PERF_'.$i,
             ]);
         }
 
@@ -501,7 +501,7 @@ class PromocodeServiceAdvancedTest extends TestCase
     {
         $user = User::factory()->create();
 
-        // Несуществующий промокод вызовет исключение в validatePromocode, 
+        // Несуществующий промокод вызовет исключение в validatePromocode,
         // но не дойдет до логирования ошибки в applyPromocode
         $this->expectException(ValidationException::class);
         $this->expectExceptionMessage('Промокод не найден');

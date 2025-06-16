@@ -20,8 +20,6 @@ class PaymentTypeTest extends TestCase
         $this->assertEquals('Direct Subscription', PaymentType::DIRECT_SUBSCRIPTION->label());
     }
 
-
-
     public function test_enum_has_all_expected_cases(): void
     {
         $cases = PaymentType::cases();

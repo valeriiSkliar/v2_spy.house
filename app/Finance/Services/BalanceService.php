@@ -2,12 +2,12 @@
 
 namespace App\Finance\Services;
 
-use App\Models\User;
-use App\Finance\Models\Payment;
-use App\Finance\Models\Subscription;
-use App\Enums\Finance\PaymentType;
 use App\Enums\Finance\PaymentMethod;
 use App\Enums\Finance\PaymentStatus;
+use App\Enums\Finance\PaymentType;
+use App\Finance\Models\Payment;
+use App\Finance\Models\Subscription;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -16,10 +16,6 @@ class BalanceService
 {
     /**
      * Проверить достаточность средств на балансе пользователя
-     *
-     * @param User $user
-     * @param float $amount
-     * @return bool
      */
     public function hasInsufficientBalance(User $user, float $amount): bool
     {
@@ -28,11 +24,6 @@ class BalanceService
 
     /**
      * Оплатить подписку с баланса пользователя
-     *
-     * @param User $user
-     * @param Subscription $subscription
-     * @param string $billingType
-     * @return array
      */
     public function processSubscriptionPaymentFromBalance(User $user, Subscription $subscription, string $billingType = 'month'): array
     {
@@ -47,7 +38,7 @@ class BalanceService
             'subscription_id' => $subscription->id,
             'amount' => $amount,
             'billing_type' => $billingType,
-            'current_balance' => $user->available_balance
+            'current_balance' => $user->available_balance,
         ]);
 
         // Проверяем достаточность средств
@@ -55,12 +46,12 @@ class BalanceService
             Log::warning('BalanceService: Недостаточно средств на балансе', [
                 'user_id' => $user->id,
                 'required_amount' => $amount,
-                'available_balance' => $user->available_balance
+                'available_balance' => $user->available_balance,
             ]);
 
             return [
                 'success' => false,
-                'error' => 'Недостаточно средств на балансе. Требуется: $' . number_format($amount, 2) . ', доступно: $' . number_format($user->available_balance, 2)
+                'error' => 'Недостаточно средств на балансе. Требуется: $'.number_format($amount, 2).', доступно: $'.number_format($user->available_balance, 2),
             ];
         }
 
@@ -73,7 +64,7 @@ class BalanceService
                     ->lockForUpdate()
                     ->first();
 
-                if (!$userForUpdate) {
+                if (! $userForUpdate) {
                     throw new \Exception('Баланс был изменен другой операцией. Повторите попытку.');
                 }
 
@@ -99,13 +90,13 @@ class BalanceService
                     'payment_id' => $payment->id,
                     'subscription_id' => $subscription->id,
                     'amount' => $amount,
-                    'new_balance' => $userForUpdate->available_balance
+                    'new_balance' => $userForUpdate->available_balance,
                 ]);
 
                 return [
                     'success' => true,
                     'payment' => $payment,
-                    'message' => 'Подписка успешно оплачена с баланса'
+                    'message' => 'Подписка успешно оплачена с баланса',
                 ];
             });
         } catch (\Exception $e) {
@@ -114,24 +105,18 @@ class BalanceService
                 'subscription_id' => $subscription->id,
                 'amount' => $amount,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return [
                 'success' => false,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ];
         }
     }
 
     /**
      * Создать запись о платеже с баланса
-     *
-     * @param User $user
-     * @param Subscription $subscription
-     * @param float $amount
-     * @param string $billingType
-     * @return Payment
      */
     protected function createBalancePayment(User $user, Subscription $subscription, float $amount, string $billingType): Payment
     {
@@ -142,8 +127,8 @@ class BalanceService
             'subscription_id' => $subscription->id,
             'payment_method' => PaymentMethod::USER_BALANCE,
             'status' => PaymentStatus::PENDING,
-            'external_number' => 'TN' . $user->id . $subscription->id . time(),
-            'invoice_number' => 'IN' . strtoupper(Str::random(10)),
+            'external_number' => 'TN'.$user->id.$subscription->id.time(),
+            'invoice_number' => 'IN'.strtoupper(Str::random(10)),
             'webhook_token' => Str::random(64),
             'idempotency_key' => Str::uuid(),
         ]);
@@ -151,10 +136,6 @@ class BalanceService
 
     /**
      * Списать средства с баланса пользователя (с optimistic locking)
-     *
-     * @param User $user
-     * @param float $amount
-     * @return bool
      */
     protected function deductFromBalance(User $user, float $amount): bool
     {
@@ -168,10 +149,10 @@ class BalanceService
             ->where('balance_version', $oldVersion)
             ->update([
                 'available_balance' => $newBalance,
-                'balance_version' => $newVersion
+                'balance_version' => $newVersion,
             ]);
 
-        if (!$updated) {
+        if (! $updated) {
             throw new \Exception('Не удалось обновить баланс - версия изменена');
         }
 
@@ -185,7 +166,7 @@ class BalanceService
             'new_balance' => $newBalance,
             'deducted_amount' => $amount,
             'old_version' => $oldVersion,
-            'new_version' => $newVersion
+            'new_version' => $newVersion,
         ]);
 
         return true;
@@ -193,11 +174,6 @@ class BalanceService
 
     /**
      * Активировать подписку пользователя
-     *
-     * @param User $user
-     * @param Subscription $subscription
-     * @param string $billingType
-     * @return void
      */
     protected function activateSubscription(User $user, Subscription $subscription, string $billingType): void
     {
@@ -205,34 +181,34 @@ class BalanceService
         $compensatedTime = 0;
 
         // ВАЖНО: Рассчитываем компенсацию времени ПЕРЕД изменением подписки пользователя
-        if (!$isRenewal && $user->subscription_id && !$subscription->isEnterprise()) {
+        if (! $isRenewal && $user->subscription_id && ! $subscription->isEnterprise()) {
             Log::info('BalanceService: Проверка условий для компенсации времени', [
                 'user_id' => $user->id,
-                'has_subscription_id' => (bool)$user->subscription_id,
+                'has_subscription_id' => (bool) $user->subscription_id,
                 'subscription_id' => $user->subscription_id,
                 'is_enterprise' => $subscription->isEnterprise(),
-                'subscription_name' => $subscription->name
+                'subscription_name' => $subscription->name,
             ]);
 
             Log::info('BalanceService: Начинаем расчет компенсации времени', [
                 'user_id' => $user->id,
                 'current_subscription_id' => $user->subscription_id,
-                'new_subscription_id' => $subscription->id
+                'new_subscription_id' => $subscription->id,
             ]);
 
             $compensatedTime = $this->calculateTimeCompensation($user, $subscription);
 
             Log::info('BalanceService: Результат расчета компенсации', [
                 'user_id' => $user->id,
-                'compensated_time' => $compensatedTime
+                'compensated_time' => $compensatedTime,
             ]);
         } else {
             Log::info('BalanceService: Компенсация времени пропущена', [
                 'user_id' => $user->id,
                 'is_renewal' => $isRenewal,
-                'has_subscription_id' => (bool)$user->subscription_id,
+                'has_subscription_id' => (bool) $user->subscription_id,
                 'is_enterprise' => $subscription->isEnterprise(),
-                'reason' => $isRenewal ? 'renewal' : (!$user->subscription_id ? 'no_current_subscription' : 'enterprise_tariff')
+                'reason' => $isRenewal ? 'renewal' : (! $user->subscription_id ? 'no_current_subscription' : 'enterprise_tariff'),
             ]);
         }
 
@@ -257,7 +233,7 @@ class BalanceService
                     'user_id' => $user->id,
                     'compensated_seconds' => $compensatedTime,
                     'compensated_days' => round($compensatedTime / 86400, 2),
-                    'new_end_time' => $endTime->toDateTimeString()
+                    'new_end_time' => $endTime->toDateTimeString(),
                 ]);
             }
         }
@@ -279,15 +255,13 @@ class BalanceService
             'start_time' => $startTime->toDateTimeString(),
             'end_time' => $endTime->toDateTimeString(),
             'is_renewal' => $isRenewal,
-            'compensated_time_seconds' => $compensatedTime
+            'compensated_time_seconds' => $compensatedTime,
         ]);
     }
 
     /**
      * Рассчитать компенсацию времени при апгрейде тарифа
      *
-     * @param User $user
-     * @param Subscription $newSubscription  
      * @return int Компенсированное время в секундах
      */
     protected function calculateTimeCompensation(User $user, Subscription $newSubscription): int
@@ -300,25 +274,27 @@ class BalanceService
             'user_subscription_id' => $user->subscription_id,
             'user_subscription_time_end' => $user->subscription_time_end ? $user->subscription_time_end->toDateTimeString() : null,
             'new_subscription_id' => $newSubscription->id,
-            'new_subscription_name' => $newSubscription->name
+            'new_subscription_name' => $newSubscription->name,
         ]);
 
         // Проверяем наличие текущей подписки
-        if (!$user->subscription_id || !$user->subscription_time_end) {
+        if (! $user->subscription_id || ! $user->subscription_time_end) {
             Log::info('BalanceService: Компенсация пропущена - нет текущей подписки или времени окончания', [
                 'user_id' => $user->id,
-                'has_subscription_id' => (bool)$user->subscription_id,
-                'has_subscription_time_end' => (bool)$user->subscription_time_end
+                'has_subscription_id' => (bool) $user->subscription_id,
+                'has_subscription_time_end' => (bool) $user->subscription_time_end,
             ]);
+
             return 0;
         }
 
         $currentSubscription = $user->subscription;
-        if (!$currentSubscription) {
+        if (! $currentSubscription) {
             Log::info('BalanceService: Компенсация пропущена - не удалось загрузить модель текущей подписки', [
                 'user_id' => $user->id,
-                'subscription_id' => $user->subscription_id
+                'subscription_id' => $user->subscription_id,
             ]);
+
             return 0;
         }
 
@@ -328,15 +304,16 @@ class BalanceService
             'user_id' => $user->id,
             'current_subscription' => $currentSubscription->name,
             'new_subscription' => $newSubscription->name,
-            'is_higher_tier' => $isHigherTier
+            'is_higher_tier' => $isHigherTier,
         ]);
 
-        if (!$isHigherTier) {
+        if (! $isHigherTier) {
             Log::info('BalanceService: Пропуск компенсации - не апгрейд', [
                 'user_id' => $user->id,
                 'current_subscription' => $currentSubscription->name,
-                'new_subscription' => $newSubscription->name
+                'new_subscription' => $newSubscription->name,
             ]);
+
             return 0;
         }
 
@@ -349,28 +326,29 @@ class BalanceService
             'now' => $now->toDateTimeString(),
             'subscription_end' => $user->subscription_time_end->toDateTimeString(),
             'time_left_seconds' => $timeLeft,
-            'time_left_days' => round($timeLeft / 86400, 2)
+            'time_left_days' => round($timeLeft / 86400, 2),
         ]);
 
         if ($timeLeft <= 0) {
             Log::info('BalanceService: Пропуск компенсации - нет оставшегося времени', [
                 'user_id' => $user->id,
-                'time_left' => $timeLeft
+                'time_left' => $timeLeft,
             ]);
+
             return 0;
         }
 
         // Используем единую логику расчета компенсации из модели Subscription
         Log::info('BalanceService: Вызов расчета компенсации через модель Subscription', [
             'user_id' => $user->id,
-            'time_left_to_compensate' => $timeLeft
+            'time_left_to_compensate' => $timeLeft,
         ]);
 
         $compensatedTime = $newSubscription->calculateTimeCompensation($currentSubscription, $timeLeft);
 
         Log::info('BalanceService: Получен результат расчета компенсации', [
             'user_id' => $user->id,
-            'compensated_time' => $compensatedTime
+            'compensated_time' => $compensatedTime,
         ]);
 
         Log::info('BalanceService: Расчет компенсации времени', [
@@ -380,7 +358,7 @@ class BalanceService
             'time_left_seconds' => $timeLeft,
             'time_left_days' => round($timeLeft / 86400, 2),
             'compensated_time_seconds' => $compensatedTime,
-            'compensated_time_days' => round($compensatedTime / 86400, 2)
+            'compensated_time_days' => round($compensatedTime / 86400, 2),
         ]);
 
         return $compensatedTime;
@@ -388,10 +366,6 @@ class BalanceService
 
     /**
      * Проверить является ли это продлением текущей подписки
-     *
-     * @param User $user
-     * @param Subscription $subscription
-     * @return bool
      */
     protected function isRenewal(User $user, Subscription $subscription): bool
     {
@@ -402,11 +376,6 @@ class BalanceService
 
     /**
      * Пополнить баланс пользователя (для будущего использования)
-     *
-     * @param User $user
-     * @param float $amount
-     * @param string $description
-     * @return bool
      */
     public function addToBalance(User $user, float $amount, string $description = ''): bool
     {
@@ -418,7 +387,7 @@ class BalanceService
                     ->lockForUpdate()
                     ->first();
 
-                if (!$userForUpdate) {
+                if (! $userForUpdate) {
                     throw new \Exception('Пользователь не найден или баланс был изменен');
                 }
 
@@ -432,10 +401,10 @@ class BalanceService
                     ->where('balance_version', $oldVersion)
                     ->update([
                         'available_balance' => $newBalance,
-                        'balance_version' => $newVersion
+                        'balance_version' => $newVersion,
                     ]);
 
-                if (!$updated) {
+                if (! $updated) {
                     throw new \Exception('Не удалось обновить баланс');
                 }
 
@@ -446,7 +415,7 @@ class BalanceService
                     'added_amount' => $amount,
                     'description' => $description,
                     'old_version' => $oldVersion,
-                    'new_version' => $newVersion
+                    'new_version' => $newVersion,
                 ]);
 
                 return true;
@@ -455,7 +424,7 @@ class BalanceService
             Log::error('BalanceService: Ошибка пополнения баланса', [
                 'user_id' => $user->id,
                 'amount' => $amount,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return false;
@@ -464,15 +433,9 @@ class BalanceService
 
     /**
      * Активировать подписку пользователя (публичный метод для webhook'ов)
-     *
-     * @param User $user
-     * @param Subscription $subscription
-     * @param string $billingType
-     * @return void
      */
     public function activateSubscriptionPublic(User $user, Subscription $subscription, string $billingType): void
     {
         $this->activateSubscription($user, $subscription, $billingType);
     }
-
 }

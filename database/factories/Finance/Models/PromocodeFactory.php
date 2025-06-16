@@ -43,7 +43,7 @@ class PromocodeFactory extends Factory
      */
     public function active(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => PromocodeStatus::ACTIVE,
         ]);
     }
@@ -53,7 +53,7 @@ class PromocodeFactory extends Factory
      */
     public function inactive(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => PromocodeStatus::INACTIVE,
         ]);
     }
@@ -63,7 +63,7 @@ class PromocodeFactory extends Factory
      */
     public function expired(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => PromocodeStatus::EXPIRED,
             'date_end' => $this->faker->dateTimeBetween('-1 month', '-1 day'),
         ]);
@@ -74,7 +74,7 @@ class PromocodeFactory extends Factory
      */
     public function exhausted(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => PromocodeStatus::EXHAUSTED,
         ]);
     }
@@ -84,7 +84,7 @@ class PromocodeFactory extends Factory
      */
     public function withDiscount(float $discount): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'discount' => $discount,
         ]);
     }
@@ -94,7 +94,7 @@ class PromocodeFactory extends Factory
      */
     public function withCode(string $code): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'promocode' => $code,
         ]);
     }
@@ -104,7 +104,7 @@ class PromocodeFactory extends Factory
      */
     public function validFrom(string $start, string $end): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'date_start' => $start,
             'date_end' => $end,
         ]);
@@ -115,7 +115,7 @@ class PromocodeFactory extends Factory
      */
     public function maxPerUser(int $max): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'max_per_user' => $max,
         ]);
     }

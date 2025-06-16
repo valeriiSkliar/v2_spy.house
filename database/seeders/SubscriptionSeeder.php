@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Finance\Models\Subscription;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -17,6 +16,7 @@ class SubscriptionSeeder extends Seeder
         // Check if subscriptions already exist to prevent duplication
         if (Subscription::count() > 0) {
             $this->command->info('Subscriptions already exist. Skipping...');
+
             return;
         }
 
@@ -88,6 +88,6 @@ class SubscriptionSeeder extends Seeder
         // Bulk insert for better performance
         Subscription::insert($subscriptions);
 
-        $this->command->info('Created ' . count($subscriptions) . ' subscription plans');
+        $this->command->info('Created '.count($subscriptions).' subscription plans');
     }
 }

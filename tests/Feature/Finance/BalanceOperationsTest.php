@@ -115,7 +115,7 @@ class BalanceOperationsTest extends TestCase
             'payment_id' => $payment->id,
             'balance_before' => 150.00,
             'balance_after' => 225.00,
-            'transaction_hash' => hash('sha256', $user->id . $payment->id . now()),
+            'transaction_hash' => hash('sha256', $user->id.$payment->id.now()),
             'created_at' => now(),
         ]);
 
@@ -308,7 +308,6 @@ class BalanceOperationsTest extends TestCase
 
                 // 2. Симулируем ошибку при активации подписки перед обновлением платежа
                 throw new \Exception('Subscription activation failed');
-
                 // 3. Обновление платежа и активация подписки (не выполнится из-за исключения)
                 $payment->update(['status' => PaymentStatus::SUCCESS]);
                 $user->update([
@@ -609,7 +608,7 @@ class BalanceOperationsTest extends TestCase
             $balanceAfter,
             $paymentId,
             now()->timestamp,
-            mt_rand()
+            mt_rand(),
         ]));
 
         DB::table('balance_audit')->insert([
@@ -631,7 +630,7 @@ class BalanceOperationsTest extends TestCase
         parent::setUp();
 
         // Создаем таблицу для аудита баланса
-        if (!Schema::hasTable('balance_audit')) {
+        if (! Schema::hasTable('balance_audit')) {
             Schema::create('balance_audit', function ($table) {
                 $table->id();
                 $table->foreignId('user_id')->constrained()->onDelete('cascade');

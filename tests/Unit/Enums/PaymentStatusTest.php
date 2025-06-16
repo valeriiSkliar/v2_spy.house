@@ -42,8 +42,6 @@ class PaymentStatusTest extends TestCase
         $this->assertFalse(PaymentStatus::PENDING->isFailed());
     }
 
-
-
     public function test_enum_has_all_expected_cases(): void
     {
         $cases = PaymentStatus::cases();

@@ -23,21 +23,23 @@ function decrypt_webhook_official($data, $secret_key)
     echo "Тестирование ключа: {$secret_key}\n";
 
     $decoded_data = base64_decode($data);
-    if ($decoded_data === FALSE) {
+    if ($decoded_data === false) {
         echo "❌ Ошибка декодирования base64\n";
-        return FALSE;
+
+        return false;
     }
 
     $parts = explode('|', $decoded_data);
     if (count($parts) !== 3) {
         echo "❌ Неправильный формат данных\n";
-        return FALSE;
+
+        return false;
     }
 
-    list($iv, $signature, $encrypted_data) = $parts;
+    [$iv, $signature, $encrypted_data] = $parts;
 
     // ИМЕННО ТАКОЙ алгоритм в документации
-    $calculated_signature = hash_hmac('sha256', $iv . '|' . $encrypted_data, $secret_key);
+    $calculated_signature = hash_hmac('sha256', $iv.'|'.$encrypted_data, $secret_key);
 
     echo "  Полученная подпись:   {$signature}\n";
     echo "  Вычисленная подпись:  {$calculated_signature}\n";
@@ -54,18 +56,20 @@ function decrypt_webhook_official($data, $secret_key)
             hex2bin(bin2hex(hex2bin($iv)))
         );
 
-        if ($decoded_encrypted_data !== FALSE) {
+        if ($decoded_encrypted_data !== false) {
             echo "  ✅ Данные расшифрованы: {$decoded_encrypted_data}\n";
+
             return $decoded_encrypted_data;
         } else {
-            echo "  ❌ Ошибка расшифровки: " . openssl_error_string() . "\n";
+            echo '  ❌ Ошибка расшифровки: '.openssl_error_string()."\n";
         }
     } else {
         echo "  ❌ Подписи не совпадают\n";
     }
 
     echo "\n";
-    return FALSE;
+
+    return false;
 }
 
 // Тестируем с разными ключами
@@ -73,10 +77,10 @@ $test_keys = [
     'API ключ' => $api_key,
     'Merchant ID' => $merchant_id,
     'Key ID' => $key_id,
-    'API + Merchant' => $api_key . $merchant_id,
-    'Merchant + API' => $merchant_id . $api_key,
-    'Key ID + API' => $key_id . $api_key,
-    'API + Key ID' => $api_key . $key_id,
+    'API + Merchant' => $api_key.$merchant_id,
+    'Merchant + API' => $merchant_id.$api_key,
+    'Key ID + API' => $key_id.$api_key,
+    'API + Key ID' => $api_key.$key_id,
 ];
 
 echo "1. Тестирование различных ключей:\n";
@@ -86,7 +90,7 @@ $success = false;
 foreach ($test_keys as $key_name => $test_key) {
     echo "Тестирую: {$key_name}\n";
     $result = decrypt_webhook_official($signature, $test_key);
-    if ($result !== FALSE) {
+    if ($result !== false) {
         $success = true;
         echo "🎉 НАЙДЕН ПРАВИЛЬНЫЙ КЛЮЧ: {$key_name}\n";
         echo "🔑 Ключ: {$test_key}\n";
@@ -95,7 +99,7 @@ foreach ($test_keys as $key_name => $test_key) {
     }
 }
 
-if (!$success) {
+if (! $success) {
     echo "\n2. Дополнительное тестирование:\n";
     echo "==============================\n";
 
@@ -112,7 +116,7 @@ if (!$success) {
     foreach ($additional_keys as $key_name => $test_key) {
         echo "Тестирую: {$key_name}\n";
         $result = decrypt_webhook_official($signature, $test_key);
-        if ($result !== FALSE) {
+        if ($result !== false) {
             $success = true;
             echo "🎉 НАЙДЕН ПРАВИЛЬНЫЙ КЛЮЧ: {$key_name}\n";
             echo "🔑 Ключ: {$test_key}\n";
@@ -122,7 +126,7 @@ if (!$success) {
     }
 }
 
-if (!$success) {
+if (! $success) {
     echo "\n❌ НИ ОДИН КЛЮЧ НЕ ПОДОШЕЛ\n";
     echo "\nВозможные причины:\n";
     echo "1. Нужен webhook secret key (отличается от API key)\n";

@@ -63,7 +63,7 @@ class Payment extends Model
             // Validate that deposit payments can only use valid payment methods
             if (
                 $payment->payment_type === PaymentType::DEPOSIT &&
-                !$payment->payment_method->isValidForDeposits()
+                ! $payment->payment_method->isValidForDeposits()
             ) {
                 throw new \InvalidArgumentException(
                     'Deposit payments can only use USDT or PAY2_HOUSE payment methods.'
@@ -116,8 +116,6 @@ class Payment extends Model
         return $this->belongsTo(Promocode::class, 'promocode_id');
     }
 
-
-
     /**
      * Check if payment is successful
      */
@@ -163,7 +161,7 @@ class Payment extends Model
      */
     public function getFormattedAmount(): string
     {
-        return '$' . number_format($this->amount, 2);
+        return '$'.number_format($this->amount, 2);
     }
 
     /**

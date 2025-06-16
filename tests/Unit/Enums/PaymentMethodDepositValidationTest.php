@@ -72,7 +72,7 @@ class PaymentMethodDepositValidationTest extends TestCase
         $allMethods = PaymentMethod::cases();
 
         // Проверяем что у нас есть ожидаемые методы платежей
-        $methodValues = array_map(fn($method) => $method->value, $allMethods);
+        $methodValues = array_map(fn ($method) => $method->value, $allMethods);
 
         $this->assertContains('USDT', $methodValues);
         $this->assertContains('PAY2.HOUSE', $methodValues);

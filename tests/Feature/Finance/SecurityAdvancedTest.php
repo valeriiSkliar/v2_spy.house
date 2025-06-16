@@ -17,7 +17,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class SecurityAdvancedTest extends TestCase
@@ -30,7 +29,7 @@ class SecurityAdvancedTest extends TestCase
     {
         /** @var User $user */
         $user = User::factory()->create();
-        $service = new PromocodeService();
+        $service = new PromocodeService;
 
         // Попытки SQL инъекции через промокод
         $maliciousInputs = [
@@ -162,8 +161,6 @@ class SecurityAdvancedTest extends TestCase
 
     // === AUTHENTICATION AND AUTHORIZATION ===
 
-
-
     public function test_payment_model_relationships_work_correctly(): void
     {
         /** @var User $user1 */
@@ -186,8 +183,6 @@ class SecurityAdvancedTest extends TestCase
     }
 
     // === INPUT VALIDATION AND SANITIZATION ===
-
-
 
     public function test_amount_validation_demonstrates_need_for_business_logic(): void
     {
@@ -233,7 +228,7 @@ class SecurityAdvancedTest extends TestCase
     {
         /** @var User $creator */
         $creator = User::factory()->create();
-        $service = new PromocodeService();
+        $service = new PromocodeService;
 
         $maliciousPromocodes = [
             '<script>alert("XSS")</script>',
@@ -266,7 +261,7 @@ class SecurityAdvancedTest extends TestCase
     {
         /** @var User $user */
         $user = User::factory()->create();
-        $service = new PromocodeService();
+        $service = new PromocodeService;
 
         // Симулируем множественные быстрые запросы валидации
         $attempts = 0;
@@ -286,8 +281,6 @@ class SecurityAdvancedTest extends TestCase
         // После определенного количества попыток должна сработать защита
         $this->assertTrue($blocked || $attempts >= 30, 'Rate limiting should activate after multiple attempts');
     }
-
-
 
     public function test_model_level_validation_prevents_spam(): void
     {
@@ -408,7 +401,7 @@ class SecurityAdvancedTest extends TestCase
             'payment_id' => $payment->id,
             'balance_before' => 500.00,
             'balance_after' => 600.00,
-            'transaction_hash' => hash('sha256', $user->id . $payment->id . time()),
+            'transaction_hash' => hash('sha256', $user->id.$payment->id.time()),
             'created_at' => now(),
         ]);
 
@@ -417,7 +410,7 @@ class SecurityAdvancedTest extends TestCase
         $originalHash = $auditRecord->transaction_hash;
 
         // Попытка изменить критические поля должна изменить хеш
-        $newHash = hash('sha256', $user->id . $payment->id . 'modified' . time());
+        $newHash = hash('sha256', $user->id.$payment->id.'modified'.time());
         $this->assertNotEquals($originalHash, $newHash);
 
         // Аудит запись должна быть неизменяемой через обычные средства
@@ -447,7 +440,7 @@ class SecurityAdvancedTest extends TestCase
             'payment_id' => $payment->id,
             'balance_before' => 500.00,
             'balance_after' => 600.00,
-            'transaction_hash' => hash('sha256', $user->id . $payment->id . time()),
+            'transaction_hash' => hash('sha256', $user->id.$payment->id.time()),
             'created_at' => now(),
         ]);
 
@@ -460,8 +453,6 @@ class SecurityAdvancedTest extends TestCase
     }
 
     // === BUSINESS LOGIC SECURITY ===
-
-
 
     public function test_balance_manipulation_prevention(): void
     {
@@ -531,7 +522,7 @@ class SecurityAdvancedTest extends TestCase
         parent::setUp();
 
         // Создаем таблицу для аудита баланса если не существует
-        if (!Schema::hasTable('balance_audit')) {
+        if (! Schema::hasTable('balance_audit')) {
             Schema::create('balance_audit', function ($table) {
                 $table->id();
                 $table->foreignId('user_id')->constrained()->onDelete('cascade');

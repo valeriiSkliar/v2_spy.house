@@ -558,8 +558,7 @@ class CreativesController extends Controller
 
     /**
      * API endpoint for loading creatives with pagination and filtering
-     * 
-     * @param Request $request
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function apiIndex(Request $request)
@@ -570,7 +569,7 @@ class CreativesController extends Controller
             $perPage = max(1, min(100, (int) $request->input('per_page', 12)));
 
             // Validate tab
-            if (!in_array($tab, ['push', 'inpage', 'facebook', 'tiktok'])) {
+            if (! in_array($tab, ['push', 'inpage', 'facebook', 'tiktok'])) {
                 $tab = 'push';
             }
 
@@ -579,7 +578,7 @@ class CreativesController extends Controller
 
             // Apply search filter if provided
             $search = $request->input('search', '');
-            if (!empty($search)) {
+            if (! empty($search)) {
                 $allCreatives = array_filter($allCreatives, function ($creative) use ($search) {
                     return stripos($creative['title'], $search) !== false ||
                         stripos($creative['description'], $search) !== false;
@@ -589,7 +588,7 @@ class CreativesController extends Controller
 
             // Apply category filter if provided
             $category = $request->input('category', '');
-            if (!empty($category)) {
+            if (! empty($category)) {
                 $allCreatives = array_filter($allCreatives, function ($creative) use ($category) {
                     return isset($creative['category']) && $creative['category'] === $category;
                 });
@@ -635,7 +634,7 @@ class CreativesController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Failed to load creatives',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }

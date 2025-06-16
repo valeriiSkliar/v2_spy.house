@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Profile;
 
-use App\Http\Requests\BaseRequest;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 

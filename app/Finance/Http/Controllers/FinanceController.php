@@ -2,14 +2,14 @@
 
 namespace App\Finance\Http\Controllers;
 
+use App\Enums\Finance\PaymentMethod;
+use App\Enums\Finance\PaymentStatus;
+use App\Enums\Finance\PaymentType;
+use App\Finance\Models\Payment;
+use App\Finance\Services\Pay2Service;
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
-use App\Finance\Services\Pay2Service;
-use App\Finance\Models\Payment;
-use App\Enums\Finance\PaymentType;
-use App\Enums\Finance\PaymentMethod;
-use App\Enums\Finance\PaymentStatus;
 use Illuminate\Support\Facades\Log;
 
 class FinanceController extends Controller
@@ -30,9 +30,10 @@ class FinanceController extends Controller
     {
         $transactions = $request->user()->deposits()->orderBy('created_at', 'desc')->paginate(10);
         $paymentMethods = collect(PaymentMethod::getForFrontend())
-            ->filter(fn($method) => $method['value'] !== 'USER_BALANCE')
+            ->filter(fn ($method) => $method['value'] !== 'USER_BALANCE')
             ->values()
             ->all();
+
         return view('pages.finances.index', [
             'transactions' => $transactions,
             'paymentMethods' => $paymentMethods,
@@ -52,7 +53,7 @@ class FinanceController extends Controller
 
             // Рендерим HTML фрагменты
             $transactionsHtml = view('components.finances.transactions-list', [
-                'transactions' => $transactions
+                'transactions' => $transactions,
             ])->render();
 
             $paginationHtml = '';
@@ -71,7 +72,7 @@ class FinanceController extends Controller
                     'currentPage' => $transactions->currentPage(),
                     'totalPages' => $transactions->lastPage(),
                     'count' => $transactions->count(),
-                ]
+                ],
             ]);
         }
 
@@ -84,10 +85,9 @@ class FinanceController extends Controller
     public function depositForm(Request $request)
     {
         $paymentMethods = collect(PaymentMethod::getForFrontend())
-            ->filter(fn($method) => $method['value'] !== 'USER_BALANCE')
+            ->filter(fn ($method) => $method['value'] !== 'USER_BALANCE')
             ->values()
             ->all();
-
 
         return view('pages.finances.deposit', [
             'paymentMethods' => $paymentMethods,
@@ -119,7 +119,7 @@ class FinanceController extends Controller
             'user_id' => $user->id,
             'amount' => $amount,
             'payment_method' => $paymentMethod,
-            'request_all' => $request->all()
+            'request_all' => $request->all(),
         ]);
 
         // TODO:  delete  this Временное исправление для совместимости со старыми формами
@@ -147,28 +147,28 @@ class FinanceController extends Controller
         // Создаем платеж через Pay2.House
         $paymentResult = $this->pay2Service->createPayment($paymentData);
 
-        if (!$paymentResult['success']) {
+        if (! $paymentResult['success']) {
             Log::error('FinanceController: Ошибка создания депозита', [
                 'user_id' => $user->id,
                 'amount' => $amount,
-                'error' => $paymentResult['error']
+                'error' => $paymentResult['error'],
             ]);
 
             return back()->withErrors([
-                'amount' => 'Не удалось создать платеж. Попробуйте позже.'
+                'amount' => 'Не удалось создать платеж. Попробуйте позже.',
             ]);
         }
 
         // Проверяем что в ответе есть необходимые данные
-        if (!isset($paymentResult['data']['invoice_number']) || !isset($paymentResult['data']['approval_url'])) {
+        if (! isset($paymentResult['data']['invoice_number']) || ! isset($paymentResult['data']['approval_url'])) {
             Log::error('FinanceController: Неполный ответ от API', [
                 'user_id' => $user->id,
                 'amount' => $amount,
-                'response_data' => $paymentResult['data'] ?? 'no data'
+                'response_data' => $paymentResult['data'] ?? 'no data',
             ]);
 
             return back()->withErrors([
-                'amount' => 'Некорректный ответ от платежной системы. Попробуйте позже.'
+                'amount' => 'Некорректный ответ от платежной системы. Попробуйте позже.',
             ]);
         }
 
@@ -189,7 +189,7 @@ class FinanceController extends Controller
             'amount' => $amount,
             'payment_id' => $payment->id,
             'external_number' => $paymentData['external_number'],
-            'invoice_number' => $paymentResult['data']['invoice_number']
+            'invoice_number' => $paymentResult['data']['invoice_number'],
         ]);
 
         // Перенаправляем на платежную страницу
@@ -204,7 +204,7 @@ class FinanceController extends Controller
         $invoiceNumber = $request->get('invoice_number');
 
         return view('pages.finances.deposit-success', [
-            'invoice_number' => $invoiceNumber
+            'invoice_number' => $invoiceNumber,
         ]);
     }
 
@@ -216,7 +216,7 @@ class FinanceController extends Controller
         $invoiceNumber = $request->get('invoice_number');
 
         return view('pages.finances.deposit-cancel', [
-            'invoice_number' => $invoiceNumber
+            'invoice_number' => $invoiceNumber,
         ]);
     }
 }

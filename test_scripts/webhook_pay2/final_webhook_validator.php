@@ -2,7 +2,7 @@
 
 /**
  * ФИНАЛЬНЫЙ РАБОЧИЙ ВАЛИДАТОР WEBHOOK PAY2.HOUSE
- * 
+ *
  * ✅ Использует официальный алгоритм из документации
  * ✅ Готов к использованию в продакшене
  * ✅ Подробное логирование для отладки
@@ -10,35 +10,35 @@
 
 /**
  * Официальная функция декодирования webhook из документации Pay2.House
- * 
- * @param string|null $data Base64 закодированная подпись из заголовка Pay2-House-Signature
- * @param string|null $secret_key API ключ мерчанта
+ *
+ * @param  string|null  $data  Base64 закодированная подпись из заголовка Pay2-House-Signature
+ * @param  string|null  $secret_key  API ключ мерчанта
  * @return string|false Расшифрованные JSON данные или false при ошибке
  */
-function decrypt_webhook($data = NULL, $secret_key = NULL)
+function decrypt_webhook($data = null, $secret_key = null)
 {
     if (empty($data) || empty($secret_key)) {
-        return FALSE;
+        return false;
     }
 
     // Шаг 1: Декодирование Base64
     $decoded_data = base64_decode($data);
-    if ($decoded_data === FALSE) {
-        return FALSE;
+    if ($decoded_data === false) {
+        return false;
     }
 
     // Шаг 2: Разделение на части iv|signature|encrypted_data
     $parts = explode('|', $decoded_data);
     if (count($parts) !== 3) {
-        return FALSE;
+        return false;
     }
 
-    list($iv, $signature, $encrypted_data) = $parts;
+    [$iv, $signature, $encrypted_data] = $parts;
 
     // Шаг 3: Проверка HMAC подписи
-    $calculated_signature = hash_hmac('sha256', $iv . '|' . $encrypted_data, $secret_key);
-    if (!hash_equals($calculated_signature, $signature)) {
-        return FALSE;
+    $calculated_signature = hash_hmac('sha256', $iv.'|'.$encrypted_data, $secret_key);
+    if (! hash_equals($calculated_signature, $signature)) {
+        return false;
     }
 
     // Шаг 4: Расшифровка AES-256-CBC данных
@@ -50,20 +50,20 @@ function decrypt_webhook($data = NULL, $secret_key = NULL)
         hex2bin(bin2hex(hex2bin($iv)))  // Точно как в официальном коде!
     );
 
-    if ($decoded_encrypted_data !== FALSE) {
+    if ($decoded_encrypted_data !== false) {
         return $decoded_encrypted_data;
     }
 
-    return FALSE;
+    return false;
 }
 
 /**
  * Полный валидатор webhook с логированием
- * 
- * @param string $signature Подпись из заголовка Pay2-House-Signature
- * @param array $payload Данные из тела запроса
- * @param string $api_key API ключ мерчанта
- * @param bool $debug Включить отладочный вывод
+ *
+ * @param  string  $signature  Подпись из заголовка Pay2-House-Signature
+ * @param  array  $payload  Данные из тела запроса
+ * @param  string  $api_key  API ключ мерчанта
+ * @param  bool  $debug  Включить отладочный вывод
  * @return array Результат валидации
  */
 function validate_pay2_webhook($signature, $payload, $api_key, $debug = false)
@@ -72,45 +72,55 @@ function validate_pay2_webhook($signature, $payload, $api_key, $debug = false)
         'valid' => false,
         'payload_data' => null,
         'webhook_data' => null,
-        'error' => null
+        'error' => null,
     ];
 
     try {
         if ($debug) {
             echo "🔍 Начинаю валидацию webhook Pay2.House\n";
-            echo "📝 Подпись: " . substr($signature, 0, 50) . "...\n";
-            echo "📦 Payload: " . json_encode($payload) . "\n";
-            echo "🔑 API ключ: " . substr($api_key, 0, 20) . "...\n\n";
+            echo '📝 Подпись: '.substr($signature, 0, 50)."...\n";
+            echo '📦 Payload: '.json_encode($payload)."\n";
+            echo '🔑 API ключ: '.substr($api_key, 0, 20)."...\n\n";
         }
 
         // Проверяем наличие необходимых данных
         if (empty($signature)) {
             $result['error'] = 'Отсутствует подпись Pay2-House-Signature';
+
             return $result;
         }
 
         if (empty($api_key)) {
             $result['error'] = 'Отсутствует API ключ';
+
             return $result;
         }
 
         // Расшифровываем подпись
-        if ($debug) echo "🔐 Расшифровываю подпись...\n";
+        if ($debug) {
+            echo "🔐 Расшифровываю подпись...\n";
+        }
 
         $decrypted_webhook = decrypt_webhook($signature, $api_key);
 
-        if ($decrypted_webhook === FALSE) {
+        if ($decrypted_webhook === false) {
             $result['error'] = 'Не удалось расшифровать подпись webhook';
-            if ($debug) echo "❌ Ошибка расшифровки подписи\n";
+            if ($debug) {
+                echo "❌ Ошибка расшифровки подписи\n";
+            }
+
             return $result;
         }
 
-        if ($debug) echo "✅ Подпись успешно расшифрована\n";
+        if ($debug) {
+            echo "✅ Подпись успешно расшифрована\n";
+        }
 
         // Парсим JSON из подписи
         $webhook_data = json_decode($decrypted_webhook, true);
         if ($webhook_data === null) {
             $result['error'] = 'Неверный формат JSON в расшифрованной подписи';
+
             return $result;
         }
 
@@ -126,13 +136,15 @@ function validate_pay2_webhook($signature, $payload, $api_key, $debug = false)
         $required_fields = ['invoice_number', 'external_number', 'amount', 'currency_code', 'status'];
 
         foreach ($required_fields as $field) {
-            if (!isset($payload[$field]) || !isset($webhook_data[$field])) {
+            if (! isset($payload[$field]) || ! isset($webhook_data[$field])) {
                 $result['error'] = "Отсутствует обязательное поле: $field";
+
                 return $result;
             }
 
             if ($payload[$field] != $webhook_data[$field]) {
                 $result['error'] = "Несоответствие поля $field: payload={$payload[$field]}, webhook={$webhook_data[$field]}";
+
                 return $result;
             }
         }
@@ -142,12 +154,17 @@ function validate_pay2_webhook($signature, $payload, $api_key, $debug = false)
         $result['payload_data'] = $payload;
         $result['webhook_data'] = $webhook_data;
 
-        if ($debug) echo "🎉 Webhook успешно валидирован!\n";
+        if ($debug) {
+            echo "🎉 Webhook успешно валидирован!\n";
+        }
 
         return $result;
     } catch (Exception $e) {
-        $result['error'] = 'Исключение при валидации: ' . $e->getMessage();
-        if ($debug) echo "❌ Исключение: " . $e->getMessage() . "\n";
+        $result['error'] = 'Исключение при валидации: '.$e->getMessage();
+        if ($debug) {
+            echo '❌ Исключение: '.$e->getMessage()."\n";
+        }
+
         return $result;
     }
 }
@@ -160,7 +177,7 @@ function example_webhook_usage()
 
     // Симулируем входящий webhook запрос
     $headers = [
-        'Pay2-House-Signature' => 'NTM5OWVlODBiZDVhZWFiNzBmZjE4YmU3MGZjMGRlNGV8ZGYwYmY0MTI2ZTgxNzYwNjA1MjM0OTI5ODRmNzQ5NjE1YTMyOTQzNjNmMDQ3NDZmZmM2NDJlYWFmOTk0NzI4OXxZMm94YTJVd1ExWXpXbTUxT1hkUVRFVm1ORU5NTDFBMllqZFJNelp4VFhOcmJtcHliR0pDZVRRelZsTk1abFp2UW0wMVJsaDRRMFpQWm5GWmNXWlFUM0l5Y1dGRVUwbGtMM2R2TVdreVdqZElURkZQVkhNMGQwY3JVVGMyU210alVYa3ZjMGRqYTJObFpuTmFhRGRrYVZodmNITklla05aVjBwNE1IUjBVa04zU1dFdmVrWkhLMFpOVEZSTVVUTlFTRWd2WlU1WE5tMVpPVTlUZEVkVmEyWldSbXRWWWs5ek9XTnpNa2RYWkRJMWNERlVVRVJYYUZSclpHVlBNbTlRY0VadFFXVXdkR0kwZDJJMVdFcEhURlI1Um1oQ05EQmpVMFp0Ukc5eFFXWjNOSGhhWm0wNUx6WTJhUzlFV1UxRmN6ZEVLMHRwWlZwWmJubFFVM2RsU0RGc1F6Um9ia3RGY1RkRkwyMDNiekZzVUdGYVdqTmtNRUphVUZCeGNDOVVVRGxOYVZZemNETkJTa1Y0TW5OT05XVlRjME5FU1ZoMlRqbG5OMVE0TDNNPQ=='
+        'Pay2-House-Signature' => 'NTM5OWVlODBiZDVhZWFiNzBmZjE4YmU3MGZjMGRlNGV8ZGYwYmY0MTI2ZTgxNzYwNjA1MjM0OTI5ODRmNzQ5NjE1YTMyOTQzNjNmMDQ3NDZmZmM2NDJlYWFmOTk0NzI4OXxZMm94YTJVd1ExWXpXbTUxT1hkUVRFVm1ORU5NTDFBMllqZFJNelp4VFhOcmJtcHliR0pDZVRRelZsTk1abFp2UW0wMVJsaDRRMFpQWm5GWmNXWlFUM0l5Y1dGRVUwbGtMM2R2TVdreVdqZElURkZQVkhNMGQwY3JVVGMyU210alVYa3ZjMGRqYTJObFpuTmFhRGRrYVZodmNITklla05aVjBwNE1IUjBVa04zU1dFdmVrWkhLMFpOVEZSTVVUTlFTRWd2WlU1WE5tMVpPVTlUZEVkVmEyWldSbXRWWWs5ek9XTnpNa2RYWkRJMWNERlVVRVJYYUZSclpHVlBNbTlRY0VadFFXVXdkR0kwZDJJMVdFcEhURlI1Um1oQ05EQmpVMFp0Ukc5eFFXWjNOSGhhWm0wNUx6WTJhUzlFV1UxRmN6ZEVLMHRwWlZwWmJubFFVM2RsU0RGc1F6Um9ia3RGY1RkRkwyMDNiekZzVUdGYVdqTmtNRUphVUZCeGNDOVVVRGxOYVZZemNETkJTa1Y0TW5OT05XVlRjME5FU1ZoMlRqbG5OMVE0TDNNPQ==',
     ];
 
     $payload = [
@@ -170,14 +187,14 @@ function example_webhook_usage()
         'handling_fee' => 0,
         'currency_code' => 'USD',
         'description' => 'Оплата тарифа Start (month)',
-        'status' => 'paid'
+        'status' => 'paid',
     ];
 
     $api_key = $_ENV['PAY2_API_KEY'] ?? 'YOUR_API_KEY_HERE';
 
     echo "📥 Входящий webhook:\n";
-    echo "🔑 Подпись: " . substr($headers['Pay2-House-Signature'], 0, 50) . "...\n";
-    echo "📦 Данные: " . json_encode($payload, JSON_UNESCAPED_UNICODE) . "\n\n";
+    echo '🔑 Подпись: '.substr($headers['Pay2-House-Signature'], 0, 50)."...\n";
+    echo '📦 Данные: '.json_encode($payload, JSON_UNESCAPED_UNICODE)."\n\n";
 
     // Валидируем webhook
     $validation_result = validate_pay2_webhook(
@@ -200,6 +217,7 @@ function example_webhook_usage()
         return ['status' => 200, 'response' => 'OK'];
     } else {
         echo "❌ ОШИБКА ВАЛИДАЦИИ: {$validation_result['error']}\n";
+
         return ['status' => 401, 'response' => 'Invalid webhook'];
     }
 }

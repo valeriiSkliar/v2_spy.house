@@ -34,7 +34,7 @@ class DatabaseMigrationTest extends TestCase
             'search_request_count',
             'status',
             'created_at',
-            'updated_at'
+            'updated_at',
         ];
 
         foreach ($columns as $column) {
@@ -60,7 +60,7 @@ class DatabaseMigrationTest extends TestCase
             'webhook_processed_at',
             'idempotency_key',
             'created_at',
-            'updated_at'
+            'updated_at',
         ];
 
         foreach ($columns as $column) {

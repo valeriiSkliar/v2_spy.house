@@ -4,7 +4,6 @@ namespace Tests\Feature\Finance;
 
 use App\Enums\Finance\PaymentMethod;
 use App\Enums\Finance\PaymentStatus;
-use App\Enums\Finance\PaymentType;
 use App\Finance\Models\Payment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -14,7 +13,6 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Tests\TestCase;
-
 
 // TODO: Add webhook integration tests
 // class WebhookIntegrationTest extends TestCase

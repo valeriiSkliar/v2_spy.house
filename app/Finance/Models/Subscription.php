@@ -53,7 +53,7 @@ class Subscription extends Model
      */
     public function getFormattedAmount(): string
     {
-        return '$' . number_format($this->amount, 2);
+        return '$'.number_format($this->amount, 2);
     }
 
     /**
@@ -61,7 +61,7 @@ class Subscription extends Model
      */
     public function getDiscountedAmount(): float
     {
-        if (!$this->early_discount) {
+        if (! $this->early_discount) {
             return $this->amount;
         }
 
@@ -73,7 +73,7 @@ class Subscription extends Model
      */
     public function getFormattedDiscountedAmount(): string
     {
-        return '$' . number_format($this->getDiscountedAmount(), 2);
+        return '$'.number_format($this->getDiscountedAmount(), 2);
     }
 
     /**
@@ -105,7 +105,7 @@ class Subscription extends Model
      */
     public function getFormattedYearlyAmount(): string
     {
-        return '$' . number_format($this->getYearlyAmount(), 2);
+        return '$'.number_format($this->getYearlyAmount(), 2);
     }
 
     /**
@@ -121,7 +121,7 @@ class Subscription extends Model
      */
     public function getFormattedAmountByBillingType(string $billingType): string
     {
-        return '$' . number_format($this->getAmountByBillingType($billingType), 2);
+        return '$'.number_format($this->getAmountByBillingType($billingType), 2);
     }
 
     /**
@@ -152,7 +152,7 @@ class Subscription extends Model
             'subscription_id' => $this->id,
             'subscription_name' => $this->name,
             'calculated_priority' => $priority,
-            'available_priorities' => $priorities
+            'available_priorities' => $priorities,
         ]);
 
         return $priority;
@@ -171,14 +171,14 @@ class Subscription extends Model
             'current_subscription' => [
                 'id' => $this->id,
                 'name' => $this->name,
-                'priority' => $thisPriority
+                'priority' => $thisPriority,
             ],
             'compared_subscription' => [
                 'id' => $other->id,
                 'name' => $other->name,
-                'priority' => $otherPriority
+                'priority' => $otherPriority,
             ],
-            'is_higher_tier' => $result
+            'is_higher_tier' => $result,
         ]);
 
         return $result;
@@ -197,14 +197,14 @@ class Subscription extends Model
             'current_subscription' => [
                 'id' => $this->id,
                 'name' => $this->name,
-                'priority' => $thisPriority
+                'priority' => $thisPriority,
             ],
             'compared_subscription' => [
                 'id' => $other->id,
                 'name' => $other->name,
-                'priority' => $otherPriority
+                'priority' => $otherPriority,
             ],
-            'is_lower_tier' => $result
+            'is_lower_tier' => $result,
         ]);
 
         return $result;
@@ -231,25 +231,26 @@ class Subscription extends Model
                 'from_subscription_amount' => $fromSubscription->amount,
                 'to_subscription_id' => $this->id,
                 'to_subscription_name' => $this->name,
-                'to_subscription_amount' => $this->amount
+                'to_subscription_amount' => $this->amount,
             ]);
+
             return 0.0;
         }
 
         // Базовый коэффициент (пропорциональный)
         $baseRatio = $fromSubscription->amount / $this->amount;
-        
+
         // Ступенчатая система с минимумом 30%
         $minCompensationRatio = 0.30;
-        
+
         // Разница в цене
         $priceDifference = $this->amount / $fromSubscription->amount;
-        
+
         if ($priceDifference > 50) {
             // Если новый тариф дороже в 50+ раз, даем 50% компенсации
             $compensationRatio = 0.5;
         } elseif ($priceDifference > 20) {
-            // Если дороже в 20+ раз, даем 40% компенсации  
+            // Если дороже в 20+ раз, даем 40% компенсации
             $compensationRatio = 0.4;
         } elseif ($priceDifference > 10) {
             // Если дороже в 10+ раз, даем 35% компенсации
@@ -266,17 +267,17 @@ class Subscription extends Model
             'from_subscription' => [
                 'id' => $fromSubscription->id,
                 'name' => $fromSubscription->name,
-                'amount' => $fromSubscription->amount
+                'amount' => $fromSubscription->amount,
             ],
             'to_subscription' => [
                 'id' => $this->id,
                 'name' => $this->name,
-                'amount' => $this->amount
+                'amount' => $this->amount,
             ],
             'price_difference_ratio' => round($priceDifference, 2),
             'base_compensation_ratio' => round($baseRatio, 4),
             'stepped_compensation_ratio' => round($compensationRatio, 4),
-            'calculation' => sprintf('Price diff: %.2f, Base: %.4f, Final: %.4f', $priceDifference, $baseRatio, $compensationRatio)
+            'calculation' => sprintf('Price diff: %.2f, Base: %.4f, Final: %.4f', $priceDifference, $baseRatio, $compensationRatio),
         ]);
 
         return $compensationRatio;
@@ -288,7 +289,7 @@ class Subscription extends Model
     public function calculateTimeCompensation(Subscription $fromSubscription, int $timeLeftSeconds): int
     {
         $ratio = $this->getTimeCompensationRatio($fromSubscription);
-        $compensatedTime = (int)($timeLeftSeconds * $ratio);
+        $compensatedTime = (int) ($timeLeftSeconds * $ratio);
 
         Log::info('Time compensation calculation details', [
             'time_left_seconds' => $timeLeftSeconds,
@@ -299,13 +300,13 @@ class Subscription extends Model
             'from_subscription' => [
                 'id' => $fromSubscription->id,
                 'name' => $fromSubscription->name,
-                'amount' => $fromSubscription->amount
+                'amount' => $fromSubscription->amount,
             ],
             'to_subscription' => [
                 'id' => $this->id,
                 'name' => $this->name,
-                'amount' => $this->amount
-            ]
+                'amount' => $this->amount,
+            ],
         ]);
 
         return $compensatedTime;

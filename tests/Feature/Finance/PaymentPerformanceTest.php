@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Finance;
 
-use App\Enums\Finance\PaymentMethod;
 use App\Enums\Finance\PaymentStatus;
 use App\Enums\Finance\PaymentType;
 use App\Finance\Models\Payment;
@@ -207,8 +206,8 @@ class PaymentPerformanceTest extends TestCase
         for ($i = 0; $i < 1000; $i++) {
             $payments->push(Payment::factory()->make([
                 'user_id' => 1, // Используем фиксированный ID для избежания создания пользователей
-                'webhook_token' => 'test_token_' . $i, // Уникальные токены
-                'idempotency_key' => 'test_key_' . $i, // Уникальные ключи
+                'webhook_token' => 'test_token_'.$i, // Уникальные токены
+                'idempotency_key' => 'test_key_'.$i, // Уникальные ключи
             ]));
         }
 

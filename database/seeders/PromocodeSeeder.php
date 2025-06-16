@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Enums\Finance\PromocodeStatus;
 use App\Finance\Models\Promocode;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class PromocodeSeeder extends Seeder
@@ -131,6 +130,6 @@ class PromocodeSeeder extends Seeder
             'created_by_user_id' => $admin->id,
         ]);
 
-        $this->command->info('Created ' . Promocode::count() . ' promocodes');
+        $this->command->info('Created '.Promocode::count().' promocodes');
     }
 }

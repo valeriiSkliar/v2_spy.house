@@ -60,7 +60,7 @@ class PaymentFactory extends Factory
      */
     public function deposit(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'payment_type' => PaymentType::DEPOSIT,
             'subscription_id' => null,
             'payment_method' => $this->faker->randomElement([PaymentMethod::USDT, PaymentMethod::PAY2_HOUSE]),
@@ -74,6 +74,7 @@ class PaymentFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             $existingSubscription = Subscription::inRandomOrder()->first();
+
             return [
                 'payment_type' => PaymentType::DIRECT_SUBSCRIPTION,
                 'subscription_id' => $existingSubscription ? $existingSubscription->id : null,
@@ -86,7 +87,7 @@ class PaymentFactory extends Factory
      */
     public function pending(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => PaymentStatus::PENDING,
             'webhook_processed_at' => null,
         ]);
@@ -97,7 +98,7 @@ class PaymentFactory extends Factory
      */
     public function successful(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => PaymentStatus::SUCCESS,
             'webhook_processed_at' => $this->faker->dateTimeBetween('-1 week', 'now'),
         ]);
@@ -108,7 +109,7 @@ class PaymentFactory extends Factory
      */
     public function failed(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'status' => PaymentStatus::FAILED,
             'webhook_processed_at' => $this->faker->dateTimeBetween('-1 week', 'now'),
         ]);
@@ -119,7 +120,7 @@ class PaymentFactory extends Factory
      */
     public function usdt(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'payment_method' => PaymentMethod::USDT,
         ]);
     }
@@ -129,7 +130,7 @@ class PaymentFactory extends Factory
      */
     public function pay2House(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'payment_method' => PaymentMethod::PAY2_HOUSE,
         ]);
     }
@@ -139,7 +140,7 @@ class PaymentFactory extends Factory
      */
     public function userBalance(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'payment_method' => PaymentMethod::USER_BALANCE,
         ]);
     }

@@ -39,15 +39,17 @@ class AddTestPayments extends Command
         $type = $this->option('type');
         $count = (int) $this->option('count');
 
-        if (!$userId) {
+        if (! $userId) {
             $this->error('User ID is required. Use --user=1');
+
             return 1;
         }
 
         // Validate user exists
         $user = User::find($userId);
-        if (!$user) {
+        if (! $user) {
             $this->error("User with ID {$userId} not found");
+
             return 1;
         }
 
@@ -58,8 +60,9 @@ class AddTestPayments extends Command
             default => null,
         };
 
-        if (!$paymentType) {
+        if (! $paymentType) {
             $this->error('Invalid payment type. Use "deposit" or "subscription"');
+
             return 1;
         }
 
@@ -114,7 +117,7 @@ class AddTestPayments extends Command
             $subscription = Subscription::where('status', 'active')->inRandomOrder()->first();
             $subscriptionId = $subscription ? $subscription->id : null;
 
-            if (!$subscriptionId) {
+            if (! $subscriptionId) {
                 throw new \Exception('No active subscriptions available for DIRECT_SUBSCRIPTION payment');
             }
         }
@@ -126,7 +129,7 @@ class AddTestPayments extends Command
             'subscription_id' => $subscriptionId,
             'payment_method' => $paymentMethod,
             'status' => $status,
-            'transaction_number' => 'TEST_' . fake()->uuid(),
+            'transaction_number' => 'TEST_'.fake()->uuid(),
         ]);
     }
 }

@@ -20,7 +20,7 @@ class PromocodeTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->promocodeService = new PromocodeService();
+        $this->promocodeService = new PromocodeService;
     }
 
     public function test_promocode_creation_with_valid_data(): void

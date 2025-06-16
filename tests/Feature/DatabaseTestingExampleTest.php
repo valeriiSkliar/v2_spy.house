@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
 use App\Models\User;
 use Database\Seeders\TestingSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Tests\TestCase;
 
 class DatabaseTestingExampleTest extends TestCase
 {
@@ -19,7 +19,7 @@ class DatabaseTestingExampleTest extends TestCase
      */
     public function createApplication()
     {
-        $app = require __DIR__ . '/../../bootstrap/app.php';
+        $app = require __DIR__.'/../../bootstrap/app.php';
 
         $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 

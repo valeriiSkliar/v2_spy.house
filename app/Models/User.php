@@ -105,14 +105,14 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function currentTariff(): array
     {
-        if (!$this->subscription_id || !$this->subscription) {
+        if (! $this->subscription_id || ! $this->subscription) {
             return [
                 'id' => null,
                 'name' => 'Free',
                 'css_class' => 'free',
                 'expires_at' => null,
                 'status' => 'Не активно',
-                'is_active' => false
+                'is_active' => false,
             ];
         }
 
@@ -124,7 +124,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'css_class' => strtolower($this->subscription->name),
             'expires_at' => $this->subscription_time_end ? $this->subscription_time_end->format('d.m.Y') : null,
             'status' => $isActive ? 'Активная' : 'Не активно',
-            'is_active' => $isActive
+            'is_active' => $isActive,
         ];
     }
 
@@ -136,7 +136,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->subscription_id
             && $this->subscription_time_end
             && $this->subscription_time_end > now()
-            && !$this->subscription_is_expired;
+            && ! $this->subscription_is_expired;
     }
 
     /**
@@ -164,7 +164,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function getFormattedBalance(): string
     {
-        return '$' . number_format($this->available_balance, 2);
+        return '$'.number_format($this->available_balance, 2);
     }
 
     /**
@@ -198,7 +198,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getFullPhoneNumber(): ?string
     {
         if ($this->phone_country_code && $this->phone) {
-            return '+' . $this->phone_country_code . $this->phone;
+            return '+'.$this->phone_country_code.$this->phone;
         }
 
         return null;
