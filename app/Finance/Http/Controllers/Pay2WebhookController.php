@@ -135,12 +135,17 @@ class Pay2WebhookController extends Controller
         Log::info('Pay2WebhookController: Статус платежа обновлен', [
             'payment_id' => $payment->id,
             'user_id' => $payment->user_id,
+            'payment_type' => $payment->payment_type->value,
             'subscription_id' => $payment->subscription_id,
             'amount' => $payment->amount
         ]);
 
-        // Активируем подписку пользователя
-        $this->activateUserSubscription($payment, $data);
+        // Обрабатываем в зависимости от типа платежа
+        if ($payment->payment_type === \App\Enums\Finance\PaymentType::DEPOSIT) {
+            $this->processDepositPayment($payment, $data);
+        } elseif ($payment->payment_type === \App\Enums\Finance\PaymentType::DIRECT_SUBSCRIPTION) {
+            $this->activateUserSubscription($payment, $data);
+        }
 
         // TODO: Отправить уведомление пользователю
     }
@@ -193,6 +198,50 @@ class Pay2WebhookController extends Controller
         }
 
         // TODO: Отправить уведомление пользователю об ошибке
+    }
+
+    /**
+     * Process deposit payment by adding to user balance
+     *
+     * @param Payment $payment
+     * @param array $webhookData
+     * @return void
+     */
+    protected function processDepositPayment(Payment $payment, array $webhookData): void
+    {
+        $user = $payment->user;
+
+        if (!$user) {
+            Log::warning('Pay2WebhookController: Не найден пользователь для депозита', [
+                'payment_id' => $payment->id,
+                'user_id' => $payment->user_id
+            ]);
+            return;
+        }
+
+        // Добавляем сумму к балансу пользователя через BalanceService
+        $balanceService = app(\App\Finance\Services\BalanceService::class);
+        $result = $balanceService->addToBalance(
+            $user,
+            $payment->amount,
+            "Пополнение баланса (платеж #{$payment->id})"
+        );
+
+        if ($result['success']) {
+            Log::info('Pay2WebhookController: Депозит успешно зачислен на баланс', [
+                'payment_id' => $payment->id,
+                'user_id' => $user->id,
+                'amount' => $payment->amount,
+                'new_balance' => $user->fresh()->available_balance
+            ]);
+        } else {
+            Log::error('Pay2WebhookController: Ошибка зачисления депозита', [
+                'payment_id' => $payment->id,
+                'user_id' => $user->id,
+                'amount' => $payment->amount,
+                'error' => $result['error'] ?? 'Unknown error'
+            ]);
+        }
     }
 
     /**
