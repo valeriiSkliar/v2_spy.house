@@ -10,9 +10,9 @@
                     <input type="text" name="amount" class="input-h-57" value="{{ old('amount') }}">
                     <div class="form-price__currency">$</div>
                 </div>
-                @error('amount')
+                {{-- @error('amount')
                 <div class="text-danger mt-2">{{ $message }}</div>
-                @enderror
+                @enderror --}}
             </div>
         </div>
         <div class="col-12 col-md-auto align-self-end">

@@ -1,4 +1,5 @@
-// resources/js/tariffs.js
+import { createAndShowToast } from './utils/uiHelpers';
+
 document.addEventListener('DOMContentLoaded', function () {
   // Toggle rate details
   const toggleRateBtn = document.querySelector('.js-toggle-rate');
@@ -142,26 +143,25 @@ document.addEventListener('DOMContentLoaded', function () {
         if (response.ok && result.success) {
           // Success - handle different payment methods
           console.log('Payment created successfully:', result);
-          
+
           // For USER_BALANCE payments, redirect to success page
           if (result.redirect_url) {
             window.location.href = result.redirect_url;
-          } 
+          }
           // For external payments, redirect to payment gateway
           else if (result.payment_url) {
             window.location.href = result.payment_url;
-          }
-          else {
-            showPaymentError('Неожиданный ответ сервера');
+          } else {
+            createAndShowToast('Неожиданный ответ сервера', 'error');
           }
         } else {
           // Error - show message
           console.error('Payment creation failed:', result);
-          showPaymentError(result.error || 'Произошла ошибка при создании платежа');
+          createAndShowToast(result.error || 'Произошла ошибка при создании платежа', 'error');
         }
       } catch (error) {
         console.error('Network error:', error);
-        showPaymentError('Ошибка соединения. Попробуйте еще раз.');
+        createAndShowToast('Ошибка соединения. Попробуйте еще раз.', 'error');
       } finally {
         // Restore button state
         submitBtn.disabled = false;
@@ -169,39 +169,5 @@ document.addEventListener('DOMContentLoaded', function () {
         submitBtn.classList.remove('loading');
       }
     });
-  }
-
-  // Function to show payment error
-  function showPaymentError(message) {
-    // Remove existing error messages
-    const existingError = document.querySelector('.payment-error-message');
-    if (existingError) {
-      existingError.remove();
-    }
-
-    // Create and show error message
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'payment-error-message alert alert-danger mb-3';
-    errorDiv.innerHTML = `
-      <div class="d-flex align-items-center">
-        <svg class="me-2" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
-        </svg>
-        <span>${message}</span>
-      </div>
-    `;
-
-    // Insert error before form
-    const paymentForm = document.getElementById('subscription-payment-form');
-    if (paymentForm) {
-      paymentForm.parentNode.insertBefore(errorDiv, paymentForm);
-
-      // Auto-hide error after 5 seconds
-      setTimeout(() => {
-        if (errorDiv.parentNode) {
-          errorDiv.remove();
-        }
-      }, 5000);
-    }
   }
 });

@@ -2,7 +2,7 @@ import { ajaxFetcher } from './components/fetcher/ajax-fetcher.js';
 import { hideInElement, showInElement } from './components/loader.js';
 import { logger, loggerError } from './helpers/logger.js';
 import { updateUrlWithoutReload } from './helpers/url-helpers.js';
-import { createAndShowToast } from './utils/uiHelpers.js';
+import { createAndShowToast } from './utils/uiHelpers';
 
 /**
  * Обновляет контейнер пагинации
