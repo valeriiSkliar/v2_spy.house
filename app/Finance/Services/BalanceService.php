@@ -204,6 +204,38 @@ class BalanceService
         $isRenewal = $this->isRenewal($user, $subscription);
         $compensatedTime = 0;
 
+        // ВАЖНО: Рассчитываем компенсацию времени ПЕРЕД изменением подписки пользователя
+        if (!$isRenewal && $user->subscription_id && !$subscription->isEnterprise()) {
+            Log::info('BalanceService: Проверка условий для компенсации времени', [
+                'user_id' => $user->id,
+                'has_subscription_id' => (bool)$user->subscription_id,
+                'subscription_id' => $user->subscription_id,
+                'is_enterprise' => $subscription->isEnterprise(),
+                'subscription_name' => $subscription->name
+            ]);
+
+            Log::info('BalanceService: Начинаем расчет компенсации времени', [
+                'user_id' => $user->id,
+                'current_subscription_id' => $user->subscription_id,
+                'new_subscription_id' => $subscription->id
+            ]);
+
+            $compensatedTime = $this->calculateTimeCompensation($user, $subscription);
+
+            Log::info('BalanceService: Результат расчета компенсации', [
+                'user_id' => $user->id,
+                'compensated_time' => $compensatedTime
+            ]);
+        } else {
+            Log::info('BalanceService: Компенсация времени пропущена', [
+                'user_id' => $user->id,
+                'is_renewal' => $isRenewal,
+                'has_subscription_id' => (bool)$user->subscription_id,
+                'is_enterprise' => $subscription->isEnterprise(),
+                'reason' => $isRenewal ? 'renewal' : (!$user->subscription_id ? 'no_current_subscription' : 'enterprise_tariff')
+            ]);
+        }
+
         // Определяем время активации
         if ($isRenewal) {
             // Продление: добавляем к существующему времени окончания
@@ -218,17 +250,15 @@ class BalanceService
                 ? $startTime->copy()->addYear()
                 : $startTime->copy()->addMonth();
 
-            // Рассчитываем компенсацию времени при апгрейде (кроме Enterprise)
-            if ($user->subscription_id && !$subscription->isEnterprise()) {
-                $compensatedTime = $this->calculateTimeCompensation($user, $subscription);
-                if ($compensatedTime > 0) {
-                    $endTime->addSeconds($compensatedTime);
-                    Log::info('BalanceService: Применена компенсация времени', [
-                        'user_id' => $user->id,
-                        'compensated_seconds' => $compensatedTime,
-                        'compensated_days' => round($compensatedTime / 86400, 2)
-                    ]);
-                }
+            // Добавляем компенсированное время
+            if ($compensatedTime > 0) {
+                $endTime->addSeconds($compensatedTime);
+                Log::info('BalanceService: Применена компенсация времени', [
+                    'user_id' => $user->id,
+                    'compensated_seconds' => $compensatedTime,
+                    'compensated_days' => round($compensatedTime / 86400, 2),
+                    'new_end_time' => $endTime->toDateTimeString()
+                ]);
             }
         }
 
@@ -262,18 +292,46 @@ class BalanceService
      */
     protected function calculateTimeCompensation(User $user, Subscription $newSubscription): int
     {
+        // Принудительно перезагружаем пользователя из базы для актуальных данных
+        $user->refresh();
+
+        Log::info('BalanceService: Вход в calculateTimeCompensation', [
+            'user_id' => $user->id,
+            'user_subscription_id' => $user->subscription_id,
+            'user_subscription_time_end' => $user->subscription_time_end ? $user->subscription_time_end->toDateTimeString() : null,
+            'new_subscription_id' => $newSubscription->id,
+            'new_subscription_name' => $newSubscription->name
+        ]);
+
         // Проверяем наличие текущей подписки
         if (!$user->subscription_id || !$user->subscription_time_end) {
+            Log::info('BalanceService: Компенсация пропущена - нет текущей подписки или времени окончания', [
+                'user_id' => $user->id,
+                'has_subscription_id' => (bool)$user->subscription_id,
+                'has_subscription_time_end' => (bool)$user->subscription_time_end
+            ]);
             return 0;
         }
 
         $currentSubscription = $user->subscription;
         if (!$currentSubscription) {
+            Log::info('BalanceService: Компенсация пропущена - не удалось загрузить модель текущей подписки', [
+                'user_id' => $user->id,
+                'subscription_id' => $user->subscription_id
+            ]);
             return 0;
         }
 
         // Проверяем что это апгрейд (не понижение)
-        if (!$newSubscription->isHigherTierThan($currentSubscription)) {
+        $isHigherTier = $newSubscription->isHigherTierThan($currentSubscription);
+        Log::info('BalanceService: Проверка типа смены тарифа', [
+            'user_id' => $user->id,
+            'current_subscription' => $currentSubscription->name,
+            'new_subscription' => $newSubscription->name,
+            'is_higher_tier' => $isHigherTier
+        ]);
+
+        if (!$isHigherTier) {
             Log::info('BalanceService: Пропуск компенсации - не апгрейд', [
                 'user_id' => $user->id,
                 'current_subscription' => $currentSubscription->name,
@@ -284,15 +342,36 @@ class BalanceService
 
         // Вычисляем оставшееся время текущей подписки
         $now = now();
-        $timeLeft = $user->subscription_time_end->diffInSeconds($now, false);
+        $timeLeft = $now->diffInSeconds($user->subscription_time_end, false);
+
+        Log::info('BalanceService: Расчет оставшегося времени', [
+            'user_id' => $user->id,
+            'now' => $now->toDateTimeString(),
+            'subscription_end' => $user->subscription_time_end->toDateTimeString(),
+            'time_left_seconds' => $timeLeft,
+            'time_left_days' => round($timeLeft / 86400, 2)
+        ]);
 
         if ($timeLeft <= 0) {
+            Log::info('BalanceService: Пропуск компенсации - нет оставшегося времени', [
+                'user_id' => $user->id,
+                'time_left' => $timeLeft
+            ]);
             return 0;
         }
 
-        // Вычисляем коэффициент компенсации на основе цен
-        $compensationRatio = $newSubscription->getTimeCompensationRatio($currentSubscription);
-        $compensatedTime = (int) ($timeLeft * $compensationRatio);
+        // Используем единую логику расчета компенсации из модели Subscription
+        Log::info('BalanceService: Вызов расчета компенсации через модель Subscription', [
+            'user_id' => $user->id,
+            'time_left_to_compensate' => $timeLeft
+        ]);
+
+        $compensatedTime = $newSubscription->calculateTimeCompensation($currentSubscription, $timeLeft);
+
+        Log::info('BalanceService: Получен результат расчета компенсации', [
+            'user_id' => $user->id,
+            'compensated_time' => $compensatedTime
+        ]);
 
         Log::info('BalanceService: Расчет компенсации времени', [
             'user_id' => $user->id,
@@ -300,7 +379,6 @@ class BalanceService
             'new_subscription' => $newSubscription->name,
             'time_left_seconds' => $timeLeft,
             'time_left_days' => round($timeLeft / 86400, 2),
-            'compensation_ratio' => $compensationRatio,
             'compensated_time_seconds' => $compensatedTime,
             'compensated_time_days' => round($compensatedTime / 86400, 2)
         ]);
@@ -396,4 +474,5 @@ class BalanceService
     {
         $this->activateSubscription($user, $subscription, $billingType);
     }
+
 }
