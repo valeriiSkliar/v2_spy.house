@@ -14,6 +14,9 @@ Route::middleware('auth')
         Route::get('/deposit/cancel', [FinanceController::class, 'depositCancel'])->name('deposit.cancel');
     });
 
+// Продолжение депозита (без auth middleware, используем invoice_number)
+Route::get('/deposit/continue/{invoice_number}', [FinanceController::class, 'continueDeposit'])->name('deposit.continue');
+
 // Public API routes with web middleware and auth
 Route::middleware(['web', 'auth'])->group(function () {
     Route::get('finances/list', [FinanceController::class, 'ajaxList'])->name('api.finances.list');

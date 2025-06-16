@@ -178,6 +178,7 @@ class TariffController extends Controller
             'payment_url' => $paymentResult['data']['approval_url'],
             'invoice_number' => $paymentResult['data']['invoice_number'],
             'external_number' => $paymentData['external_number'],
+            'continue_payment_url' => $payment->getContinuePaymentUrl(), // Ссылка для продолжения платежа
         ]);
     }
 
@@ -400,6 +401,49 @@ class TariffController extends Controller
     }
 
     /**
+     * Continue payment - redirect to original approval_url
+     */
+    public function continuePayment(Request $request, $invoiceNumber)
+    {
+        Log::info('TariffController: Запрос на продолжение платежа', [
+            'invoice_number' => $invoiceNumber,
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        // Находим платеж по invoice_number
+        $payment = Payment::where('invoice_number', $invoiceNumber)->first();
+
+        if (!$payment) {
+            Log::warning('TariffController: Платеж не найден для продолжения', [
+                'invoice_number' => $invoiceNumber,
+            ]);
+
+            return redirect()->route('tariffs.index')->with('error', 'Платеж не найден');
+        }
+
+        // Проверяем что есть approval_url
+        if (empty($payment->approval_url)) {
+            Log::warning('TariffController: Отсутствует approval_url для продолжения', [
+                'payment_id' => $payment->id,
+                'invoice_number' => $invoiceNumber,
+            ]);
+
+            return redirect()->route('tariffs.index')->with('error', 'Ссылка для оплаты недоступна');
+        }
+
+        Log::info('TariffController: Перенаправление на approval_url', [
+            'payment_id' => $payment->id,
+            'invoice_number' => $invoiceNumber,
+            'user_id' => $payment->user_id,
+            'status' => $payment->status->value,
+        ]);
+
+        // Перенаправляем на approval_url от платежной системы
+        return redirect($payment->approval_url);
+    }
+
+    /**
      * AJAX endpoint for payments pagination.
      *
      * @return \Illuminate\Http\JsonResponse
@@ -437,5 +481,40 @@ class TariffController extends Controller
         }
 
         return $view;
+    }
+
+    /**
+     * Get pending payments for current user (for future reminders functionality)
+     */
+    public function getPendingPayments(Request $request)
+    {
+        $user = $request->user();
+
+        $pendingPayments = $user->payments()
+            ->where('status', PaymentStatus::PENDING)
+            ->whereNotNull('approval_url')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->filter(fn($payment) => !empty($payment->approval_url))
+            ->map(fn($payment) => [
+                'id' => $payment->id,
+                'amount' => $payment->getFormattedAmount(),
+                'payment_type' => $payment->payment_type->value,
+                'created_at' => $payment->created_at->format('d.m.Y H:i'),
+                'hours_old' => $payment->created_at->diffInHours(now()),
+                'continue_url' => $payment->getContinuePaymentUrl(),
+                'subscription_name' => $payment->subscription?->name,
+            ])
+            ->values();
+
+        Log::info('TariffController: Получен список незавершенных платежей', [
+            'user_id' => $user->id,
+            'pending_count' => $pendingPayments->count(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'pending_payments' => $pendingPayments,
+        ]);
     }
 }

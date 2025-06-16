@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/tariffs/payment/success', [TariffController::class, 'paymentSuccess'])->name('tariffs.payment.success');
 Route::get('/tariffs/payment/cancel', [TariffController::class, 'paymentCancel'])->name('tariffs.payment.cancel');
 
+// Продолжение платежа (без auth middleware, используем invoice_number)
+Route::get('/payment/continue/{invoice_number}', [TariffController::class, 'continuePayment'])->name('payment.continue');
+
 // Тарифы
 Route::middleware('auth')->group(function () {
     Route::get('/tariffs', [TariffController::class, 'index'])->name('tariffs.index');
@@ -17,4 +20,5 @@ Route::middleware('auth')->group(function () {
 // API роуты для AJAX
 Route::prefix('api')->middleware('auth')->group(function () {
     Route::get('/tariffs/payments', [TariffController::class, 'ajaxPayments'])->name('api.tariffs.payments');
+    Route::get('/tariffs/pending-payments', [TariffController::class, 'getPendingPayments'])->name('api.tariffs.pending-payments');
 });

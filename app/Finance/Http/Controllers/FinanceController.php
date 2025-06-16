@@ -220,4 +220,58 @@ class FinanceController extends Controller
             'invoice_number' => $invoiceNumber,
         ]);
     }
+
+    /**
+     * Continue deposit payment - redirect to original approval_url
+     */
+    public function continueDeposit(Request $request, $invoiceNumber)
+    {
+        Log::info('FinanceController: Запрос на продолжение депозита', [
+            'invoice_number' => $invoiceNumber,
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        // Находим платеж по invoice_number
+        $payment = Payment::where('invoice_number', $invoiceNumber)->first();
+
+        if (!$payment) {
+            Log::warning('FinanceController: Депозит не найден для продолжения', [
+                'invoice_number' => $invoiceNumber,
+            ]);
+
+            return redirect()->route('finances.index')->with('error', 'Платеж не найден');
+        }
+
+        // Проверяем что это депозит
+        if ($payment->payment_type !== PaymentType::DEPOSIT) {
+            Log::warning('FinanceController: Платеж не является депозитом', [
+                'payment_id' => $payment->id,
+                'invoice_number' => $invoiceNumber,
+                'payment_type' => $payment->payment_type->value,
+            ]);
+
+            return redirect()->route('finances.index')->with('error', 'Недействительный тип платежа');
+        }
+
+        // Проверяем что есть approval_url
+        if (empty($payment->approval_url)) {
+            Log::warning('FinanceController: Отсутствует approval_url для продолжения депозита', [
+                'payment_id' => $payment->id,
+                'invoice_number' => $invoiceNumber,
+            ]);
+
+            return redirect()->route('finances.index')->with('error', 'Ссылка для оплаты недоступна');
+        }
+
+        Log::info('FinanceController: Перенаправление на approval_url для депозита', [
+            'payment_id' => $payment->id,
+            'invoice_number' => $invoiceNumber,
+            'user_id' => $payment->user_id,
+            'status' => $payment->status->value,
+        ]);
+
+        // Перенаправляем на approval_url от платежной системы
+        return redirect($payment->approval_url);
+    }
 }

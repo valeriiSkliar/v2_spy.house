@@ -166,6 +166,26 @@ class Payment extends Model
     }
 
     /**
+     * Generate continue payment URL for pending payments
+     */
+    public function getContinuePaymentUrl(): ?string
+    {
+        // Только для платежей со статусом PENDING и с approval_url и invoice_number
+        if ($this->status !== PaymentStatus::PENDING || empty($this->approval_url) || empty($this->invoice_number)) {
+            return null;
+        }
+
+        // Определяем роут в зависимости от типа платежа
+        $routeName = $this->payment_type === PaymentType::DEPOSIT
+            ? 'deposit.continue'
+            : 'payment.continue';
+
+        return route($routeName, [
+            'invoice_number' => $this->invoice_number,
+        ]);
+    }
+
+    /**
      * Mark payment as successful
      */
     public function markAsSuccessful(): bool
