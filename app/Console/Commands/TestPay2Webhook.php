@@ -3,164 +3,87 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Finance\Http\Controllers\Pay2WebhookController;
 use App\Finance\Services\Pay2Service;
-use App\Finance\Models\Payment;
-use App\Models\User;
-use App\Enums\Finance\PaymentMethod;
-use App\Enums\Finance\PaymentStatus;
-use App\Enums\Finance\PaymentType;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Config;
 
 class TestPay2Webhook extends Command
 {
-    protected $signature = 'test:pay2-webhook';
-    protected $description = 'Тестирование обработки webhook от Pay2.House с реальными данными';
+    protected $signature = 'pay2:test-webhook';
+    protected $description = 'Тестирование методов Pay2Service с реальными webhook данными';
 
     public function handle()
     {
-        $this->info('=== Тестирование обработки Pay2.House webhook ===');
+        // Исходные данные из webhook лога
+        $signature = "NTM5OWVlODBiZDVhZWFiNzBmZjE4YmU3MGZjMGRlNGV8ZGYwYmY0MTI2ZTgxNzYwNjA1MjM0OTI5ODRmNzQ5NjE1YTMyOTQzNjNmMDQ3NDZmZmM2NDJlYWFmOTk0NzI4OXxZMm94YTJVd1ExWXpXbTUxT1hkUVRFVm1ORU5NTDFBMllqZFJNelp4VFhOcmJtcHliR0pDZVRRelZsTk1abFp2UW0wMVJsaDRRMFpQWm5GWmNXWlFUM0l5Y1dGRVUwbGtMM2R2TVdreVdqZElURkZQVkhNMGQwY3JVVGMyU210alVYa3ZjMGRqYTJObFpuTmFhRGRrYVZodmNITklla05aVjBwNE1IUjBVa04zU1dFdmVrWkhLMFpOVEZSTVVUTlFTRWd2WlU1WE5tMVpPVTlUZEVkVmEyWldSbXRWWWs5ek9XTnpNa2RYWkRJMWNERlVVRVJYYUZSclpHVlBNbTlRY0VadFFXVXdkR0kwZDJJMVdFcEhURlI1Um1oQ05EQmpVMFp0Ukc5eFFXWjNOSGhhWm0wNUx6WTJhUzlFV1UxRmN6ZEVLMHRwWlZwWmJubFFVM2RsU0RGc1F6Um9ia3RGY1RkRkwyMDNiekZzVUdGYVdqTmtNRUphVUZCeGNDOVVVRGxOYVZZemNETkJTa1Y0TW5OT05XVlRjME5FU1ZoMlRqbG5OMVE0TDNNPQ==";
 
-        try {
-            // Реальные данные из curl запроса
-            $webhookData = [
-                'invoice_number' => 'IN2212956367',
-                'external_number' => 'TN121750056778',
-                'amount' => 1,
-                'handling_fee' => 0,
-                'currency_code' => 'USD',
-                'description' => 'плата тарифа Start (month)',
-                'status' => 'paid'
-            ];
+        $payload = [
+            "invoice_number" => "IN2212956367",
+            "external_number" => "TN121750056778",
+            "amount" => 1,
+            "handling_fee" => 0,
+            "currency_code" => "USD",
+            "description" => "Оплата тарифа Start (month)",
+            "status" => "paid"
+        ];
 
-            $signature = 'NTM5OWVlODBiZDVhZWFiNzBmZjE4YmU3MGZjMGRlNGV8ZGYwYmY0MTI2ZTgxNzYwNjA1MjM0OTI5ODRmNzQ5NjE1YTMyOTQzNjNmMDQ3NDZmZmM2NDJlYWFmOTk0NzI4OXxZMm94YTJVd1ExWXpXbTUxT1hkUVRFVm1ORU5NTDFBMllqZFJNelp4VFhOcmJtcHliR0pDZVRRelZsTk1abFp2UW0wMVJsaDRRMFpQWm5GWmNXWlFUM0l5Y1dGRVUwbGtMM2R2TVdreVdqZElURkZQVkhNMGQwY3JVVGMyU210alVYa3ZjMGRqYTJObFpuTmFhRGRrYVZodmNITklla05aVjBwNE1IUjBVa04zU1dFdmVrWkhLMFpOVEZSTVVUTlFTRWd2WlU1WE5tMVpPVTlUZEVkVmEyWldSbXRWWWs5ek9XTnpNa2RYWkRJMWNERlVVRVJYYUZSclpHVlBNbTlRY0VadFFXVXdkR0kwZDJJMVdFcEhURlI1Um1oQ05EQmpVMFp0Ukc5eFFXWjNOSGhhWm0wNUx6WTJhUzlFV1UxRmN6ZEVLMHRwWlZwWmJubFFVM2RsU0RGc1F6Um9ia3RGY1RkRkwyMDNiekZzVUdGYVdqTmtNRUphVUZCeGNDOVVVRGxOYVZZemNETkJTa1Y0TW5OT05XVlRjME5FU1ZoMlRqbG5OMVE0TDNNPQ==';
+        $this->line("=== ТЕСТИРОВАНИЕ Pay2Service МЕТОДОВ ===");
+        $this->line("Signature: " . substr($signature, 0, 50) . "...");
+        $this->line("Payload: " . json_encode($payload, JSON_UNESCAPED_UNICODE));
+        $this->line("");
 
-            $this->info('1. Проверка подписи webhook...');
-            $this->testWebhookSignature($signature, $webhookData);
+        // Создаем экземпляр сервиса
+        $pay2Service = new Pay2Service();
 
-            $this->info('2. Создание тестового платежа...');
-            $payment = $this->createTestPayment($webhookData);
+        // Получаем API ключ из конфига
+        $apiKey = Config::get('pay2.test_mode')
+            ? Config::get('pay2.test_api_key')
+            : Config::get('pay2.api_key');
 
-            $this->info('3. Симуляция обработки webhook...');
-            $this->simulateWebhookProcessing($webhookData, $signature, $payment);
+        $this->info("Используемый API ключ: " . substr($apiKey, 0, 20) . "...");
+        $this->info("Тестовый режим: " . (Config::get('pay2.test_mode') ? 'ДА' : 'НЕТ'));
+        $this->line("");
 
-            $this->info('4. Проверка результатов...');
-            $this->checkResults($payment);
+        // ТЕСТ 1: decrypt_webhook
+        $this->line("=== ТЕСТ 1: decrypt_webhook ===");
+        $decrypted = $pay2Service->decrypt_webhook($signature, $apiKey);
+        if ($decrypted !== FALSE) {
+            $this->line("✅ Расшифровка успешна!");
+            $this->line("Расшифрованные данные: " . $decrypted);
 
-            $this->info('✅ Тестирование webhook завершено успешно!');
-        } catch (\Exception $e) {
-            $this->error('❌ Ошибка при тестировании: ' . $e->getMessage());
-            $this->error('Трейс: ' . $e->getTraceAsString());
-        }
-    }
-
-    protected function testWebhookSignature($signature, $webhookData)
-    {
-        $pay2Service = app(Pay2Service::class);
-
-        $this->info('Подпись: ' . substr($signature, 0, 50) . '...');
-        $this->info('Данные: ' . json_encode($webhookData));
-        $this->info('Режим Pay2: ' . (config('pay2.test_mode') ? 'Тестовый' : 'Продакшн'));
-
-        // В тестовом режиме проверка подписи может быть пропущена
-        if (config('pay2.test_mode')) {
-            $this->warn('⚠️ Тестовый режим: проверка подписи пропущена');
-        } else {
-            $isValidSignature = $pay2Service->verifyWebhookSignature($signature, $webhookData);
-            $this->info('Подпись валидна: ' . ($isValidSignature ? '✅ Да' : '❌ Нет'));
-
-            if (!$isValidSignature) {
-                $this->warn('⚠️ Принудительно включаем тестовый режим для тестирования');
-                config(['pay2.test_mode' => true]);
-            }
-        }
-    }
-
-    protected function createTestPayment($webhookData)
-    {
-        // Создаем тестового пользователя или находим существующего
-        $user = User::first();
-        if (!$user) {
-            $this->error('❌ Не найден пользователь для создания платежа');
-            throw new \Exception('Пользователь не найден');
-        }
-
-        // Очищаем старый тестовый платеж, если есть
-        Payment::where('invoice_number', $webhookData['invoice_number'])->delete();
-
-        // Создаем тестовый платеж
-        $payment = Payment::create([
-            'user_id' => $user->id,
-            'amount' => $webhookData['amount'],
-            'payment_type' => PaymentType::DEPOSIT,
-            'subscription_id' => null,
-            'payment_method' => PaymentMethod::PAY2_HOUSE,
-            'status' => PaymentStatus::PENDING,
-            'invoice_number' => $webhookData['invoice_number'],
-            'external_number' => $webhookData['external_number'],
-        ]);
-
-        $this->info("Создан тестовый платеж ID: {$payment->id}");
-        $this->info("Пользователь: {$user->email}");
-        $this->info("Сумма: {$payment->amount} USD");
-        $this->info("Статус: {$payment->status->value}");
-        $this->info("Баланс до: {$user->available_balance} USD");
-
-        return $payment;
-    }
-
-    protected function simulateWebhookProcessing($webhookData, $signature, $payment)
-    {
-        // Создаем mock Request с данными webhook
-        $request = new Request();
-        $request->merge($webhookData);
-        $request->headers->set('Pay2-House-Signature', $signature);
-        $request->headers->set('Content-Type', 'application/json');
-
-        $this->info('Симулируем обработку webhook через Pay2WebhookController...');
-        $this->info('Тестовый режим: ' . (config('pay2.test_mode') ? 'включен' : 'выключен'));
-
-        // Создаем экземпляр контроллера
-        $webhookController = app(Pay2WebhookController::class);
-
-        try {
-            // Вызываем метод обработки
-            $response = $webhookController->handle($request);
-
-            $this->info('Ответ контроллера: ' . $response->getContent());
-            $this->info('HTTP статус: ' . $response->getStatusCode());
-
-            if ($response->getStatusCode() === 200) {
-                $this->info('✅ Webhook обработан успешно');
-            } else {
-                $this->warn('⚠️ Webhook обработан с ошибкой');
-            }
-        } catch (\Exception $e) {
-            $this->error('❌ Ошибка при обработке webhook: ' . $e->getMessage());
-        }
-    }
-
-    protected function checkResults($payment)
-    {
-        // Обновляем данные платежа из БД
-        $payment->refresh();
-
-        $this->info('=== Результаты обработки ===');
-        $this->info("Статус платежа: {$payment->status->value}");
-        $this->info("Обновлен: {$payment->updated_at}");
-
-        // Проверяем пользователя
-        $user = $payment->user;
-        $this->info("Баланс пользователя: {$user->balance}");
-
-        if ($payment->status === PaymentStatus::SUCCESS) {
-            $this->info('✅ Платеж успешно обработан!');
-            if ($payment->payment_type === PaymentType::DEPOSIT) {
-                $this->info('✅ Баланс должен быть пополнен');
+            $webhookData = json_decode($decrypted, true);
+            if ($webhookData) {
+                $this->line("Parsed JSON:");
+                foreach ($webhookData as $key => $value) {
+                    $this->line("  $key: $value");
+                }
             }
         } else {
-            $this->warn('⚠️ Платеж не был обработан как успешный');
+            $this->error("❌ Ошибка расшифровки");
         }
+        $this->line("");
+
+        // ТЕСТ 2: validate_pay2_webhook
+        $this->line("=== ТЕСТ 2: validate_pay2_webhook (с отладкой) ===");
+        $validationResult = $pay2Service->validate_pay2_webhook($signature, $payload, $apiKey, true);
+        $this->line("Результат валидации:");
+        $this->line("Valid: " . ($validationResult['valid'] ? 'true' : 'false'));
+        if (isset($validationResult['error'])) {
+            $this->error("Error: " . $validationResult['error']);
+        }
+        if (isset($validationResult['webhook_data'])) {
+            $this->line("Webhook data:");
+            foreach ($validationResult['webhook_data'] as $key => $value) {
+                $this->line("  $key: $value");
+            }
+        }
+        $this->line("");
+
+        // ТЕСТ 3: verifyWebhookSignature  
+        $this->line("=== ТЕСТ 3: verifyWebhookSignature ===");
+        $isValid = $pay2Service->verifyWebhookSignature($signature, $payload);
+        $this->line("Результат: " . ($isValid ? "✅ ВАЛИДНАЯ" : "❌ НЕВАЛИДНАЯ") . " подпись");
+
+        $this->line("");
+        $this->info("=== ТЕСТИРОВАНИЕ ЗАВЕРШЕНО ===");
     }
 }

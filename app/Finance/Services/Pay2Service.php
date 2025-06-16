@@ -189,7 +189,8 @@ class Pay2Service
     }
 
     /**
-     * Проверка webhook подписи
+     * Проверка webhook подписи Pay2.House
+     * Официальная документация: https://pay2.house/docs/api (Webhook Events)
      *
      * @param string $signature
      * @param array $data
@@ -197,13 +198,86 @@ class Pay2Service
      */
     public function verifyWebhookSignature(string $signature, array $data)
     {
-        $secretKey = $this->config['test_mode']
-            ? $this->config['test_secret_key']
-            : $this->config['api_key'];
+        try {
+            // В тестовом режиме используем тестовый API ключ
+            $secretKey = $this->config['test_mode']
+                ? $this->config['test_api_key']
+                : $this->config['api_key'];
 
-        $expectedSignature = $this->createSignToken($data);
+            Log::info('Pay2Service: Проверка webhook подписи', [
+                'test_mode' => $this->config['test_mode'],
+                'signature' => substr($signature, 0, 100) . '...',
+                'data' => $data
+            ]);
 
-        return hash_equals($signature, $expectedSignature);
+            // Декодируем base64
+            $decoded_data = base64_decode($signature);
+            if ($decoded_data === false) {
+                Log::error('Pay2Service: Ошибка декодирования base64 подписи');
+                return false;
+            }
+
+            // Разделяем на части: iv|signature|encrypted_data
+            $parts = explode('|', $decoded_data);
+            if (count($parts) !== 3) {
+                Log::error('Pay2Service: Неверный формат подписи webhook', [
+                    'parts_count' => count($parts),
+                    'signature' => substr($signature, 0, 100) . '...'
+                ]);
+                return false;
+            }
+
+            list($iv, $hmac_signature, $encrypted_data) = $parts;
+
+            // Вычисляем HMAC подпись для проверки целостности (по официальной документации)
+            $hmac_data = $iv . '|' . $encrypted_data;
+            $calculated_signature = hash_hmac('sha256', $hmac_data, $secretKey);
+
+            // Проверяем подпись
+            if (!hash_equals($calculated_signature, $hmac_signature)) {
+                Log::warning('Pay2Service: Подпись webhook не совпадает', [
+                    'calculated' => $calculated_signature,
+                    'received' => $hmac_signature,
+                    'hmac_data' => substr($hmac_data, 0, 100) . '...'
+                ]);
+                return false;
+            }
+
+            // Расшифровываем данные используя AES-256-CBC (по ОФИЦИАЛЬНОЙ документации)
+            $decrypted_data = openssl_decrypt(
+                base64_decode($encrypted_data),
+                'AES-256-CBC',
+                hex2bin(hash('sha256', $secretKey)),
+                0,
+                hex2bin(bin2hex(hex2bin($iv)))  // Точно как в официальном коде Pay2.House!
+            );
+
+            if ($decrypted_data === false) {
+                Log::error('Pay2Service: Ошибка расшифровки AES-256-CBC');
+                return false;
+            }
+
+            // Парсим JSON данные
+            $webhook_data = json_decode($decrypted_data, true);
+            if ($webhook_data === null) {
+                Log::error('Pay2Service: Ошибка парсинга JSON из расшифрованных данных', [
+                    'decrypted_data' => $decrypted_data
+                ]);
+                return false;
+            }
+
+            Log::info('Pay2Service: Webhook подпись успешно проверена', [
+                'webhook_data' => $webhook_data
+            ]);
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Pay2Service: Исключение при проверке webhook подписи', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return false;
+        }
     }
 
     /**
@@ -218,5 +292,139 @@ class Pay2Service
         // Префикс DP для депозитов, TN для тарифов/подписок
         $prefix = 'TN';
         return $prefix . $userId . $tariffId . time();
+    }
+
+    /**
+     *  decrypt_webhook из final_webhook_validator.php
+     */
+    public function decrypt_webhook($data = NULL, $secret_key = NULL)
+    {
+        if (empty($data) || empty($secret_key)) {
+            return FALSE;
+        }
+
+        // Шаг 1: Декодирование Base64
+        $decoded_data = base64_decode($data);
+        if ($decoded_data === FALSE) {
+            return FALSE;
+        }
+
+        // Шаг 2: Разделение на части iv|signature|encrypted_data
+        $parts = explode('|', $decoded_data);
+        if (count($parts) !== 3) {
+            return FALSE;
+        }
+
+        list($iv, $signature, $encrypted_data) = $parts;
+
+        // Шаг 3: Проверка HMAC подписи
+        $calculated_signature = hash_hmac('sha256', $iv . '|' . $encrypted_data, $secret_key);
+        if (!hash_equals($calculated_signature, $signature)) {
+            return FALSE;
+        }
+
+        // Шаг 4: Расшифровка AES-256-CBC данных
+        $decoded_encrypted_data = openssl_decrypt(
+            base64_decode($encrypted_data),
+            'AES-256-CBC',
+            hex2bin(hash('sha256', $secret_key)),
+            0,
+            hex2bin(bin2hex(hex2bin($iv)))
+        );
+
+        if ($decoded_encrypted_data !== FALSE) {
+            return $decoded_encrypted_data;
+        }
+
+        return FALSE;
+    }
+
+    /**
+     * ТОЧНАЯ КОПИЯ validate_pay2_webhook из final_webhook_validator.php
+     */
+    public function validate_pay2_webhook($signature, $payload, $api_key, $debug = false)
+    {
+        $result = [
+            'valid' => false,
+            'payload_data' => null,
+            'webhook_data' => null,
+            'error' => null
+        ];
+
+        try {
+            if ($debug) {
+                echo "🔍 Начинаю валидацию webhook Pay2.House\n";
+                echo "📝 Подпись: " . substr($signature, 0, 50) . "...\n";
+                echo "📦 Payload: " . json_encode($payload) . "\n";
+                echo "🔑 API ключ: " . substr($api_key, 0, 20) . "...\n\n";
+            }
+
+            // Проверяем наличие необходимых данных
+            if (empty($signature)) {
+                $result['error'] = 'Отсутствует подпись Pay2-House-Signature';
+                return $result;
+            }
+
+            if (empty($api_key)) {
+                $result['error'] = 'Отсутствует API ключ';
+                return $result;
+            }
+
+            // Расшифровываем подпись
+            if ($debug) echo "🔐 Расшифровываю подпись...\n";
+
+            $decrypted_webhook = $this->decrypt_webhook($signature, $api_key);
+
+            if ($decrypted_webhook === FALSE) {
+                $result['error'] = 'Не удалось расшифровать подпись webhook';
+                if ($debug) echo "❌ Ошибка расшифровки подписи\n";
+                return $result;
+            }
+
+            if ($debug) echo "✅ Подпись успешно расшифрована\n";
+
+            // Парсим JSON из подписи
+            $webhook_data = json_decode($decrypted_webhook, true);
+            if ($webhook_data === null) {
+                $result['error'] = 'Неверный формат JSON в расшифрованной подписи';
+                return $result;
+            }
+
+            if ($debug) {
+                echo "📊 Данные из подписи:\n";
+                foreach ($webhook_data as $key => $value) {
+                    echo "  $key: $value\n";
+                }
+                echo "\n";
+            }
+
+            // Проверяем соответствие данных в подписи и payload
+            $required_fields = ['invoice_number', 'external_number', 'amount', 'currency_code', 'status'];
+
+            foreach ($required_fields as $field) {
+                if (!isset($payload[$field]) || !isset($webhook_data[$field])) {
+                    $result['error'] = "Отсутствует обязательное поле: $field";
+                    return $result;
+                }
+
+                if ($payload[$field] != $webhook_data[$field]) {
+                    $result['error'] = "Несоответствие поля $field: payload={$payload[$field]}, webhook={$webhook_data[$field]}";
+                    return $result;
+                }
+            }
+
+            // Все проверки прошли успешно
+            $result['valid'] = true;
+            $result['payload_data'] = $payload;
+            $result['webhook_data'] = $webhook_data;
+
+            if ($debug) echo "🎉 Webhook успешно валидирован!\n";
+
+            return $result;
+        } catch (\Exception $e) {
+            $result['error'] = 'Исключение при валидации: ' . $e->getMessage();
+            if ($debug) echo "❌ Исключение: " . $e->getMessage() . "\n";
+            return $result;
+        }
     }
 }
