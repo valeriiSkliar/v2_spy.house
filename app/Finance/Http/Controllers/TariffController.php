@@ -14,6 +14,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class TariffController extends Controller
 {
@@ -64,22 +65,39 @@ class TariffController extends Controller
         $paymentMethod = $request->get('payment_method');
         $promoCode = $request->get('promo_code');
 
+        $user = $request->user();
+
+        Log::info('TariffController: Начало обработки платежа тарифа', [
+            'user_id' => $user->id,
+            'tariff_id' => $tariffId,
+            'billing_type' => $billingType,
+            'is_renewal' => $isRenewal,
+            'payment_method' => $paymentMethod,
+            'promo_code' => $promoCode,
+            'current_subscription_id' => $user->subscription_id ?? null,
+            'current_subscription_end' => $user->subscription_time_end ?? null
+        ]);
+
         // Валидация основных полей
         if (!$tariffId) {
+            Log::warning('TariffController: Tariff ID отсутствует', ['user_id' => $user->id]);
             return response()->json(['error' => 'Tariff ID is required'], 400);
         }
 
         if (!$paymentMethod) {
+            Log::warning('TariffController: Payment method отсутствует', ['user_id' => $user->id, 'tariff_id' => $tariffId]);
             return response()->json(['error' => 'Payment method is required'], 400);
         }
 
         // Проверяем существование тарифа
         $tariff = Subscription::find($tariffId);
         if (!$tariff) {
+            Log::error('TariffController: Тариф не найден', ['user_id' => $user->id, 'tariff_id' => $tariffId]);
             return response()->json(['error' => 'Tariff not found'], 404);
         }
 
-        $user = $request->user();
+        // Анализ изменения тарифа
+        $this->logTariffChangeAnalysis($user, $tariff);
 
         // Обрабатываем платеж с баланса пользователя
         if ($paymentMethod === 'USER_BALANCE') {
@@ -91,6 +109,15 @@ class TariffController extends Controller
         if ($billingType === 'year') {
             $amount = $tariff->amount * 12 * 0.8; // 20% скидка за годовую подписку
         }
+
+        Log::info('TariffController: Расчет суммы платежа', [
+            'user_id' => $user->id,
+            'tariff_id' => $tariffId,
+            'billing_type' => $billingType,
+            'base_amount' => $tariff->amount,
+            'calculated_amount' => $amount,
+            'discount_applied' => $billingType === 'year' ? '20%' : 'none'
+        ]);
 
         // Подготавливаем данные для Pay2.House
         $paymentData = [
@@ -134,10 +161,10 @@ class TariffController extends Controller
         Log::info('TariffController: Платеж создан успешно', [
             'user_id' => $user->id,
             'tariff_id' => $tariffId,
+            'payment_id' => $payment->id,
             'external_number' => $paymentData['external_number'],
             'invoice_number' => $paymentResult['data']['invoice_number'],
-            'amount' => $amount,
-            'payment_result' => $paymentResult
+            'amount' => $amount
         ]);
 
         return response()->json([
@@ -146,6 +173,73 @@ class TariffController extends Controller
             'invoice_number' => $paymentResult['data']['invoice_number'],
             'external_number' => $paymentData['external_number']
         ]);
+    }
+
+    /**
+     * Анализ и логирование изменения тарифа
+     */
+    private function logTariffChangeAnalysis(User $user, Subscription $newTariff): void
+    {
+        $currentSubscriptionId = $user->subscription_id;
+        $currentSubscriptionEnd = $user->subscription_time_end;
+        $currentTime = time();
+
+        if (!$currentSubscriptionId) {
+            Log::info('TariffController: Первая покупка тарифа', [
+                'user_id' => $user->id,
+                'new_tariff_id' => $newTariff->id,
+                'new_tariff_name' => $newTariff->name
+            ]);
+            return;
+        }
+
+        $currentSubscription = Subscription::find($currentSubscriptionId);
+        if (!$currentSubscription) {
+            Log::warning('TariffController: Текущий тариф не найден в базе', [
+                'user_id' => $user->id,
+                'current_subscription_id' => $currentSubscriptionId,
+                'new_tariff_id' => $newTariff->id
+            ]);
+            return;
+        }
+
+        // Исправляем ошибку типов: конвертируем Carbon в timestamp
+        $timeLeft = $currentSubscriptionEnd ? ($currentSubscriptionEnd->timestamp - $currentTime) : 0;
+        $isUpgrade = $newTariff->isHigherTierThan($currentSubscription);
+        $isDowngrade = $newTariff->isLowerTierThan($currentSubscription);
+        $isRenewal = $currentSubscriptionId === $newTariff->id;
+
+        Log::info('TariffController: Анализ смены тарифа', [
+            'user_id' => $user->id,
+            'current_subscription' => [
+                'id' => $currentSubscription->id,
+                'name' => $currentSubscription->name,
+                'amount' => $currentSubscription->amount,
+                'priority' => $currentSubscription->getTariffPriority()
+            ],
+            'new_subscription' => [
+                'id' => $newTariff->id,
+                'name' => $newTariff->name,
+                'amount' => $newTariff->amount,
+                'priority' => $newTariff->getTariffPriority()
+            ],
+            'change_type' => $isRenewal ? 'renewal' : ($isUpgrade ? 'upgrade' : ($isDowngrade ? 'downgrade' : 'same_tier')),
+            'time_left_seconds' => $timeLeft,
+            'time_left_days' => round($timeLeft / 86400, 2),
+            'current_subscription_end' => $currentSubscriptionEnd
+        ]);
+
+        // Расчет компенсации времени если есть оставшееся время
+        if ($timeLeft > 0 && !$isRenewal) {
+            Log::info('TariffController: Компенсация времени будет рассчитана в BalanceService', [
+                'user_id' => $user->id,
+                'time_left_seconds' => $timeLeft,
+                'time_left_days' => round($timeLeft / 86400, 2),
+                'is_upgrade' => $isUpgrade,
+                'current_subscription' => $currentSubscription->name,
+                'new_subscription' => $newTariff->name
+            ]);
+        }
     }
 
     /**
@@ -165,36 +259,54 @@ class TariffController extends Controller
             'user_balance' => $user->available_balance
         ]);
 
-        // Обрабатываем платеж через BalanceService
-        $result = $this->balanceService->processSubscriptionPaymentFromBalance($user, $tariff, $billingType);
+        try {
+            // Обрабатываем платеж через BalanceService (который уже содержит логику компенсации времени)
+            $result = $this->balanceService->processSubscriptionPaymentFromBalance($user, $tariff, $billingType);
 
-        if (!$result['success']) {
-            Log::warning('TariffController: Ошибка платежа с баланса', [
+            if (!$result['success']) {
+                Log::warning('TariffController: Ошибка платежа с баланса', [
+                    'user_id' => $user->id,
+                    'tariff_id' => $tariff->id,
+                    'error' => $result['error']
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'error' => $result['error']
+                ], 400);
+            }
+
+            Log::info('TariffController: Платеж с баланса выполнен успешно', [
                 'user_id' => $user->id,
                 'tariff_id' => $tariff->id,
-                'error' => $result['error']
+                'payment_id' => $result['payment']->id,
+                'message' => $result['message']
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => $result['message'],
+                'payment_id' => $result['payment']->id,
+                'redirect_url' => route('tariffs.payment.success', ['invoice_number' => $result['payment']->invoice_number])
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('TariffController: Ошибка при обработке платежа с баланса', [
+                'user_id' => $user->id,
+                'tariff_id' => $tariff->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([
                 'success' => false,
-                'error' => $result['error']
-            ], 400);
+                'error' => 'Payment processing failed'
+            ], 500);
         }
-
-        Log::info('TariffController: Платеж с баланса выполнен успешно', [
-            'user_id' => $user->id,
-            'tariff_id' => $tariff->id,
-            'payment_id' => $result['payment']->id,
-            'message' => $result['message']
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => $result['message'],
-            'payment_id' => $result['payment']->id,
-            'redirect_url' => route('tariffs.payment.success', ['invoice_number' => $result['payment']->invoice_number])
-        ]);
     }
+
+
 
     /**
      * Show the payment page for a specific tariff
