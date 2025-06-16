@@ -5,6 +5,7 @@ namespace App\Finance\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Log;
 
 class Subscription extends Model
 {
@@ -145,7 +146,16 @@ class Subscription extends Model
             'Enterprise' => 4,
         ];
 
-        return $priorities[$this->name] ?? 0;
+        $priority = $priorities[$this->name] ?? 0;
+
+        Log::debug('Subscription tariff priority calculation', [
+            'subscription_id' => $this->id,
+            'subscription_name' => $this->name,
+            'calculated_priority' => $priority,
+            'available_priorities' => $priorities
+        ]);
+
+        return $priority;
     }
 
     /**
@@ -153,7 +163,25 @@ class Subscription extends Model
      */
     public function isHigherTierThan(Subscription $other): bool
     {
-        return $this->getTariffPriority() > $other->getTariffPriority();
+        $thisPriority = $this->getTariffPriority();
+        $otherPriority = $other->getTariffPriority();
+        $result = $thisPriority > $otherPriority;
+
+        Log::debug('Checking if subscription is higher tier', [
+            'current_subscription' => [
+                'id' => $this->id,
+                'name' => $this->name,
+                'priority' => $thisPriority
+            ],
+            'compared_subscription' => [
+                'id' => $other->id,
+                'name' => $other->name,
+                'priority' => $otherPriority
+            ],
+            'is_higher_tier' => $result
+        ]);
+
+        return $result;
     }
 
     /**
@@ -161,7 +189,25 @@ class Subscription extends Model
      */
     public function isLowerTierThan(Subscription $other): bool
     {
-        return $this->getTariffPriority() < $other->getTariffPriority();
+        $thisPriority = $this->getTariffPriority();
+        $otherPriority = $other->getTariffPriority();
+        $result = $thisPriority < $otherPriority;
+
+        Log::debug('Checking if subscription is lower tier', [
+            'current_subscription' => [
+                'id' => $this->id,
+                'name' => $this->name,
+                'priority' => $thisPriority
+            ],
+            'compared_subscription' => [
+                'id' => $other->id,
+                'name' => $other->name,
+                'priority' => $otherPriority
+            ],
+            'is_lower_tier' => $result
+        ]);
+
+        return $result;
     }
 
     /**
@@ -174,14 +220,94 @@ class Subscription extends Model
 
     /**
      * Get time compensation ratio when upgrading from another subscription
-     * Based on price differences
+     * Based on improved stepped system with minimum 30% compensation
      */
     public function getTimeCompensationRatio(Subscription $fromSubscription): float
     {
         if ($fromSubscription->amount <= 0) {
+            Log::warning('Time compensation calculation with zero or negative amount', [
+                'from_subscription_id' => $fromSubscription->id,
+                'from_subscription_name' => $fromSubscription->name,
+                'from_subscription_amount' => $fromSubscription->amount,
+                'to_subscription_id' => $this->id,
+                'to_subscription_name' => $this->name,
+                'to_subscription_amount' => $this->amount
+            ]);
             return 0.0;
         }
 
-        return $fromSubscription->amount / $this->amount;
+        // Базовый коэффициент (пропорциональный)
+        $baseRatio = $fromSubscription->amount / $this->amount;
+        
+        // Ступенчатая система с минимумом 30%
+        $minCompensationRatio = 0.30;
+        
+        // Разница в цене
+        $priceDifference = $this->amount / $fromSubscription->amount;
+        
+        if ($priceDifference > 50) {
+            // Если новый тариф дороже в 50+ раз, даем 50% компенсации
+            $compensationRatio = 0.5;
+        } elseif ($priceDifference > 20) {
+            // Если дороже в 20+ раз, даем 40% компенсации  
+            $compensationRatio = 0.4;
+        } elseif ($priceDifference > 10) {
+            // Если дороже в 10+ раз, даем 35% компенсации
+            $compensationRatio = 0.35;
+        } elseif ($priceDifference > 5) {
+            // Если дороже в 5+ раз, даем 30% компенсации
+            $compensationRatio = 0.3;
+        } else {
+            // Для остальных случаев - минимум 30% или базовый коэффициент (что больше)
+            $compensationRatio = max($minCompensationRatio, $baseRatio);
+        }
+
+        Log::info('Time compensation ratio calculated with stepped system', [
+            'from_subscription' => [
+                'id' => $fromSubscription->id,
+                'name' => $fromSubscription->name,
+                'amount' => $fromSubscription->amount
+            ],
+            'to_subscription' => [
+                'id' => $this->id,
+                'name' => $this->name,
+                'amount' => $this->amount
+            ],
+            'price_difference_ratio' => round($priceDifference, 2),
+            'base_compensation_ratio' => round($baseRatio, 4),
+            'stepped_compensation_ratio' => round($compensationRatio, 4),
+            'calculation' => sprintf('Price diff: %.2f, Base: %.4f, Final: %.4f', $priceDifference, $baseRatio, $compensationRatio)
+        ]);
+
+        return $compensationRatio;
+    }
+
+    /**
+     * Calculate time compensation in seconds for upgrade/downgrade
+     */
+    public function calculateTimeCompensation(Subscription $fromSubscription, int $timeLeftSeconds): int
+    {
+        $ratio = $this->getTimeCompensationRatio($fromSubscription);
+        $compensatedTime = (int)($timeLeftSeconds * $ratio);
+
+        Log::info('Time compensation calculation details', [
+            'time_left_seconds' => $timeLeftSeconds,
+            'time_left_days' => round($timeLeftSeconds / 86400, 2),
+            'compensation_ratio' => $ratio,
+            'compensated_time_seconds' => $compensatedTime,
+            'compensated_time_days' => round($compensatedTime / 86400, 2),
+            'from_subscription' => [
+                'id' => $fromSubscription->id,
+                'name' => $fromSubscription->name,
+                'amount' => $fromSubscription->amount
+            ],
+            'to_subscription' => [
+                'id' => $this->id,
+                'name' => $this->name,
+                'amount' => $this->amount
+            ]
+        ]);
+
+        return $compensatedTime;
     }
 }
