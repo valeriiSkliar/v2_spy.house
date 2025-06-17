@@ -4,7 +4,7 @@
 <h1 class="mb-25">{{ __('finances.title') }}</h1>
 
 
-<div class="section">
+<div id="deposit-form-container" class="section">
     <h3 class="mb-15">{{ __('finances.payment_methods.title') }}</h3>
 
     <x-finances.payment-methods :methods="$paymentMethods" />

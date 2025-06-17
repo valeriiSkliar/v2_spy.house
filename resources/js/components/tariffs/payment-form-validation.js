@@ -9,9 +9,6 @@ class PaymentFormValidator {
     this.form = document.querySelector(formSelector);
     this.isValidating = false;
 
-    console.log('PaymentFormValidator: Initializing...', this.form);
-    console.log('PaymentFormValidator: createAndShowToast function:', createAndShowToast);
-
     if (this.form) {
       // Помечаем форму как использующую новый валидатор
       this.form.setAttribute('data-has-new-validator', 'true');
@@ -21,16 +18,13 @@ class PaymentFormValidator {
 
   init() {
     this.form.addEventListener('submit', this.handleSubmit.bind(this));
-    console.log('PaymentFormValidator: Event listener added to form');
   }
 
   async handleSubmit(event) {
     event.preventDefault();
-    console.log('PaymentFormValidator: Form submit intercepted');
 
     // Предотвращаем двойную отправку
     if (this.isValidating) {
-      console.log('PaymentFormValidator: Already validating, skipping...');
       return;
     }
 
@@ -45,7 +39,6 @@ class PaymentFormValidator {
 
       // Выполняем асинхронную валидацию
       const isValid = await this.validateOnServer();
-      console.log('PaymentFormValidator: Validation result:', isValid);
 
       if (isValid) {
         // Если валидация прошла успешно - продолжаем с обычной логикой обработки платежа
@@ -55,12 +48,10 @@ class PaymentFormValidator {
       console.error('Ошибка валидации:', error);
       // Проверяем наличие контейнера тостов
       const toastContainer = document.querySelector('.toast-container');
-      console.log('Toast container found:', toastContainer);
 
       // Тестируем вызов createAndShowToast
       try {
         createAndShowToast('Произошла ошибка при проверке данных', 'error');
-        console.log('createAndShowToast called successfully');
       } catch (toastError) {
         console.error('Error calling createAndShowToast:', toastError);
       }
@@ -71,13 +62,8 @@ class PaymentFormValidator {
   }
 
   async validateOnServer() {
-    console.log('PaymentFormValidator: Starting server validation...');
-
     const formData = new FormData(this.form);
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-    console.log('PaymentFormValidator: Form data:', Object.fromEntries(formData));
-    console.log('PaymentFormValidator: CSRF token:', csrfToken);
 
     const response = await fetch('/tariffs/validate-payment', {
       method: 'POST',
@@ -89,10 +75,7 @@ class PaymentFormValidator {
       },
     });
 
-    console.log('PaymentFormValidator: Response status:', response.status, response.ok);
-
     const result = await response.json();
-    console.log('PaymentFormValidator: Response data:', result);
 
     if (!response.ok) {
       // Отображаем ошибки валидации в тостах
@@ -130,7 +113,6 @@ class PaymentFormValidator {
 
       if (response.ok && result.success) {
         // Success - handle different payment methods
-        console.log('Payment created successfully:', result);
 
         // For USER_BALANCE payments, redirect to success page
         if (result.redirect_url) {
@@ -144,7 +126,6 @@ class PaymentFormValidator {
         }
       } else {
         // Error - show message
-        console.error('Payment creation failed:', result);
         createAndShowToast(result.error || 'Произошла ошибка при создании платежа', 'error');
       }
     } catch (error) {
@@ -154,30 +135,18 @@ class PaymentFormValidator {
   }
 
   displayValidationErrors(errors) {
-    console.log('displayValidationErrors called with:', errors);
-
-    // Проверяем Bootstrap
-    console.log('Bootstrap available:', typeof bootstrap !== 'undefined');
-    console.log('Toast container:', document.querySelector('.toast-container'));
-
     // Очищаем предыдущие тосты
     // this.clearToasts();
 
     // Показываем каждую ошибку в отдельном тосте
     Object.keys(errors).forEach(field => {
       const fieldErrors = Array.isArray(errors[field]) ? errors[field] : [errors[field]];
-      console.log(`Field ${field} errors:`, fieldErrors);
 
       fieldErrors.forEach(errorMessage => {
-        console.log('Showing toast for error:', errorMessage);
-
         try {
           // Сначала пытаемся использовать тосты
           createAndShowToast(errorMessage, 'error', 7000, false);
-          console.log('Toast created successfully');
         } catch (error) {
-          console.error('Error creating toast:', error);
-
           // Fallback: создаем простое уведомление
           this.showSimpleError(errorMessage);
         }

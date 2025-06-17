@@ -1,4 +1,4 @@
-<form action="{{ route('finances.deposit') }}" method="POST" class="max-w-400">
+<form id="deposit-form" action="{{ route('finances.deposit') }}" method="POST" class="max-w-400">
     @csrf
     <input type="hidden" name="payment_method" id="selected_payment_method" value="USDT">
 

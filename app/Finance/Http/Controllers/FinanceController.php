@@ -95,6 +95,28 @@ class FinanceController extends Controller
     }
 
     /**
+     * Validate deposit form fields (AJAX endpoint)
+     */
+    public function validateDeposit(Request $request)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:50|max:1000',
+            'payment_method' => 'required|string',
+        ], [
+            'amount.required' => 'Сумма пополнения обязательна',
+            'amount.numeric' => 'Сумма должна быть числом',
+            'amount.min' => 'Минимальная сумма пополнения: $50',
+            'amount.max' => 'Максимальная сумма пополнения: $1,000',
+            'payment_method.required' => 'Выберите способ оплаты',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Validation passed'
+        ]);
+    }
+
+    /**
      * Обработка запроса на депозит
      */
     public function deposit(Request $request)
@@ -111,6 +133,14 @@ class FinanceController extends Controller
         ]);
 
         $user = $request->user();
+
+        // Если валидация уже была пройдена асинхронно, пропускаем повторную проверку
+        if ($request->has('_validation_passed')) {
+            Log::info('FinanceController: Валидация была пройдена асинхронно', [
+                'user_id' => $user->id,
+            ]);
+        }
+
         $amount = floatval($request->amount);
         $paymentMethod = $request->payment_method;
 
@@ -154,6 +184,13 @@ class FinanceController extends Controller
                 'error' => $paymentResult['error'],
             ]);
 
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Не удалось создать платеж. Попробуйте позже.',
+                ], 400);
+            }
+
             return back()->withErrors([
                 'amount' => 'Не удалось создать платеж. Попробуйте позже.',
             ]);
@@ -166,6 +203,13 @@ class FinanceController extends Controller
                 'amount' => $amount,
                 'response_data' => $paymentResult['data'] ?? 'no data',
             ]);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Некорректный ответ от платежной системы. Попробуйте позже.',
+                ], 400);
+            }
 
             return back()->withErrors([
                 'amount' => 'Некорректный ответ от платежной системы. Попробуйте позже.',
@@ -192,6 +236,16 @@ class FinanceController extends Controller
             'external_number' => $paymentData['external_number'],
             'invoice_number' => $paymentResult['data']['invoice_number'],
         ]);
+
+        // Возвращаем JSON для AJAX или редирект для обычных запросов
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'payment_url' => $paymentResult['data']['approval_url'],
+                'invoice_number' => $paymentResult['data']['invoice_number'],
+                'external_number' => $paymentData['external_number'],
+            ]);
+        }
 
         // Перенаправляем на платежную страницу
         return redirect($paymentResult['data']['approval_url']);

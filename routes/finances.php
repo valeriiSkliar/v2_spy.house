@@ -10,6 +10,7 @@ Route::middleware('auth')
         Route::get('/', [FinanceController::class, 'index'])->name('index');
         Route::get('/deposit', [FinanceController::class, 'depositForm'])->name('deposit.form');
         Route::post('/deposit', [FinanceController::class, 'deposit'])->name('deposit');
+        Route::post('/validate-deposit', [FinanceController::class, 'validateDeposit'])->name('validate-deposit');
         Route::get('/deposit/success', [FinanceController::class, 'depositSuccess'])->name('deposit.success');
         Route::get('/deposit/cancel', [FinanceController::class, 'depositCancel'])->name('deposit.cancel');
     });
