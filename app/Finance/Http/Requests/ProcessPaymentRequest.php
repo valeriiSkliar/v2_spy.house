@@ -51,13 +51,13 @@ class ProcessPaymentRequest extends BaseRequest
     public function messages(): array
     {
         return [
-            'payment_method.required' => 'Выберите способ оплаты',
-            'payment_method.in' => 'Некорректный способ оплаты',
-            'promo_code.min' => 'Промокод должен содержать минимум :min символов',
-            'promo_code.max' => 'Промокод не может содержать более :max символов',
-            'promo_code.regex' => 'Промокод может содержать только латинские буквы, цифры, дефисы и подчеркивания',
-            'is_renewal.required' => 'Не указан тип операции',
-            'is_renewal.boolean' => 'Некорректное значение типа операции'
+            'payment_method.required' => __('validation.tariffs.payment_method_required'),
+            'payment_method.in' => __('validation.tariffs.payment_method_invalid'),
+            'promo_code.min' => __('validation.tariffs.promo_code_min'),
+            'promo_code.max' => __('validation.tariffs.promo_code_max'),
+            'promo_code.regex' => __('validation.tariffs.promo_code_regex'),
+            'is_renewal.required' => __('validation.tariffs.is_renewal_required'),
+            'is_renewal.boolean' => __('validation.tariffs.is_renewal_boolean')
         ];
     }
 

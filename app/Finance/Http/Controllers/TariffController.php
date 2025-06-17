@@ -46,7 +46,6 @@ class TariffController extends Controller
 
         $payments = $user->subscriptionPayments()->with('subscription')->paginate(10);
 
-        // dd($payments);
         return view('pages.tariffs.index', [
             'currentTariff' => $user->currentTariff(),
             'tariffs' => $tariffs,
@@ -63,7 +62,7 @@ class TariffController extends Controller
     {
         return response()->json([
             'success' => true,
-            'message' => 'Validation passed'
+            'message' => __('validation.validation_passed')
         ]);
     }
 
@@ -93,7 +92,7 @@ class TariffController extends Controller
                 'user_id' => $user->id,
                 'referer' => $referer
             ]);
-            return response()->json(['error' => 'Invalid payment page URL'], 400);
+            return response()->json(['error' => __('validation.tariffs.invalid_payment_page_url')], 400);
         }
 
         $slug = $matches[1];
@@ -116,7 +115,7 @@ class TariffController extends Controller
                 'user_id' => $user->id,
                 'slug' => $slug
             ]);
-            return response()->json(['error' => 'Payment method is required'], 400);
+            return response()->json(['error' => __('validation.tariffs.payment_method_required')], 400);
         }
 
         // Проверяем корректность типа подписки
@@ -125,7 +124,7 @@ class TariffController extends Controller
                 'user_id' => $user->id,
                 'billing_type' => $billingType
             ]);
-            return response()->json(['error' => 'Invalid billing type'], 400);
+            return response()->json(['error' => __('validation.tariffs.invalid_billing_type')], 400);
         }
 
         // Ищем тариф по slug
@@ -135,7 +134,7 @@ class TariffController extends Controller
                 'user_id' => $user->id,
                 'slug' => $slug
             ]);
-            return response()->json(['error' => 'Tariff not found'], 404);
+            return response()->json(['error' => __('validation.tariffs.tariff_not_found')], 404);
         }
 
         // Анализ изменения тарифа
@@ -166,7 +165,7 @@ class TariffController extends Controller
             'external_number' => $this->pay2Service->generateExternalNumber($user->id, $tariff->id),
             'amount' => $amount,
             'currency_code' => 'USD',
-            'description' => "Оплата тарифа {$tariff->name} ({$billingType})",
+            'description' => __('tariffs.payment_description', ['name' => $tariff->name, 'billing_type' => $billingType]),
             'payer_email' => $user->email,
             'payment_method' => $paymentMethod,
             'handling_fee' => 0,
@@ -352,7 +351,7 @@ class TariffController extends Controller
 
             return response()->json([
                 'success' => false,
-                'error' => 'Payment processing failed',
+                'error' => __('tariffs.errors.payment_processing_failed'),
             ], 500);
         }
     }
@@ -461,7 +460,7 @@ class TariffController extends Controller
                 'invoice_number' => $invoiceNumber,
             ]);
 
-            return redirect()->route('tariffs.index')->with('error', 'Платеж не найден');
+            return redirect()->route('tariffs.index')->with('error', __('tariffs.errors.payment_not_found'));
         }
 
         // Проверяем что есть approval_url
@@ -471,7 +470,7 @@ class TariffController extends Controller
                 'invoice_number' => $invoiceNumber,
             ]);
 
-            return redirect()->route('tariffs.index')->with('error', 'Ссылка для оплаты недоступна');
+            return redirect()->route('tariffs.index')->with('error', __('tariffs.errors.payment_not_found'));
         }
 
         Log::info('TariffController: Перенаправление на approval_url', [
