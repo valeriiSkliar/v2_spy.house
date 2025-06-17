@@ -7,6 +7,4 @@
     <x-tariffs.payment-methods :paymentMethods="$paymentMethods" />
     <x-tariffs.payment-form :tariff="$tariff" :billingType="$billingType" :isRenewal="$isRenewal" />
 </div>
-
-<button class="btn btn-primary" id="test-button">Test Button</button>
 @endsection

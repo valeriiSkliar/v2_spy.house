@@ -286,14 +286,6 @@ class PaymentFormValidator {
 // Инициализация при загрузке DOM
 document.addEventListener('DOMContentLoaded', () => {
   new PaymentFormValidator();
-
-  const testButton = document.getElementById('test-button');
-  if (testButton) {
-    testButton.addEventListener('click', () => {
-      console.log('Test button clicked');
-      createAndShowToast('Test toast', 'success', 70000, false);
-    });
-  }
 });
 
 export default PaymentFormValidator;
