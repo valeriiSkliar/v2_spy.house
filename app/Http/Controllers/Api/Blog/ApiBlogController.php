@@ -132,11 +132,13 @@ class ApiBlogController extends BaseBlogController
     {
         switch ($sort) {
             case 'popular':
-                // Сортировка по популярности (рейтинг + просмотры)
-                $query->leftJoin('ratings', 'blog_posts.id', '=', 'ratings.blog_id')
-                    ->selectRaw('blog_posts.*, COALESCE(AVG(ratings.rating), 0) as avg_rating, blog_posts.views_count')
-                    ->groupBy('blog_posts.id')
-                    ->orderByRaw('(COALESCE(AVG(ratings.rating), 0) * 0.7 + LOG(blog_posts.views_count + 1) * 0.3) ' . $direction);
+                // Сортировка по популярности - используем субзапрос для избежания проблем с GROUP BY
+                $query->addSelect([
+                    'avg_rating' => \DB::table('ratings')
+                        ->selectRaw('COALESCE(AVG(rating), 0)')
+                        ->whereColumn('ratings.blog_id', 'blog_posts.id')
+                ])
+                ->orderByRaw('((SELECT COALESCE(AVG(rating), 0) FROM ratings WHERE ratings.blog_id = blog_posts.id) * 0.7 + LOG(blog_posts.views_count + 1) * 0.3) ' . $direction);
                 break;
                 
             case 'views':
@@ -157,12 +159,20 @@ class ApiBlogController extends BaseBlogController
      */
     private function validatePagination(int $totalCount, int $currentPage, Request $request)
     {
-        // Если нет статей вообще
+        // Если нет статей, но есть поисковый запрос или категория - показываем "нет результатов"
         if ($totalCount === 0) {
+            $hasSearchOrCategory = $request->filled('search') || $request->filled('category');
+            
+            if ($hasSearchOrCategory) {
+                // Не делаем редирект, позволяем показать "нет результатов"
+                return null;
+            }
+            
+            // Только если нет фильтров - редиректим на главную
             if ($request->ajax()) {
                 return response()->json([
                     'redirect' => true,
-                    'url' => $this->buildRedirectUrl($request, 1, true), // Сброс на главную без параметров
+                    'url' => $this->buildRedirectUrl($request, 1, true),
                 ]);
             }
 
@@ -211,7 +221,7 @@ class ApiBlogController extends BaseBlogController
         // Получаем hero статью только для первой страницы
         $heroArticle = null;
         if ($currentPage === 1 && $totalCount > 0) {
-            $heroArticle = (clone $query)->orderBy('created_at', 'desc')->first();
+            $heroArticle = (clone $query)->first();
         }
 
         // Получаем статьи для пагинации (исключаем hero если есть)
@@ -220,7 +230,7 @@ class ApiBlogController extends BaseBlogController
             $articlesQuery->where('id', '!=', $heroArticle->id);
         }
 
-        $articles = $articlesQuery->orderBy('created_at', 'desc')
+        $articles = $articlesQuery
             ->paginate(self::ARTICLES_PER_PAGE)
             ->appends(request()->all());
 

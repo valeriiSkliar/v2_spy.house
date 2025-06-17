@@ -199,6 +199,13 @@ function updatePageContent(data, container, scrollToTop) {
       container.innerHTML = data.html;
     }
 
+    // Обновляем классы контейнера в зависимости от результатов
+    if (data.count === 0 && data.totalCount === 0) {
+      container.classList.add('blog-list__no-results');
+    } else {
+      container.classList.remove('blog-list__no-results');
+    }
+
     // Обновляем пагинацию
     updatePaginationContent(data);
 
