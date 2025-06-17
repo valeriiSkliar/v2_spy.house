@@ -82,6 +82,7 @@ document.addEventListener('DOMContentLoaded', function () {
       })
       .catch(error => {
         console.error('Error loading payments:', error);
+        createAndShowToast('Error loading payments', 'error');
         // Можно добавить показ toast с ошибкой
       })
       .finally(() => {

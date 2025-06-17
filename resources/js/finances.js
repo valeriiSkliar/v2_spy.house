@@ -1,4 +1,5 @@
 import { ajaxFetcher } from './components/fetcher/ajax-fetcher.js';
+import DepositFormValidator from './components/finances/deposit-form-validation.js';
 import { hideInElement, showInElement } from './components/loader.js';
 import { logger, loggerError } from './helpers/logger.js';
 import { updateUrlWithoutReload } from './helpers/url-helpers.js';
@@ -137,4 +138,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Инициализация обработчиков пагинации
   initializePaginationHandlers(transactionsContainer, ajaxUrl);
+
+  // Валидатор формы депозита инициализируется автоматически при подключении модуля
+  new DepositFormValidator();
 });
