@@ -20,4 +20,22 @@ return [
         'payment_processing_failed' => 'Ошибка при обработке платежа',
         'payment_not_found' => 'Платеж не найден',
     ],
+
+    'payment_methods' => [
+        'title' => 'Способы оплаты',
+    ],
+
+    'payment_info' => [
+        'renewal_on' => 'Продление на',
+        'subscription_period' => 'Срок действия',
+        'price' => 'Стоимость',
+        'discount' => 'Скидка',
+    ],
+
+    'payment_form' => [
+        'account_activation_message' => 'Ваш аккаунт будет активирован после подтверждения платежа. Это обычно занимает',
+        'payment_processing_time' => '5 минут',
+        'payment_processing_message' => 'Пожалуйста, будьте внимательны и переводите точную сумму, указанную в инструкциях, чтобы ваш платеж был успешно обработан',
+        'proceed_to_payment' => 'Перейти к оплате',
+    ],
 ];

@@ -35,19 +35,23 @@
         <div class="col-auto">
             <div class="tariff-pay__info">
                 @if($isRenewal ?? false)
-                Продление на: <strong>1 {{ $tariff->getBillingPeriodName($billingType) }}</strong>
+                {{ __('tariffs.payment_info.renewal_on') }} <strong>1 {{ $tariff->getBillingPeriodName($billingType)
+                    }}</strong>
                 @else
-                Срок действия: <strong>1 {{ $tariff->getBillingPeriodName($billingType) }}</strong>
+                {{ __('tariffs.payment_info.subscription_period') }} <strong>1 {{
+                    $tariff->getBillingPeriodName($billingType) }}</strong>
                 @endif
             </div>
         </div>
         <div class="col-auto">
-            <div class="tariff-pay__info">Стоимость: <strong>{{ $tariff->getFormattedAmountByBillingType($billingType)
+            <div class="tariff-pay__info">{{ __('tariffs.payment_info.price') }} <strong>{{
+                    $tariff->getFormattedAmountByBillingType($billingType)
                     }}</strong></div>
         </div>
         @if($billingType === 'year' && $tariff->early_discount > 0)
         <div class="col-auto">
-            <div class="tariff-pay__info">Скидка: <strong>{{ $tariff->early_discount }}%</strong></div>
+            <div class="tariff-pay__info">{{ __('tariffs.payment_info.discount') }} <strong>{{ $tariff->early_discount
+                    }}%</strong></div>
         </div>
         @endif
     </div>

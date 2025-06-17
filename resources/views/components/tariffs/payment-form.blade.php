@@ -2,14 +2,13 @@
     <div class="col-12 col-md-12 col-lg-6">
         <div class="message mb-25">
             <span class="icon-i"></span>
-            <div class="message__txt">Your account will be activated after payment confirmation. <br>This usually takes
-                <strong>5 minutes</strong>.
+            <div class="message__txt">{{ __('tariffs.payment_form.account_activation_message') }} <br>
+                <strong>{{ __('tariffs.payment_form.payment_processing_time') }}</strong>.
             </div>
         </div>
         <div class="message _bg _red mb-25">
             <span class="icon-i"></span>
-            <div class="message__txt">Please be careful and transfer the exact amount specified in the instructions to
-                ensure your payment is processed successfully</div>
+            <div class="message__txt">{{ __('tariffs.payment_form.payment_processing_message') }}</div>
         </div>
     </div>
     <div class="col-12 col-md-6 col-lg-5">
@@ -28,7 +27,8 @@
             </div>
             @endif
             <div class="mb-20">
-                <button type="submit" class="btn _flex _green _big min-200 w-mob-100">Proceed to payment</button>
+                <button type="submit" class="btn _flex _green _big min-200 w-mob-100">{{
+                    __('tariffs.payment_form.proceed_to_payment') }}</button>
             </div>
         </form>
     </div>

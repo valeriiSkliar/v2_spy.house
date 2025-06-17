@@ -10,7 +10,7 @@ use App\Finance\Models\Subscription;
 use App\Finance\Services\BalanceService;
 use App\Finance\Services\Pay2Service;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Finance\ProcessPaymentRequest;
+use App\Finance\Http\Requests\ProcessPaymentRequest;
 use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
