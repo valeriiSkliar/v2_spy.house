@@ -83,8 +83,8 @@ class DepositFormValidator {
     try {
       this.isValidating = true;
 
-      // Показываем состояние загрузки
-      this.setLoadingState(container, true);
+      // Показываем состояние загрузки и сохраняем ссылку на loader
+      this.loader = this.setLoadingState(container, true);
 
       // Выполняем асинхронную валидацию
       const isValid = await this.validateOnServer();
@@ -106,10 +106,8 @@ class DepositFormValidator {
       }
     } finally {
       this.isValidating = false;
-      const loader = this.setLoadingState(container, false);
-      if (loader) {
-        this.loader = loader;
-      }
+      // Скрываем loader
+      this.setLoadingState(container, false);
     }
   }
 
@@ -216,15 +214,9 @@ class DepositFormValidator {
         try {
           // Сначала пытаемся использовать тосты
           createAndShowToast(errorMessage, 'error', 7000, false);
-          if (this.loader) {
-            hideInElement(this.loader);
-          }
         } catch (error) {
           // Fallback: создаем простое уведомление
           this.showSimpleError(errorMessage);
-          if (this.loader) {
-            hideInElement(this.loader);
-          }
         }
       });
     });
@@ -290,10 +282,11 @@ class DepositFormValidator {
 
   setLoadingState(element, isLoading) {
     if (isLoading) {
-      showInElement(element, 'Проверка данных...');
+      return showInElement(element);
     } else {
       if (this.loader) {
         hideInElement(this.loader);
+        this.loader = null;
       }
     }
   }

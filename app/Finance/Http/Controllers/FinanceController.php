@@ -5,6 +5,7 @@ namespace App\Finance\Http\Controllers;
 use App\Enums\Finance\PaymentMethod;
 use App\Enums\Finance\PaymentStatus;
 use App\Enums\Finance\PaymentType;
+use App\Finance\Http\Requests\DepositValidationRequest;
 use App\Finance\Models\Payment;
 use App\Finance\Services\Pay2Service;
 use App\Http\Controllers\Controller;
@@ -97,19 +98,9 @@ class FinanceController extends Controller
     /**
      * Validate deposit form fields (AJAX endpoint)
      */
-    public function validateDeposit(Request $request)
+    public function validateDeposit(DepositValidationRequest $request)
     {
-        $request->validate([
-            'amount' => 'required|numeric|min:50|max:1000',
-            'payment_method' => 'required|string',
-        ], [
-            'amount.required' => 'Сумма пополнения обязательна',
-            'amount.numeric' => 'Сумма должна быть числом',
-            'amount.min' => 'Минимальная сумма пополнения: $50',
-            'amount.max' => 'Максимальная сумма пополнения: $1,000',
-            'payment_method.required' => 'Выберите способ оплаты',
-        ]);
-
+        // Валидация выполняется автоматически через DepositValidationRequest
         return response()->json([
             'success' => true,
             'message' => 'Validation passed'
@@ -119,19 +110,8 @@ class FinanceController extends Controller
     /**
      * Обработка запроса на депозит
      */
-    public function deposit(Request $request)
+    public function deposit(DepositValidationRequest $request)
     {
-        $request->validate([
-            'amount' => 'required|numeric|min:50|max:1000',
-            'payment_method' => 'required|string',
-        ], [
-            'amount.required' => 'Сумма пополнения обязательна',
-            'amount.numeric' => 'Сумма должна быть числом',
-            'amount.min' => 'Минимальная сумма пополнения: $50',
-            'amount.max' => 'Максимальная сумма пополнения: $1,000',
-            'payment_method.required' => 'Выберите способ оплаты',
-        ]);
-
         $user = $request->user();
 
         // Если валидация уже была пройдена асинхронно, пропускаем повторную проверку
@@ -141,8 +121,9 @@ class FinanceController extends Controller
             ]);
         }
 
-        $amount = floatval($request->amount);
-        $paymentMethod = $request->payment_method;
+        // Используем методы Request класса для получения валидированных данных
+        $amount = $request->getValidatedAmount();
+        $paymentMethod = $request->getValidatedPaymentMethod();
 
         // Логирование для отладки
         Log::info('FinanceController: Получены данные депозита', [
@@ -151,15 +132,6 @@ class FinanceController extends Controller
             'payment_method' => $paymentMethod,
             'request_all' => $request->all(),
         ]);
-
-        // TODO:  delete  this Временное исправление для совместимости со старыми формами
-        if ($paymentMethod === 'Tether') {
-            $paymentMethod = 'USDT';
-            Log::warning('FinanceController: Исправлено значение Tether на USDT');
-        } elseif ($paymentMethod === 'Pay2.House' || $paymentMethod === 'pay2') {
-            $paymentMethod = 'PAY2.HOUSE';
-            Log::warning('FinanceController: Исправлено значение на PAY2.HOUSE');
-        }
 
         // Подготавливаем данные для Pay2.House
         $paymentData = [
