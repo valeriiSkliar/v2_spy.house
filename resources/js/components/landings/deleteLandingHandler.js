@@ -1,10 +1,11 @@
+import { confirm } from '../../services/sweetAlertService';
 import { createAndShowToast } from '../../utils/uiHelpers';
 import { ajaxFetcher } from '../fetcher/ajax-fetcher';
 import { hideInButton, showInButton } from '../loader';
 import { landingsConstants } from './constants';
 import { fetchAndReplaceContent } from './fetchAndReplaceContnt';
 
-export const deleteLandingHandler = function (event) {
+export const deleteLandingHandler = async function (event) {
   event.preventDefault();
   event.stopImmediatePropagation();
 
@@ -18,7 +19,12 @@ export const deleteLandingHandler = function (event) {
     return;
   }
 
-  if (!confirm(`Вы уверены, что хотите удалить ${landingName}?`)) {
+  const confirmed = await confirm(
+    'Подтверждение удаления',
+    `Вы уверены, что хотите удалить ${landingName}? Это действие нельзя отменить.`
+  );
+
+  if (!confirmed) {
     return;
   }
 
