@@ -19,7 +19,8 @@ use Illuminate\Support\Facades\Auth;
     <title>{{ config('app.name', 'Laravel') }}</title>
 
     <!-- Custom Styles -->
-    <link href="{{ asset('css/profile-avatar-upload.css') }}" rel="stylesheet">
+    {{--
+    <link href="{{ asset('css/profile-avatar-upload.css') }}" rel="stylesheet"> --}}
 
     <!-- Scripts -->
     @vite([ 'resources/js/app.js', 'resources/scss/app.scss'])
