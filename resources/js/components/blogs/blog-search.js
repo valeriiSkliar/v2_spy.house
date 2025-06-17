@@ -1,5 +1,5 @@
 import { debounce } from '@/helpers';
-
+// DEBRICATED AFTER NEW IMPLEMENTATION NEED TO BE DELETED
 /**
  * Класс для управления поиском в блоге
  * Зачем: централизованное управление состоянием поиска и интеграция с основной системой
