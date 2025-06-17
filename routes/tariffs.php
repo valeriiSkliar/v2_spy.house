@@ -14,13 +14,10 @@ Route::get('/payment/continue/{invoice_number}', [TariffController::class, 'cont
 Route::middleware('auth')->group(function () {
     Route::get('/tariffs', [TariffController::class, 'index'])->name('tariffs.index');
 
-    // Новый красивый URL (должен быть первым для приоритета)
+    // Красивый URL для страницы оплаты тарифа
     Route::get('/tariffs/payment/{slug}/{billingType}', [TariffController::class, 'payment'])
-        ->name('tariffs.payment.new')
+        ->name('tariffs.payment')
         ->where('billingType', 'month|year');
-
-    // Старый URL для обратной совместимости
-    Route::get('/tariffs/payment/{slug}', [TariffController::class, 'payment'])->name('tariffs.payment');
 
     Route::post('/tariffs/process-payment', [TariffController::class, 'processPayment'])->name('tariffs.process-payment');
 });

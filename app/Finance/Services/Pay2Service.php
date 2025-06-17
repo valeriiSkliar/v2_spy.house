@@ -51,6 +51,10 @@ class Pay2Service
             'handling_fee' => $paymentData['handling_fee'] ?? 0,
         ];
 
+        Log::info('Pay2Service: Создание платежа', [
+            'requestData' => $requestData,
+        ]);
+
         // Добавляем API ключ (требуется в обоих режимах)
         $requestData['api_key'] = $this->config['test_mode']
             ? $this->config['test_api_key']
@@ -71,7 +75,7 @@ class Pay2Service
         ]);
 
         try {
-            $response = Http::timeout(30)->post($apiUrl.'/api/create_payment', $requestData);
+            $response = Http::timeout(30)->post($apiUrl . '/api/create_payment', $requestData);
 
             if ($response->successful()) {
                 $result = $response->json();
@@ -83,7 +87,7 @@ class Pay2Service
 
                     return [
                         'success' => false,
-                        'error' => 'API Error: '.($result['msg'] ?? $result['code'] ?? 'Unknown error'),
+                        'error' => 'API Error: ' . ($result['msg'] ?? $result['code'] ?? 'Unknown error'),
                     ];
                 }
 
@@ -101,7 +105,7 @@ class Pay2Service
 
                 return [
                     'success' => false,
-                    'error' => 'HTTP Error '.$response->status().': '.$response->body(),
+                    'error' => 'HTTP Error ' . $response->status() . ': ' . $response->body(),
                 ];
             }
         } catch (\Exception $e) {
@@ -112,7 +116,7 @@ class Pay2Service
 
             return [
                 'success' => false,
-                'error' => 'Payment creation error: '.$e->getMessage(),
+                'error' => 'Payment creation error: ' . $e->getMessage(),
             ];
         }
     }
@@ -139,7 +143,7 @@ class Pay2Service
         ];
 
         try {
-            $response = Http::timeout(30)->post($apiUrl.'/api/show_payment_details', $requestData);
+            $response = Http::timeout(30)->post($apiUrl . '/api/show_payment_details', $requestData);
 
             if ($response->successful()) {
                 return [
@@ -149,7 +153,7 @@ class Pay2Service
             } else {
                 return [
                     'success' => false,
-                    'error' => 'Failed to get payment details: '.$response->body(),
+                    'error' => 'Failed to get payment details: ' . $response->body(),
                 ];
             }
         } catch (\Exception $e) {
@@ -160,7 +164,7 @@ class Pay2Service
 
             return [
                 'success' => false,
-                'error' => 'Error getting payment details: '.$e->getMessage(),
+                'error' => 'Error getting payment details: ' . $e->getMessage(),
             ];
         }
     }
@@ -206,7 +210,7 @@ class Pay2Service
 
             Log::info('Pay2Service: Проверка webhook подписи', [
                 'test_mode' => $this->config['test_mode'],
-                'signature' => substr($signature, 0, 100).'...',
+                'signature' => substr($signature, 0, 100) . '...',
                 'data' => $data,
             ]);
 
@@ -223,7 +227,7 @@ class Pay2Service
             if (count($parts) !== 3) {
                 Log::error('Pay2Service: Неверный формат подписи webhook', [
                     'parts_count' => count($parts),
-                    'signature' => substr($signature, 0, 100).'...',
+                    'signature' => substr($signature, 0, 100) . '...',
                 ]);
 
                 return false;
@@ -232,7 +236,7 @@ class Pay2Service
             [$iv, $hmac_signature, $encrypted_data] = $parts;
 
             // Вычисляем HMAC подпись для проверки целостности (по официальной документации)
-            $hmac_data = $iv.'|'.$encrypted_data;
+            $hmac_data = $iv . '|' . $encrypted_data;
             $calculated_signature = hash_hmac('sha256', $hmac_data, $secretKey);
 
             // Проверяем подпись
@@ -240,7 +244,7 @@ class Pay2Service
                 Log::warning('Pay2Service: Подпись webhook не совпадает', [
                     'calculated' => $calculated_signature,
                     'received' => $hmac_signature,
-                    'hmac_data' => substr($hmac_data, 0, 100).'...',
+                    'hmac_data' => substr($hmac_data, 0, 100) . '...',
                 ]);
 
                 return false;
@@ -296,7 +300,7 @@ class Pay2Service
         // Префикс DP для депозитов, TN для тарифов/подписок
         $prefix = 'TN';
 
-        return $prefix.$userId.$tariffId.time();
+        return $prefix . $userId . $tariffId . time();
     }
 
     /**
@@ -323,7 +327,7 @@ class Pay2Service
         [$iv, $signature, $encrypted_data] = $parts;
 
         // Шаг 3: Проверка HMAC подписи
-        $calculated_signature = hash_hmac('sha256', $iv.'|'.$encrypted_data, $secret_key);
+        $calculated_signature = hash_hmac('sha256', $iv . '|' . $encrypted_data, $secret_key);
         if (! hash_equals($calculated_signature, $signature)) {
             return false;
         }
@@ -359,9 +363,9 @@ class Pay2Service
         try {
             if ($debug) {
                 echo "🔍 Начинаю валидацию webhook Pay2.House\n";
-                echo '📝 Подпись: '.substr($signature, 0, 50)."...\n";
-                echo '📦 Payload: '.json_encode($payload)."\n";
-                echo '🔑 API ключ: '.substr($api_key, 0, 20)."...\n\n";
+                echo '📝 Подпись: ' . substr($signature, 0, 50) . "...\n";
+                echo '📦 Payload: ' . json_encode($payload) . "\n";
+                echo '🔑 API ключ: ' . substr($api_key, 0, 20) . "...\n\n";
             }
 
             // Проверяем наличие необходимых данных
@@ -441,9 +445,9 @@ class Pay2Service
 
             return $result;
         } catch (\Exception $e) {
-            $result['error'] = 'Исключение при валидации: '.$e->getMessage();
+            $result['error'] = 'Исключение при валидации: ' . $e->getMessage();
             if ($debug) {
-                echo '❌ Исключение: '.$e->getMessage()."\n";
+                echo '❌ Исключение: ' . $e->getMessage() . "\n";
             }
 
             return $result;

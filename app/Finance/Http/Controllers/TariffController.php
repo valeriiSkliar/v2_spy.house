@@ -60,18 +60,29 @@ class TariffController extends Controller
      */
     public function processPayment(Request $request)
     {
-        // Получаем данные из запроса
-        $tariffId = $request->get('tariff_id');
-        $billingType = $request->get('billing_type', 'month');
-        $isRenewal = (bool) $request->get('is_renewal', false);
+        $user = $request->user();
+
+        // Получаем данные из HTTP Referer для извлечения slug и billingType
+        $referer = $request->headers->get('referer');
         $paymentMethod = $request->get('payment_method');
         $promoCode = $request->get('promo_code');
+        $isRenewal = (bool) $request->get('is_renewal', false);
 
-        $user = $request->user();
+        // Парсим URL для получения slug и billingType
+        if (!$referer || !preg_match('/\/tariffs\/payment\/([^\/]+)\/([^\/\?]+)/', $referer, $matches)) {
+            Log::warning('TariffController: Неверный referer URL', [
+                'user_id' => $user->id,
+                'referer' => $referer
+            ]);
+            return response()->json(['error' => 'Invalid payment page URL'], 400);
+        }
+
+        $slug = $matches[1];
+        $billingType = $matches[2];
 
         Log::info('TariffController: Начало обработки платежа тарифа', [
             'user_id' => $user->id,
-            'tariff_id' => $tariffId,
+            'slug' => $slug,
             'billing_type' => $billingType,
             'is_renewal' => $isRenewal,
             'payment_method' => $paymentMethod,
@@ -81,23 +92,30 @@ class TariffController extends Controller
         ]);
 
         // Валидация основных полей
-        if (! $tariffId) {
-            Log::warning('TariffController: Tariff ID отсутствует', ['user_id' => $user->id]);
-
-            return response()->json(['error' => 'Tariff ID is required'], 400);
-        }
-
-        if (! $paymentMethod) {
-            Log::warning('TariffController: Payment method отсутствует', ['user_id' => $user->id, 'tariff_id' => $tariffId]);
-
+        if (!$paymentMethod) {
+            Log::warning('TariffController: Payment method отсутствует', [
+                'user_id' => $user->id,
+                'slug' => $slug
+            ]);
             return response()->json(['error' => 'Payment method is required'], 400);
         }
 
-        // Проверяем существование тарифа
-        $tariff = Subscription::find($tariffId);
-        if (! $tariff) {
-            Log::error('TariffController: Тариф не найден', ['user_id' => $user->id, 'tariff_id' => $tariffId]);
+        // Проверяем корректность типа подписки
+        if (!in_array($billingType, ['month', 'year'])) {
+            Log::warning('TariffController: Неверный billing type', [
+                'user_id' => $user->id,
+                'billing_type' => $billingType
+            ]);
+            return response()->json(['error' => 'Invalid billing type'], 400);
+        }
 
+        // Ищем тариф по slug
+        $tariff = Subscription::findBySlug($slug);
+        if (!$tariff) {
+            Log::error('TariffController: Тариф не найден', [
+                'user_id' => $user->id,
+                'slug' => $slug
+            ]);
             return response()->json(['error' => 'Tariff not found'], 404);
         }
 
@@ -117,7 +135,7 @@ class TariffController extends Controller
 
         Log::info('TariffController: Расчет суммы платежа', [
             'user_id' => $user->id,
-            'tariff_id' => $tariffId,
+            'tariff_id' => $tariff->id,
             'billing_type' => $billingType,
             'base_amount' => $tariff->amount,
             'calculated_amount' => $amount,
@@ -133,7 +151,13 @@ class TariffController extends Controller
             'payer_email' => $user->email,
             'payment_method' => $paymentMethod,
             'handling_fee' => 0,
+            'return_url' => config('pay2.tariffs_return_url'),
+            'cancel_url' => config('pay2.tariffs_cancel_url'),
         ];
+
+        Log::info('TariffController: Подготовленные данные для платежа', [
+            'paymentData' => $paymentData,
+        ]);
 
         // Создаем платеж через Pay2.House
         $paymentResult = $this->pay2Service->createPayment($paymentData);
@@ -141,7 +165,7 @@ class TariffController extends Controller
         if (! $paymentResult['success']) {
             Log::error('TariffController: Ошибка создания платежа', [
                 'user_id' => $user->id,
-                'tariff_id' => $tariffId,
+                'tariff_id' => $tariff->id,
                 'error' => $paymentResult['error'],
             ]);
 
@@ -166,7 +190,7 @@ class TariffController extends Controller
 
         Log::info('TariffController: Платеж создан успешно', [
             'user_id' => $user->id,
-            'tariff_id' => $tariffId,
+            'tariff_id' => $tariff->id,
             'payment_id' => $payment->id,
             'external_number' => $paymentData['external_number'],
             'invoice_number' => $paymentResult['data']['invoice_number'],
@@ -295,7 +319,7 @@ class TariffController extends Controller
                 'success' => true,
                 'message' => $result['message'],
                 'payment_id' => $result['payment']->id,
-                'redirect_url' => route('tariffs.payment.success', ['invoice_number' => $result['payment']->invoice_number]),
+                'redirect_url' => config('pay2.tariffs_return_url') . '?invoice_number=' . $result['payment']->invoice_number,
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -319,50 +343,16 @@ class TariffController extends Controller
      */
     public function payment($slug, Request $request, $billingType = null)
     {
-        // Если billingType не передан в URL, пытаемся получить из query параметра (для обратной совместимости)
-        if (!$billingType) {
-            $billingType = $request->get('billing_type', 'month');
-
-            // Если это старый URL с query параметром, редиректим на новый красивый URL
-            if ($request->has('billing_type')) {
-                // Сначала пытаемся найти тариф для получения правильного slug
-                $tariff = Subscription::findBySlug($slug);
-                if (!$tariff && is_numeric($slug)) {
-                    $tariff = Subscription::where('id', $slug)->first();
-                }
-
-                if ($tariff) {
-                    return redirect()->route('tariffs.payment.new', [
-                        'slug' => $tariff->getSlug(),
-                        'billingType' => $billingType
-                    ], 301);
-                }
-            }
-        }
-
         // Проверяем корректность типа подписки
         if (! in_array($billingType, ['month', 'year'])) {
-            $billingType = 'month';
+            abort(404, 'Invalid billing type');
         }
 
-        // Сначала пытаемся найти по slug (новая логика)
+        // Ищем тариф по slug
         $tariff = Subscription::findBySlug($slug);
 
-        // Если не нашли по slug, пытаемся найти по ID (обратная совместимость)
-        if (!$tariff && is_numeric($slug)) {
-            $tariff = Subscription::where('id', $slug)->first();
-
-            // Если нашли по ID, редиректим на правильный slug
-            if ($tariff) {
-                return redirect()->route('tariffs.payment.new', [
-                    'slug' => $tariff->getSlug(),
-                    'billingType' => $billingType
-                ], 301);
-            }
-        }
-
         if (! $tariff) {
-            abort(404);
+            abort(404, 'Tariff not found');
         }
 
         // Определить тип операции

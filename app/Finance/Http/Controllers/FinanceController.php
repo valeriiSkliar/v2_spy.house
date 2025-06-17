@@ -140,8 +140,8 @@ class FinanceController extends Controller
             'payer_email' => $user->email,
             'payment_method' => $paymentMethod,
             'handling_fee' => 0,
-            'return_url' => route('finances.deposit.success'),
-            'cancel_url' => route('finances.deposit.cancel'),
+            'return_url' => config('pay2.finance_return_url'),
+            'cancel_url' => config('pay2.finance_cansel_url'),
         ];
 
         // Создаем платеж через Pay2.House

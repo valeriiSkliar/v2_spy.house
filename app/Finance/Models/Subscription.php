@@ -64,7 +64,7 @@ class Subscription extends Model
      */
     public function getPaymentUrl(string $billingType = 'month'): string
     {
-        return route('tariffs.payment.new', [
+        return route('tariffs.payment', [
             'slug' => $this->getSlug(),
             'billingType' => $billingType
         ]);

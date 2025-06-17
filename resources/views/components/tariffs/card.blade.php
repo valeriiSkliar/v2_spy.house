@@ -37,12 +37,10 @@
 <div class="rate-item-bottom">
     @if($currentTariff['id'] === $tariff->id)
     <a href="{{ $tariff->getPaymentUrl('month') }}" class="btn w-100 _flex _medium _border-green tariff-renew-btn"
-        data-tariff-id="{{ $tariff->id }}" data-tariff-slug="{{ $tariff->getSlug() }}"
-        data-billing-type="month">Продлить</a>
+        data-tariff-slug="{{ $tariff->getSlug() }}" data-billing-type="month">Продлить</a>
     @else
     <a href="{{ $tariff->getPaymentUrl('month') }}" class="btn w-100 _flex _medium _green tariff-select-btn"
-        data-tariff-id="{{ $tariff->id }}" data-tariff-slug="{{ $tariff->getSlug() }}"
-        data-billing-type="month">Выбрать</a>
+        data-tariff-slug="{{ $tariff->getSlug() }}" data-billing-type="month">Выбрать</a>
     @endif
 </div>
 </div>

@@ -412,7 +412,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function subscriptionPayments(): HasMany
     {
-        return $this->payments()->subscriptions()->with('subscription');
+        return $this->payments()->subscriptions()->with('subscription')->orderBy('created_at', 'desc');
     }
 
     /**

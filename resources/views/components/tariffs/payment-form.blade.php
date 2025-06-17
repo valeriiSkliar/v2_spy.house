@@ -15,9 +15,7 @@
     <div class="col-12 col-md-6 col-lg-5">
         <form id="subscription-payment-form" action="{{ route('tariffs.process-payment') }}" method="POST">
             @csrf
-            {{-- Эти поля теперь передаются через URL, но оставляем для совместимости с процессингом --}}
-            <input type="hidden" name="tariff_id" value="{{ $tariff->id }}">
-            <input type="hidden" name="billing_type" value="{{ $billingType }}">
+            {{-- Данные тарифа и типа оплаты теперь передаются через URL --}}
             <input type="hidden" name="is_renewal" value="{{ $isRenewal ? '1' : '0' }}">
             <input type="hidden" name="is_upgrade" value="{{ ($isUpgrade ?? false) ? '1' : '0' }}">
             <input type="hidden" name="payment_method" id="selected_payment_method"
