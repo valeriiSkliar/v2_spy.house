@@ -49,12 +49,12 @@ class PasswordUpdateConfirmationNotification extends Notification implements Sho
                 'expires_in' => 15,
                 'user' => $notifiable,
                 'emailType' => 'password_update_confirmation',
-                'loginUrl' => config('app.url') . '/login',
+                'loginUrl' => config('app.url').'/login',
                 'telegramUrl' => config('app.telegram_url', 'https://t.me/spyhouse'),
                 'supportEmail' => config('mail.support_email', 'support@spy.house'),
                 'unsubscribeUrl' => $notifiable->unsubscribe_hash
                     ? route('unsubscribe.show', $notifiable->unsubscribe_hash)
-                    : config('app.url') . '/unsubscribe',
+                    : config('app.url').'/unsubscribe',
             ]);
     }
 

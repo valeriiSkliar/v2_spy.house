@@ -54,9 +54,9 @@ class ProfileSettingsUpdateRequest extends BaseRequest
                 }
             }],
             // Use values instead of names for validation - the dropdown sends value not enum name
-            'experience' => ['nullable', 'string', 'in:' . implode(',', UserExperience::names())],
+            'experience' => ['nullable', 'string', 'in:'.implode(',', UserExperience::names())],
             // Use values instead of names for validation
-            'scope_of_activity' => ['nullable', 'string', 'in:' . implode(',', UserScopeOfActivity::names())],
+            'scope_of_activity' => ['nullable', 'string', 'in:'.implode(',', UserScopeOfActivity::names())],
         ];
     }
 

@@ -50,6 +50,14 @@ class User extends Authenticatable implements MustVerifyEmail
         'email_contact_id',
         'is_newsletter_subscribed',
         'unsubscribe_hash',
+        // Financial system fields
+        'available_balance',
+        'subscription_id',
+        'subscription_time_start',
+        'subscription_time_end',
+        'subscription_is_expired',
+        'queued_subscription_id',
+        'balance_version',
     ];
 
     /**
@@ -78,39 +86,100 @@ class User extends Authenticatable implements MustVerifyEmail
             'ip_restrictions' => 'array',
             'google_2fa_enabled' => 'boolean',
             'is_newsletter_subscribed' => 'boolean',
-        ];
-    }
-
-    public function currentTariff()
-    {
-        // For the demo, return Enterprise tariff
-        return [
-            'id' => 4,
-            'name' => 'Enterprise',
-            'css_class' => 'enterprise',
-            'expires_at' => '12.06.2024',
-            'status' => 'Активная', // or 'Не активно'
+            // Financial system casts
+            'available_balance' => 'decimal:2',
+            'subscription_time_start' => 'datetime',
+            'subscription_time_end' => 'datetime',
+            'subscription_is_expired' => 'boolean',
+            'balance_version' => 'integer',
         ];
     }
 
     /**
-     * Check if tariff is active
+     * Get user's current subscription
      */
-    public function hasTariff($tariffId = null)
+    public function subscription()
     {
-        if ($tariffId) {
-            return $this->tariff_id == $tariffId && $this->tariff_expires_at > now();
+        return $this->belongsTo(\App\Finance\Models\Subscription::class);
+    }
+
+    public function currentTariff(): array
+    {
+        if (! $this->subscription_id || ! $this->subscription) {
+            return [
+                'id' => null,
+                'name' => 'Free',
+                'css_class' => 'free',
+                'expires_at' => null,
+                'status' => 'Не активно',
+                'is_active' => false,
+            ];
         }
 
-        return $this->tariff_id && $this->tariff_expires_at > now();
+        $isActive = $this->hasActiveSubscription();
+
+        return [
+            'id' => $this->subscription->id,
+            'name' => $this->subscription->name,
+            'css_class' => strtolower($this->subscription->name),
+            'expires_at' => $this->subscription_time_end ? $this->subscription_time_end->format('d.m.Y') : null,
+            'status' => $isActive ? 'Активная' : 'Не активно',
+            'is_active' => $isActive,
+        ];
     }
 
     /**
-     * Get tariff expiration date
+     * Check if user has active subscription (new method for subscription system)
      */
-    public function tariffExpiresAt()
+    public function hasActiveSubscription(): bool
     {
-        return $this->tariff_expires_at ? $this->tariff_expires_at->format('d.m.Y') : null;
+        return $this->subscription_id
+            && $this->subscription_time_end
+            && $this->subscription_time_end > now()
+            && ! $this->subscription_is_expired;
+    }
+
+    /**
+     * Check if user has specific subscription or any active subscription
+     */
+    public function hasTariff($subscriptionId = null): bool
+    {
+        if ($subscriptionId) {
+            return $this->subscription_id == $subscriptionId && $this->hasActiveSubscription();
+        }
+
+        return $this->hasActiveSubscription();
+    }
+
+    /**
+     * Get subscription expiration date
+     */
+    public function tariffExpiresAt(): ?string
+    {
+        return $this->subscription_time_end ? $this->subscription_time_end->format('d.m.Y') : null;
+    }
+
+    /**
+     * Get formatted balance with currency
+     */
+    public function getFormattedBalance(): string
+    {
+        return '$' . number_format($this->available_balance, 2);
+    }
+    /**
+     * Get formatted balance with currency
+     */
+    public function getFormattedBalanceWithoutCurrency(): string
+    {
+        return number_format($this->available_balance, 2);
+    }
+
+    /**
+     * Check if user has sufficient balance for amount
+     */
+    public function hasSufficientBalance(float $amount): bool
+    {
+        return $this->available_balance >= $amount;
     }
 
     public function ratings(): HasMany
@@ -136,7 +205,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getFullPhoneNumber(): ?string
     {
         if ($this->phone_country_code && $this->phone) {
-            return '+'.$this->phone_country_code.$this->phone;
+            return '+' . $this->phone_country_code . $this->phone;
         }
 
         return null;
@@ -299,5 +368,65 @@ class User extends Authenticatable implements MustVerifyEmail
     public function sendWelcomeInAppNotification(): void
     {
         $this->notify(new WelcomeInAppNotification);
+    }
+
+    /**
+     * Get all payments for the user.
+     */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(\App\Finance\Models\Payment::class);
+    }
+
+    public function deposits(): HasMany
+    {
+        return $this->payments()->where('payment_type', \App\Enums\Finance\PaymentType::DEPOSIT);
+    }
+
+    /**
+     * Get successful payments for the user.
+     */
+    public function successfulPayments(): HasMany
+    {
+        return $this->payments()->successful();
+    }
+
+    /**
+     * Get pending payments for the user.
+     */
+    public function pendingPayments(): HasMany
+    {
+        return $this->payments()->pending();
+    }
+
+    /**
+     * Get deposit payments for the user.
+     */
+    public function depositPayments(): HasMany
+    {
+        return $this->payments()->deposits();
+    }
+
+    /**
+     * Get subscription payments for the user.
+     */
+    public function subscriptionPayments(): HasMany
+    {
+        return $this->payments()->subscriptions()->with('subscription')->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Get all active subscriptions for the user.
+     */
+    public function activeSubscriptions()
+    {
+        return $this->successfulPayments()
+            ->with('subscription')
+            ->whereHas('subscription', function ($query) {
+                $query->where('status', 'active');
+            })
+            ->get()
+            ->pluck('subscription')
+            ->unique('id');
     }
 }

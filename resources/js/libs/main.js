@@ -94,16 +94,16 @@ document.addEventListener(
       );
 
       //--------Toggle tariff------------------------------------
-      $('body').on('click', '.js-toggle-rate', function () {
-        $(this).toggleClass('show-all');
-        $('.rate-item-body._fixed').toggleClass('show-all');
-        $('.rate-item-body__hidden').slideToggle(300);
-        if ($(this).hasClass('show-all')) {
-          $('.btn__text', this).html($(this).data('hide'));
-        } else {
-          $('.btn__text', this).html($(this).data('show'));
-        }
-      });
+      // $('body').on('click', '.js-toggle-rate', function () {
+      //   $(this).toggleClass('show-all');
+      //   $('.rate-item-body._fixed').toggleClass('show-all');
+      //   $('.rate-item-body__hidden').slideToggle(300);
+      //   if ($(this).hasClass('show-all')) {
+      //     $('.btn__text', this).html($(this).data('hide'));
+      //   } else {
+      //     $('.btn__text', this).html($(this).data('show'));
+      //   }
+      // });
 
       //--------Switch password------------------------------------
       $('body').on('click', '[data-pass-switch]', function (e) {

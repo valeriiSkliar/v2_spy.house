@@ -38,11 +38,25 @@ return new class extends Migration
             $table->string('email_contact_id')->nullable()->comment('Email service contact ID for newsletters');
             $table->boolean('is_newsletter_subscribed')->default(false)->comment('Newsletter subscription status');
             $table->string('unsubscribe_hash')->unique()->nullable()->comment('Unique hash for newsletter unsubscribe');
+
+            // Financial system fields
+            $table->decimal('available_balance', 10, 2)->default(0.00)->comment('User available balance for payments');
+            $table->unsignedBigInteger('subscription_id')->nullable()->comment('Current active subscription');
+            $table->timestamp('subscription_time_start')->nullable()->comment('Current subscription start time');
+            $table->timestamp('subscription_time_end')->nullable()->comment('Current subscription end time');
+            $table->boolean('subscription_is_expired')->default(false)->comment('Current subscription expiration status');
+            $table->unsignedBigInteger('queued_subscription_id')->nullable()->comment('Queued subscription for activation');
+            $table->integer('balance_version')->default(1)->comment('Version for optimistic locking on balance operations');
+
             $table->rememberToken();
             $table->timestamps();
 
             // Add unique constraint for messenger_type + messenger_contact combination
             $table->unique(['messenger_type', 'messenger_contact']);
+
+            // Indexes for financial queries optimization
+            $table->index(['subscription_id', 'subscription_is_expired'], 'users_subscription_status_idx');
+            $table->index('balance_version', 'users_balance_version_idx');
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

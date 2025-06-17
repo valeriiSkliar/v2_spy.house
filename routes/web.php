@@ -6,7 +6,6 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\Test\ApiController;
 use App\Http\Controllers\Test\CreativesController;
-use App\Http\Controllers\Test\FinanceController;
 use App\Http\Controllers\UnsubscribeController;
 // use App\Http\Controllers\UnsubscribeController;
 use Illuminate\Support\Facades\Route;
@@ -24,8 +23,6 @@ Route::get('/terms', function () {
 Route::get('/modal/{tab}', [ModalController::class, 'loadModal'])->name('modal.load');
 
 Route::get('/api', [ApiController::class, 'index'])->name('api.index');
-Route::get('/finances', [FinanceController::class, 'index'])->name('finances.index');
-Route::post('/finances/deposit', [FinanceController::class, 'deposit'])->name('finances.deposit');
 
 // Route::get('/dashboard', function () {
 //     return view('dashboard');
@@ -59,19 +56,21 @@ Route::get('/sitemapindex.xml', [SitemapController::class, 'sitemapIndex'])->nam
 
 // Robots.txt route
 Route::get('/robots.txt', function () {
-    $content = "User-agent: *\nDisallow:\n\nSitemap: " . url('/sitemap.xml');
+    $content = "User-agent: *\nDisallow:\n\nSitemap: ".url('/sitemap.xml');
 
     return response($content, 200, ['Content-Type' => 'text/plain']);
 })->name('robots');
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';
 // API routes are included directly in api.php with proper prefixing
-include __DIR__ . '/api.php';
-require __DIR__ . '/blog.php';
-require __DIR__ . '/profile.php';
-require __DIR__ . '/tariffs.php';
-require __DIR__ . '/landings.php';
-require __DIR__ . '/notifications.php';
-require __DIR__ . '/services.php';
-require __DIR__ . '/test.php';
-require __DIR__ . '/creatives.php';
+include __DIR__.'/api.php';
+require __DIR__.'/blog.php';
+require __DIR__.'/profile.php';
+require __DIR__.'/tariffs.php';
+require __DIR__.'/landings.php';
+require __DIR__.'/notifications.php';
+require __DIR__.'/services.php';
+require __DIR__.'/test.php';
+require __DIR__.'/creatives.php';
+require __DIR__.'/finances.php';
+require __DIR__.'/webhooks.php';

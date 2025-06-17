@@ -1,0 +1,198 @@
+graph TD
+    %% ✅ РЕАЛИЗОВАННЫЕ ТАБЛИЦЫ (Текущее состояние)
+    Users["`✅ **users** (частично финансовый)
+    id, available_balance (DECIMAL 10,2)
+    subscription_id, subscription_time_start
+    subscription_time_end, subscription_is_expired
+    queued_subscription_id, balance_version`"]
+    
+    Payments["`✅ **payments** (полностью реализован)
+    id, user_id, amount (DECIMAL 15,2)
+    payment_type ENUM, subscription_id
+    payment_method ENUM, transaction_number
+    promocode_id, status ENUM
+    webhook_token, webhook_processed_at
+    idempotency_key, invoice_number
+    external_number (Pay2House)`"]
+    
+    Subscriptions["`✅ **subscriptions** (базовая реализация)
+    id, name, amount (DECIMAL 10,2)
+    early_discount (DECIMAL 5,2)
+    api_request_count, search_request_count
+    status ENUM (active,inactive,deprecated)`"]
+    
+    Promocodes["`✅ **promocodes** (полностью реализован)
+    id, promocode (VARCHAR 50), discount (DECIMAL 5,2)
+    status ENUM, date_start, date_end
+    count_activation, max_per_user
+    created_by_user_id`"]
+    
+    PromocodeActivations["`✅ **promocode_activations** (реализован)
+    id, promocode_id, user_id
+    payment_id, ip_address
+    user_agent, created_at`"]
+
+    %% ❌ ПЛАНИРУЕМЫЕ ТАБЛИЦЫ (НЕ РЕАЛИЗОВАНЫ)
+    
+    BalanceAudit["`❌ **balance_audit** (НЕ РЕАЛИЗОВАНО)
+    id, user_id, amount
+    operation_type, payment_id
+    balance_before, balance_after
+    transaction_hash, created_at`"]
+    
+    WebhookLogs["`❌ **webhook_logs** (НЕ РЕАЛИЗОВАНО)
+    id, payment_id, webhook_token
+    request_body, request_headers
+    ip_address, processed_at
+    response_status, nonce, signature_valid`"]
+    
+    SubscriptionAudit["`❌ **subscription_audit** (НЕ РЕАЛИЗОВАНО)
+    id, user_id, subscription_id
+    action, previous_subscription_id
+    payment_id, created_at`"]
+    
+    FinancialReconciliation["`❌ **financial_reconciliation** (НЕ РЕАЛИЗОВАНО)
+    id, date, payment_system
+    our_total_amount, external_total_amount
+    discrepancy, status, reconciled_at`"]
+    
+    RateLimiting["`❌ **rate_limiting** (НЕ РЕАЛИЗОВАНО)
+    id, ip_address, endpoint
+    request_count, window_start
+    blocked_until`"]
+    
+    SecurityAlerts["`❌ **security_alerts** (НЕ РЕАЛИЗОВАНО)
+    id, alert_type, user_id
+    payment_id, description
+    severity, resolved, created_at`"]
+
+    TransactionLimits["`❌ **transaction_limits** (НЕ РЕАЛИЗОВАНО)
+    id, user_id, daily_limit
+    monthly_limit, current_daily_amount
+    current_monthly_amount, last_reset_daily
+    last_reset_monthly`"]
+
+    %% ✅ РЕАЛИЗОВАННЫЕ СВЯЗИ
+    Users -->|subscription_id| Subscriptions
+    Payments -->|user_id| Users
+    Payments -->|subscription_id| Subscriptions
+    Payments -->|promocode_id| Promocodes
+    PromocodeActivations -->|promocode_id| Promocodes
+    PromocodeActivations -->|user_id| Users
+    PromocodeActivations -->|payment_id| Payments
+    
+    %% ❌ ПЛАНИРУЕМЫЕ СВЯЗИ (НЕ РЕАЛИЗОВАНЫ)
+    BalanceAudit -.->|user_id| Users
+    BalanceAudit -.->|payment_id| Payments
+    WebhookLogs -.->|payment_id| Payments
+    SubscriptionAudit -.->|user_id| Users
+    SubscriptionAudit -.->|subscription_id| Subscriptions
+    SubscriptionAudit -.->|payment_id| Payments
+    SecurityAlerts -.->|user_id| Users
+    SecurityAlerts -.->|payment_id| Payments
+    TransactionLimits -.->|user_id| Users
+    
+    %% ✅ РЕАЛИЗОВАННЫЕ ПРОЦЕССЫ (Текущий функционал)
+    CurrentDirectSubFlow["`✅ **Полный цикл покупки подписки**
+    1. Выбор тарифа → TariffController::processPayment
+    2. Генерация external_number → Pay2Service::createPayment  
+    3. Создание Payment записи со статусом PENDING
+    4. Редирект на Pay2.House → Оплата пользователем
+    5. Pay2.House отправляет webhook → Pay2WebhookController::handle
+    6. Проверка подписи → Обновление статуса платежа
+    7. Автоматическая активация подписки пользователя
+    8. Возврат на success/cancel страницы`"]
+    
+    CurrentPromocodeFlow["`✅ **Система промокодов**
+    1. PromocodeService::validatePromocode
+    2. Проверка лимитов и дат
+    3. PromocodeService::applyPromocode
+    4. Создание PromocodeActivation записи
+    5. IP и User-Agent логирование`"]
+    
+    %% ❌ ПЛАНИРУЕМЫЕ ПРОЦЕССЫ (НЕ РЕАЛИЗОВАНЫ)
+    PlannedDepositFlow["`❌ **Планируемое пополнение** (НЕ РЕАЛИЗОВАНО)
+    Проверка лимитов → Optimistic locking
+    → Audit запись → Webhook с nonce
+    → Rate limiting проверка`"]
+    
+    PlannedBalanceSubFlow["`❌ **Планируемая оплата с баланса** (НЕ РЕАЛИЗОВАНО)
+    SELECT FOR UPDATE блокировка
+    → Balance version проверка
+    → Двойная запись → Audit логирование`"]
+    
+    %% 🔄 ЧАСТИЧНО РЕАЛИЗОВАННЫЕ СИСТЕМЫ
+    CurrentPaymentSystems["`🔄 **Платежные системы** (частично)
+    ✅ Pay2.House интеграция + HMAC подписи
+    ❌ TetherUSDT не реализован
+    ❌ Rate limiting отсутствует`"]
+    
+    Pay2WebhookController["`✅ **Pay2WebhookController** (РЕАЛИЗОВАН!)
+    ✅ Pay2WebhookController::handle() обрабатывает webhook'и
+    ✅ Проверка HMAC подписи (в продакшн режиме)
+    ✅ Автоматическое обновление статусов платежей
+    ✅ Автоматическая активация подписок после оплаты
+    ✅ Поддержка статусов: paid, cancelled, error
+    ✅ Логирование всех операций`"]
+    
+    %% ✅ ТЕКУЩИЕ ПОТОКИ ПРОЦЕССОВ  
+    CurrentDirectSubFlow --> Payments
+    CurrentDirectSubFlow --> Users
+    CurrentPromocodeFlow --> PromocodeActivations
+    CurrentPaymentSystems -->|working webhook| Pay2WebhookController
+    Pay2WebhookController --> Payments
+    Pay2WebhookController --> Users
+    
+    %% ❌ ПЛАНИРУЕМЫЕ ПОТОКИ (НЕ РЕАЛИЗОВАНЫ)
+    PlannedDepositFlow -.-> BalanceAudit
+    PlannedDepositFlow -.-> TransactionLimits
+    PlannedBalanceSubFlow -.-> BalanceAudit
+    PlannedBalanceSubFlow -.-> SubscriptionAudit
+    
+    %% ✅ РЕАЛИЗОВАННЫЕ ENUM значения
+    PaymentTypesActual["`✅ **payment_type ENUM** (реализовано)
+    DEPOSIT | DIRECT_SUBSCRIPTION`"]
+    
+    PaymentMethodsActual["`✅ **payment_method ENUM** (реализовано)
+    USDT | PAY2_HOUSE | USER_BALANCE`"]
+    
+    PaymentStatusesActual["`✅ **status ENUM** (реализовано)
+    PENDING | SUCCESS | FAILED`"]
+    
+    PromocodeStatusesActual["`✅ **promocode_status ENUM** (реализовано)
+    active | inactive | expired | exhausted`"]
+
+    %% ❌ ПЛАНИРУЕМЫЕ ENUM (НЕ РЕАЛИЗОВАНЫ)
+    PaymentTypesPlanned["`❌ **payment_type** (планируемые)
+    BALANCE_SUBSCRIPTION | REFUND | CHARGEBACK`"]
+    
+    PaymentMethodsPlanned["`❌ **payment_method** (планируемые)
+    TetherUSDT | INTERNAL_BALANCE | ADMIN_ADJUSTMENT`"]
+    
+    PaymentStatusesPlanned["`❌ **status** (планируемые)
+    REFUNDED | DISPUTED | CANCELLED`"]
+
+    AlertTypesPlanned["`❌ **alert_type ENUM** (НЕ РЕАЛИЗОВАНО)
+    SUSPICIOUS_ACTIVITY | DUPLICATE_WEBHOOK
+    BALANCE_MISMATCH | RATE_LIMIT_EXCEEDED
+    PROMOCODE_ABUSE | RECONCILIATION_ERROR`"]
+    
+    %% Стилизация
+    classDef implementedStyle fill:#e8f5e8,stroke:#2e7d32,stroke-width:3px,color:#000
+    classDef notImplementedStyle fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#000
+    classDef partialStyle fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#000
+    classDef enumImplementedStyle fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000
+    classDef enumPlannedStyle fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#000
+    
+    %% ✅ Реализованные компоненты
+    class Users,Payments,Subscriptions,Promocodes,PromocodeActivations implementedStyle
+    class CurrentDirectSubFlow,CurrentPromocodeFlow,Pay2WebhookController implementedStyle
+    class PaymentTypesActual,PaymentMethodsActual,PaymentStatusesActual,PromocodeStatusesActual enumImplementedStyle
+    
+    %% 🔄 Частично реализованные
+    class CurrentPaymentSystems partialStyle
+    
+    %% ❌ Не реализованные компоненты  
+    class BalanceAudit,WebhookLogs,SubscriptionAudit,FinancialReconciliation,RateLimiting,SecurityAlerts,TransactionLimits notImplementedStyle
+    class PlannedDepositFlow,PlannedBalanceSubFlow notImplementedStyle
+    class PaymentTypesPlanned,PaymentMethodsPlanned,PaymentStatusesPlanned,AlertTypesPlanned enumPlannedStyle

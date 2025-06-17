@@ -15,12 +15,17 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         $this->call([
+            UserSeeder::class,
             BlogPostSeeder::class,
             BlogCommentSeeder::class,
             WebsiteDownloadSeeder::class,
             ServiceSeeder::class,
             NotificationTypesSeeder::class,
             NotificationsSeeder::class,
+            SubscriptionSeeder::class,
+            PaymentSeeder::class,
+            PromocodeSeeder::class,
+            PromocodeActivationSeeder::class,
             // Add other seeders here if needed
         ]);
     }

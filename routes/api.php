@@ -34,7 +34,6 @@ Route::prefix('api')->group(function () {
         Route::get('tokens', [TokenController::class, 'listTokens'])->name('api.tokens.list');
         Route::post('tokens/revoke', [TokenController::class, 'revokeToken'])->name('api.tokens.revoke');
 
-
         // Test
         Route::get('test-api-token2', [BaseTokenController::class, 'testBaseToken2'])->name('test-base-token2');
     });

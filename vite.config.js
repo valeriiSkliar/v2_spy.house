@@ -5,6 +5,7 @@ export default defineConfig({
   plugins: [
     laravel({
       input: [
+        'resources/js/finances.js',
         // 'resources/css/app.css',
         'resources/scss/app.scss',
         'resources/js/app.js',
@@ -18,6 +19,10 @@ export default defineConfig({
         'resources/img/telegram.svg',
         'resources/img/viber.svg',
         'resources/img/whatsapp.svg',
+        'resources/js/pages/register.js',
+        'resources/js/tariffs-payments.js',
+        'resources/js/tariffs.js',
+        'resources/js/pages/blogs.js',
       ],
       refresh: true,
     }),
@@ -48,14 +53,17 @@ export default defineConfig({
       compress: {
         drop_console: process.env.NODE_ENV === 'production',
         drop_debugger: process.env.NODE_ENV === 'production',
-        pure_funcs: process.env.NODE_ENV === 'production' ? [
-          'console.log',
-          'console.info',
-          'logger',
-          'loggerError',
-          'loggerWarn',
-          'loggerSuccess',
-        ] : [],
+        pure_funcs:
+          process.env.NODE_ENV === 'production'
+            ? [
+                'console.log',
+                'console.info',
+                'logger',
+                'loggerError',
+                'loggerWarn',
+                'loggerSuccess',
+              ]
+            : [],
       },
       mangle: {
         safari10: true,

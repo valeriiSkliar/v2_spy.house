@@ -39,8 +39,8 @@ class ProfileUpdateRequest extends BaseRequest
 
         return [
             'login' => $loginRules,
-            'experience' => 'nullable|string|in:' . implode(',', UserExperience::names()),
-            'scope_of_activity' => 'nullable|string|in:' . implode(',', UserScopeOfActivity::names()),
+            'experience' => 'nullable|string|in:'.implode(',', UserExperience::names()),
+            'scope_of_activity' => 'nullable|string|in:'.implode(',', UserScopeOfActivity::names()),
             'messenger_type' => 'nullable|string|in:telegram,viber,whatsapp',
             'messenger_contact' => [
                 'nullable',

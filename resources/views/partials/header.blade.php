@@ -8,17 +8,43 @@
         <a href="/" class="header__logo"><img src="/img/logo.svg" alt="" width="142" height="36"></a>
     </div>
     <div class="header__right">
+        @auth
+        @php
+        $user = auth()->user();
+        $currentTariff = $user->currentTariff();
+        @endphp
+
+
+
+        {{-- Current Subscription --}}
         <div class="header__tariff">
-            <div class="header__tariff">
-                @if(auth()->check() && auth()->user()->hasTariff())
-                <x-tariff-link :type="auth()->user()->currentTariff()['css_class']">
-                    {{ auth()->user()->currentTariff()['name'] }}
-                </x-tariff-link>
-                @else
-                <x-tariff-link>{{ __('tariffs.free') }}</x-tariff-link>
-                @endif
-            </div>
+            <x-tariff-link :type="$currentTariff['css_class']" data-toggle="modal"
+                data-target="#modal-current-subscription" style="cursor: pointer;">
+                {{ $currentTariff['name'] }}
+            </x-tariff-link>
         </div>
+
+        {{-- User Balance --}}
+        @if($user->available_balance > 0)
+        <div class="header__balance">
+            <a href="#" class="user-balance">
+                <span class="user-balance__currency">$</span>
+                <span class="user-balance__val">{{ $user->getFormattedBalanceWithoutCurrency() }}</span>
+            </a>
+        </div>
+        @endif
+
+        {{-- Push modal to global stack --}}
+        @push('modals')
+        <x-modals.subscribtion-activated :currentTariff="$currentTariff" />
+        @endpush
+        @else
+        {{-- Guest User --}}
+        <div class="header__tariff">
+            <x-tariff-link>{{ __('tariffs.free') }}</x-tariff-link>
+        </div>
+        @endauth
+
         <div class="header__lang">
             <x-frontend.language-selector />
         </div>

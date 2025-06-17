@@ -81,11 +81,11 @@ return [
             'push' => 'Push',
             'inpage' => 'In Page',
             'facebook' => 'Facebook',
-            'tiktok' => 'TikTok'
+            'tiktok' => 'TikTok',
         ],
         'country' => [
             'all' => 'Все страны',
             'placeholder' => 'Страна',
-        ]
-    ]
+        ],
+    ],
 ];

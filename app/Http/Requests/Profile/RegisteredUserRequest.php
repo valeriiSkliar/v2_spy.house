@@ -61,12 +61,12 @@ class RegisteredUserRequest extends BaseRequest
                     }
                 },
             ],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Password::defaults()],
             // Use values instead of names for validation - the dropdown sends value not enum name
-            'experience' => ['required', 'string', 'in:' . implode(',', UserExperience::names())],
+            'experience' => ['required', 'string', 'in:'.implode(',', UserExperience::names())],
             // Use values instead of names for validation
-            'scope_of_activity' => ['required', 'string', 'in:' . implode(',', UserScopeOfActivity::names())],
+            'scope_of_activity' => ['required', 'string', 'in:'.implode(',', UserScopeOfActivity::names())],
             'g-recaptcha-response' => ['required', new Recaptcha],
         ];
     }

@@ -164,9 +164,9 @@ class LoginRequest extends FormRequest
     public function throttleKey(string $type = 'login'): string
     {
         if ($type === '2fa') {
-            return Str::transliterate(Str::lower($this->input('email')) . '|2fa|' . $this->ip());
+            return Str::transliterate(Str::lower($this->input('email')).'|2fa|'.$this->ip());
         }
 
-        return Str::transliterate(Str::lower($this->input('email')) . '|' . $this->ip());
+        return Str::transliterate(Str::lower($this->input('email')).'|'.$this->ip());
     }
 }

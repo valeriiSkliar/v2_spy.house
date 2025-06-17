@@ -19,7 +19,7 @@ class BlogParametersValidation
     public function handle(Request $request, Closure $next, ...$guards): Response
     {
         // Валидируем только запросы к блогу
-        if (!$this->isBlogRequest($request)) {
+        if (! $this->isBlogRequest($request)) {
             return $next($request);
         }
 
@@ -36,7 +36,6 @@ class BlogParametersValidation
         return $next($request);
     }
 
-
     /**
      * Проверка является ли запрос блоговым
      * Зачем: применение валидации только к релевантным маршрутам
@@ -48,7 +47,7 @@ class BlogParametersValidation
             'blog.category',
             'blog.search',
             'api.blog.list',
-            'api.blog.search'
+            'api.blog.search',
         ];
 
         $currentRoute = $request->route()?->getName();
@@ -87,36 +86,36 @@ class BlogParametersValidation
             'page' => [
                 'integer',
                 'min:1',
-                'max:1000' //  ограничение для предотвращения злоупотреблений
+                'max:1000', //  ограничение для предотвращения злоупотреблений
             ],
             'category' => [
                 'string',
                 'max:255',
-                'regex:/^[a-zA-Z0-9\-_]+$/' // Только безопасные символы
+                'regex:/^[a-zA-Z0-9\-_]+$/', // Только безопасные символы
             ],
             'search' => [
                 'string',
                 'max:255',
-                'min:1'
+                'min:1',
             ],
             'q' => [ // Для API поиска
                 'string',
                 'max:255',
-                'min:3'
+                'min:3',
             ],
             'sort' => [
                 'string',
-                'in:date,title,views,rating' // Только разрешенные поля сортировки
+                'in:date,title,views,rating', // Только разрешенные поля сортировки
             ],
             'order' => [
                 'string',
-                'in:asc,desc'
+                'in:asc,desc',
             ],
             'limit' => [
                 'integer',
                 'min:1',
-                'max:50' // Ограничение для API запросов
-            ]
+                'max:50', // Ограничение для API запросов
+            ],
         ];
 
         // Добавляем специфичные правила для разных типов запросов
@@ -136,12 +135,12 @@ class BlogParametersValidation
         return [
             'format' => [
                 'string',
-                'in:json,html'
+                'in:json,html',
             ],
             'include' => [
                 'string',
-                'regex:/^[a-zA-Z,_]+$/' // Для указания связанных моделей
-            ]
+                'regex:/^[a-zA-Z,_]+$/', // Для указания связанных моделей
+            ],
         ];
     }
 
@@ -164,7 +163,7 @@ class BlogParametersValidation
             'sort.in' => __('validation.blog.sort.in'),
             'order.in' => __('validation.blog.order.in'),
             'limit.min' => __('validation.blog.limit.min'),
-            'limit.max' => __('validation.blog.limit.max')
+            'limit.max' => __('validation.blog.limit.max'),
         ];
     }
 
@@ -184,7 +183,7 @@ class BlogParametersValidation
         // Проверка категории на существование (если указана)
         if ($request->has('category')) {
             $categoryExists = PostCategory::where('slug', $request->category)->exists();
-            if (!$categoryExists) {
+            if (! $categoryExists) {
                 $errors['category'] = __('validation.blog.category.not_found');
             }
         }
@@ -244,7 +243,6 @@ class BlogParametersValidation
         // Убираем лишние пробелы
         $query = preg_replace('/\s+/', ' ', trim($query));
 
-
         // Anti-XSS
         if ($query) {
             $query = sanitize_input($query);
@@ -266,7 +264,7 @@ class BlogParametersValidation
                 'message' => __('validation.blog.validation_failed'),
                 'errors' => $errors,
                 'redirect' => true,
-                'url' => $this->getCleanRedirectUrl($request)
+                'url' => $this->getCleanRedirectUrl($request),
             ], 422);
         }
 
@@ -292,6 +290,7 @@ class BlogParametersValidation
                 if ($this->isValidCategorySlug($category)) {
                     return route('blog.category', $category);
                 }
+
                 return route('blog.index');
 
             case 'blog.search':
@@ -314,7 +313,9 @@ class BlogParametersValidation
      */
     private function isValidCategorySlug(?string $slug): bool
     {
-        if (!$slug) return false;
+        if (! $slug) {
+            return false;
+        }
 
         return PostCategory::where('slug', $slug)->exists();
     }
@@ -330,19 +331,19 @@ class BlogParametersValidation
             'page' => $request->integer('page', 0) > 100,
             'malformed_search' => $request->has('search') && strlen($request->input('search')) > 200,
             'sql_injection' => $this->detectSQLInjection($request),
-            'xss_attempt' => $this->detectXSSAttempt($request)
+            'xss_attempt' => $this->detectXSSAttempt($request),
         ];
 
         $isSuspicious = array_filter($suspicious);
 
-        if (!empty($isSuspicious)) {
+        if (! empty($isSuspicious)) {
             Log::warning('Suspicious blog request detected', [
                 'ip' => $request->ip(),
                 'user_agent' => $request->userAgent(),
                 'url' => $request->fullUrl(),
                 'parameters' => $request->all(),
                 'suspicious_flags' => array_keys($isSuspicious),
-                'validation_errors' => $errors
+                'validation_errors' => $errors,
             ]);
         }
     }
@@ -358,11 +359,13 @@ class BlogParametersValidation
             '/\'\s*or\s*\'/i',
             '/\'\s*;\s*drop/i',
             '/\'\s*;\s*delete/i',
-            '/\/\*.*\*\//i'
+            '/\/\*.*\*\//i',
         ];
 
         $queryString = $request->getQueryString();
-        if (!$queryString) return false;
+        if (! $queryString) {
+            return false;
+        }
 
         foreach ($sqlPatterns as $pattern) {
             if (preg_match($pattern, $queryString)) {
@@ -384,7 +387,7 @@ class BlogParametersValidation
             '/javascript:/i',
             '/on\w+\s*=/i',
             '/<iframe/i',
-            '/<object/i'
+            '/<object/i',
         ];
 
         $allInput = implode(' ', $request->all());

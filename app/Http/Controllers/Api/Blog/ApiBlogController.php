@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Validator;
 class ApiBlogController extends BaseBlogController
 {
     const ARTICLES_PER_PAGE = 12;
+
     const CACHE_TTL = 300; // 5 минут
 
     /**
@@ -60,7 +61,7 @@ class ApiBlogController extends BaseBlogController
         // Получаем данные для текущей страницы
         $articlesData = $this->getArticlesForPage($query, $currentPage, $totalCount);
 
-        if (!$request->ajax()) {
+        if (! $request->ajax()) {
             return redirect()->route('blog.index', $request->all());
         }
 
@@ -113,7 +114,7 @@ class ApiBlogController extends BaseBlogController
         return [
             'query' => $query,
             'category' => $currentCategory,
-            'total' => $totalCount
+            'total' => $totalCount,
         ];
     }
 
@@ -127,9 +128,10 @@ class ApiBlogController extends BaseBlogController
             if ($request->ajax()) {
                 return response()->json([
                     'redirect' => true,
-                    'url' => $this->buildRedirectUrl($request, 1, true) // Сброс на главную без параметров
+                    'url' => $this->buildRedirectUrl($request, 1, true), // Сброс на главную без параметров
                 ]);
             }
+
             return redirect()->route('blog.index');
         }
 
@@ -142,9 +144,10 @@ class ApiBlogController extends BaseBlogController
             if ($request->ajax()) {
                 return response()->json([
                     'redirect' => true,
-                    'url' => $this->buildRedirectUrl($request, $redirectPage)
+                    'url' => $this->buildRedirectUrl($request, $redirectPage),
                 ]);
             }
+
             return redirect()->route('blog.index', $this->buildRedirectParams($request, $redirectPage));
         }
 
@@ -189,7 +192,7 @@ class ApiBlogController extends BaseBlogController
 
         return [
             'heroArticle' => $heroArticle,
-            'articles' => $articles
+            'articles' => $articles,
         ];
     }
 
@@ -202,7 +205,7 @@ class ApiBlogController extends BaseBlogController
         $articles = $articlesData['articles'];
 
         // Если нет статей (не должно происходить из-за валидации выше)
-        if ($articles->count() === 0 && !$heroArticle) {
+        if ($articles->count() === 0 && ! $heroArticle) {
             $queryText = $this->getQueryText($currentCategory, $search);
             $html = view('components.blog.blog-no-results-found', ['query' => $queryText])->render();
 
@@ -214,7 +217,7 @@ class ApiBlogController extends BaseBlogController
                 'totalPages' => 0,
                 'count' => 0,
                 'currentCategory' => $this->formatCategoryResponse($currentCategory),
-                'totalCount' => 0
+                'totalCount' => 0,
             ];
         }
 
@@ -238,7 +241,7 @@ class ApiBlogController extends BaseBlogController
             'totalPages' => $articles->lastPage(),
             'count' => $articles->count(),
             'currentCategory' => $this->formatCategoryResponse($currentCategory),
-            'totalCount' => $totalCount
+            'totalCount' => $totalCount,
         ];
     }
 
@@ -260,7 +263,7 @@ class ApiBlogController extends BaseBlogController
             return response()->json([
                 'redirect' => true,
                 'url' => route('blog.index'),
-                'error' => $error
+                'error' => $error,
             ], 422);
         }
 
@@ -277,6 +280,7 @@ class ApiBlogController extends BaseBlogController
         }
 
         $params = $this->buildRedirectParams($request, $page);
+
         return route('blog.index', $params);
     }
 
@@ -289,6 +293,7 @@ class ApiBlogController extends BaseBlogController
         if ($page > 1) {
             $params['page'] = $page;
         }
+
         return $params;
     }
 
@@ -297,9 +302,10 @@ class ApiBlogController extends BaseBlogController
      */
     private function getQueryText($currentCategory, ?string $search): string
     {
-        if ($currentCategory && !$search) {
+        if ($currentCategory && ! $search) {
             return $currentCategory->name;
         }
+
         return $search ?: '';
     }
 
@@ -308,14 +314,14 @@ class ApiBlogController extends BaseBlogController
      */
     private function formatCategoryResponse($currentCategory): ?array
     {
-        if (!$currentCategory) {
+        if (! $currentCategory) {
             return null;
         }
 
         return [
             'id' => $currentCategory->id,
             'name' => $currentCategory->name,
-            'slug' => $currentCategory->slug
+            'slug' => $currentCategory->slug,
         ];
     }
 
@@ -339,13 +345,13 @@ class ApiBlogController extends BaseBlogController
     {
         $validator = Validator::make($request->all(), [
             'q' => 'required|string|min:3|max:255',
-            'limit' => 'integer|min:1|max:50'
+            'limit' => 'integer|min:1|max:50',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => $validator->errors()->first()
+                'message' => $validator->errors()->first(),
             ], 422);
         }
 
@@ -353,7 +359,7 @@ class ApiBlogController extends BaseBlogController
         $limit = min($request->get('limit', 5), 50); // Ограничиваем максимум
 
         // Проверяем кеш
-        $cacheKey = "blog_search_" . md5($query) . "_" . $limit;
+        $cacheKey = 'blog_search_'.md5($query).'_'.$limit;
         $cachedResult = Cache::get($cacheKey);
 
         if ($cachedResult) {

@@ -29,7 +29,7 @@ class UserFactory extends Factory
 
         return [
             'name' => fake()->name(),
-            'email' => 'test@test.com',
+            'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'login' => fake()->unique()->safeEmail(),
             'messenger_type' => $messengerType,
@@ -38,6 +38,14 @@ class UserFactory extends Factory
             'experience' => $this->faker->randomElement(UserExperience::names()),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            // Financial system fields with defaults
+            'available_balance' => 0.00,
+            'subscription_id' => null,
+            'subscription_time_start' => null,
+            'subscription_time_end' => null,
+            'subscription_is_expired' => false,
+            'queued_subscription_id' => null,
+            'balance_version' => 1,
         ];
     }
 

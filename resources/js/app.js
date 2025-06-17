@@ -16,6 +16,9 @@ import './base-select.js'; // need to disconnect this component ( after move cli
 // Import the modal system
 import './components/modal';
 
+// Import the current subscription modal
+import './components/current-subscription-modal';
+
 // Import the toast system
 import './components/toasts';
 
@@ -42,6 +45,7 @@ import './carousel.js';
 import './components/profile/profile-settings-form-validation.js';
 import { initLogin2FA } from './pages/login.js';
 // import './pages/verify-email.js';
+import './components/tariffs/payment-form-validation';
 import './tariffs';
 
 // Initialize notification checking (check every minute)
