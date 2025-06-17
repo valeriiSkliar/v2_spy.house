@@ -1,6 +1,6 @@
 {{-- Уведомления о типе операции --}}
-@if($isRenewal ?? false)
-<div class="alert alert-info mb-15">
+{{-- @if($isRenewal ?? false) --}}
+{{-- <div class="alert alert-info mb-15">
     <div class="d-flex align-items-center">
         <svg class="me-2" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
             <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
@@ -11,8 +11,8 @@
             $currentEndDate->copy()->add($billingType === 'year' ? '1 year' : '1 month')->format('d.m.Y')
             }}@endif</span>
     </div>
-</div>
-@elseif($isUpgrade ?? false)
+</div> --}}
+@if($isUpgrade ?? false)
 <div class="alert alert-warning mb-15">
     <div class="d-flex align-items-center">
         <svg class="me-2" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
