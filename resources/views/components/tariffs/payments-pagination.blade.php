@@ -10,7 +10,7 @@
                 href="{{ $pagination->onFirstPage() ? '' : $pagination->previousPageUrl() }}"
                 data-page="{{ $pagination->onFirstPage() ? '' : $pagination->currentPage() - 1 }}">
                 <span class="icon-prev"></span>
-                <span class="pagination-link__txt">Previous</span>
+                <span class="pagination-link__txt">{{ __('tariffs.previous') }}</span>
             </a>
         </li>
 
@@ -28,7 +28,7 @@
                 aria-disabled="{{ $pagination->hasMorePages() ? 'false' : 'true' }}"
                 href="{{ $pagination->hasMorePages() ? $pagination->nextPageUrl() : '' }}"
                 data-page="{{ $pagination->hasMorePages() ? $pagination->currentPage() + 1 : '' }}">
-                <span class="pagination-link__txt">Next</span>
+                <span class="pagination-link__txt">{{ __('tariffs.next') }}</span>
                 <span class="icon-next"></span>
             </a>
         </li>

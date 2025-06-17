@@ -1,1 +1,1 @@
-<h1>Tariffs</h1>
+<h1>{{ __('tariffs.header_title') }}</h1>
