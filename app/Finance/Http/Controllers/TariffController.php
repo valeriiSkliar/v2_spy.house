@@ -10,6 +10,7 @@ use App\Finance\Models\Subscription;
 use App\Finance\Services\BalanceService;
 use App\Finance\Services\Pay2Service;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Finance\ProcessPaymentRequest;
 use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
@@ -56,11 +57,29 @@ class TariffController extends Controller
     }
 
     /**
+     * Validate payment form fields (AJAX endpoint)
+     */
+    public function validatePayment(ProcessPaymentRequest $request)
+    {
+        return response()->json([
+            'success' => true,
+            'message' => 'Validation passed'
+        ]);
+    }
+
+    /**
      * Process the payment for a specific tariff
      */
-    public function processPayment(Request $request)
+    public function processPayment(ProcessPaymentRequest $request)
     {
         $user = $request->user();
+
+        // Если валидация уже была пройдена асинхронно, пропускаем повторную проверку
+        if ($request->has('_validation_passed')) {
+            Log::info('TariffController: Валидация была пройдена асинхронно', [
+                'user_id' => $user->id,
+            ]);
+        }
 
         // Получаем данные из HTTP Referer для извлечения slug и billingType
         $referer = $request->headers->get('referer');

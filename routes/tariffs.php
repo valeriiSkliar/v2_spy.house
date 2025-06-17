@@ -19,6 +19,7 @@ Route::middleware('auth')->group(function () {
         ->name('tariffs.payment')
         ->where('billingType', 'month|year');
 
+    Route::post('/tariffs/validate-payment', [TariffController::class, 'validatePayment'])->name('tariffs.validate-payment');
     Route::post('/tariffs/process-payment', [TariffController::class, 'processPayment'])->name('tariffs.process-payment');
 });
 

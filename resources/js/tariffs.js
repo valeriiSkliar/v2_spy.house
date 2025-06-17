@@ -108,6 +108,13 @@ document.addEventListener('DOMContentLoaded', function () {
   // Handle async payment form submission
   const paymentForm = document.getElementById('subscription-payment-form');
   if (paymentForm) {
+    // Проверяем, есть ли новый валидатор (который добавит атрибут data-validator)
+    // Если есть - пропускаем старый обработчик
+    if (paymentForm.hasAttribute('data-has-new-validator')) {
+      console.log('New validator detected, skipping old form handler');
+      return;
+    }
+
     paymentForm.addEventListener('submit', async function (e) {
       e.preventDefault();
 
