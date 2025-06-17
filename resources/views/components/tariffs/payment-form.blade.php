@@ -15,6 +15,7 @@
     <div class="col-12 col-md-6 col-lg-5">
         <form id="subscription-payment-form" action="{{ route('tariffs.process-payment') }}" method="POST">
             @csrf
+            {{-- Эти поля теперь передаются через URL, но оставляем для совместимости с процессингом --}}
             <input type="hidden" name="tariff_id" value="{{ $tariff->id }}">
             <input type="hidden" name="billing_type" value="{{ $billingType }}">
             <input type="hidden" name="is_renewal" value="{{ $isRenewal ? '1' : '0' }}">

@@ -317,19 +317,52 @@ class TariffController extends Controller
     /**
      * Show the payment page for a specific tariff
      */
-    public function payment($slug, Request $request)
+    public function payment($slug, Request $request, $billingType = null)
     {
-        $tariff = Subscription::where('id', $slug)->first();
+        // Если billingType не передан в URL, пытаемся получить из query параметра (для обратной совместимости)
+        if (!$billingType) {
+            $billingType = $request->get('billing_type', 'month');
 
-        if (! $tariff) {
-            abort(404);
+            // Если это старый URL с query параметром, редиректим на новый красивый URL
+            if ($request->has('billing_type')) {
+                // Сначала пытаемся найти тариф для получения правильного slug
+                $tariff = Subscription::findBySlug($slug);
+                if (!$tariff && is_numeric($slug)) {
+                    $tariff = Subscription::where('id', $slug)->first();
+                }
+
+                if ($tariff) {
+                    return redirect()->route('tariffs.payment.new', [
+                        'slug' => $tariff->getSlug(),
+                        'billingType' => $billingType
+                    ], 301);
+                }
+            }
         }
-
-        $billingType = $request->get('billing_type', 'month'); // По умолчанию месячная подписка
 
         // Проверяем корректность типа подписки
         if (! in_array($billingType, ['month', 'year'])) {
             $billingType = 'month';
+        }
+
+        // Сначала пытаемся найти по slug (новая логика)
+        $tariff = Subscription::findBySlug($slug);
+
+        // Если не нашли по slug, пытаемся найти по ID (обратная совместимость)
+        if (!$tariff && is_numeric($slug)) {
+            $tariff = Subscription::where('id', $slug)->first();
+
+            // Если нашли по ID, редиректим на правильный slug
+            if ($tariff) {
+                return redirect()->route('tariffs.payment.new', [
+                    'slug' => $tariff->getSlug(),
+                    'billingType' => $billingType
+                ], 301);
+            }
+        }
+
+        if (! $tariff) {
+            abort(404);
         }
 
         // Определить тип операции

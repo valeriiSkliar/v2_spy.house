@@ -42,9 +42,8 @@ document.addEventListener('DOMContentLoaded', function () {
           // Update tariff select button URL for this specific card
           const selectBtn = rateItem.querySelector('.tariff-select-btn');
           if (selectBtn) {
-            const tariffId = selectBtn.getAttribute('data-tariff-id');
-            const baseUrl = window.location.origin + '/tariffs/payment/' + tariffId;
-            const newUrl = baseUrl + '?billing_type=' + period;
+            const tariffSlug = selectBtn.getAttribute('data-tariff-slug');
+            const newUrl = window.location.origin + '/tariffs/payment/' + tariffSlug + '/' + period;
 
             selectBtn.href = newUrl;
             selectBtn.setAttribute('data-billing-type', period);
@@ -53,9 +52,8 @@ document.addEventListener('DOMContentLoaded', function () {
           // Update tariff renew button URL for this specific card
           const renewBtn = rateItem.querySelector('.tariff-renew-btn');
           if (renewBtn) {
-            const tariffId = renewBtn.getAttribute('data-tariff-id');
-            const baseUrl = window.location.origin + '/tariffs/payment/' + tariffId;
-            const newUrl = baseUrl + '?billing_type=' + period;
+            const tariffSlug = renewBtn.getAttribute('data-tariff-slug');
+            const newUrl = window.location.origin + '/tariffs/payment/' + tariffSlug + '/' + period;
 
             renewBtn.href = newUrl;
             renewBtn.setAttribute('data-billing-type', period);
@@ -73,9 +71,8 @@ document.addEventListener('DOMContentLoaded', function () {
           // Обновляем все кнопки "Выбрать"
           const allSelectBtns = document.querySelectorAll('.tariff-select-btn');
           allSelectBtns.forEach(selectBtn => {
-            const tariffId = selectBtn.getAttribute('data-tariff-id');
-            const baseUrl = window.location.origin + '/tariffs/payment/' + tariffId;
-            const newUrl = baseUrl + '?billing_type=' + period;
+            const tariffSlug = selectBtn.getAttribute('data-tariff-slug');
+            const newUrl = window.location.origin + '/tariffs/payment/' + tariffSlug + '/' + period;
 
             selectBtn.href = newUrl;
             selectBtn.setAttribute('data-billing-type', period);
@@ -84,9 +81,8 @@ document.addEventListener('DOMContentLoaded', function () {
           // Обновляем все кнопки "Продлить"
           const allRenewBtns = document.querySelectorAll('.tariff-renew-btn');
           allRenewBtns.forEach(renewBtn => {
-            const tariffId = renewBtn.getAttribute('data-tariff-id');
-            const baseUrl = window.location.origin + '/tariffs/payment/' + tariffId;
-            const newUrl = baseUrl + '?billing_type=' + period;
+            const tariffSlug = renewBtn.getAttribute('data-tariff-slug');
+            const newUrl = window.location.origin + '/tariffs/payment/' + tariffSlug + '/' + period;
 
             renewBtn.href = newUrl;
             renewBtn.setAttribute('data-billing-type', period);

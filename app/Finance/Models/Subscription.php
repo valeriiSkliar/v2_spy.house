@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class Subscription extends Model
 {
@@ -41,6 +42,35 @@ class Subscription extends Model
     }
 
     /**
+     * Get subscription slug (lowercase name for URL)
+     */
+    public function getSlug(): string
+    {
+        return strtolower($this->name);
+    }
+
+    /**
+     * Find subscription by slug
+     */
+    public static function findBySlug(string $slug): ?self
+    {
+        return self::where(DB::raw('LOWER(name)'), strtolower($slug))
+            ->where('status', 'active')
+            ->first();
+    }
+
+    /**
+     * Get payment URL for this subscription
+     */
+    public function getPaymentUrl(string $billingType = 'month'): string
+    {
+        return route('tariffs.payment.new', [
+            'slug' => $this->getSlug(),
+            'billingType' => $billingType
+        ]);
+    }
+
+    /**
      * Check if subscription is active
      */
     public function isActive(): bool
@@ -53,7 +83,7 @@ class Subscription extends Model
      */
     public function getFormattedAmount(): string
     {
-        return '$'.number_format($this->amount, 2);
+        return '$' . number_format($this->amount, 2);
     }
 
     /**
@@ -73,7 +103,7 @@ class Subscription extends Model
      */
     public function getFormattedDiscountedAmount(): string
     {
-        return '$'.number_format($this->getDiscountedAmount(), 2);
+        return '$' . number_format($this->getDiscountedAmount(), 2);
     }
 
     /**
@@ -105,7 +135,7 @@ class Subscription extends Model
      */
     public function getFormattedYearlyAmount(): string
     {
-        return '$'.number_format($this->getYearlyAmount(), 2);
+        return '$' . number_format($this->getYearlyAmount(), 2);
     }
 
     /**
@@ -121,7 +151,7 @@ class Subscription extends Model
      */
     public function getFormattedAmountByBillingType(string $billingType): string
     {
-        return '$'.number_format($this->getAmountByBillingType($billingType), 2);
+        return '$' . number_format($this->getAmountByBillingType($billingType), 2);
     }
 
     /**
