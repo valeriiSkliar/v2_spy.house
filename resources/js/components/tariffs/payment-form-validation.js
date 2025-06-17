@@ -1,4 +1,5 @@
 import { createAndShowToast } from '../../utils/uiHelpers';
+import { hideInElement, showInElement } from '../loader';
 
 /**
  * Синхронно-асинхронная валидация формы платежа
@@ -7,6 +8,8 @@ import { createAndShowToast } from '../../utils/uiHelpers';
 class PaymentFormValidator {
   constructor(formSelector = '#subscription-payment-form') {
     this.form = document.querySelector(formSelector);
+    this.paymentContainer = document.querySelector('#subscription-payment-container');
+    this.loader = null;
     this.isValidating = false;
 
     if (this.form) {
@@ -28,14 +31,14 @@ class PaymentFormValidator {
       return;
     }
 
-    const submitBtn = this.form.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
+    // const submitBtn = this.form.querySelector('button[type="submit"]');
+    // const originalText = submitBtn.textContent;
 
     try {
       this.isValidating = true;
 
       // Показываем состояние загрузки
-      this.setLoadingState(submitBtn, true);
+      this.setLoadingState(this.paymentContainer, true, this.loader);
 
       // Выполняем асинхронную валидацию
       const isValid = await this.validateOnServer();
@@ -57,7 +60,7 @@ class PaymentFormValidator {
       }
     } finally {
       this.isValidating = false;
-      this.setLoadingState(submitBtn, false, originalText);
+      this.setLoadingState(this.paymentContainer, false);
     }
   }
 
@@ -226,15 +229,13 @@ class PaymentFormValidator {
     }
   }
 
-  setLoadingState(button, isLoading, originalText = 'Proceed to payment') {
+  setLoadingState(paymentContainer, isLoading) {
     if (isLoading) {
-      button.disabled = true;
-      button.textContent = 'Проверка данных...';
-      button.classList.add('loading');
+      this.loader = showInElement(paymentContainer);
     } else {
-      button.disabled = false;
-      button.textContent = originalText;
-      button.classList.remove('loading');
+      if (this.loader) {
+        hideInElement(this.loader);
+      }
     }
   }
 
