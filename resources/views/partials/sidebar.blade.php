@@ -16,20 +16,22 @@
             </x-tariff-link>
 
             {{-- Push modal to global stack --}}
-            @push('modals')
+            {{-- @push('modals')
             <x-modals.subscribtion-activated :currentTariff="$currentTariff" />
-            @endpush
+            @endpush --}}
             @else
             <x-tariff-link>{{ __('tariffs.free') }}</x-tariff-link>
             @endauth
         </div>
         <div class="aside__balance">
-            @if($user->available_balance > 0)
+            @auth
+            @if(auth()->user()->available_balance > 0)
             <a href="#" class="user-balance">
                 <span class="user-balance__currency">$</span>
-                <span class="user-balance__val">{{ $user->getFormattedBalanceWithoutCurrency() }}</span>
+                <span class="user-balance__val">{{ auth()->user()->getFormattedBalanceWithoutCurrency() }}</span>
             </a>
             @endif
+            @endauth
         </div>
     </div>
     <div class="aside__content">

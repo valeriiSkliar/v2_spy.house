@@ -1,18 +1,20 @@
-.modal-backdrop{
-  z-index: 10003;
+.modal-backdrop {
+  z-index: 1050 !important;
 }
-.modal{
-  .modal-dialog{
+.modal {
+  z-index: 1070 !important;
+  position: fixed !important;
+  .modal-dialog {
     max-width: 640px;
   }
-  .modal-content{
+  .modal-content {
     padding: 30px;
     @media screen and (max-width: 767px) {
       padding-left: 20px;
       padding-right: 20px;
     }
   }
-  .btn-close{
+  .btn-close {
     position: absolute;
     top: 20px;
     right: 30px;
@@ -20,46 +22,46 @@
       right: 20px;
     }
   }
-  .modal-head{
+  .modal-head {
     padding-right: 50px;
     margin-bottom: 20px;
   }
 }
 
-.manager{
+.manager {
   display: flex;
   align-items: center;
   gap: 15px;
   padding: 15px 18px;
   border-radius: 10px;
-  background: #F3F5F6;
+  background: #f3f5f6;
   position: relative;
   font-size: 15px;
   font-weight: 500;
-  .manager__thumb{
-    img{
+  .manager__thumb {
+    img {
       width: 52px;
       height: 52px;
       display: block;
     }
   }
-  .manager__name{
+  .manager__name {
     font-weight: 600;
     display: block;
     margin-bottom: 3px;
   }
-  .icon-telegram{
+  .icon-telegram {
     position: absolute;
     top: 11px;
     right: 15px;
     font-size: 20px;
-    color: #1E99D7;
-    transition: transform .3s;
+    color: #1e99d7;
+    transition: transform 0.3s;
   }
   @media (hover: hover) {
-    &:hover{
-      background: darken(#F3F5F6, 5%);
-      .icon-telegram{
+    &:hover {
+      background: darken(#f3f5f6, 5%);
+      .icon-telegram {
         transform: translate(3px, -3px);
       }
     }
