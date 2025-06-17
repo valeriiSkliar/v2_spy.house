@@ -12,7 +12,6 @@
             <div class="blog-layout">
                 <div class="blog-layout__content">
                     @include('partials.blog.mobile-filter')
-                    <x-blog.search-block />
                     @yield('page-content')
                 </div>
                 <aside class="blog-layout__aside">

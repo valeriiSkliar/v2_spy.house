@@ -513,9 +513,19 @@ function initSidebarState() {
  * Зачем: интеграция поиска с общей системой состояний
  */
 function initOptimizedBlogSearch() {
+  // Новый поиск в блоке фильтров
+  const filterSearchInput = document.querySelector('.blog-filter-search input[type="search"]');
+  
+  // Старый поиск в форме
   const searchForm = document.querySelector('.search-form form');
   const searchInput = document.querySelector('.search-form input[type="search"]');
 
+  // Инициализируем новый поиск в блоке фильтров
+  if (filterSearchInput) {
+    initFilterSearch(filterSearchInput);
+  }
+
+  // Поддерживаем старый поиск для обратной совместимости
   if (!searchForm || !searchInput) {
     return;
   }
@@ -578,6 +588,75 @@ function initOptimizedBlogSearch() {
 }
 
 /**
+ * Инициализация поиска в блоке фильтров
+ * Зачем: новый дизайн поиска с интеграцией в систему фильтров
+ */
+function initFilterSearch(searchInput) {
+  // Устанавливаем значение из URL если есть
+  const urlParams = new URLSearchParams(window.location.search);
+  const searchParam = urlParams.get('search');
+  if (searchParam) {
+    searchInput.value = searchParam;
+  }
+
+  // Debounced обработчик поиска
+  let searchTimeout;
+  searchInput.addEventListener('input', function (e) {
+    const query = e.target.value.trim();
+
+    // Очищаем предыдущий таймаут
+    clearTimeout(searchTimeout);
+
+    // Устанавливаем задержку для избежания частых запросов
+    searchTimeout = setTimeout(() => {
+      handleFilterSearch(query);
+    }, 300);
+  });
+
+  // Обработчик Enter
+  searchInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      clearTimeout(searchTimeout);
+      const query = e.target.value.trim();
+      handleFilterSearch(query);
+    }
+  });
+}
+
+/**
+ * Обработка поиска из блока фильтров
+ * Зачем: централизованная обработка поиска с обновлением URL
+ */
+function handleFilterSearch(query) {
+  const blogContainer = document.getElementById('blog-articles-container');
+  const ajaxUrl = blogContainer?.getAttribute('data-blog-ajax-url');
+
+  if (!ajaxUrl) return;
+
+  console.log('Filter search triggered:', query);
+
+  // Обновляем URL параметры
+  const urlParams = new URLSearchParams(window.location.search);
+  
+  if (query.length > 0) {
+    urlParams.set('search', query);
+  } else {
+    urlParams.delete('search');
+  }
+  
+  // Сбрасываем страницу при поиске
+  urlParams.delete('page');
+  
+  // Обновляем URL браузера
+  const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+  window.history.pushState({ search: query }, '', newUrl);
+
+  // Перезагружаем контент
+  reloadBlogContent(blogContainer, ajaxUrl);
+}
+
+/**
  * Выполнение интегрированного поиска через основную систему
  * Зачем: единая обработка всех типов запросов
  */
@@ -601,6 +680,129 @@ function performIntegratedSearch(query) {
 
   // Перезагружаем контент
   reloadBlogContent(blogContainer, ajaxUrl);
+}
+
+/**
+ * Инициализация сортировки блога
+ * Зачем: функциональность сортировки статей без перезагрузки страницы
+ */
+function initBlogSorting() {
+  const sortingButtons = document.querySelectorAll('.sorting-btn');
+  
+  if (sortingButtons.length === 0) {
+    console.log('No sorting buttons found');
+    return;
+  }
+
+  console.log('Initializing blog sorting with', sortingButtons.length, 'buttons');
+
+  // Инициализируем состояние кнопок на основе URL
+  updateSortingButtonsState();
+
+  // Добавляем обработчики для кнопок сортировки
+  sortingButtons.forEach(button => {
+    button.addEventListener('click', function(e) {
+      e.preventDefault();
+      handleSortingClick(this);
+    });
+  });
+}
+
+/**
+ * Обработка клика по кнопке сортировки
+ * Зачем: переключение сортировки и обновление контента
+ */
+function handleSortingClick(button) {
+  if (isLoading) {
+    console.log('Request already in progress, ignoring sort click');
+    return;
+  }
+
+  const blogContainer = document.getElementById('blog-articles-container');
+  const ajaxUrl = blogContainer?.getAttribute('data-blog-ajax-url');
+
+  if (!ajaxUrl) {
+    console.error('No AJAX URL found for sorting');
+    return;
+  }
+
+  // Определяем тип сортировки на основе текста кнопки
+  let sortType;
+  const buttonText = button.textContent.trim().toLowerCase();
+  
+  if (buttonText.includes('популярные')) {
+    sortType = 'popular';
+  } else if (buttonText.includes('просматрыв')) {
+    sortType = 'views';
+  } else {
+    sortType = 'latest'; // По умолчанию
+  }
+
+  // Получаем текущие параметры URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const currentSort = urlParams.get('sort') || 'latest';
+  const currentDirection = urlParams.get('direction') || 'desc';
+
+  // Определяем новое направление сортировки
+  let newDirection;
+  if (currentSort === sortType) {
+    // Переключаем направление для той же сортировки
+    newDirection = currentDirection === 'asc' ? 'desc' : 'asc';
+  } else {
+    // Устанавливаем направление по умолчанию для новой сортировки
+    newDirection = sortType === 'popular' || sortType === 'views' ? 'desc' : 'desc';
+  }
+
+  console.log('Sorting:', { sortType, newDirection, currentSort, currentDirection });
+
+  // Обновляем URL параметры
+  urlParams.set('sort', sortType);
+  urlParams.set('direction', newDirection);
+  urlParams.delete('page'); // Сбрасываем на первую страницу
+
+  // Обновляем состояние кнопок
+  updateSortingButtonsState(sortType, newDirection);
+
+  // Обновляем URL браузера
+  const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+  window.history.pushState({ sort: sortType, direction: newDirection }, '', newUrl);
+
+  // Перезагружаем контент
+  reloadBlogContent(blogContainer, ajaxUrl);
+}
+
+/**
+ * Обновление состояния кнопок сортировки
+ * Зачем: визуальная индикация текущей сортировки
+ */
+function updateSortingButtonsState(sortType = null, direction = null) {
+  const urlParams = new URLSearchParams(window.location.search);
+  const currentSort = sortType || urlParams.get('sort') || 'latest';
+  const currentDirection = direction || urlParams.get('direction') || 'desc';
+
+  console.log('Updating sorting buttons state:', { currentSort, currentDirection });
+
+  // Убираем активные классы со всех кнопок
+  document.querySelectorAll('.sorting-btn').forEach(button => {
+    button.classList.remove('asc', 'desc');
+  });
+
+  // Устанавливаем активное состояние для соответствующей кнопки
+  document.querySelectorAll('.sorting-btn').forEach(button => {
+    const buttonText = button.textContent.trim().toLowerCase();
+    let buttonType = 'latest';
+
+    if (buttonText.includes('популярные')) {
+      buttonType = 'popular';
+    } else if (buttonText.includes('просматрыв')) {
+      buttonType = 'views';
+    }
+
+    if (buttonType === currentSort) {
+      button.classList.add(currentDirection);
+      console.log('Set button state:', { buttonType, currentDirection });
+    }
+  });
 }
 
 /**
@@ -668,6 +870,7 @@ document.addEventListener('DOMContentLoaded', function () {
   initCategoryFiltering();
   initSidebarState();
   initOptimizedBlogSearch();
+  initBlogSorting();
   initResponsiveHandlers();
   initPreloadSystem();
 

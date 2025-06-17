@@ -5,6 +5,8 @@
 @endsection
 
 @section('page-content')
+<x-blog.search-block />
+
 <div data-blog-ajax-url="{{ route('api.blog.list') }}" id="blog-articles-container"
     class="blog-list @if($articles->count() == 0) blog-list__no-results @endif">
 
@@ -41,6 +43,6 @@
 </a>
 @endsection
 
-{{-- @push('scripts')
+@push('scripts')
 @vite(['resources/js/pages/blogs.js'])
-@endpush --}}
+@endpush

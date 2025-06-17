@@ -25,6 +25,8 @@ class ApiBlogController extends BaseBlogController
             'page' => 'integer|min:1|max:1000',
             'category' => 'string|max:255|alpha_dash',
             'search' => 'string|max:255',
+            'sort' => 'string|in:latest,popular,views',
+            'direction' => 'string|in:asc,desc',
         ]);
 
         if ($validator->fails()) {
@@ -34,9 +36,11 @@ class ApiBlogController extends BaseBlogController
         $currentPage = (int) $request->get('page', 1);
         $categorySlug = $request->input('category');
         $search = $this->sanitizeInput($request->input('search', ''));
+        $sort = $request->input('sort', 'latest');
+        $direction = $request->input('direction', 'desc');
 
         // Создаем ключ кеша для запроса
-        $cacheKey = $this->generateCacheKey($currentPage, $categorySlug, $search);
+        $cacheKey = $this->generateCacheKey($currentPage, $categorySlug, $search, $sort, $direction);
 
         // Пытаемся получить данные из кеша (только для поиска и категорий)
         if ($search || $categorySlug) {
@@ -47,7 +51,7 @@ class ApiBlogController extends BaseBlogController
         }
 
         // Строим основной запрос
-        $queryResult = $this->buildArticlesQuery($search, $categorySlug);
+        $queryResult = $this->buildArticlesQuery($search, $categorySlug, $sort, $direction);
         $query = $queryResult['query'];
         $currentCategory = $queryResult['category'];
         $totalCount = $queryResult['total'];
@@ -79,7 +83,7 @@ class ApiBlogController extends BaseBlogController
     /**
      * Построение запроса статей с учетом фильтров
      */
-    private function buildArticlesQuery(?string $search, ?string $categorySlug): array
+    private function buildArticlesQuery(?string $search, ?string $categorySlug, string $sort = 'latest', string $direction = 'desc'): array
     {
         $query = BlogPost::query()
             ->with(['author', 'categories'])
@@ -109,6 +113,9 @@ class ApiBlogController extends BaseBlogController
             }
         }
 
+        // Применяем сортировку
+        $this->applySorting($query, $sort, $direction);
+
         $totalCount = $query->count();
 
         return [
@@ -116,6 +123,33 @@ class ApiBlogController extends BaseBlogController
             'category' => $currentCategory,
             'total' => $totalCount,
         ];
+    }
+
+    /**
+     * Применение сортировки к запросу
+     */
+    private function applySorting($query, string $sort, string $direction): void
+    {
+        switch ($sort) {
+            case 'popular':
+                // Сортировка по популярности (рейтинг + просмотры)
+                $query->leftJoin('ratings', 'blog_posts.id', '=', 'ratings.blog_id')
+                    ->selectRaw('blog_posts.*, COALESCE(AVG(ratings.rating), 0) as avg_rating, blog_posts.views_count')
+                    ->groupBy('blog_posts.id')
+                    ->orderByRaw('(COALESCE(AVG(ratings.rating), 0) * 0.7 + LOG(blog_posts.views_count + 1) * 0.3) ' . $direction);
+                break;
+                
+            case 'views':
+                // Сортировка по количеству просмотров
+                $query->orderBy('views_count', $direction);
+                break;
+                
+            case 'latest':
+            default:
+                // Сортировка по дате создания
+                $query->orderBy('created_at', $direction);
+                break;
+        }
     }
 
     /**
@@ -328,12 +362,14 @@ class ApiBlogController extends BaseBlogController
     /**
      * Генерация ключа кеша
      */
-    private function generateCacheKey(int $page, ?string $category, ?string $search): string
+    private function generateCacheKey(int $page, ?string $category, ?string $search, string $sort = 'latest', string $direction = 'desc'): string
     {
         return sprintf(
-            'blog_ajax_%s_%s_%d',
+            'blog_ajax_%s_%s_%s_%s_%d',
             $category ?: 'all',
             md5($search ?: ''),
+            $sort,
+            $direction,
             $page
         );
     }
