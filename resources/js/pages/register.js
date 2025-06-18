@@ -3,11 +3,14 @@
  */
 import loader, { hideInButton, showInButton } from '../components/loader.js';
 import { createAndShowToast } from '../utils/uiHelpers.js';
+import { MessengerStateManager } from '../components/profile/messenger-state-manager.js';
+import { ValidationMethods } from '../validation/validation-constants.js';
 
 class RegistrationForm {
   constructor() {
     this.form = document.querySelector('form[action*="register"]');
     this.submitButton = this.form?.querySelector('button[type="submit"]');
+    this.messengerManager = null;
     this.init();
   }
 
@@ -45,8 +48,8 @@ class RegistrationForm {
           select.classList.remove('is-empty');
 
           // Special handling for messenger type
-          if (targetName === 'messenger_type') {
-            this.updateMessengerPlaceholder(value);
+          if (targetName === 'messenger_type' && this.messengerManager) {
+            this.messengerManager.updateFormInputs(value);
           }
         });
       });
@@ -54,77 +57,83 @@ class RegistrationForm {
   }
 
   initMessengerField() {
-    // Initialize messenger field functionality
+    // Initialize messenger field functionality using unified approach
     const messengerSelect = this.form.querySelector('#register-messenger-select');
     if (!messengerSelect) return;
 
     const messengerContactInput = this.form.querySelector('input[name="messenger_contact"]');
     const messengerTypeInput = this.form.querySelector('input[name="messenger_type"]');
-    const triggerElement = messengerSelect.querySelector('.base-select__trigger');
-    const dropdown = messengerSelect.querySelector('.base-select__dropdown');
-    const options = messengerSelect.querySelectorAll('.base-select__option');
 
     if (!messengerContactInput || !messengerTypeInput) return;
 
-    // Toggle dropdown
-    triggerElement.addEventListener('click', e => {
+    // Create elements object compatible with MessengerStateManager
+    const elements = {
+      messengerType: $(messengerTypeInput),
+      messengerContact: $(messengerContactInput),
+      profileMessangerSelect: $(messengerSelect),
+      profileMessangerSelectTrigger: $(messengerSelect.querySelector('.base-select__trigger')),
+      profileMessangerSelectOptions: $(messengerSelect.querySelectorAll('.base-select__option'))
+    };
+
+    // Initialize the messenger state manager
+    this.messengerManager = new MessengerStateManager(elements);
+
+    // Toggle dropdown on trigger click
+    elements.profileMessangerSelectTrigger.off('click').on('click', function (e) {
       e.preventDefault();
+      const dropdown = messengerSelect.querySelector('.base-select__dropdown');
       const isVisible = dropdown.style.display !== 'none';
       dropdown.style.display = isVisible ? 'none' : 'block';
     });
 
     // Handle option selection
-    options.forEach(option => {
-      option.addEventListener('click', e => {
-        e.preventDefault();
-        const value = option.getAttribute('data-value');
-        const img = option.querySelector('img');
+    elements.profileMessangerSelectOptions.off('click').on('click', (e) => {
+      e.preventDefault();
+      const selectedOption = e.currentTarget;
+      const selectedType = selectedOption.getAttribute('data-value');
 
-        if (value && img) {
-          // Update hidden input
-          messengerTypeInput.value = value;
+      if (selectedType) {
+        // Use the unified state manager to handle the selection
+        this.messengerManager.updateSelectedMessenger(selectedType, selectedOption);
 
-          // Update trigger image
-          const triggerImg = messengerSelect.querySelector('.base-select__trigger img');
-          if (triggerImg) {
-            triggerImg.src = img.src;
-            triggerImg.alt = img.alt;
-          }
-
-          // Update selected state
-          options.forEach(opt => opt.classList.remove('is-selected'));
-          option.classList.add('is-selected');
-
-          // Update placeholder
-          this.updateMessengerPlaceholder(value);
-
-          // Hide dropdown
-          dropdown.style.display = 'none';
-        }
-      });
-    });
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', e => {
-      if (!messengerSelect.contains(e.target)) {
+        // Close dropdown
+        const dropdown = messengerSelect.querySelector('.base-select__dropdown');
         dropdown.style.display = 'none';
       }
     });
+
+    // Handle input validation using unified validation methods
+    elements.messengerContact.off('input').on('input', function () {
+      const value = $(this).val();
+      const type = elements.messengerType.val();
+
+      // Clear previous classes
+      $(this).removeClass('error valid');
+      
+      // Only add classes if there's a value to validate
+      if (value.trim()) {
+        if (ValidationMethods.validateMessengerContact(type, value)) {
+          $(this).addClass('valid');
+        } else {
+          $(this).addClass('error');
+        }
+      }
+    });
+
+    // Close dropdown when clicking outside
+    $(document)
+      .off('click.registerMessengerDropdown')
+      .on('click.registerMessengerDropdown', function (e) {
+        if (
+          !$(messengerSelect).is(e.target) &&
+          $(messengerSelect).has(e.target).length === 0
+        ) {
+          const dropdown = messengerSelect.querySelector('.base-select__dropdown');
+          dropdown.style.display = 'none';
+        }
+      });
   }
 
-  updateMessengerPlaceholder(messengerType) {
-    const messengerContactInput = this.form.querySelector('input[name="messenger_contact"]');
-    if (!messengerContactInput) return;
-
-    const placeholders = {
-      telegram: '@username',
-      viber: '+1 (999) 999-99-99',
-      whatsapp: '+1 (999) 999-99-99',
-    };
-
-    const placeholder = placeholders[messengerType] || placeholders['telegram'];
-    messengerContactInput.placeholder = placeholder;
-  }
 
   async handleSubmit(event) {
     event.preventDefault();
@@ -269,6 +278,19 @@ class RegistrationForm {
         isValid = false;
       }
     });
+
+    // Additional validation for messenger contact using unified validation
+    const messengerType = this.form.querySelector('input[name="messenger_type"]')?.value;
+    const messengerContact = this.form.querySelector('input[name="messenger_contact"]')?.value;
+    
+    if (messengerType && messengerContact && !ValidationMethods.validateMessengerContact(messengerType, messengerContact)) {
+      const messengerInput = this.form.querySelector('input[name="messenger_contact"]');
+      if (messengerInput) {
+        messengerInput.classList.add('error');
+      }
+      createAndShowToast(ValidationMethods.getMessengerErrorMessage(messengerType), 'error', 4000);
+      isValid = false;
+    }
 
     // Validate reCAPTCHA
     const recaptchaResponse = window.grecaptcha?.getResponse();
