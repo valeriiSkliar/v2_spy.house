@@ -25,7 +25,7 @@ class BlogController extends BaseBlogController
 
         if ($searchQuery) {
             $searchQuery = $this->sanitizeInput($searchQuery);
-            $articlesQuery->where('title', 'like', '%'.$searchQuery.'%');
+            $articlesQuery->where('title', 'like', '%' . $searchQuery . '%');
         }
 
         $totalArticlesCount = $articlesQuery->count();
@@ -322,7 +322,7 @@ class BlogController extends BaseBlogController
         $user = Auth::user();
         $commentsHtml = '';
         if ($comments->isEmpty()) {
-            $commentsHtml = '<div class="message _bg _with-border">'.__('blog.errors.no_comments_found').'</div>';
+            $commentsHtml = '<div class="message _bg _with-border">' . __('blog.errors.no_comments_found') . '</div>';
         } else {
             if ($user) {
                 $commentsHtml .= view('components.blog.comment.reply-form', [

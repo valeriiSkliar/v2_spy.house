@@ -7,6 +7,7 @@ use App\Models\Frontend\Blog\BlogPost;
 use App\Models\Frontend\Blog\PostCategory;
 use App\Models\Frontend\Blog\BlogComment;
 use App\Enums\Frontend\CommentStatus;
+use App\Traits\App\HasAntiFloodProtection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\Auth;
 
 class ApiBlogController extends BaseBlogController
 {
+    use HasAntiFloodProtection;
+
     const ARTICLES_PER_PAGE = 12;
 
     const CACHE_TTL = 300; // 5 минут
@@ -464,6 +467,21 @@ class ApiBlogController extends BaseBlogController
      */
     public function storeComment(Request $request, string $slug)
     {
+
+        $userId = Auth::id() ?? $request->ip();
+        $action = 'store_comment';
+        $limit = 1; // 1 comment
+        $window = 60; // per 60 seconds (1 minute)
+
+        if (! $this->checkAntiFlood($userId, $action, $limit, $window)) {
+            $errorMessage = __('blogs.comments.flood_protection_message');
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $errorMessage], 429); // 429 Too Many Requests
+            }
+
+            return redirect()->back()->withInput();
+        }
+        // --- Anti-Flood Check End ---
         // Валидация входных данных
         $validator = Validator::make($request->all(), [
             'content' => 'required|string|min:2|max:1000',

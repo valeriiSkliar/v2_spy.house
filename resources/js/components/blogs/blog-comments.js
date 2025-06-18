@@ -52,7 +52,7 @@ const replyClickHandler = e => {
   const commentId = $(e.target).data('comment-id');
   const authorName = $(e.target).data('author-name');
   const regularCommentLabel = $(e.target)
-    .closest('.universal-comment-form')
+    .closest('#universal-comment-form')
     .find('.regular-comment-label');
   if (regularCommentLabel.length) {
     regularCommentLabel.hide();
@@ -203,6 +203,11 @@ function reinitializeCommentsComponents() {
 
   // Переинициализируем обработчики пагинации
   initCommentsPagination();
+
+  // КРИТИЧНО: Переинициализируем саму форму комментариев
+  if (commentForm.length) {
+    initUniversalCommentForm(commentForm);
+  }
 }
 
 /**
@@ -256,6 +261,9 @@ function handlePaginationClick(e) {
 export function initUniversalCommentForm(commentForm) {
   logger('initUniversalCommentForm', commentForm, { debug: true });
   if (!commentForm) return;
+
+  // Убираем старые обработчики перед добавлением новых
+  commentForm.off('submit');
 
   commentForm.on('submit', function (e) {
     e.preventDefault();
@@ -342,7 +350,8 @@ export function initReplyButtons(commentForm) {
   if (!replyButtons) return;
   replyButtons.each(function () {
     const button = $(this);
-    button.off('click', replyClickHandler);
+    // Убираем старые обработчики перед добавлением новых
+    button.off('click');
     button.on('click', replyClickHandler);
   });
 }

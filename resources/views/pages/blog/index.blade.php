@@ -42,7 +42,3 @@
     <img src="/img/7e520e96565eeafe22e8a1249c5f7896.gif" alt="">
 </a>
 @endsection
-
-@push('scripts')
-@vite(['resources/js/pages/blogs.js'])
-@endpush
