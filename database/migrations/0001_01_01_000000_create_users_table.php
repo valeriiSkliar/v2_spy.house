@@ -40,6 +40,7 @@ return new class extends Migration
             $table->string('unsubscribe_hash')->unique()->nullable()->comment('Unique hash for newsletter unsubscribe');
 
             // Financial system fields
+            $table->boolean('is_trial_period')->default(true)->comment('Flag for show upgrade tariff promo in sidebar');
             $table->decimal('available_balance', 10, 2)->default(0.00)->comment('User available balance for payments');
             $table->unsignedBigInteger('subscription_id')->nullable()->comment('Current active subscription');
             $table->timestamp('subscription_time_start')->nullable()->comment('Current subscription start time');
