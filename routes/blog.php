@@ -32,6 +32,6 @@ Route::prefix('api/blog')
                 Route::post('{slug}/comment', [ApiBlogController::class, 'storeComment'])->name('comment.store');
                 Route::post('{slug}/reply', [ApiBlogController::class, 'storeReply'])->name('reply.store');
                 Route::get('{slug}/reply/{comment_id}', [ApiBlogController::class, 'getReplyForm'])->name('get-reply-form');
-                Route::get('{slug}/comments', [ApiBlogController::class, 'paginateComments'])->name('comments.get');
+                Route::get('{slug}/comments', [BlogController::class, 'paginateComments'])->name('comments.get');
             });
     });

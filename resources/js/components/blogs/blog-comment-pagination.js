@@ -1,4 +1,8 @@
 import { initReplyButtons } from '@/components/blogs';
+import { showInElement } from '@/components/loader';
+import { createAndShowToast } from '@/utils/uiHelpers';
+import { hideInElement } from '../loader';
+
 document.addEventListener('DOMContentLoaded', function () {
   initCommentPagination();
 });
@@ -54,12 +58,17 @@ function loadComments(slug, page) {
   const commentForm = $('#universal-comment-form');
   const commentsList = $('.comment-list');
   const paginationContainer = $('.pagination-nav');
+  const commentContainer = $('#article-comments-container');
 
-  // Show loading indicator that matches site styling
-  commentsList.html(
-    '<div class="text-center py-4"><div class="message _bg _with-border">Loading comments...</div></div>'
-  );
-
+  let loader = null;
+  if (commentContainer.length >= 1) {
+    loader = showInElement('article-comments-container', 'Loading comments...');
+  } else {
+    // Show loading indicator that matches site styling
+    commentsList.html(
+      '<div class="text-center py-4"><div class="message _bg _with-border">Loading comments...</div></div>'
+    );
+  }
   fetch(`/blog/${slug}/comments?page=${page}`)
     .then(response => response.json())
     .then(data => {
@@ -79,16 +88,29 @@ function loadComments(slug, page) {
         // Scroll to comments section
         document.getElementById('comments').scrollIntoView({ behavior: 'smooth' });
       } else {
+        if (loader) {
+          hideInElement(loader);
+        }
+        createAndShowToast('Error loading comments. Please try again.', 'error');
         commentsList.html(
           '<div class="message _bg _with-border _red">Error loading comments. Please try again.</div>'
         );
       }
     })
     .catch(error => {
+      if (loader) {
+        hideInElement(loader);
+      }
+      createAndShowToast('Error loading comments. Please try again.', 'error');
       console.error('Error:', error);
       commentsList.html(
         '<div class="message _bg _with-border _red">Error loading comments. Please try again.</div>'
       );
+    })
+    .finally(() => {
+      if (loader) {
+        hideInElement(loader);
+      }
     });
 }
 

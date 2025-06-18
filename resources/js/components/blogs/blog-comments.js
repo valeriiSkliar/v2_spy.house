@@ -238,7 +238,7 @@ function handlePaginationClick(e) {
   const link = e.currentTarget;
   const page = link.dataset.page;
   const slug = window.location.pathname.split('/').pop();
-  const commentsContainer = document.getElementById('comments');
+  const commentsContainer = document.getElementById('article-comments-container');
 
   if (page && commentsContainer) {
     let pageNumber = 1;

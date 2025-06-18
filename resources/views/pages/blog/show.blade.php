@@ -58,7 +58,7 @@
 
 <div class="sep"></div>
 
-<div class="article _big _single">
+<div id="article-comments-container" class="article _big _single">
     <div class="comments" id="comments" data-comments-ajax-url="{{ route('api.blog.comments.get', $article->slug) }}">
         <h2>{{ __('blogs.comments.title') }} <span class="comment-count">{{ $commentsCount }}</span></h2>
 

@@ -48,6 +48,7 @@ class BlogParametersValidation
             'blog.search',
             'api.blog.list',
             'api.blog.search',
+            'api.blog.comments.get',
         ];
 
         $currentRoute = $request->route()?->getName();
@@ -105,7 +106,7 @@ class BlogParametersValidation
             ],
             'sort' => [
                 'string',
-                'in:date,title,views,rating', // Только разрешенные поля сортировки
+                $this->getSortValidationRule($request), // Динамические правила для sort
             ],
             'order' => [
                 'string',
@@ -124,6 +125,23 @@ class BlogParametersValidation
         }
 
         return $rules;
+    }
+
+    /**
+     * Получение правил валидации для параметра sort в зависимости от типа запроса
+     */
+    private function getSortValidationRule(Request $request): string
+    {
+        // Для API комментариев разрешены только latest и oldest
+        if (
+            $request->routeIs('api.blog.comments.get') ||
+            (str_contains($request->getPathInfo(), '/api/blog/') && str_contains($request->getPathInfo(), '/comments'))
+        ) {
+            return 'in:latest,oldest';
+        }
+
+        // Для обычных блоговых запросов
+        return 'in:date,title,views,rating,latest,popular';
     }
 
     /**
