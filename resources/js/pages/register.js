@@ -2,8 +2,8 @@
  * Registration form handler
  */
 import loader, { hideInButton, showInButton } from '../components/loader.js';
-import { createAndShowToast } from '../utils/uiHelpers.js';
 import { MessengerStateManager } from '../components/profile/messenger-state-manager.js';
+import { createAndShowToast } from '../utils/uiHelpers.js';
 import { ValidationMethods } from '../validation/validation-constants.js';
 
 class RegistrationForm {
@@ -30,6 +30,11 @@ class RegistrationForm {
     const customSelects = this.form.querySelectorAll('.base-select[data-target]');
 
     customSelects.forEach(select => {
+      // Пропускаем элементы с кастомной обработкой (например, messenger select)
+      if (select.classList.contains('js-custom-handling')) {
+        return;
+      }
+
       const targetName = select.getAttribute('data-target');
       const targetInput = this.form.querySelector(`input[name="${targetName}"]`);
       const options = select.querySelectorAll('.base-select__option[data-value]');
@@ -66,29 +71,67 @@ class RegistrationForm {
 
     if (!messengerContactInput || !messengerTypeInput) return;
 
+    // Отключаем стандартную функциональность base-select для этого элемента
+    messengerSelect.classList.add('js-custom-handling');
+
     // Create elements object compatible with MessengerStateManager
     const elements = {
       messengerType: $(messengerTypeInput),
       messengerContact: $(messengerContactInput),
       profileMessangerSelect: $(messengerSelect),
       profileMessangerSelectTrigger: $(messengerSelect.querySelector('.base-select__trigger')),
-      profileMessangerSelectOptions: $(messengerSelect.querySelectorAll('.base-select__option'))
+      profileMessangerSelectOptions: $(messengerSelect.querySelectorAll('.base-select__option')),
     };
 
     // Initialize the messenger state manager
     this.messengerManager = new MessengerStateManager(elements);
 
+    // Удаляем любые существующие обработчики для этого элемента
+    elements.profileMessangerSelectTrigger.off('click');
+    elements.profileMessangerSelectOptions.off('click');
+
     // Toggle dropdown on trigger click
-    elements.profileMessangerSelectTrigger.off('click').on('click', function (e) {
+    elements.profileMessangerSelectTrigger.on('click', e => {
       e.preventDefault();
-      const dropdown = messengerSelect.querySelector('.base-select__dropdown');
-      const isVisible = dropdown.style.display !== 'none';
-      dropdown.style.display = isVisible ? 'none' : 'block';
+      e.stopPropagation();
+
+      const $dropdown = $(messengerSelect).find('.base-select__dropdown');
+      const $select = $(messengerSelect);
+      const $trigger = elements.profileMessangerSelectTrigger;
+
+      // Сначала закрываем все другие dropdown'ы
+      $('.base-select')
+        .not(messengerSelect)
+        .each(function () {
+          const $otherSelect = $(this);
+          const $otherDropdown = $otherSelect.find('.base-select__dropdown');
+          const $otherTrigger = $otherSelect.find('.base-select__trigger');
+
+          $otherSelect.removeClass('is-open');
+          $otherTrigger.removeClass('is-open');
+          $otherDropdown.slideUp(200);
+        });
+
+      // Переключаем состояние текущего dropdown
+      const isOpen = $select.hasClass('is-open');
+
+      if (isOpen) {
+        // Закрываем
+        $select.removeClass('is-open');
+        $trigger.removeClass('is-open');
+        $dropdown.slideUp(200);
+      } else {
+        // Открываем
+        $select.addClass('is-open');
+        $trigger.addClass('is-open');
+        $dropdown.slideDown(200);
+      }
     });
 
     // Handle option selection
-    elements.profileMessangerSelectOptions.off('click').on('click', (e) => {
+    elements.profileMessangerSelectOptions.on('click', e => {
       e.preventDefault();
+      e.stopPropagation();
       const selectedOption = e.currentTarget;
       const selectedType = selectedOption.getAttribute('data-value');
 
@@ -97,8 +140,13 @@ class RegistrationForm {
         this.messengerManager.updateSelectedMessenger(selectedType, selectedOption);
 
         // Close dropdown
-        const dropdown = messengerSelect.querySelector('.base-select__dropdown');
-        dropdown.style.display = 'none';
+        const $dropdown = $(messengerSelect).find('.base-select__dropdown');
+        const $select = $(messengerSelect);
+        const $trigger = elements.profileMessangerSelectTrigger;
+
+        $select.removeClass('is-open');
+        $trigger.removeClass('is-open');
+        $dropdown.slideUp(200);
       }
     });
 
@@ -109,7 +157,7 @@ class RegistrationForm {
 
       // Clear previous classes
       $(this).removeClass('error valid');
-      
+
       // Only add classes if there's a value to validate
       if (value.trim()) {
         if (ValidationMethods.validateMessengerContact(type, value)) {
@@ -120,20 +168,24 @@ class RegistrationForm {
       }
     });
 
-    // Close dropdown when clicking outside
+    // Close dropdown when clicking outside (убираем таймеры для избежания конфликтов)
     $(document)
       .off('click.registerMessengerDropdown')
       .on('click.registerMessengerDropdown', function (e) {
-        if (
-          !$(messengerSelect).is(e.target) &&
-          $(messengerSelect).has(e.target).length === 0
-        ) {
-          const dropdown = messengerSelect.querySelector('.base-select__dropdown');
-          dropdown.style.display = 'none';
+        // Проверяем что клик был не по нашему элементу
+        if (!$(messengerSelect).is(e.target) && $(messengerSelect).has(e.target).length === 0) {
+          const $dropdown = $(messengerSelect).find('.base-select__dropdown');
+          const $select = $(messengerSelect);
+          const $trigger = elements.profileMessangerSelectTrigger;
+
+          if ($select.hasClass('is-open')) {
+            $select.removeClass('is-open');
+            $trigger.removeClass('is-open');
+            $dropdown.slideUp(200);
+          }
         }
       });
   }
-
 
   async handleSubmit(event) {
     event.preventDefault();
@@ -229,7 +281,7 @@ class RegistrationForm {
   handleValidationErrors(errors) {
     // Hide loader
     loader.hide();
-    
+
     // Reset reCAPTCHA on validation errors
     if (window.grecaptcha) {
       window.grecaptcha.reset();
@@ -282,8 +334,12 @@ class RegistrationForm {
     // Additional validation for messenger contact using unified validation
     const messengerType = this.form.querySelector('input[name="messenger_type"]')?.value;
     const messengerContact = this.form.querySelector('input[name="messenger_contact"]')?.value;
-    
-    if (messengerType && messengerContact && !ValidationMethods.validateMessengerContact(messengerType, messengerContact)) {
+
+    if (
+      messengerType &&
+      messengerContact &&
+      !ValidationMethods.validateMessengerContact(messengerType, messengerContact)
+    ) {
       const messengerInput = this.form.querySelector('input[name="messenger_contact"]');
       if (messengerInput) {
         messengerInput.classList.add('error');

@@ -244,10 +244,30 @@ document.addEventListener(
       $(document).on('click', function (e) {
         let el = '.base-select, .date-picker-container, .multi-select';
         if ($(e.target).closest(el).length) return;
-        $(
-          '.base-select__trigger, .base-select__arrow, .date-select-field, .multi-select__tags, .multi-select__arrow'
-        ).removeClass('is-open');
-        $('.base-select__dropdown, .date-options-dropdown, .multi-select__dropdown').slideUp(200);
+
+        // Закрываем только элементы без кастомной обработки
+        $('.base-select__trigger, .base-select__arrow').each(function () {
+          const $trigger = $(this);
+          const $select = $trigger.closest('.base-select');
+
+          // Пропускаем элементы с кастомной обработкой
+          if (!$select.hasClass('js-custom-handling')) {
+            $trigger.removeClass('is-open');
+          }
+        });
+
+        $('.date-select-field, .multi-select__tags, .multi-select__arrow').removeClass('is-open');
+        $('.date-options-dropdown, .multi-select__dropdown').slideUp(200);
+
+        // Закрываем только base-select dropdown'ы без кастомной обработки
+        $('.base-select__dropdown').each(function () {
+          const $dropdown = $(this);
+          const $select = $dropdown.closest('.base-select');
+
+          if (!$select.hasClass('js-custom-handling')) {
+            $dropdown.slideUp(200);
+          }
+        });
       });
     });
   },
