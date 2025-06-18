@@ -243,9 +243,51 @@ class Subscription extends Model
     /**
      * Check if this is Enterprise subscription
      */
+    public static function isEnterpriseSubscription(string $subscriptionName): bool
+    {
+        return $subscriptionName === 'Enterprise';
+    }
+
+    /**
+     * Check if this is Enterprise subscription
+     */
     public function isEnterprise(): bool
     {
         return $this->name === 'Enterprise';
+    }
+
+    /**
+     * Check if this is Premium subscription
+     */
+    public static function isPremiumSubscription(string $subscriptionName): bool
+    {
+        return $subscriptionName === 'Premium';
+    }
+
+    /**
+     * Check if this is Premium subscription
+     */
+    public function isPremium(): bool
+    {
+        return $this->name === 'Premium';
+    }
+
+    /**
+     * Check if promo banner should be shown for this subscription
+     * Show promo for all subscriptions except Enterprise and Premium
+     */
+    public static function shouldShowPromoForSubscription(string $subscriptionName): bool
+    {
+        return !self::isEnterpriseSubscription($subscriptionName) &&
+            !self::isPremiumSubscription($subscriptionName);
+    }
+
+    /**
+     * Check if promo banner should be shown for this subscription instance
+     */
+    public function shouldShowPromo(): bool
+    {
+        return !$this->isEnterprise() && !$this->isPremium();
     }
 
     /**

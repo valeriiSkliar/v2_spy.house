@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\Frontend\NotificationType;
+use App\Finance\Models\Subscription;
 use App\Models\Frontend\Rating;
 use App\Notifications\Auth\VerifyEmailNotification;
 use App\Notifications\Auth\WelcomeNotification;
@@ -101,6 +102,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function subscription()
     {
         return $this->belongsTo(\App\Finance\Models\Subscription::class);
+    }
+
+    /**
+     * Get flag for show upgrade tariff promo in sidebar
+     */
+    public function showUpgradeTariffPromo(): bool
+    {
+        $currentTariff = $this->currentTariff();
+
+        return Subscription::shouldShowPromoForSubscription($currentTariff['name']);
     }
 
     public function currentTariff(): array
