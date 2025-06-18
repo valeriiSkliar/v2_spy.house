@@ -269,17 +269,6 @@ class FinanceController extends Controller
             return redirect()->route('finances.index')->with('error', 'Платеж не найден');
         }
 
-        // Проверяем что это депозит
-        if ($payment->payment_type !== PaymentType::DEPOSIT) {
-            Log::warning('FinanceController: Платеж не является депозитом', [
-                'payment_id' => $payment->id,
-                'invoice_number' => $invoiceNumber,
-                'payment_type' => $payment->payment_type->value,
-            ]);
-
-            return redirect()->route('finances.index')->with('error', 'Недействительный тип платежа');
-        }
-
         // Проверяем что есть approval_url
         if (empty($payment->approval_url)) {
             Log::warning('FinanceController: Отсутствует approval_url для продолжения депозита', [
