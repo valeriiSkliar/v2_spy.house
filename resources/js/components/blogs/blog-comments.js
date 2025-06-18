@@ -1,4 +1,4 @@
-import { ajaxFetcher } from '@/components/fetcher/ajax-fetcher';
+import { hideInElement, showInElement } from '@/components/loader';
 import { logger } from '@/helpers/logger';
 import { createAndShowToast } from '@/utils/uiHelpers';
 
@@ -100,6 +100,159 @@ function validateCommentForm(form) {
   return true;
 }
 
+/**
+ * Асинхронное обновление списка комментариев
+ */
+function reloadCommentsContent(container, slug, options = {}) {
+  const { page = 1, sort = 'latest', showLoader = true, scrollToTop = true } = options;
+
+  if (showLoader) {
+    showInElement(container);
+  }
+
+  // Строим URL для получения комментариев
+  const url = `/api/blog/${slug}/comments`;
+  const params = new URLSearchParams({ page, sort });
+
+  fetch(`${url}?${params.toString()}`, {
+    method: 'GET',
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest',
+      'X-CSRF-TOKEN':
+        document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+  })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (data.success) {
+        // Обновляем содержимое комментариев
+        updateCommentsContent(data, container);
+
+        // Обновляем счетчик комментариев
+        updateCommentsCounter(data.commentsCount);
+
+        // Переинициализируем компоненты
+        reinitializeCommentsComponents();
+
+        if (scrollToTop) {
+          container.scrollIntoView({ behavior: 'smooth' });
+        }
+      } else {
+        createAndShowToast(data.message || 'Ошибка загрузки комментариев', 'error');
+      }
+    })
+    .catch(error => {
+      console.error('Error loading comments:', error);
+      createAndShowToast('Ошибка загрузки комментариев', 'error');
+    })
+    .finally(() => {
+      if (showLoader) {
+        hideInElement(container);
+      }
+    });
+}
+
+/**
+ * Обновление содержимого комментариев в DOM
+ */
+function updateCommentsContent(data, container) {
+  // Находим контейнер списка комментариев
+  const commentsList = container.querySelector('.comment-list');
+  if (commentsList && data.html) {
+    commentsList.innerHTML = data.html;
+  }
+
+  // Обновляем пагинацию
+  const paginationContainer = document.querySelector('#comments-pagination-container');
+  if (paginationContainer) {
+    if (data.hasPagination && data.pagination) {
+      paginationContainer.innerHTML = data.pagination;
+      paginationContainer.style.display = 'block';
+    } else {
+      paginationContainer.innerHTML = '';
+      paginationContainer.style.display = 'none';
+    }
+  }
+}
+
+/**
+ * Обновление счетчика комментариев
+ */
+function updateCommentsCounter(count) {
+  const counterElement = document.querySelector('.comment-count');
+  if (counterElement) {
+    counterElement.textContent = count || 0;
+  }
+}
+
+/**
+ * Переинициализация компонентов после обновления DOM
+ */
+function reinitializeCommentsComponents() {
+  const commentForm = $('#universal-comment-form');
+
+  // Переинициализируем кнопки ответа
+  initReplyButtons(commentForm);
+
+  // Переинициализируем обработчики пагинации
+  initCommentsPagination();
+}
+
+/**
+ * Инициализация обработчиков пагинации комментариев
+ */
+function initCommentsPagination() {
+  const paginationLinks = document.querySelectorAll(
+    '#comments-pagination-container .pagination-link'
+  );
+
+  paginationLinks.forEach(link => {
+    // Удаляем старые обработчики
+    link.removeEventListener('click', handlePaginationClick);
+
+    // Добавляем новые если ссылка не заблокирована
+    if (!link.classList.contains('disabled')) {
+      link.addEventListener('click', handlePaginationClick);
+    }
+  });
+}
+
+/**
+ * Обработчик клика по пагинации
+ */
+function handlePaginationClick(e) {
+  e.preventDefault();
+
+  const link = e.currentTarget;
+  const page = link.dataset.page;
+  const slug = window.location.pathname.split('/').pop();
+  const commentsContainer = document.getElementById('comments');
+
+  if (page && commentsContainer) {
+    let pageNumber = 1;
+
+    // Извлекаем номер страницы
+    if (!isNaN(parseInt(page))) {
+      pageNumber = parseInt(page);
+    } else if (page.includes('?')) {
+      const urlParams = new URLSearchParams(page.split('?')[1]);
+      const pageParam = urlParams.get('page');
+      if (pageParam) {
+        pageNumber = parseInt(pageParam);
+      }
+    }
+
+    reloadCommentsContent(commentsContainer, slug, { page: pageNumber });
+  }
+}
+
 export function initUniversalCommentForm(commentForm) {
   logger('initUniversalCommentForm', commentForm, { debug: true });
   if (!commentForm) return;
@@ -121,54 +274,63 @@ export function initUniversalCommentForm(commentForm) {
     submitButton.html('<i class="fas fa-spinner fa-spin"></i> Отправка...');
 
     const formData = new FormData(this);
-    const url = form.attr('action');
+    const actionUrl = form.attr('action');
 
-    ajaxFetcher.submit(url, {
-      data: formData,
-      successCallback: function (response) {
-        if (response.success) {
-          createAndShowToast(response.message, 'success');
+    // Заменяем URL на API endpoint
+    const slug = window.location.pathname.split('/').pop();
+    const apiUrl = `/api/blog/${slug}/comment`;
 
-          // Clear form
+    fetch(apiUrl, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRF-TOKEN':
+          document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+      },
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          createAndShowToast(data.message, 'success');
+
+          // Очистка формы
           form.find('textarea[name="content"]').val('').removeClass('error');
           form.find('#comment-parent-id').val('');
 
-          // Reset form to comment mode (not reply)
+          // Сброс формы в режим комментария (не ответа)
           setCommentMode({ preventDefault: () => {}, target: form[0] });
-        } else {
-          createAndShowToast(response.message || 'Ошибка отправки комментария', 'error');
-        }
-      },
-      errorCallback: function (jqXHR) {
-        let errorMessage = 'Ошибка отправки комментария';
 
-        if (jqXHR.responseJSON) {
-          if (jqXHR.responseJSON.message) {
-            errorMessage = jqXHR.responseJSON.message;
-          } else if (jqXHR.responseJSON.errors) {
-            // Handle validation errors
-            const errors = jqXHR.responseJSON.errors;
+          // Асинхронное обновление списка комментариев
+          const commentsContainer = document.getElementById('comments');
+          if (commentsContainer && data.html) {
+            updateCommentsContent(data, commentsContainer);
+            updateCommentsCounter(data.commentsCount);
+            reinitializeCommentsComponents();
+
+            // Скролл к началу комментариев для показа нового комментария
+            commentsContainer.scrollIntoView({ behavior: 'smooth' });
+          }
+        } else {
+          createAndShowToast(data.message || 'Ошибка отправки комментария', 'error');
+
+          if (data.errors) {
+            const errors = data.errors;
             if (errors.content && errors.content.length > 0) {
-              errorMessage = errors.content[0];
               form.find('textarea[name="content"]').addClass('error');
-            } else {
-              errorMessage = Object.values(errors).flat().join(', ');
             }
           }
-        } else if (jqXHR.status === 429) {
-          errorMessage = 'Слишком много запросов. Пожалуйста, подождите минуту.';
-        } else if (jqXHR.status === 401) {
-          errorMessage = 'Необходимо авторизоваться для отправки комментариев';
         }
-
-        createAndShowToast(errorMessage, 'error');
-      },
-      completeCallback: function () {
+      })
+      .catch(error => {
+        console.error('Error submitting comment:', error);
+        createAndShowToast('Ошибка отправки комментария', 'error');
+      })
+      .finally(() => {
         // Re-enable submit button
         submitButton.prop('disabled', false);
         submitButton.html(originalButtonText);
-      },
-    });
+      });
   });
 }
 
@@ -184,3 +346,6 @@ export function initReplyButtons(commentForm) {
     button.on('click', replyClickHandler);
   });
 }
+
+// Экспортируем новые функции для использования в других компонентах
+export { reloadCommentsContent, updateCommentsContent, updateCommentsCounter };

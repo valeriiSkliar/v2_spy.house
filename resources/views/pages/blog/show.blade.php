@@ -34,21 +34,19 @@
     @auth
 
     @php
-        $userRating = Auth::check() ? $article->ratings()->where('user_id', Auth::id())->first() : null;
+    $userRating = Auth::check() ? $article->ratings()->where('user_id', Auth::id())->first() : null;
     @endphp
-        <x-blog.article-rating 
-        :rating="$article->average_rating ?? 0" 
-        :slug="$article->slug"
-        :isRated="$isRated"
+    <x-blog.article-rating :rating="$article->average_rating ?? 0" :slug="$article->slug" :isRated="$isRated"
         :userRating="$userRating ? $userRating->rating : null" />
     @endauth
-    
+
     @guest
 
-        <div class="message _bg _with-border font-weight-500 mt-4">
-            <span class="icon-warning font-18"></span>
-            <div class="message__txt">{{ __('blogs.article_rating.leave_rating') }} <a href="{{ route('login') }}" class="link">{{__('blogs.article_rating.login')}}</a> {{__('blogs.article_rating.to_service')}}</div>
-        </div>
+    <div class="message _bg _with-border font-weight-500 mt-4">
+        <span class="icon-warning font-18"></span>
+        <div class="message__txt">{{ __('blogs.article_rating.leave_rating') }} <a href="{{ route('login') }}"
+                class="link">{{__('blogs.article_rating.login')}}</a> {{__('blogs.article_rating.to_service')}}</div>
+    </div>
     @endguest
 </div>
 
@@ -61,19 +59,28 @@
 <div class="sep"></div>
 
 <div class="article _big _single">
-    <div class="comments" id="comments">
+    <div class="comments" id="comments" data-comments-ajax-url="{{ route('api.blog.comments.get', $article->slug) }}">
         <h2>{{ __('blogs.comments.title') }} <span class="comment-count">{{ $commentsCount }}</span></h2>
 
         @guest
         <div class="message _bg _with-border font-weight-500">
             <span class="icon-warning font-18"></span>
-            <div class="message__txt">{{ __('blogs.comments.leave_comment') }} <a href="{{ route('login') }}" class="link">{{__('blogs.comments.login')}}</a> {{__('blogs.comments.to_service')}}</div>
+            <div class="message__txt">{{ __('blogs.comments.leave_comment') }} <a href="{{ route('login') }}"
+                    class="link">{{__('blogs.comments.login')}}</a> {{__('blogs.comments.to_service')}}</div>
         </div>
         @endguest
 
-        <x-blog.comment-list-with-reply-form :comments="$comments" :article="$article" />
+        {{-- AJAX контейнер для списка комментариев --}}
+        <div id="comments-list-container">
+            <x-blog.comment-list-with-reply-form :comments="$comments" :article="$article" />
+        </div>
 
-        {{ $comments->links('components.blog.comment.async-pagination', ['paginator' => $comments]) }}
+        {{-- AJAX контейнер для пагинации --}}
+        <div id="comments-pagination-container" data-pagination-container>
+            @if($comments->hasPages())
+            {{ $comments->links('components.blog.comment.async-pagination', ['paginator' => $comments]) }}
+            @endif
+        </div>
     </div>
 </div>
 @endsection

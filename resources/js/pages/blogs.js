@@ -300,10 +300,10 @@ function cleanRedirect() {
  */
 function showErrorMessage(container, error) {
   const errorHtml = `
-    <div class="blog-error-message">
+    <div class="blog-error-message empty-landing">
       <h3>Произошла ошибка при загрузке</h3>
       <p>Пожалуйста, обновите страницу или попробуйте позже.</p>
-      <button onclick="window.location.reload()" class="btn btn-primary">Обновить страницу</button>
+      <button onclick="window.location.reload()" class="btn _flex _green _medium min-120">Обновить страницу</button>
     </div>
   `;
   container.innerHTML = errorHtml;
@@ -522,7 +522,7 @@ function initSidebarState() {
 function initOptimizedBlogSearch() {
   // Новый поиск в блоке фильтров
   const filterSearchInput = document.querySelector('.blog-filter-search input[type="search"]');
-  
+
   // Старый поиск в форме
   const searchForm = document.querySelector('.search-form form');
   const searchInput = document.querySelector('.search-form input[type="search"]');
@@ -621,7 +621,7 @@ function initFilterSearch(searchInput) {
   });
 
   // Обработчик Enter
-  searchInput.addEventListener('keypress', function(e) {
+  searchInput.addEventListener('keypress', function (e) {
     if (e.key === 'Enter') {
       e.preventDefault();
       clearTimeout(searchTimeout);
@@ -645,18 +645,19 @@ function handleFilterSearch(query) {
 
   // Обновляем URL параметры
   const urlParams = new URLSearchParams(window.location.search);
-  
+
   if (query.length > 0) {
     urlParams.set('search', query);
   } else {
     urlParams.delete('search');
   }
-  
+
   // Сбрасываем страницу при поиске
   urlParams.delete('page');
-  
+
   // Обновляем URL браузера
-  const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+  const newUrl =
+    window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
   window.history.pushState({ search: query }, '', newUrl);
 
   // Перезагружаем контент
@@ -695,7 +696,7 @@ function performIntegratedSearch(query) {
  */
 function initBlogSorting() {
   const sortingButtons = document.querySelectorAll('.sorting-btn');
-  
+
   if (sortingButtons.length === 0) {
     console.log('No sorting buttons found');
     return;
@@ -708,7 +709,7 @@ function initBlogSorting() {
 
   // Добавляем обработчики для кнопок сортировки
   sortingButtons.forEach(button => {
-    button.addEventListener('click', function(e) {
+    button.addEventListener('click', function (e) {
       e.preventDefault();
       handleSortingClick(this);
     });
@@ -736,7 +737,7 @@ function handleSortingClick(button) {
   // Определяем тип сортировки на основе текста кнопки
   let sortType;
   const buttonText = button.textContent.trim().toLowerCase();
-  
+
   if (buttonText.includes('популярные')) {
     sortType = 'popular';
   } else if (buttonText.includes('просматрыв')) {
@@ -771,7 +772,8 @@ function handleSortingClick(button) {
   updateSortingButtonsState(sortType, newDirection);
 
   // Обновляем URL браузера
-  const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+  const newUrl =
+    window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
   window.history.pushState({ sort: sortType, direction: newDirection }, '', newUrl);
 
   // Перезагружаем контент

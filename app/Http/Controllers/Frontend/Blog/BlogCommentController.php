@@ -37,7 +37,7 @@ class BlogCommentController extends Controller
 
         if (! Auth::check()) {
             return response()->json([
-                'message' => __('blog.you_must_be_logged_in_to_submit_a_comment'),
+                'message' => __('blog.errors.you_must_be_logged_in_to_submit_a_comment'),
             ], 401);
         }
 
@@ -67,7 +67,7 @@ class BlogCommentController extends Controller
         }
 
         return response()->json([
-            'message' => 'Comment submitted successfully and is awaiting moderation.',
+            'message' => __('blog.messages.comment_submitted_successfully'),
             'comment' => $comment,
         ], 201);
     }
@@ -81,7 +81,7 @@ class BlogCommentController extends Controller
         $comment->update(['status' => CommentStatus::APPROVED]);
 
         return response()->json([
-            'message' => 'Comment approved successfully',
+            'message' => __('blog.messages.comment_approved_successfully'),
             'comment' => $comment,
         ]);
     }
@@ -93,7 +93,7 @@ class BlogCommentController extends Controller
         $comment->delete();
 
         return response()->json([
-            'message' => 'Comment deleted successfully',
+            'message' => __('blog.messages.comment_deleted_successfully'),
         ]);
     }
 }

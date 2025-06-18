@@ -5,10 +5,13 @@ namespace App\Http\Controllers\Api\Blog;
 use App\Http\Controllers\Frontend\Blog\BaseBlogController;
 use App\Models\Frontend\Blog\BlogPost;
 use App\Models\Frontend\Blog\PostCategory;
+use App\Models\Frontend\Blog\BlogComment;
+use App\Enums\Frontend\CommentStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class ApiBlogController extends BaseBlogController
 {
@@ -454,5 +457,192 @@ class ApiBlogController extends BaseBlogController
         Cache::put($cacheKey, $result, self::CACHE_TTL);
 
         return response()->json($result);
+    }
+
+    /**
+     * Асинхронное добавление комментария с обновлением списка
+     */
+    public function storeComment(Request $request, string $slug)
+    {
+        // Валидация входных данных
+        $validator = Validator::make($request->all(), [
+            'content' => 'required|string|min:2|max:1000',
+            'parent_id' => 'nullable|exists:blog_comments,id',
+        ], [
+            'content.required' => __('blogs.comments.content_required'),
+            'content.min' => __('blogs.comments.content_min'),
+            'content.max' => __('blogs.comments.content_max'),
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        if (!Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'message' => __('blog.errors.you_must_be_logged_in_to_submit_a_comment'),
+            ], 401);
+        }
+
+        $post = BlogPost::where('slug', $slug)
+            ->where('is_published', true)
+            ->firstOrFail();
+
+        $user = Auth::user();
+        $validated = $validator->validated();
+
+        // Проверка на ответ самому себе
+        if ($request->filled('parent_id')) {
+            $parentComment = BlogComment::findOrFail($request->parent_id);
+
+            if ($parentComment->post_id != $post->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('blog.errors.invalid_parent_comment'),
+                ], 422);
+            }
+
+            if ($parentComment->email === $user->email) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('blog.errors.cannot_reply_to_own_comment'),
+                ], 422);
+            }
+        }
+
+        // Создание комментария
+        $comment = new BlogComment([
+            'post_id' => $post->id,
+            'author_name' => $user->name,
+            'email' => $user->email,
+            'content' => $this->sanitizeInput($validated['content']),
+            'status' => CommentStatus::APPROVED, // Автоодобрение для авторизованных пользователей
+            'is_spam' => false,
+        ]);
+
+        if ($request->filled('parent_id')) {
+            $comment->parent_id = $request->parent_id;
+        }
+
+        $comment->save();
+
+        // Получаем обновленный список комментариев
+        $commentsData = $this->getCommentsData($post);
+
+        return response()->json([
+            'success' => true,
+            'message' => __('blogs.comments.comment_added_successfully'),
+            'comment' => $comment->load('replies'),
+            'html' => $commentsData['html'],
+            'pagination' => $commentsData['pagination'],
+            'hasPagination' => $commentsData['hasPagination'],
+            'currentPage' => 1, // Возвращаемся на первую страницу для показа нового комментария
+            'totalPages' => $commentsData['totalPages'],
+            'count' => $commentsData['count'],
+            'commentsCount' => $commentsData['commentsCount'],
+        ], 201);
+    }
+
+    /**
+     * AJAX получение комментариев (для пагинации и обновления)
+     */
+    public function getComments(Request $request, string $slug)
+    {
+        $validator = Validator::make($request->all(), [
+            'page' => 'integer|min:1|max:1000',
+            'sort' => 'string|in:latest,oldest',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $post = BlogPost::where('slug', $slug)
+            ->where('is_published', true)
+            ->firstOrFail();
+
+        $page = (int) $request->get('page', 1);
+        $sort = $request->get('sort', 'latest');
+
+        $commentsData = $this->getCommentsData($post, $page, $sort);
+
+        return response()->json([
+            'success' => true,
+            'html' => $commentsData['html'],
+            'pagination' => $commentsData['pagination'],
+            'hasPagination' => $commentsData['hasPagination'],
+            'currentPage' => $commentsData['currentPage'],
+            'totalPages' => $commentsData['totalPages'],
+            'count' => $commentsData['count'],
+            'commentsCount' => $commentsData['commentsCount'],
+        ]);
+    }
+
+    /**
+     * Получение данных комментариев для AJAX ответов
+     */
+    private function getCommentsData(BlogPost $post, int $page = 1, string $sort = 'latest'): array
+    {
+        $sortDirection = $sort === 'oldest' ? 'asc' : 'desc';
+
+        $comments = BlogComment::where('post_id', $post->id)
+            ->where('status', CommentStatus::APPROVED->value)
+            ->whereNull('parent_id')
+            ->with(['replies' => function ($query) {
+                $query->where('status', CommentStatus::APPROVED->value)->orderBy('created_at', 'asc');
+            }])
+            ->orderBy('created_at', $sortDirection)
+            ->paginate(10, ['*'], 'page', $page);
+
+        $commentsCount = BlogComment::where('post_id', $post->id)
+            ->where('status', CommentStatus::APPROVED->value)
+            ->count();
+
+        // Генерируем HTML для комментариев
+        $commentsHtml = '';
+        if ($comments->isEmpty()) {
+            $commentsHtml = view('components.blog.comment.no-comments')->render();
+        } else {
+            // Добавляем форму комментария если пользователь авторизован
+            if (Auth::check()) {
+                $commentsHtml .= view('components.blog.comment.reply-form', [
+                    'article' => $post,
+                ])->render();
+            }
+
+            // Добавляем список комментариев
+            foreach ($comments as $comment) {
+                $commentsHtml .= view('components.blog.comment.comment', [
+                    'comment' => $comment,
+                    'slug' => $post->slug,
+                ])->render();
+            }
+        }
+
+        // Генерируем пагинацию
+        $paginationHtml = '';
+        $hasPagination = $comments->hasPages();
+
+        if ($hasPagination) {
+            $paginationHtml = $comments->links('components.blog.comment.async-pagination')->render();
+        }
+
+        return [
+            'html' => $commentsHtml,
+            'pagination' => $paginationHtml,
+            'hasPagination' => $hasPagination,
+            'currentPage' => $comments->currentPage(),
+            'totalPages' => $comments->lastPage(),
+            'count' => $comments->count(),
+            'commentsCount' => $commentsCount,
+        ];
     }
 }
