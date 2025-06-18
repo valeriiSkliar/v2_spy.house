@@ -24,3 +24,7 @@
     </main>
 </div>
 @endsection
+
+@push('scripts')
+@vite(['resources/js/pages/blogs.js'])
+@endpush

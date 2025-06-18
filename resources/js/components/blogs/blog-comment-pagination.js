@@ -1,12 +1,6 @@
 import { initReplyButtons } from '@/components/blogs';
 document.addEventListener('DOMContentLoaded', function () {
   initCommentPagination();
-
-  // Initialize reply buttons on initial page load
-  const commentForm = $('#universal-comment-form');
-  if (commentForm.length > 0) {
-    initReplyButtons(commentForm);
-  }
 });
 
 function initCommentPagination() {

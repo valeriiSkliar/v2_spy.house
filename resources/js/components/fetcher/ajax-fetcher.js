@@ -124,6 +124,10 @@ const ajaxFetcher = {
             error: errorCallback,
             beforeSend: beforeSendCallback,
             complete: completeCallback,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
         };
 
         if (data instanceof FormData) {
