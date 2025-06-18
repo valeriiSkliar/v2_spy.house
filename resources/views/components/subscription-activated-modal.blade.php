@@ -11,17 +11,19 @@
                 <div class="subscription-activated-icon icon-check-circle">
                     <div class="tariff-name _{{ $type }}">{{ $tariff }}</div>
                 </div>
-                <h2 class="font-20 mb-20">Subscription activated</h2>
+                <h2 class="font-20 mb-20">{{ __('tariffs.subscription_activated_modal.title') }}</h2>
                 <p class="mb-30">
-                    Your <strong>"{{ $tariff }}"</strong> subscription is active. <br>
-                    Valid until: <span class="icon-clock"></span> <strong>{{ $expires }}</strong>
+                    {!! __('tariffs.subscription_activated_modal.message', ['tariff' => $tariff, 'expires' => $expires])
+                    !!}
                 </p>
                 <div class="row justify-content-center">
                     <div class="col-auto">
-                        <button class="btn _flex _green _medium min-120" data-dismiss="modal">Ok</button>
+                        <button class="btn _flex _green _medium min-120" data-dismiss="modal">{{
+                            __('tariffs.subscription_activated_modal.ok') }}</button>
                     </div>
                     <div class="col-auto">
-                        <a href="{{ route('tariffs.index') }}" class="btn _flex _gray _medium min-120">Change tariff</a>
+                        <a href="{{ route('tariffs.index') }}" class="btn _flex _gray _medium min-120">{{
+                            __('tariffs.subscription_activated_modal.change_tariff') }}</a>
                     </div>
                 </div>
             </div>

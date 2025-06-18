@@ -38,4 +38,11 @@ return [
         'payment_processing_message' => 'Пожалуйста, будьте внимательны и переводите точную сумму, указанную в инструкциях, чтобы ваш платеж был успешно обработан',
         'proceed_to_payment' => 'Перейти к оплате',
     ],
+
+    'subscription_activated_modal' => [
+        'title' => 'Подписка активна',
+        'message' => 'Ваша подписка <strong>":tariff"</strong> активна. <br> Срок действия: :expires',
+        'ok' => 'OK',
+        'change_tariff' => 'Изменить тариф',
+    ],
 ];
