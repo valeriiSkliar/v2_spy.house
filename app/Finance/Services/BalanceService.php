@@ -51,7 +51,7 @@ class BalanceService
 
             return [
                 'success' => false,
-                'error' => 'Недостаточно средств на балансе. Требуется: $'.number_format($amount, 2).', доступно: $'.number_format($user->available_balance, 2),
+                'error' => 'Недостаточно средств на балансе. Требуется: $' . number_format($amount, 2) . ', доступно: $' . number_format($user->available_balance, 2),
             ];
         }
 
@@ -127,8 +127,8 @@ class BalanceService
             'subscription_id' => $subscription->id,
             'payment_method' => PaymentMethod::USER_BALANCE,
             'status' => PaymentStatus::PENDING,
-            'external_number' => 'TN'.$user->id.$subscription->id.time(),
-            'invoice_number' => 'IN'.strtoupper(Str::random(10)),
+            'external_number' => 'TN' . $user->id . $subscription->id . time(),
+            'invoice_number' => 'IN' . strtoupper(Str::random(10)),
             'webhook_token' => Str::random(64),
             'idempotency_key' => Str::uuid(),
         ]);
@@ -212,6 +212,9 @@ class BalanceService
             ]);
         }
 
+        // Проверяем является ли пользователь в триале
+        $wasInTrial = $user->isTrialPeriod();
+
         // Определяем время активации
         if ($isRenewal) {
             // Продление: добавляем к существующему времени окончания
@@ -221,13 +224,15 @@ class BalanceService
                 : $startTime->copy()->addMonth();
         } else {
             // Новая подписка или апгрейд: начинаем с текущего момента
+            // ВАЖНО: Если пользователь был в триале, время подписки начинается с момента покупки
             $startTime = now();
             $endTime = $billingType === 'year'
                 ? $startTime->copy()->addYear()
                 : $startTime->copy()->addMonth();
 
-            // Добавляем компенсированное время
-            if ($compensatedTime > 0) {
+            // Добавляем компенсированное время только если пользователь НЕ был в триале
+            // Время триала НЕ должно прибавляться к общему сроку подписки
+            if ($compensatedTime > 0 && !$wasInTrial) {
                 $endTime->addSeconds($compensatedTime);
                 Log::info('BalanceService: Применена компенсация времени', [
                     'user_id' => $user->id,
@@ -235,17 +240,34 @@ class BalanceService
                     'compensated_days' => round($compensatedTime / 86400, 2),
                     'new_end_time' => $endTime->toDateTimeString(),
                 ]);
+            } elseif ($wasInTrial) {
+                Log::info('BalanceService: Компенсация времени пропущена - пользователь был в триале', [
+                    'user_id' => $user->id,
+                    'was_in_trial' => $wasInTrial,
+                    'trial_end_time' => $user->subscription_time_end ? $user->subscription_time_end->toDateTimeString() : null,
+                ]);
             }
         }
 
         // Обновляем подписку пользователя
-        $user->update([
+        $updateData = [
             'subscription_id' => $subscription->id,
             'subscription_time_start' => $startTime,
             'subscription_time_end' => $endTime,
             'subscription_is_expired' => false,
             'queued_subscription_id' => null,
-        ]);
+        ];
+
+        // Сбрасываем флаг триала при покупке подписки
+        if ($wasInTrial) {
+            $updateData['is_trial_period'] = false;
+            Log::info('BalanceService: Сброс флага триала при активации подписки', [
+                'user_id' => $user->id,
+                'was_in_trial' => $wasInTrial,
+            ]);
+        }
+
+        $user->update($updateData);
 
         Log::info('BalanceService: Подписка активирована', [
             'user_id' => $user->id,
@@ -256,6 +278,8 @@ class BalanceService
             'end_time' => $endTime->toDateTimeString(),
             'is_renewal' => $isRenewal,
             'compensated_time_seconds' => $compensatedTime,
+            'was_in_trial' => $wasInTrial,
+            'trial_flag_reset' => $wasInTrial,
         ]);
     }
 
@@ -283,6 +307,16 @@ class BalanceService
                 'user_id' => $user->id,
                 'has_subscription_id' => (bool) $user->subscription_id,
                 'has_subscription_time_end' => (bool) $user->subscription_time_end,
+            ]);
+
+            return 0;
+        }
+
+        // Не рассчитываем компенсацию если пользователь в триале
+        if ($user->isTrialPeriod()) {
+            Log::info('BalanceService: Компенсация пропущена - пользователь в триале', [
+                'user_id' => $user->id,
+                'trial_end_time' => $user->subscription_time_end->toDateTimeString(),
             ]);
 
             return 0;
