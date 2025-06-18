@@ -37,7 +37,7 @@
     <div class="aside__content">
         <x-auth.buttons-mobile />
         @include('partials.sidebar-menu')
-        @if(auth()->user()->showUpgradeTariffPromo())
+        @if(auth()->check() && auth()->user()->showUpgradeTariffPromo())
         <x-promo-tariff />
         @endif
         <div class="aside__copyright">{{ __('footer.copyright', ['year' => date('Y')]) }}</div>

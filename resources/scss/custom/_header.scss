@@ -2,3 +2,10 @@
   //   background-color: red;
   z-index: 999;
 }
+
+.tariff-link {
+  &._starter {
+    background: rgba(72, 186, 201, 0.15);
+    color: #48bac9;
+  }
+}
