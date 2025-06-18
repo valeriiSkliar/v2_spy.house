@@ -44,8 +44,8 @@ return [
 
     'cansel_url' => env('APP_URL', 'http://localhost:8000'),
     'return_url' => env('APP_URL', 'http://localhost:8000'),
-    'finance_cansel_url' => env('APP_URL', 'http://localhost:8000') . '/finance',
-    'finance_return_url' => env('APP_URL', 'http://localhost:8000') . '/finance',
+    'finance_cansel_url' => env('APP_URL', 'http://localhost:8000') . '/finances',
+    'finance_return_url' => env('APP_URL', 'http://localhost:8000') . '/finances',
     'tariffs_return_url' => env('APP_URL', 'http://localhost:8000') . '/tariffs',
     'tariffs_cancel_url' => env('APP_URL', 'http://localhost:8000') . '/tariffs',
     'webhook_url' => env('APP_URL', 'http://localhost:8000') . '/api/pay2/webhook',

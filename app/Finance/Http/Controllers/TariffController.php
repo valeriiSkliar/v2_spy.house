@@ -165,7 +165,7 @@ class TariffController extends Controller
             'external_number' => $this->pay2Service->generateExternalNumber($user->id, $tariff->id),
             'amount' => $amount,
             'currency_code' => 'USD',
-            'description' => __('tariffs.payment_description', ['name' => $tariff->name, 'billing_type' => $billingType]),
+            'description' => __('tariffs.payment_description', ['name' => $tariff->name]),
             'payer_email' => $user->email,
             'payment_method' => $paymentMethod,
             'handling_fee' => 0,

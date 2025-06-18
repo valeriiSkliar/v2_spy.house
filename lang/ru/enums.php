@@ -31,7 +31,7 @@ return [
     'PaymentMethod' => [
         'USDT' => 'Tether USDT',
         'PAY2_HOUSE' => 'Pay2.House',
-        'USER_BALANCE' => 'Баланс пользователя',
+        'USER_BALANCE' => 'Оплата с баланса',
     ],
     'PaymentType' => [
         'DEPOSIT' => 'Пополнение',

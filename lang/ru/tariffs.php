@@ -14,7 +14,7 @@ return [
     'previous' => 'Предыдущая',
     'next' => 'Следующая',
 
-    'payment_description' => 'Оплата тарифа :name (тип подписки: :billing_type)',
+    'payment_description' => 'Оплата тарифа :name',
 
     'errors' => [
         'payment_processing_failed' => 'Ошибка при обработке платежа',
@@ -41,7 +41,7 @@ return [
 
     'subscription_activated_modal' => [
         'title' => 'Подписка активна',
-        'message' => 'Ваша подписка <strong>":tariff"</strong> активна. <br> Срок действия: :expires',
+        'message' => 'Ваша подписка <strong>":tariff"</strong> активна. <br> Срок действия: <span class="icon-clock"></span> :expires',
         'ok' => 'OK',
         'change_tariff' => 'Изменить тариф',
     ],
