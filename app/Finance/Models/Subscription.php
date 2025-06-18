@@ -170,7 +170,7 @@ class Subscription extends Model
     {
         $priorities = [
             'Free' => 0,
-            'Start' => 1,
+            'Starter' => 1,
             'Basic' => 2,
             'Premium' => 3,
             'Enterprise' => 4,

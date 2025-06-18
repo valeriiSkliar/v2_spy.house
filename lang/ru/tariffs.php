@@ -2,7 +2,7 @@
 
 return [
     'free' => 'Free',
-    'start' => 'Start',
+    'start' => 'Starter',
     'basic' => 'Basic',
     'premium' => 'Premium',
     'enterprise' => 'Enterprise',

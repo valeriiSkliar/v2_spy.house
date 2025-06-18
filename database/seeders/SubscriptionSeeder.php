@@ -44,7 +44,7 @@ class SubscriptionSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'name' => 'Start',
+                'name' => 'Starter',
                 'amount' => 29.99,
                 'early_discount' => 15.00,
                 'api_request_count' => 1000,
@@ -88,6 +88,6 @@ class SubscriptionSeeder extends Seeder
         // Bulk insert for better performance
         Subscription::insert($subscriptions);
 
-        $this->command->info('Created '.count($subscriptions).' subscription plans');
+        $this->command->info('Created ' . count($subscriptions) . ' subscription plans');
     }
 }

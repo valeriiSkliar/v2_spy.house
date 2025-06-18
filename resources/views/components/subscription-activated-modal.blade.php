@@ -1,5 +1,5 @@
 <!-- resources/views/components/subscription-activated-modal.blade.php -->
-@props(['type' => 'start', 'tariff' => 'Start', 'expires' => '02.05.25'])
+@props(['type' => 'start', 'tariff' => 'Starter', 'expires' => '02.05.25'])
 
 <div class="modal fade modal-subscription-activated" id="modal-subscription-activated" style="z-index: 10005;">
     <div class="modal-dialog">
