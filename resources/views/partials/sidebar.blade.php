@@ -10,11 +10,21 @@
             $currentTariff = $user->currentTariff();
             @endphp
 
+            @if($user->isTrialPeriod())
+            <x-tariff-link :type="'trial'" data-toggle="modal" data-target="#modal-current-subscription"
+                style="cursor: pointer;">
+                {{ __('tariffs.trial') }}
+            </x-tariff-link>
+            @else
+            @if($user->hasActiveSubscription())
             <x-tariff-link :type="$currentTariff['css_class']" data-toggle="modal"
                 data-target="#modal-current-subscription" style="cursor: pointer;">
                 {{ $currentTariff['name'] }}
             </x-tariff-link>
-
+            @else
+            <x-tariff-link>{{ __('tariffs.free') }}</x-tariff-link>
+            @endif
+            @endif
             {{-- Push modal to global stack --}}
             {{-- @push('modals')
             <x-modals.subscribtion-activated :currentTariff="$currentTariff" />

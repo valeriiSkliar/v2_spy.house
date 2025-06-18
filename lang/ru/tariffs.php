@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'trial' => 'Trial',
     'free' => 'Free',
     'start' => 'Starter',
     'basic' => 'Basic',
@@ -44,5 +45,10 @@ return [
         'message' => 'Ваша подписка <strong>":tariff"</strong> активна. <br> Срок действия: <span class="icon-clock"></span> :expires',
         'ok' => 'OK',
         'change_tariff' => 'Изменить тариф',
+    ],
+
+    'trial_info' => [
+        'expires_at' => 'Триал до: :date',
+        'days_left' => 'Осталось дней: :days',
     ],
 ];

@@ -59,6 +59,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'subscription_is_expired',
         'queued_subscription_id',
         'balance_version',
+        'is_trial_period',
     ];
 
     /**
@@ -93,6 +94,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'subscription_time_end' => 'datetime',
             'subscription_is_expired' => 'boolean',
             'balance_version' => 'integer',
+            'is_trial_period' => 'boolean',
         ];
     }
 
@@ -116,6 +118,19 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function currentTariff(): array
     {
+        // Если активен триал период
+        if ($this->isTrialPeriod()) {
+            return [
+                'id' => null,
+                'name' => 'Trial',
+                'css_class' => 'trial',
+                'expires_at' => $this->subscription_time_end ? $this->subscription_time_end->format('d.m.Y') : null,
+                'status' => 'Триал активен',
+                'is_active' => true,
+                'is_trial' => true,
+            ];
+        }
+
         if (! $this->subscription_id || ! $this->subscription) {
             return [
                 'id' => null,
@@ -124,6 +139,7 @@ class User extends Authenticatable implements MustVerifyEmail
                 'expires_at' => null,
                 'status' => 'Не активно',
                 'is_active' => false,
+                'is_trial' => false,
             ];
         }
 
@@ -136,6 +152,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'expires_at' => $this->subscription_time_end ? $this->subscription_time_end->format('d.m.Y') : null,
             'status' => $isActive ? 'Активная' : 'Не активно',
             'is_active' => $isActive,
+            'is_trial' => false,
         ];
     }
 
@@ -439,5 +456,64 @@ class User extends Authenticatable implements MustVerifyEmail
             ->get()
             ->pluck('subscription')
             ->unique('id');
+    }
+
+    public function isTrialPeriod(): bool
+    {
+        // Если флаг триала не установлен, триал не активен
+        if (!$this->is_trial_period) {
+            return false;
+        }
+
+        // Если нет даты окончания триала, значит триал был установлен неправильно
+        if (!$this->subscription_time_end) {
+            return false;
+        }
+
+        // Проверяем, не истек ли триал
+        if ($this->subscription_time_end->isPast()) {
+            // Автоматически снимаем флаг триала если срок истек
+            $this->update([
+                'is_trial_period' => false,
+                'subscription_time_start' => null,
+                'subscription_time_end' => null,
+            ]);
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Активировать 7-дневный триал период
+     */
+    public function activateTrialPeriod(): void
+    {
+        $this->update([
+            'is_trial_period' => true,
+            'subscription_time_start' => now(),
+            'subscription_time_end' => now()->addDays(7),
+            'subscription_is_expired' => false,
+        ]);
+    }
+
+    /**
+     * Получить количество оставшихся дней триала
+     */
+    public function getTrialDaysLeft(): int
+    {
+        if (!$this->isTrialPeriod() || !$this->subscription_time_end) {
+            return 0;
+        }
+
+        // Простой подсчет: разница в днях между окончанием триала и сегодня
+        $now = now()->startOfDay();
+        $endDate = $this->subscription_time_end->startOfDay();
+
+        if ($endDate <= $now) {
+            return 0; // Триал истек
+        }
+
+        return (int) $now->diffInDays($endDate, false);
     }
 }

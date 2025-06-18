@@ -15,7 +15,14 @@
         @endphp
 
 
-
+        @if($user->isTrialPeriod())
+        <div class="header__tariff">
+            <x-tariff-link :type="'trial'" data-toggle="modal" data-target="#modal-current-subscription"
+                style="cursor: pointer;">
+                {{ __('tariffs.trial') }}
+            </x-tariff-link>
+        </div>
+        @else
         {{-- Current Subscription --}}
         <div class="header__tariff">
             <x-tariff-link :type="$currentTariff['css_class']" data-toggle="modal"
@@ -23,7 +30,7 @@
                 {{ $currentTariff['name'] }}
             </x-tariff-link>
         </div>
-
+        @endif
         {{-- User Balance --}}
         @if($user->available_balance > 0)
         <div class="header__balance">
