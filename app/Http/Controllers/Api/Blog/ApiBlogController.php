@@ -7,6 +7,7 @@ use App\Models\Frontend\Blog\BlogPost;
 use App\Models\Frontend\Blog\PostCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class ApiBlogController extends BaseBlogController
@@ -134,18 +135,18 @@ class ApiBlogController extends BaseBlogController
             case 'popular':
                 // Сортировка по популярности - используем субзапрос для избежания проблем с GROUP BY
                 $query->addSelect([
-                    'avg_rating' => \DB::table('ratings')
+                    'avg_rating' => DB::table('ratings')
                         ->selectRaw('COALESCE(AVG(rating), 0)')
                         ->whereColumn('ratings.blog_id', 'blog_posts.id')
                 ])
-                ->orderByRaw('((SELECT COALESCE(AVG(rating), 0) FROM ratings WHERE ratings.blog_id = blog_posts.id) * 0.7 + LOG(blog_posts.views_count + 1) * 0.3) ' . $direction);
+                    ->orderByRaw('((SELECT COALESCE(AVG(rating), 0) FROM ratings WHERE ratings.blog_id = blog_posts.id) * 0.7 + LOG(blog_posts.views_count + 1) * 0.3) ' . $direction);
                 break;
-                
+
             case 'views':
                 // Сортировка по количеству просмотров
                 $query->orderBy('views_count', $direction);
                 break;
-                
+
             case 'latest':
             default:
                 // Сортировка по дате создания
@@ -162,12 +163,12 @@ class ApiBlogController extends BaseBlogController
         // Если нет статей, но есть поисковый запрос или категория - показываем "нет результатов"
         if ($totalCount === 0) {
             $hasSearchOrCategory = $request->filled('search') || $request->filled('category');
-            
+
             if ($hasSearchOrCategory) {
                 // Не делаем редирект, позволяем показать "нет результатов"
                 return null;
             }
-            
+
             // Только если нет фильтров - редиректим на главную
             if ($request->ajax()) {
                 return response()->json([
@@ -405,7 +406,7 @@ class ApiBlogController extends BaseBlogController
         $limit = min($request->get('limit', 5), 50); // Ограничиваем максимум
 
         // Проверяем кеш
-        $cacheKey = 'blog_search_'.md5($query).'_'.$limit;
+        $cacheKey = 'blog_search_' . md5($query) . '_' . $limit;
         $cachedResult = Cache::get($cacheKey);
 
         if ($cachedResult) {

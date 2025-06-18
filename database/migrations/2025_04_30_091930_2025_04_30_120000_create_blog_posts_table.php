@@ -86,7 +86,7 @@ return new class extends Migration
             $table->text('content');
             $table->integer('rating')->nullable();
             $table->boolean('is_spam')->default(false);
-            $table->enum('status', CommentStatus::values())->default(CommentStatus::PENDING->value);
+            $table->enum('status', CommentStatus::values())->default(CommentStatus::APPROVED->value);
             $table->timestamps();
         });
 
