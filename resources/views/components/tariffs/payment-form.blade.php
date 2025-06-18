@@ -1,5 +1,5 @@
 <div class="row flex-row-reverse _offset80 justify-content-end">
-    <div class="col-12 col-md-12 col-lg-6">
+    <div id="subscription-payment-form-message" class="col-12 col-md-12 col-lg-6" style="display: none;">
         <div class="message mb-25">
             <span class="icon-i"></span>
             <div class="message__txt">{{ __('tariffs.payment_form.account_activation_message') }} <br>

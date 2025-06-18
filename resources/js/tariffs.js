@@ -95,14 +95,36 @@ document.addEventListener('DOMContentLoaded', function () {
   // Handle payment method selection
   const paymentMethods = document.querySelectorAll('input[name="payment"]');
   const hiddenInput = document.getElementById('selected_payment_method');
+  const paymentMessage = document.getElementById('subscription-payment-form-message');
+
+  // Функция для управления видимостью сообщения
+  function togglePaymentMessage(paymentMethod) {
+    if (!paymentMessage) return;
+
+    if (paymentMethod === 'USDT') {
+      paymentMessage.style.display = 'block';
+    } else {
+      paymentMessage.style.display = 'none';
+    }
+  }
 
   if (paymentMethods.length > 0 && hiddenInput) {
     paymentMethods.forEach(method => {
       method.addEventListener('change', function () {
         const methodName = this.value;
         hiddenInput.value = methodName;
+        togglePaymentMessage(methodName);
       });
     });
+
+    // Устанавливаем начальное состояние при загрузке страницы
+    const initialMethod = document.querySelector('input[name="payment"]:checked');
+    if (initialMethod) {
+      togglePaymentMessage(initialMethod.value);
+    } else {
+      // Если ничего не выбрано, скрываем сообщение
+      togglePaymentMessage('');
+    }
   }
 
   // Handle async payment form submission
