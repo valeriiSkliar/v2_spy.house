@@ -378,7 +378,41 @@ export function initBlogPageComponent() {
     // Навигационные методы - проксируем к AJAX менеджеру
     goToPage(page) {
       if (this.loading) return;
+      console.log(`Navigating to page ${page}`);
       this.loadContentWithManager(() => blogAjaxManager.goToPage(page));
+    },
+
+    // NEW: Специальные методы для пагинации
+    goToNextPage() {
+      if (this.loading) return;
+      const store = this.getStore();
+      if (store && store.pagination.hasNext) {
+        this.goToPage(store.pagination.currentPage + 1);
+      }
+    },
+
+    goToPrevPage() {
+      if (this.loading) return;
+      const store = this.getStore();
+      if (store && store.pagination.hasPrev) {
+        this.goToPage(store.pagination.currentPage - 1);
+      }
+    },
+
+    goToFirstPage() {
+      if (this.loading) return;
+      const store = this.getStore();
+      if (store && store.pagination.currentPage > 1) {
+        this.goToPage(1);
+      }
+    },
+
+    goToLastPage() {
+      if (this.loading) return;
+      const store = this.getStore();
+      if (store) {
+        this.goToPage(store.pagination.totalPages);
+      }
     },
 
     setCategory(categorySlug) {

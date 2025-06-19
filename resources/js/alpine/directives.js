@@ -156,6 +156,89 @@ export function initBlogNavigateDirective() {
 }
 
 /**
+ * NEW: Директива для пагинации блога
+ * Использование: x-blog-paginate="pageNumber" или x-blog-paginate.next x-blog-paginate.prev
+ */
+export function initBlogPaginateDirective() {
+  Alpine.directive('blog-paginate', (el, { modifiers, expression }, { evaluateLater, effect }) => {
+    // Создаем evaluate только если есть expression
+    const evaluate = expression ? evaluateLater(expression) : null;
+
+    const handleClick = e => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const store = Alpine.store('blog');
+      if (!store || store.loading) return;
+
+      if (modifiers.includes('next')) {
+        const nextPage = store.pagination.currentPage + 1;
+        if (nextPage <= store.pagination.totalPages) {
+          store.setFilters({ ...store.filters, page: nextPage });
+        }
+      } else if (modifiers.includes('prev')) {
+        const prevPage = store.pagination.currentPage - 1;
+        if (prevPage >= 1) {
+          store.setFilters({ ...store.filters, page: prevPage });
+        }
+      } else if (modifiers.includes('first')) {
+        store.setFilters({ ...store.filters, page: 1 });
+      } else if (modifiers.includes('last')) {
+        store.setFilters({ ...store.filters, page: store.pagination.totalPages });
+      } else if (expression && evaluate) {
+        // Конкретный номер страницы
+        evaluate(page => {
+          const targetPage = parseInt(page);
+          if (targetPage >= 1 && targetPage <= store.pagination.totalPages) {
+            store.setFilters({ ...store.filters, page: targetPage });
+          }
+        });
+      }
+    };
+
+    // Обработчик клика
+    el.addEventListener('click', handleClick);
+
+    // Обработчик клавиатуры для доступности
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        handleClick(e);
+      }
+    });
+
+    // Установка ARIA атрибутов для доступности
+    el.setAttribute('role', 'button');
+    el.setAttribute('tabindex', '0');
+
+    // Обновление состояния disabled
+    effect(() => {
+      const store = Alpine.store('blog');
+      if (!store) return;
+
+      let disabled = false;
+
+      if (modifiers.includes('next')) {
+        disabled = !store.pagination.hasNext || store.loading;
+      } else if (modifiers.includes('prev')) {
+        disabled = !store.pagination.hasPrev || store.loading;
+      } else if (modifiers.includes('first')) {
+        disabled = store.pagination.currentPage === 1 || store.loading;
+      } else if (modifiers.includes('last')) {
+        disabled = store.pagination.currentPage === store.pagination.totalPages || store.loading;
+      }
+
+      if (disabled) {
+        el.setAttribute('aria-disabled', 'true');
+        el.classList.add('disabled');
+      } else {
+        el.removeAttribute('aria-disabled');
+        el.classList.remove('disabled');
+      }
+    });
+  });
+}
+
+/**
  * NEW: Директива для отслеживания изменений URL
  * Использование: x-blog-url-watcher
  */
@@ -203,5 +286,6 @@ export function initBlogDirectives() {
   initBlogUrlSyncDirective();
   initBlogScrollRestoreDirective();
   initBlogNavigateDirective();
+  initBlogPaginateDirective();
   initBlogUrlWatcherDirective();
 }

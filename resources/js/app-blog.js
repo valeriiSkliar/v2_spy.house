@@ -13,6 +13,7 @@ import Alpine from 'alpinejs';
 
 // Blog store and components
 import { initBlogPageComponent } from './components/blogs/blog-page-component';
+import { initBlogPaginationComponent } from './components/blogs/blog-pagination-component';
 import { initBlogStore } from './stores/blog-store';
 
 // Blog managers and services
@@ -36,6 +37,9 @@ initBlogStore(Alpine);
 
 // Initialize blog page component
 initBlogPageComponent();
+
+// Initialize blog pagination component
+initBlogPaginationComponent();
 
 // Initialize Alpine extensions
 initBlogDirectives();

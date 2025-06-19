@@ -354,8 +354,36 @@ export class BlogAjaxManager {
     const store = this.getStore();
     if (!store) return;
 
+    console.log(`BlogAjaxManager: goToPage(${page})`);
+
     store.setFilters({ ...store.filters, page });
-    this.syncUrlWithStore();
+    this.loadFromCurrentState();
+  }
+
+  /**
+   * NEW: Загрузка контента на основе текущего состояния store
+   */
+  loadFromCurrentState() {
+    const store = this.getStore();
+    if (!store) return;
+
+    const container = document.getElementById('blog-articles-container');
+    if (!container) {
+      console.warn('Blog container not found');
+      return;
+    }
+
+    // Строим URL для запроса на основе текущих фильтров
+    const baseUrl = '/api/blog/list'; // используем API endpoint
+    const requestUrl = store.buildRequestURL(baseUrl);
+
+    console.log('Loading content from current state:', requestUrl);
+
+    this.loadContent(container, baseUrl, {
+      scrollToTop: true,
+      showLoader: true,
+      validateParams: true,
+    });
   }
 
   setCategory(categorySlug) {
