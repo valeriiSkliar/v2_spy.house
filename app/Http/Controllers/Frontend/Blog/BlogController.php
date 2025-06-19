@@ -98,14 +98,18 @@ class BlogController extends BaseBlogController
             ->with('children')
             ->firstOrFail();
 
+        $searchQuery = $request->input('search');
+        if ($searchQuery) {
+            $searchQuery = $this->sanitizeInput($searchQuery);
+        }
+
         $posts = BlogPost::whereHas('categories', function ($query) use ($category) {
             $query->where('post_categories.id', $category->id)
                 ->orWhere('post_categories.parent_id', $category->id);
         })
             ->where('is_published', true)
             ->with(['author', 'categories'])
-            ->when($request->input('search'), function ($query, $search) {
-                $search = $this->sanitizeInput($search);
+            ->when($searchQuery, function ($query, $search) {
                 $query->where('title', 'like', "%{$search}%")
                     ->orWhere('content', 'like', "%{$search}%");
             })
@@ -125,9 +129,9 @@ class BlogController extends BaseBlogController
             'sidebar' => $sidebar,
             'categories' => $this->getSidebarData(),
             'currentCategory' => $category,
-
+            'query' => $searchQuery,
             'filters' => [
-                'search' => $request->input('search'),
+                'search' => $searchQuery,
                 'category' => $category,
             ],
         ]);
