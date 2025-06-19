@@ -3,8 +3,6 @@ import {
   initCommentPagination,
   initReadOftenArticlesCarousel,
 } from '@/components/blogs';
-import { hideInElement, showInElement } from '../components/loader';
-import { updateBrowserUrl } from '../helpers/update-browser-url';
 import Alpine from 'alpinejs';
 import { blogAjaxManager } from '../managers/blog-ajax-manager';
 
@@ -34,7 +32,7 @@ function validateRequestParams() {
       console.warn('Store not available for validation, falling back to basic validation');
     }
   }
-  
+
   // Fallback validation without store
   const urlParams = new URLSearchParams(window.location.search);
   const page = parseInt(urlParams.get('page')) || 1;
@@ -44,7 +42,7 @@ function validateRequestParams() {
   if (page < 1 || page > 1000) return false;
   if (search && (search.length > 255 || search.length < 1)) return false;
   if (category && !/^[a-zA-Z0-9\-_]*$/.test(category)) return false;
-  
+
   return true;
 }
 
@@ -100,13 +98,13 @@ function handlePaginationClick(event) {
   }
 
   // Get the anchor element - event.target might be a child element
-  const linkElement = event.target.closest('a') || event.target;  
+  const linkElement = event.target.closest('a') || event.target;
   const href = linkElement.href;
   if (!href) {
     console.error('No href found on pagination link');
     return;
   }
-  
+
   const url = new URL(href);
   const page = parseInt(url.searchParams.get('page')) || 1;
 
@@ -266,7 +264,7 @@ function initSidebarState() {
       console.warn('Store not available for sidebar state, falling back to URL params');
     }
   }
-  
+
   // Fallback: get category from URL directly
   const urlParams = new URLSearchParams(window.location.search);
   const categorySlug = urlParams.get('category') || '';
@@ -372,7 +370,7 @@ function initFilterSearch(searchInput) {
       console.warn('Store not available for search init, falling back to URL params');
     }
   }
-  
+
   // Fallback: get search from URL directly if store not available
   if (!searchInput.value) {
     const urlParams = new URLSearchParams(window.location.search);
@@ -521,7 +519,7 @@ function handleSortingClick(button) {
   // Get current sort state from store or URL fallback
   let currentSort = 'latest';
   let currentDirection = 'desc';
-  
+
   if (typeof Alpine !== 'undefined' && Alpine.store) {
     try {
       const store = Alpine.store('blog');
@@ -627,7 +625,7 @@ function initPreloadSystem() {
       if (!e.target || typeof e.target.closest !== 'function') return;
 
       const paginationLink = e.target.closest('#blog-pagination-container .pagination-list a');
-      
+
       // Check if store is available and loading
       let isStoreLoading = false;
       if (typeof Alpine !== 'undefined' && Alpine.store) {
@@ -638,7 +636,7 @@ function initPreloadSystem() {
           // Continue without store check
         }
       }
-      
+
       if (!paginationLink || isStoreLoading) return;
 
       const url = new URL(paginationLink.href);
