@@ -289,6 +289,9 @@ export class BlogAjaxManager {
             // Destroy existing slick carousels
             this.destroyExistingCarousels();
 
+            // Reinitialize pagination click handlers
+            this.reinitializePagination();
+
             // Reinitialize carousels with delay
             setTimeout(() => {
                 // Import and call carousel initialization functions
@@ -304,6 +307,23 @@ export class BlogAjaxManager {
             }, 100);
         } catch (error) {
             console.error('Error reinitializing components:', error);
+        }
+    }
+
+    /**
+     * Reinitialize pagination click handlers after AJAX content load
+     */
+    reinitializePagination() {
+        try {
+            // Import and call pagination initialization function
+            import('../pages/blogs').then(({ initPaginationClickHandlers }) => {
+                initPaginationClickHandlers();
+                console.log('Pagination handlers reinitialized');
+            }).catch(() => {
+                console.warn('Could not reinitialize pagination handlers');
+            });
+        } catch (error) {
+            console.error('Error reinitializing pagination:', error);
         }
     }
 
