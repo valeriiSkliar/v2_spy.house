@@ -2,8 +2,6 @@ import {
   initAlsowInterestingArticlesCarousel,
   initCommentPagination,
   initReadOftenArticlesCarousel,
-  initReplyButtons,
-  initUniversalCommentForm,
 } from '@/components/blogs';
 import { hideInElement, showInElement } from '../components/loader';
 import { updateBrowserUrl } from '../helpers/update-browser-url';
@@ -883,13 +881,7 @@ document.addEventListener('DOMContentLoaded', function () {
   initResponsiveHandlers();
   initPreloadSystem();
 
-  // Инициализируем существующие компоненты блога
-  const commentForm = $('#universal-comment-form');
-  if (commentForm.length) {
-    initReplyButtons(commentForm);
-    initUniversalCommentForm(commentForm);
-  }
-
+  // Инициализируем компоненты комментариев
   initCommentPagination();
   initAlsowInterestingArticlesCarousel();
   initReadOftenArticlesCarousel();

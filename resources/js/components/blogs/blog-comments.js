@@ -1,5 +1,4 @@
 import { hideInElement, showInElement } from '@/components/loader';
-import { logger } from '@/helpers/logger';
 import { createAndShowToast } from '@/utils/uiHelpers';
 
 function setCommentMode(e) {
@@ -160,6 +159,71 @@ function reloadCommentsContent(container, slug, options = {}) {
 }
 
 /**
+ * Загрузка комментариев для пагинации (совместимость)
+ */
+function loadComments(slug, page) {
+  const commentForm = $('#universal-comment-form');
+  const commentsList = $('.comment-list');
+  const paginationContainer = $('.pagination-nav');
+  const commentContainer = $('#article-comments-container');
+
+  let loader = null;
+  if (commentContainer.length >= 1) {
+    loader = showInElement('article-comments-container', 'Loading comments...');
+  } else {
+    // Show loading indicator that matches site styling
+    commentsList.html(
+      '<div class="text-center py-4"><div class="message _bg _with-border">Loading comments...</div></div>'
+    );
+  }
+
+  // Используем новый API endpoint
+  fetch(`/blog/${slug}/comments?page=${page}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Update comments
+        $(commentsList).html(data.commentsHtml);
+
+        // Update pagination
+        $(paginationContainer).html(data.paginationHtml);
+
+        // Reinitialize pagination after DOM update
+        initCommentPagination();
+
+        // Reinitialize reply buttons
+        initReplyButtons(commentForm);
+
+        // Scroll to comments section
+        document.getElementById('comments').scrollIntoView({ behavior: 'smooth' });
+      } else {
+        if (loader) {
+          hideInElement(loader);
+        }
+        createAndShowToast('Error loading comments. Please try again.', 'error');
+        commentsList.html(
+          '<div class="message _bg _with-border _red">Error loading comments. Please try again.</div>'
+        );
+      }
+    })
+    .catch(error => {
+      if (loader) {
+        hideInElement(loader);
+      }
+      createAndShowToast('Error loading comments. Please try again.', 'error');
+      console.error('Error:', error);
+      commentsList.html(
+        '<div class="message _bg _with-border _red">Error loading comments. Please try again.</div>'
+      );
+    })
+    .finally(() => {
+      if (loader) {
+        hideInElement(loader);
+      }
+    });
+}
+
+/**
  * Обновление содержимого комментариев в DOM
  */
 function updateCommentsContent(data, container) {
@@ -197,69 +261,82 @@ function updateCommentsCounter(count) {
  */
 function reinitializeCommentsComponents() {
   const commentForm = $('#universal-comment-form');
-
-  // Переинициализируем кнопки ответа
-  initReplyButtons(commentForm);
-
-  // Переинициализируем обработчики пагинации
-  initCommentsPagination();
-
-  // КРИТИЧНО: Переинициализируем саму форму комментариев
   if (commentForm.length) {
     initUniversalCommentForm(commentForm);
+    initReplyButtons(commentForm);
   }
+
+  // Переинициализируем пагинацию
+  initCommentPagination();
 }
 
 /**
- * Инициализация обработчиков пагинации комментариев
+ * Инициализация пагинации комментариев
  */
-function initCommentsPagination() {
-  const paginationLinks = document.querySelectorAll(
-    '#comments-pagination-container .pagination-link'
-  );
+function initCommentPagination() {
+  const blogLayout = $('.blog-layout');
+  if (blogLayout.length < 1) return;
+  const article = $('.article._big._single');
+  if (article.length < 1) return;
 
-  paginationLinks.forEach(link => {
-    // Удаляем старые обработчики
-    link.removeEventListener('click', handlePaginationClick);
+  const commentsList = $('.comment-list');
+  const paginationLinks = $('.pagination-link');
+  const commentsContainer = $('#comments');
 
-    // Добавляем новые если ссылка не заблокирована
-    if (!link.classList.contains('disabled')) {
-      link.addEventListener('click', handlePaginationClick);
-    }
+  if (!commentsList || !commentsContainer) return;
+
+  paginationLinks.each(function () {
+    if ($(this).hasClass('disabled')) return;
+
+    // Убираем старые обработчики перед добавлением новых
+    $(this).off('click');
+
+    $(this).on('click', function (e) {
+      e.preventDefault();
+
+      const slug = window.location.pathname.split('/').pop();
+      let page = this.dataset.page;
+
+      // For number pagination links
+      if (!isNaN(parseInt(page))) {
+        loadComments(slug, parseInt(page));
+        return;
+      }
+
+      // Handle prev/next links that have URLs
+      if (page && page.includes('?')) {
+        const urlParams = new URLSearchParams(page.split('?')[1]);
+        const pageParam = urlParams.get('page');
+        if (pageParam) {
+          loadComments(slug, parseInt(pageParam));
+          return;
+        }
+      }
+
+      // Default to page 1 if we couldn't extract a page number
+      loadComments(slug, 1);
+      console.log('loadComments');
+    });
   });
 }
 
 /**
- * Обработчик клика по пагинации
+ * Обработка кликов по пагинации
  */
 function handlePaginationClick(e) {
   e.preventDefault();
+  const target = e.currentTarget;
+  const container = document.querySelector('#comments');
 
-  const link = e.currentTarget;
-  const page = link.dataset.page;
+  if (!container) return;
+
   const slug = window.location.pathname.split('/').pop();
-  const commentsContainer = document.getElementById('article-comments-container');
+  const page = parseInt(target.dataset.page) || 1;
 
-  if (page && commentsContainer) {
-    let pageNumber = 1;
-
-    // Извлекаем номер страницы
-    if (!isNaN(parseInt(page))) {
-      pageNumber = parseInt(page);
-    } else if (page.includes('?')) {
-      const urlParams = new URLSearchParams(page.split('?')[1]);
-      const pageParam = urlParams.get('page');
-      if (pageParam) {
-        pageNumber = parseInt(pageParam);
-      }
-    }
-
-    reloadCommentsContent(commentsContainer, slug, { page: pageNumber });
-  }
+  reloadCommentsContent(container, slug, { page, scrollToTop: true });
 }
 
 export function initUniversalCommentForm(commentForm) {
-  logger('initUniversalCommentForm', commentForm, { debug: true });
   if (!commentForm) return;
 
   // Убираем старые обработчики перед добавлением новых
@@ -343,7 +420,6 @@ export function initUniversalCommentForm(commentForm) {
 }
 
 export function initReplyButtons(commentForm) {
-  logger('initReplyButtons', commentForm, { debug: true });
   if (!commentForm) return;
 
   const replyButtons = $('.reply-btn');
@@ -356,5 +432,18 @@ export function initReplyButtons(commentForm) {
   });
 }
 
-// Экспортируем новые функции для использования в других компонентах
-export { reloadCommentsContent, updateCommentsContent, updateCommentsCounter };
+// Инициализация при загрузке DOM
+document.addEventListener('DOMContentLoaded', function () {
+  initCommentPagination();
+});
+
+// Экспорт всех функций
+export {
+  handlePaginationClick,
+  initCommentPagination,
+  loadComments,
+  reinitializeCommentsComponents,
+  reloadCommentsContent,
+  updateCommentsContent,
+  updateCommentsCounter,
+};
