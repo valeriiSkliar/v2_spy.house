@@ -12,12 +12,7 @@ Route::prefix('blog')->name('blog.')->middleware('blog.validate.params')->group(
 });
 
 Route::prefix('blog')->name('blog.')->middleware(['auth', 'throttle:10,1'])->group(function () {
-    Route::post('/{slug}/comment', [BlogController::class, 'storeComment'])->name('comment.store');
     Route::post('/{slug}/rate', [BlogController::class, 'rateArticle'])->name('rate');
-});
-
-Route::prefix('blog')->name('blog.')->middleware(['throttle:20,1'])->group(function () {
-    Route::get('/{slug}/comments', [BlogController::class, 'paginateComments'])->name('comments.paginate');
 });
 
 // API routes for blog
@@ -32,6 +27,12 @@ Route::prefix('api/blog')
                 Route::post('{slug}/comment', [ApiBlogController::class, 'storeComment'])->name('comment.store');
                 Route::post('{slug}/reply', [ApiBlogController::class, 'storeReply'])->name('reply.store');
                 Route::get('{slug}/reply/{comment_id}', [ApiBlogController::class, 'getReplyForm'])->name('get-reply-form');
-                Route::get('{slug}/comments', [BlogController::class, 'paginateComments'])->name('comments.get');
+                Route::get('{slug}/comments', [ApiBlogController::class, 'getComments'])->name('comments.get');
             });
     });
+
+// Backward compatibility routes - redirect to API
+Route::prefix('blog')->name('blog.')->group(function () {
+    Route::post('/{slug}/comment', [ApiBlogController::class, 'storeComment'])->name('comment.store')->middleware(['auth', 'throttle:10,1']);
+    Route::get('/{slug}/comments', [ApiBlogController::class, 'paginateComments'])->name('comments.paginate')->middleware(['throttle:20,1']);
+});

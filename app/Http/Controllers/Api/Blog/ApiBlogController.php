@@ -605,6 +605,30 @@ class ApiBlogController extends BaseBlogController
     }
 
     /**
+     * Метод для совместимости с фронтендом (проксирует к getComments)
+     * Обеспечивает совместимость со старым форматом ответа BlogController.paginateComments
+     */
+    public function paginateComments(Request $request, string $slug)
+    {
+        $post = BlogPost::where('slug', $slug)
+            ->where('is_published', true)
+            ->firstOrFail();
+
+        $page = (int) $request->get('page', 1);
+        $commentsData = $this->getCommentsData($post, $page);
+
+        // Формат ответа совместимый со старым BlogController
+        return response()->json([
+            'success' => true,
+            'commentsHtml' => $commentsData['html'],
+            'paginationHtml' => $commentsData['pagination'],
+            'currentPage' => $commentsData['currentPage'],
+            'lastPage' => $commentsData['totalPages'],
+            'total' => $commentsData['commentsCount'],
+        ]);
+    }
+
+    /**
      * Получение данных комментариев для AJAX ответов
      */
     private function getCommentsData(BlogPost $post, int $page = 1, string $sort = 'latest'): array
