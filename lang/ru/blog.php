@@ -11,6 +11,7 @@ return [
         'comment_submitted_successfully' => 'Комментарий успешно отправлен и ожидает модерации.',
         'comment_approved_successfully' => 'Комментарий успешно одобрен.',
         'comment_deleted_successfully' => 'Комментарий успешно удален.',
+        'rating_submitted_successfully' => 'Оценка успешно отправлена.',
     ],
     'errors' => [
         'invalid_parent_comment' => 'Операция недоступна.',

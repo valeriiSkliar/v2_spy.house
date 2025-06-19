@@ -222,6 +222,7 @@ class BlogController extends BaseBlogController
             'average_rating' => $averageRating,
             'user_rating' => $request->rating,
             'is_rated' => true,
+            'message' => __('blog.messages.rating_submitted_successfully'),
         ]);
     }
 
