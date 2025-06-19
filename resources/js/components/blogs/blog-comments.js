@@ -177,8 +177,8 @@ function loadComments(slug, page) {
     );
   }
 
-  // Используем новый API endpoint
-  fetch(`/blog/${slug}/comments?page=${page}`)
+  // Используем унифицированный API endpoint
+  fetch(`/api/blog/${slug}/comments?page=${page}`)
     .then(response => response.json())
     .then(data => {
       if (data.success) {
@@ -361,7 +361,7 @@ export function initUniversalCommentForm(commentForm) {
     const formData = new FormData(this);
     const actionUrl = form.attr('action');
 
-    // Заменяем URL на API endpoint
+    // Используем унифицированный API endpoint
     const slug = window.location.pathname.split('/').pop();
     const apiUrl = `/api/blog/${slug}/comment`;
 

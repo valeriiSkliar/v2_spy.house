@@ -11,15 +11,6 @@ Route::prefix('api')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->name('api.login');
     Route::post('auth/refresh', [AuthController::class, 'refreshToken'])->name('api.auth.refresh');
 
-    // Public routes
-    // Route::get('blog/search', [ApiBlogController::class, 'search'])
-    //     ->middleware('web')
-    //     ->name('api.blog.search');
-
-    // Route::get('blog/list', [ApiBlogController::class, 'ajaxList'])
-    //     ->middleware('web')
-    //     ->name('api.blog.list');
-
     // Token refresh endpoint - works with cookies and without authentication
     Route::post('auth/refresh-token', [TokenController::class, 'refreshToken'])->name('api.auth.refresh-token');
 
