@@ -96,6 +96,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'subscription_is_expired' => 'boolean',
             'balance_version' => 'integer',
             'is_trial_period' => 'boolean',
+            'trial_period_used' => 'boolean',
         ];
     }
 

@@ -95,9 +95,61 @@ class EmailVerificationController extends Controller
             ], 422);
         }
 
+        return $this->processEmailVerification($user, $request);
+    }
+
+    /**
+     * Handle simple email verification for tests (code as string)
+     */
+    public function verifySimple(Request $request): JsonResponse
+    {
+        $request->validate([
+            'verification_code' => 'required|string|size:6',
+        ]);
+
+        $user = $request->user();
+
+        if ($user->hasVerifiedEmail()) {
+            return response()->json([
+                'success' => true,
+                'message' => __('auth.email_verification.already_verified'),
+                'redirect' => route('profile.settings', absolute: false) . '?verified=1',
+            ]);
+        }
+
+        // Получаем код из запроса
+        $verificationCode = $request->input('verification_code');
+
+        // Получаем сохраненный код из кэша
+        $cachedCode = Cache::get('email_verification_code:' . $user->id);
+
+        if (! $cachedCode) {
+            return response()->json([
+                'success' => false,
+                'message' => __('auth.email_verification.code_expired'),
+            ], 422);
+        }
+
+        if ($verificationCode !== $cachedCode) {
+            return response()->json([
+                'success' => false,
+                'message' => __('auth.email_verification.invalid_code'),
+            ], 422);
+        }
+
+        return $this->processEmailVerification($user, $request);
+    }
+
+    /**
+     * Process email verification logic
+     */
+    private function processEmailVerification($user, Request $request): JsonResponse
+    {
         if ($user->markEmailAsVerified()) {
             // Активируем триал период на 7 дней только если он еще не был использован
-            if (!$user->hasActiveSubscription() && !$user->isTrialPeriod() && !$user->hasTrialPeriodBeenUsed()) {
+            $hasActiveSubscriptionPeriod = $user->subscription_time_end && $user->subscription_time_end > now() && !$user->subscription_is_expired;
+
+            if (!$hasActiveSubscriptionPeriod && !$user->isTrialPeriod() && !$user->hasTrialPeriodBeenUsed()) {
                 $user->activateTrialPeriod();
             }
 
