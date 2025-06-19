@@ -32,7 +32,7 @@ class WelcomeInAppNotification extends Notification implements ShouldQueue
     public function toDatabase(object $notifiable): array
     {
         return [
-            'title' => __('notifications.welcome.title'),
+            'title' => __('notifications.welcome.title', ['app_name' => config('app.name')]),
             'message' => __('notifications.welcome.message', [
                 'name' => $notifiable->name ?? $notifiable->login,
                 'app_name' => config('app.name'),
