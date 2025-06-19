@@ -1,5 +1,6 @@
 import { hideInElement, showInElement } from '@/components/loader';
 import { createAndShowToast } from '@/utils/uiHelpers';
+import { blogAPI } from '../fetcher/ajax-fetcher';
 
 function setCommentMode(e) {
   e.preventDefault();
@@ -109,26 +110,9 @@ function reloadCommentsContent(container, slug, options = {}) {
     showInElement(container);
   }
 
-  // Строим URL для получения комментариев
-  const url = `/api/blog/${slug}/comments`;
-  const params = new URLSearchParams({ page, sort });
-
-  fetch(`${url}?${params.toString()}`, {
-    method: 'GET',
-    headers: {
-      'X-Requested-With': 'XMLHttpRequest',
-      'X-CSRF-TOKEN':
-        document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    },
-  })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      return response.json();
-    })
+  // Используем централизованный blogAPI вместо прямого fetch
+  blogAPI
+    .loadComments(slug, { page, sort })
     .then(data => {
       if (data.success) {
         // Обновляем содержимое комментариев
@@ -177,9 +161,9 @@ function loadComments(slug, page) {
     );
   }
 
-  // Используем унифицированный API endpoint
-  fetch(`/api/blog/${slug}/comments?page=${page}`)
-    .then(response => response.json())
+  // Используем централизованный blogAPI вместо прямого fetch
+  blogAPI
+    .loadComments(slug, { page })
     .then(data => {
       if (data.success) {
         // Update comments
@@ -200,21 +184,12 @@ function loadComments(slug, page) {
         if (loader) {
           hideInElement(loader);
         }
-        createAndShowToast('Error loading comments. Please try again.', 'error');
-        commentsList.html(
-          '<div class="message _bg _with-border _red">Error loading comments. Please try again.</div>'
-        );
+        createAndShowToast(data.message || 'Ошибка загрузки комментариев', 'error');
       }
     })
     .catch(error => {
-      if (loader) {
-        hideInElement(loader);
-      }
-      createAndShowToast('Error loading comments. Please try again.', 'error');
-      console.error('Error:', error);
-      commentsList.html(
-        '<div class="message _bg _with-border _red">Error loading comments. Please try again.</div>'
-      );
+      console.error('Error loading comments:', error);
+      createAndShowToast('Ошибка загрузки комментариев', 'error');
     })
     .finally(() => {
       if (loader) {
@@ -361,20 +336,11 @@ export function initUniversalCommentForm(commentForm) {
     const formData = new FormData(this);
     const actionUrl = form.attr('action');
 
-    // Используем унифицированный API endpoint
+    // Используем централизованный blogAPI для отправки комментария
     const slug = window.location.pathname.split('/').pop();
-    const apiUrl = `/api/blog/${slug}/comment`;
 
-    fetch(apiUrl, {
-      method: 'POST',
-      body: formData,
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest',
-        'X-CSRF-TOKEN':
-          document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-      },
-    })
-      .then(response => response.json())
+    blogAPI
+      .submitComment(slug, formData)
       .then(data => {
         if (data.success) {
           createAndShowToast(data.message, 'success');
@@ -409,7 +375,9 @@ export function initUniversalCommentForm(commentForm) {
       })
       .catch(error => {
         console.error('Error submitting comment:', error);
-        createAndShowToast('Ошибка отправки комментария', 'error');
+        // Используем централизованное сообщение об ошибке из blogAPI
+        const errorMessage = error.message || 'Ошибка отправки комментария';
+        createAndShowToast(errorMessage, 'error');
       })
       .finally(() => {
         // Re-enable submit button

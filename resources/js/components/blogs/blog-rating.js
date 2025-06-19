@@ -1,4 +1,5 @@
 import { createAndShowToast } from '@/utils';
+import { blogAPI } from '../fetcher/ajax-fetcher';
 
 const updateRating = (rating, userRating = null) => {
   const ratingValue = document.querySelector('.article-rate__value .font-weight-600');
@@ -32,21 +33,8 @@ const updateRating = (rating, userRating = null) => {
 };
 
 export function submitRating(slug, rating) {
-  fetch(`/blog/${slug}/rate`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-    },
-    body: JSON.stringify({ rating: rating }),
-  })
-    .then(response => {
-      if (response.redirected && response.url.includes('login')) {
-        window.location.href = response.url;
-        return;
-      }
-      return response.json();
-    })
+  blogAPI
+    .submitRating(slug, rating)
     .then(data => {
       if (data.success) {
         // Update UI with average rating and user rating
@@ -59,7 +47,8 @@ export function submitRating(slug, rating) {
     })
     .catch(error => {
       console.error('Error:', error);
-      createAndShowToast('Error saving rating. Please try again.', 'error');
+      const errorMessage = error.message || 'Error saving rating. Please try again.';
+      createAndShowToast(errorMessage, 'error');
     });
 }
 
