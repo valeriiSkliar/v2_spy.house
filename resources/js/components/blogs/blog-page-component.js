@@ -1,7 +1,6 @@
 /**
  * Blog Page Alpine Component
- * Легкая обертка над blogStore - единый источник данных
- * Отвечает только за инициализацию серверных данных и интеграцию с шаблоном
+ * Единый компонент для страницы блога с инициализацией серверных данных
  */
 
 import Alpine from 'alpinejs';
@@ -13,59 +12,164 @@ export function initBlogPageComponent() {
     initFromServer(serverData) {
       console.log('Initializing blog page from server data...', serverData);
 
+      // Валидация входных данных
+      if (!serverData || typeof serverData !== 'object') {
+        console.error('Invalid server data provided:', serverData);
+        return;
+      }
+
       const store = this.getStore();
       if (!store) {
         console.error('Blog store not available');
         return;
       }
 
-      // Устанавливаем данные статей в store
-      store.setArticles(serverData.articles || []);
+      try {
+        // Валидация и нормализация данных
+        const validatedData = this.validateServerData(serverData);
 
-      // Устанавливаем статистику
-      store.setStats({
-        totalCount: serverData.totalCount || 0,
-        currentCount: (serverData.articles || []).length + (serverData.heroArticle ? 1 : 0),
-      });
+        // Устанавливаем данные статей в store
+        store.setArticles(validatedData.articles);
 
-      // Устанавливаем пагинацию
-      store.setPagination({
-        currentPage: serverData.currentPage || 1,
-        totalPages: serverData.totalPages || 1,
-        hasPagination: serverData.hasPagination || false,
-        hasNext: (serverData.currentPage || 1) < (serverData.totalPages || 1),
-        hasPrev: (serverData.currentPage || 1) > 1,
-      });
+        // Устанавливаем статистику
+        store.setStats({
+          totalCount: validatedData.totalCount,
+          currentCount: validatedData.currentCount,
+        });
 
-      // Устанавливаем фильтры
-      store.setFilters({
-        search: serverData.filters?.search || '',
-        category: serverData.filters?.category || '',
-        sort: serverData.filters?.sort || 'latest',
-        direction: serverData.filters?.direction || 'desc',
-        page: serverData.currentPage || 1,
-      });
+        // Устанавливаем пагинацию
+        store.setPagination({
+          currentPage: validatedData.currentPage,
+          totalPages: validatedData.totalPages,
+          hasPagination: validatedData.hasPagination,
+          hasNext: validatedData.currentPage < validatedData.totalPages,
+          hasPrev: validatedData.currentPage > 1,
+        });
 
-      // Устанавливаем категории для сайдбара
-      store.setCategories(serverData.categories || []);
+        // Устанавливаем фильтры
+        store.setFilters({
+          search: validatedData.filters.search,
+          category: validatedData.filters.category,
+          sort: validatedData.filters.sort,
+          direction: validatedData.filters.direction,
+          page: validatedData.currentPage,
+        });
 
-      // Устанавливаем популярные посты
-      store.setPopularPosts(serverData.popularPosts || []);
+        // Устанавливаем категории для сайдбара
+        store.setCategories(validatedData.categories);
 
-      // Сохраняем heroArticle и URL отдельно (они не входят в основной store)
-      this.heroArticle = serverData.heroArticle || null;
-      this.ajaxUrl = serverData.ajaxUrl || '';
+        // Устанавливаем популярные посты
+        store.setPopularPosts(validatedData.popularPosts);
 
-      // Синхронизируем с AJAX менеджером
-      this.syncWithAjaxManager();
+        // Сохраняем heroArticle и URL отдельно (они не входят в основной store)
+        this.heroArticle = validatedData.heroArticle;
+        this.ajaxUrl = validatedData.ajaxUrl;
 
-      console.log('Blog page initialized:', {
-        articlesCount: store.articles.length,
-        heroArticle: this.heroArticle,
-        filters: store.filters,
-        currentPage: store.pagination.currentPage,
-        totalPages: store.pagination.totalPages,
-      });
+        // Синхронизируем с AJAX менеджером
+        this.syncWithAjaxManager();
+
+        console.log('Blog page initialized successfully:', {
+          articlesCount: store.articles.length,
+          heroArticle: this.heroArticle,
+          filters: store.filters,
+          currentPage: store.pagination.currentPage,
+          totalPages: store.pagination.totalPages,
+        });
+      } catch (error) {
+        console.error('Error initializing blog page:', error);
+        this.handleInitializationError(error);
+      }
+    },
+
+    // Валидация серверных данных
+    validateServerData(serverData) {
+      const defaults = {
+        articles: [],
+        heroArticle: null,
+        totalCount: 0,
+        currentPage: 1,
+        totalPages: 1,
+        hasPagination: false,
+        filters: {
+          search: '',
+          category: '',
+          sort: 'latest',
+          direction: 'desc',
+        },
+        categories: [],
+        popularPosts: [],
+        ajaxUrl: '',
+      };
+
+      const validated = { ...defaults };
+
+      // Валидация массивов
+      if (Array.isArray(serverData.articles)) {
+        validated.articles = serverData.articles;
+      }
+      if (Array.isArray(serverData.categories)) {
+        validated.categories = serverData.categories;
+      }
+      if (Array.isArray(serverData.popularPosts)) {
+        validated.popularPosts = serverData.popularPosts;
+      }
+
+      // Валидация чисел
+      if (typeof serverData.totalCount === 'number' && serverData.totalCount >= 0) {
+        validated.totalCount = serverData.totalCount;
+      }
+      if (typeof serverData.currentPage === 'number' && serverData.currentPage >= 1) {
+        validated.currentPage = serverData.currentPage;
+      }
+      if (typeof serverData.totalPages === 'number' && serverData.totalPages >= 1) {
+        validated.totalPages = serverData.totalPages;
+      }
+
+      // Валидация boolean
+      if (typeof serverData.hasPagination === 'boolean') {
+        validated.hasPagination = serverData.hasPagination;
+      }
+
+      // Валидация объектов
+      if (serverData.heroArticle && typeof serverData.heroArticle === 'object') {
+        validated.heroArticle = serverData.heroArticle;
+      }
+      if (serverData.filters && typeof serverData.filters === 'object') {
+        validated.filters = { ...defaults.filters, ...serverData.filters };
+      }
+
+      // Валидация строк
+      if (typeof serverData.ajaxUrl === 'string' && serverData.ajaxUrl.length > 0) {
+        validated.ajaxUrl = serverData.ajaxUrl;
+      }
+
+      // Вычисляем currentCount
+      validated.currentCount = validated.articles.length + (validated.heroArticle ? 1 : 0);
+
+      return validated;
+    },
+
+    // Обработка ошибок инициализации
+    handleInitializationError(error) {
+      console.error('Blog initialization failed:', error);
+
+      // Устанавливаем минимальное рабочее состояние
+      const store = this.getStore();
+      if (store) {
+        store.setArticles([]);
+        store.setStats({ totalCount: 0, currentCount: 0 });
+        store.setPagination({
+          currentPage: 1,
+          totalPages: 1,
+          hasPagination: false,
+          hasNext: false,
+          hasPrev: false,
+        });
+        store.resetFilters();
+      }
+
+      this.heroArticle = null;
+      this.ajaxUrl = '';
     },
 
     // Локальные данные (не входят в store)
@@ -91,39 +195,48 @@ export function initBlogPageComponent() {
 
     // Проксируем свойства из store для удобства использования в шаблонах
     get loading() {
-      return this.getStore()?.loading || false;
+      const store = this.getStore();
+      return store ? store.loading : false;
     },
 
     get articles() {
-      return this.getStore()?.articles || [];
+      const store = this.getStore();
+      return store ? store.articles : [];
     },
 
     get totalCount() {
-      return this.getStore()?.stats.totalCount || 0;
+      const store = this.getStore();
+      return store ? store.stats.totalCount : 0;
     },
 
     get currentPage() {
-      return this.getStore()?.pagination.currentPage || 1;
+      const store = this.getStore();
+      return store ? store.pagination.currentPage : 1;
     },
 
     get totalPages() {
-      return this.getStore()?.pagination.totalPages || 1;
+      const store = this.getStore();
+      return store ? store.pagination.totalPages : 1;
     },
 
     get hasPagination() {
-      return this.getStore()?.pagination.hasPagination || false;
+      const store = this.getStore();
+      return store ? store.pagination.hasPagination : false;
     },
 
     get filters() {
-      return this.getStore()?.filters || {};
+      const store = this.getStore();
+      return store ? store.filters : {};
     },
 
     get categories() {
-      return this.getStore()?.categories || [];
+      const store = this.getStore();
+      return store ? store.categories : [];
     },
 
     get popularPosts() {
-      return this.getStore()?.popularPosts || [];
+      const store = this.getStore();
+      return store ? store.popularPosts : [];
     },
 
     // Геттеры для шаблонов

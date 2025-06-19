@@ -12,7 +12,6 @@ import persist from '@alpinejs/persist';
 import Alpine from 'alpinejs';
 
 // Blog store and components
-import './components/blogs/blog-alpine-component';
 import { initBlogPageComponent } from './components/blogs/blog-page-component';
 import { initBlogStore } from './stores/blog-store';
 
