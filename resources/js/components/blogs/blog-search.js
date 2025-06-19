@@ -332,7 +332,7 @@ class BlogSearchManager {
 
   /**
    * Обработка отправки формы поиска
-   * Зачем: переход на страницу результатов поиска
+   * Зачем: выполнение поиска через API
    */
   handleSearchSubmit() {
     const query = this.currentSearchQuery.trim();
@@ -342,11 +342,8 @@ class BlogSearchManager {
       return;
     }
 
-    // Переходим на страницу поиска
-    const url = new URL(window.location.href);
-    url.pathname = '/blog/search';
-    url.searchParams.set('q', query);
-    window.location.href = url.toString();
+    // Выполняем поиск через API
+    this.performSearch(query);
   }
 
   /**

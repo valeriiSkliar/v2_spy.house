@@ -164,51 +164,7 @@ class BlogController extends BaseBlogController
         ];
     }
 
-    public function search(Request $request)
-    {
-        $query = $request->input('q');
-        if (! $query) {
-            return redirect()->route('blog.index');
-        }
-        $search = $this->sanitizeInput($query);
-        $results = $this->getSearchResults($search);
 
-        return view($this->indexView, [
-            'articles' => $results,
-            'heroArticle' => $results->first(),
-            'query' => $query,
-            'categories' => $this->getSidebarData(),
-            'currentCategory' => null,
-            'filters' => $request->only(['search', 'category', 'sort']),
-            'currentPage' => $request->get('page', 1),
-            'totalPages' => ceil($results->count() / 12),
-            'breadcrumbs' => [
-                ['title' => __('blogs.breadcrumbs.blog'), 'url' => route('blog.index')],
-                ['title' => __('blogs.breadcrumbs.search_results', ['query' => $query]), 'url' => route('blog.search', ['q' => $query])],
-            ],
-        ]);
-    }
-
-    private function getSearchResults(string $query)
-    {
-
-        $results = BlogPost::query()
-            ->where('is_published', true)
-            ->where('title', 'like', "%{$query}%")
-            ->orderBy('created_at', 'desc')
-            ->with(['author', 'categories'])
-            ->paginate(12);
-
-        return $results;
-    }
-
-    public function searchApiResults(string $query)
-    {
-
-        $results = $this->getSearchResults($query);
-
-        return $results;
-    }
 
     public function rateArticle(Request $request, string $slug)
     {

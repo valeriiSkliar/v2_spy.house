@@ -45,7 +45,6 @@ class BlogParametersValidation
         $blogRoutes = [
             'blog.index',
             'blog.category',
-            'blog.search',
             'api.blog.list',
             'api.blog.search',
             'api.blog.comments.get',
