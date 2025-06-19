@@ -79,34 +79,45 @@ function initPaginationClickHandlers() {
 /**
  * Обработка кликов по ссылкам пагинации
  * Зачем: AJAX навигация без перезагрузки страницы
- * REFACTORED: Now uses store and ajax manager with safety checks
+ * MIGRATED: Now uses centralized store for state management
  */
 function handlePaginationClick(event) {
   event.preventDefault();
 
-  // Check if store is available and loading
-  if (typeof Alpine !== 'undefined' && Alpine.store) {
-    try {
-      const store = Alpine.store('blog');
-      if (store && store.loading) {
-        console.log('Request already in progress, ignoring click');
-        return;
-      }
-    } catch (e) {
-      // Continue without store check
-    }
-  }
-
-  // Get the anchor element - event.target might be a child element
-  const linkElement = event.target.closest('a') || event.target;
-  const href = linkElement.href;
-  if (!href) {
-    console.error('No href found on pagination link');
+  // Получаем store - обязательно для новой архитектуры
+  if (typeof Alpine === 'undefined' || !Alpine.store) {
+    console.error('Alpine store not available for pagination');
     return;
   }
 
-  const url = new URL(href);
-  const page = parseInt(url.searchParams.get('page')) || 1;
+  const store = Alpine.store('blog');
+  if (!store) {
+    console.error('Blog store not available');
+    return;
+  }
+
+  // Проверяем состояние загрузки через store
+  if (store.loading) {
+    console.log('Request already in progress, ignoring pagination click');
+    return;
+  }
+
+  // Получаем номер страницы из data-page атрибута или href
+  const linkElement = event.target.closest('a') || event.target;
+  let page;
+
+  // Приоритет: сначала data-page, потом href
+  if (linkElement.dataset.page) {
+    page = parseInt(linkElement.dataset.page);
+  } else {
+    const href = linkElement.href;
+    if (!href) {
+      console.error('No href or data-page found on pagination link');
+      return;
+    }
+    const url = new URL(href);
+    page = parseInt(url.searchParams.get('page')) || 1;
+  }
 
   // Валидация номера страницы
   if (page < 1 || page > 1000) {
@@ -114,6 +125,15 @@ function handlePaginationClick(event) {
     return;
   }
 
+  console.log('Navigating to page:', page, 'via store');
+
+  // Обновляем состояние через store (реактивно)
+  store.setFilters({
+    ...store.filters,
+    page,
+  });
+
+  // Получаем контейнер и URL для загрузки
   const blogContainer = document.getElementById('blog-articles-container');
   const ajaxUrl = blogContainer?.getAttribute('data-blog-ajax-url');
 
@@ -122,12 +142,7 @@ function handlePaginationClick(event) {
     return;
   }
 
-  console.log('Navigating to page:', page);
-
-  // Use ajax manager navigation
-  blogAjaxManager.goToPage(page);
-
-  // Перезагружаем контент
+  // Запускаем загрузку через manager (он использует store состояние)
   reloadBlogContent(blogContainer, ajaxUrl);
 }
 
@@ -152,25 +167,34 @@ function initCategoryFiltering() {
 
     event.preventDefault();
 
-    // Check if store is available and loading
-    if (typeof Alpine !== 'undefined' && Alpine.store) {
-      try {
-        const store = Alpine.store('blog');
-        if (store && store.loading) {
-          console.log('Request already in progress, ignoring category click');
-          return;
-        }
-      } catch (e) {
-        // Continue without store check
-      }
+    // Получаем store - обязательно для новой архитектуры
+    if (typeof Alpine === 'undefined' || !Alpine.store) {
+      console.error('Alpine store not available for categories');
+      return;
+    }
+
+    const store = Alpine.store('blog');
+    if (!store) {
+      console.error('Blog store not available');
+      return;
+    }
+
+    // Проверяем состояние загрузки через store
+    if (store.loading) {
+      console.log('Request already in progress, ignoring category click');
+      return;
     }
 
     const categorySlug = categoryLink.getAttribute('data-category-slug') || '';
 
-    console.log('Category clicked:', categorySlug || 'all');
+    console.log('Category clicked:', categorySlug || 'all', 'via store');
 
-    // Use ajax manager for category navigation
-    blogAjaxManager.setCategory(categorySlug);
+    // Обновляем состояние через store (реактивно) - сбрасываем страницу на 1
+    store.setFilters({
+      ...store.filters,
+      category: categorySlug,
+      page: 1, // Сбрасываем на первую страницу при смене категории
+    });
 
     // Обновляем активное состояние в сайдбаре (preserve existing DOM approach)
     updateCategorySidebarState(categorySlug);
@@ -218,21 +242,36 @@ function initBlogPagination() {
   // Обработчик навигации браузера (кнопки назад/вперед)
   window.addEventListener('popstate', function () {
     if (blogContainer && ajaxUrl) {
-      // Check if store is available and loading
+      // Проверяем store и синхронизируем состояние с URL
       if (typeof Alpine !== 'undefined' && Alpine.store) {
         try {
           const store = Alpine.store('blog');
-          if (store && store.loading) {
+          if (store) {
+            // Предотвращаем одновременные запросы
+            if (store.loading) {
+              return;
+            }
+
+            console.log('Popstate event triggered, syncing store with URL');
+
+            // Синхронизируем store с текущим URL
+            store.updateFromURL();
+
+            // Обновляем состояние сайдбара на основе store
+            updateCategorySidebarState(store.filters.category);
+
+            // Перезагружаем контент
+            reloadBlogContent(blogContainer, ajaxUrl, { scrollToTop: false });
             return;
           }
         } catch (e) {
-          // Continue without store check
+          console.warn('Store sync failed during popstate, falling back to URL parsing');
         }
       }
 
-      console.log('Popstate event triggered, reloading content');
+      console.log('Popstate event triggered, reloading content (fallback)');
 
-      // Обновляем состояние сайдбара на основе текущего URL
+      // Fallback: обновляем состояние сайдбара на основе текущего URL
       const urlParams = new URLSearchParams(window.location.search);
       const categorySlug = urlParams.get('category') || '';
       updateCategorySidebarState(categorySlug);
@@ -249,15 +288,25 @@ function initBlogPagination() {
 /**
  * Инициализация состояния сайдбара на основе URL
  * Зачем: корректное отображение активной категории при загрузке страницы
- * REFACTORED: Now uses store state with safety checks
+ * MIGRATED: Полностью использует centralized store для state management
  */
 function initSidebarState() {
   if (typeof Alpine !== 'undefined' && Alpine.store) {
     try {
       const store = Alpine.store('blog');
       if (store) {
+        // Синхронизируем store с URL при загрузке страницы
         store.updateFromURL();
+
+        // Обновляем состояние сайдбара на основе store
         updateCategorySidebarState(store.filters.category);
+
+        console.log('Sidebar state initialized via store:', {
+          category: store.filters.category,
+          page: store.filters.page,
+          search: store.filters.search,
+        });
+
         return;
       }
     } catch (e) {
@@ -265,7 +314,8 @@ function initSidebarState() {
     }
   }
 
-  // Fallback: get category from URL directly
+  // Fallback: get category from URL directly (для совместимости)
+  console.log('Using fallback URL parsing for sidebar state');
   const urlParams = new URLSearchParams(window.location.search);
   const categorySlug = urlParams.get('category') || '';
   updateCategorySidebarState(categorySlug);
