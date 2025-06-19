@@ -4,6 +4,7 @@ return [
     // Заголовки
     'title' => 'Финансы',
     'deposit_history_title' => 'История депозитов',
+    'deposit_history_empty' => 'История депозитов пуста',
 
     // Методы оплаты
     'payment_methods' => [
