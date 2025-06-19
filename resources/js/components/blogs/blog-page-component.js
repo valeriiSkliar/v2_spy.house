@@ -28,6 +28,13 @@ export function initBlogPageComponent() {
         // Валидация и нормализация данных
         const validatedData = this.validateServerData(serverData);
 
+        // NEW: Сначала инициализируем фильтры из URL, если они есть
+        const urlHasFilters = this.hasUrlFilters();
+        if (urlHasFilters) {
+          console.log('URL contains filters, initializing from URL first');
+          store.initFromURL();
+        }
+
         // Устанавливаем данные статей в store
         store.setArticles(validatedData.articles);
 
@@ -46,14 +53,19 @@ export function initBlogPageComponent() {
           hasPrev: validatedData.currentPage > 1,
         });
 
-        // Устанавливаем фильтры
-        store.setFilters({
-          search: validatedData.filters.search,
-          category: validatedData.filters.category,
-          sort: validatedData.filters.sort,
-          direction: validatedData.filters.direction,
-          page: validatedData.currentPage,
-        });
+        // Устанавливаем фильтры (если не было инициализации из URL)
+        if (!urlHasFilters) {
+          store.setFiltersFromURL({
+            search: validatedData.filters.search,
+            category: validatedData.filters.category,
+            sort: validatedData.filters.sort,
+            direction: validatedData.filters.direction,
+            page: validatedData.currentPage,
+          });
+
+          // Обновляем URL с начальными фильтрами
+          store.updateURL(false); // replaceState, не pushState
+        }
 
         // Устанавливаем категории для сайдбара
         store.setCategories(validatedData.categories);
@@ -68,16 +80,64 @@ export function initBlogPageComponent() {
         // Синхронизируем с AJAX менеджером
         this.syncWithAjaxManager();
 
+        // NEW: Устанавливаем флаг успешной инициализации
+        this.initialized = true;
+
         console.log('Blog page initialized successfully:', {
           articlesCount: store.articles.length,
           heroArticle: this.heroArticle,
           filters: store.filters,
           currentPage: store.pagination.currentPage,
           totalPages: store.pagination.totalPages,
+          urlSynced: store.isStateInSync(),
         });
       } catch (error) {
         console.error('Error initializing blog page:', error);
         this.handleInitializationError(error);
+      }
+    },
+
+    // NEW: Проверка наличия фильтров в URL
+    hasUrlFilters() {
+      const urlParams = new URLSearchParams(window.location.search);
+      return (
+        urlParams.has('page') ||
+        urlParams.has('category') ||
+        urlParams.has('search') ||
+        urlParams.has('sort') ||
+        urlParams.has('direction')
+      );
+    },
+
+    // NEW: Инициализация только из URL (для восстановления состояния)
+    initFromURL() {
+      console.log('Initializing blog page from URL only...');
+
+      const store = this.getStore();
+      if (!store) {
+        console.error('Blog store not available');
+        return;
+      }
+
+      try {
+        // Инициализируем состояние из URL
+        store.initFromURL();
+
+        // Помечаем как инициализированный из URL
+        this.urlInitialized = true;
+
+        // Синхронизируем с AJAX менеджером
+        this.syncWithAjaxManager();
+
+        console.log('Blog page initialized from URL:', {
+          filters: store.filters,
+          urlSynced: store.isStateInSync(),
+        });
+
+        return true;
+      } catch (error) {
+        console.error('Error initializing from URL:', error);
+        return false;
       }
     },
 
@@ -170,16 +230,24 @@ export function initBlogPageComponent() {
 
       this.heroArticle = null;
       this.ajaxUrl = '';
+      this.initialized = false;
     },
 
     // Локальные данные (не входят в store)
     heroArticle: null,
     ajaxUrl: '',
+    initialized: false,
+    urlInitialized: false,
 
     // Синхронизация с AJAX менеджером
     syncWithAjaxManager() {
       if (blogAjaxManager && typeof blogAjaxManager.initFromURL === 'function') {
         blogAjaxManager.initFromURL();
+      }
+
+      // NEW: Обеспечиваем глобальный доступ к manager
+      if (typeof window !== 'undefined') {
+        window.blogAjaxManager = blogAjaxManager;
       }
     },
 
@@ -190,6 +258,50 @@ export function initBlogPageComponent() {
       } catch (e) {
         console.error('Blog store not available:', e);
         return null;
+      }
+    },
+
+    // NEW: Восстановление состояния из URL (для браузерной навигации)
+    restoreFromURL() {
+      console.log('Restoring blog state from URL...');
+
+      const store = this.getStore();
+      if (!store) return false;
+
+      try {
+        // Обновляем состояние из URL
+        store.updateFromURL();
+
+        // Если есть AJAX URL, перезагружаем контент
+        if (this.ajaxUrl) {
+          this.loadContentFromCurrentState();
+        }
+
+        console.log('State restored from URL:', store.filters);
+        return true;
+      } catch (error) {
+        console.error('Error restoring from URL:', error);
+        return false;
+      }
+    },
+
+    // NEW: Загрузка контента на основе текущего состояния
+    loadContentFromCurrentState() {
+      if (!this.ajaxUrl) {
+        console.warn('No AJAX URL available for content loading');
+        return;
+      }
+
+      const container = document.getElementById('blog-articles-container');
+      if (!container) {
+        console.warn('Blog container not found');
+        return;
+      }
+
+      if (blogAjaxManager && typeof blogAjaxManager.loadContent === 'function') {
+        const store = this.getStore();
+        const requestUrl = store ? store.buildRequestURL(this.ajaxUrl) : this.ajaxUrl;
+        blogAjaxManager.loadContent(container, requestUrl);
       }
     },
 
@@ -237,6 +349,17 @@ export function initBlogPageComponent() {
     get popularPosts() {
       const store = this.getStore();
       return store ? store.popularPosts : [];
+    },
+
+    // NEW: URL-related getters
+    get currentUrl() {
+      const store = this.getStore();
+      return store ? store.getCurrentURL() : window.location.href;
+    },
+
+    get isUrlSynced() {
+      const store = this.getStore();
+      return store ? store.isStateInSync() : false;
     },
 
     // Геттеры для шаблонов

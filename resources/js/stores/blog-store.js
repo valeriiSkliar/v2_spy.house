@@ -104,6 +104,14 @@ export const blogStore = {
         console.warn('Could not parse persisted blog filters:', e);
       }
     }
+
+    // Initialize from URL on first load
+    this.initFromURL();
+
+    // Listen for popstate events (browser back/forward)
+    window.addEventListener('popstate', () => {
+      this.handlePopState();
+    });
   },
 
   // Save filters to sessionStorage
@@ -158,6 +166,9 @@ export const blogStore = {
     };
     // Persist filters whenever they change
     this.persistFilters();
+
+    // Update URL when filters change
+    this.updateURL(true);
   },
 
   resetFilters() {
@@ -170,6 +181,9 @@ export const blogStore = {
     };
     // Persist reset filters
     this.persistFilters();
+
+    // Update URL when filters are reset
+    this.updateURL(true);
   },
 
   setUIState(newUIState) {
@@ -219,12 +233,121 @@ export const blogStore = {
   updateFromURL() {
     const urlParams = new URLSearchParams(window.location.search);
 
-    this.setFilters({
+    this.setFiltersFromURL({
       page: parseInt(urlParams.get('page')) || 1,
       category: urlParams.get('category') || '',
       search: urlParams.get('search') || '',
       sort: urlParams.get('sort') || 'latest',
       direction: urlParams.get('direction') || 'desc',
+    });
+  },
+
+  // NEW: Initialize from URL without triggering URL update
+  initFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+
+    const urlFilters = {
+      page: parseInt(urlParams.get('page')) || 1,
+      category: urlParams.get('category') || '',
+      search: urlParams.get('search') || '',
+      sort: urlParams.get('sort') || 'latest',
+      direction: urlParams.get('direction') || 'desc',
+    };
+
+    // Set filters without triggering URL update or persistence
+    this.filters = { ...this.filters, ...urlFilters };
+
+    console.log('Blog store initialized from URL:', urlFilters);
+  },
+
+  // NEW: Set filters from URL without triggering URL update
+  setFiltersFromURL(newFilters) {
+    this.filters = {
+      ...this.filters,
+      ...newFilters,
+    };
+    // Persist filters but don't update URL
+    this.persistFilters();
+  },
+
+  // NEW: Handle browser back/forward navigation
+  handlePopState() {
+    console.log('Handling popstate event - updating from URL');
+    this.updateFromURL();
+
+    // Trigger content reload if AJAX manager is available
+    if (
+      window.blogAjaxManager &&
+      typeof window.blogAjaxManager.loadFromCurrentState === 'function'
+    ) {
+      window.blogAjaxManager.loadFromCurrentState();
+    }
+  },
+
+  // NEW: Update URL without triggering popstate
+  updateURL(pushState = true) {
+    const url = new URL(window.location);
+
+    // Add current filter values
+    const params = this.filterParams;
+    params.forEach((value, key) => {
+      url.searchParams.set(key, value);
+    });
+
+    // Create a simple, cloneable state object (avoid complex objects)
+    const stateData = {
+      blogFilters: {
+        page: this.filters.page,
+        category: this.filters.category || '',
+        search: this.filters.search || '',
+        sort: this.filters.sort || 'latest',
+        direction: this.filters.direction || 'desc',
+      },
+      timestamp: Date.now(),
+    };
+
+    // Update browser history
+    if (pushState) {
+      window.history.pushState(stateData, '', url.toString());
+    } else {
+      window.history.replaceState(stateData, '', url.toString());
+    }
+
+    console.log('URL updated:', url.toString());
+  },
+
+  // NEW: Get current URL with filters
+  getCurrentURL() {
+    const url = new URL(window.location);
+
+    // Clear existing params
+    url.searchParams.delete('page');
+    url.searchParams.delete('category');
+    url.searchParams.delete('search');
+    url.searchParams.delete('sort');
+    url.searchParams.delete('direction');
+
+    // Add current filters
+    this.filterParams.forEach((value, key) => {
+      url.searchParams.set(key, value);
+    });
+
+    return url.toString();
+  },
+
+  clearSearch() {
+    this.setFilters({
+      ...this.filters,
+      search: '',
+      page: 1,
+    });
+  },
+
+  clearCategory() {
+    this.setFilters({
+      ...this.filters,
+      category: '',
+      page: 1,
     });
   },
 
@@ -246,20 +369,37 @@ export const blogStore = {
     });
   },
 
-  clearSearch() {
-    this.setFilters({
-      ...this.filters,
-      search: '',
-      page: 1,
-    });
+  // NEW: Navigate to specific URL state
+  navigateToState(filters, replaceState = false) {
+    // Update filters
+    this.filters = { ...this.filters, ...filters };
+    this.persistFilters();
+
+    // Update URL
+    this.updateURL(!replaceState);
+
+    // Trigger content reload
+    if (
+      window.blogAjaxManager &&
+      typeof window.blogAjaxManager.loadFromCurrentState === 'function'
+    ) {
+      window.blogAjaxManager.loadFromCurrentState();
+    }
   },
 
-  clearCategory() {
-    this.setFilters({
-      ...this.filters,
-      category: '',
-      page: 1,
-    });
+  // NEW: Check if current state matches URL
+  isStateInSync() {
+    const urlParams = new URLSearchParams(window.location.search);
+
+    const urlFilters = {
+      page: parseInt(urlParams.get('page')) || 1,
+      category: urlParams.get('category') || '',
+      search: urlParams.get('search') || '',
+      sort: urlParams.get('sort') || 'latest',
+      direction: urlParams.get('direction') || 'desc',
+    };
+
+    return JSON.stringify(urlFilters) === JSON.stringify(this.filters);
   },
 
   // Validation methods

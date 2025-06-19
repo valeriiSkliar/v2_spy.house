@@ -134,8 +134,15 @@ export class BlogAjaxManager {
       direction: redirectParams.get('direction') || 'desc',
     });
 
-    // Update browser state
-    window.history.pushState({ filters: store.filters }, '', data.url);
+    // Update browser state with serializable data
+    const serializableFilters = {
+      page: store.filters.page,
+      category: store.filters.category || '',
+      search: store.filters.search || '',
+      sort: store.filters.sort || 'latest',
+      direction: store.filters.direction || 'desc',
+    };
+    window.history.pushState({ filters: serializableFilters }, '', data.url);
 
     // Update category sidebar state
     this.updateCategorySidebarState(store.filters.category);
