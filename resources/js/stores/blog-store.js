@@ -12,6 +12,7 @@ export const blogStore = {
   // Content data
   articles: [],
   categories: [],
+  popularPosts: [],
   currentCategory: null,
 
   // Pagination
@@ -133,6 +134,10 @@ export const blogStore = {
 
   setCategories(categories) {
     this.categories = categories;
+  },
+
+  setPopularPosts(popularPosts) {
+    this.popularPosts = popularPosts;
   },
 
   setCurrentCategory(category) {
@@ -279,6 +284,8 @@ export const blogStore = {
     this.currentRequest = null;
     this.retryCount = 0;
     this.articles = [];
+    this.categories = [];
+    this.popularPosts = [];
     this.currentCategory = null;
     this.pagination = {
       currentPage: 1,

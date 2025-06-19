@@ -1,13 +1,15 @@
 <?php
 
 use App\Http\Controllers\Api\Blog\ApiBlogController;
+use App\Http\Controllers\Frontend\Blog\AlpinaBlogController;
 use App\Http\Controllers\Frontend\Blog\BlogController;
 use Illuminate\Support\Facades\Route;
 
 // ========== WEB ROUTES - ТОЛЬКО ДЛЯ ОТОБРАЖЕНИЯ ==========
 
 Route::prefix('blog')->name('blog.')->middleware('blog.validate.params')->group(function () {
-    Route::get('/', [BlogController::class, 'index'])->name('index');
+    // Route::get('/', [BlogController::class, 'index'])->name('index');
+    Route::get('/', [AlpinaBlogController::class, 'index'])->name('index');
     Route::get('/category/{slug}', [BlogController::class, 'byCategory'])->name('category');
     Route::get('/{slug}', [BlogController::class, 'show'])->name('show');
 });
