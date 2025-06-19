@@ -9,6 +9,7 @@ import focus from '@alpinejs/focus';
 import intersect from '@alpinejs/intersect';
 import persist from '@alpinejs/persist';
 import Alpine from 'alpinejs';
+import { initBlogPageComponent } from './components/blogs/blog-page-component';
 
 // Import blog store initializer and components
 import './components/blogs/blog-alpine-component';
