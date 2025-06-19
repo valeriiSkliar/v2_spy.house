@@ -5,319 +5,51 @@ import {
 } from '@/components/blogs';
 import { hideInElement, showInElement } from '../components/loader';
 import { updateBrowserUrl } from '../helpers/update-browser-url';
-
-// Глобальные переменные для состояния
-let isLoading = false;
-let currentRequest = null;
-let retryCount = 0;
-const MAX_RETRIES = 3;
-const RETRY_DELAY = 1000;
+import Alpine from 'alpinejs';
+import { blogAjaxManager } from '../managers/blog-ajax-manager';
 
 /**
  * Главная функция для перезагрузки контента блога
  * Зачем: централизованная обработка всех AJAX запросов с retry логикой и валидацией
+ * REFACTORED: Now uses store and ajax manager
  */
 function reloadBlogContent(container, url, options = {}) {
-  const {
-    scrollToTop = true,
-    showLoader = true,
-    validateParams = true,
-    retryOnError = true,
-  } = options;
-
-  // Предотвращаем множественные одновременные запросы
-  if (isLoading && currentRequest) {
-    currentRequest.abort();
-  }
-
-  if (validateParams && !validateRequestParams()) {
-    console.warn('Invalid request parameters detected, redirecting to clean state');
-    cleanRedirect();
-    return;
-  }
-
-  console.log('Reloading blog content...', { url, options });
-
-  isLoading = true;
-  const loader = showLoader ? showInElement(container) : null;
-
-  // Строим URL с текущими параметрами
-  const requestUrl = buildRequestUrl(url);
-
-  // Создаем AbortController для возможности отмены запроса
-  const controller = new AbortController();
-  currentRequest = controller;
-
-  // Делаем AJAX запрос
-  fetch(requestUrl, {
-    method: 'GET',
-    headers: {
-      'X-Requested-With': 'XMLHttpRequest',
-      'X-CSRF-TOKEN':
-        document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    },
-    signal: controller.signal,
-  })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      return response.json();
-    })
-    .then(data => {
-      console.log('AJAX response received:', data);
-      retryCount = 0; // Сбрасываем счетчик попыток при успехе
-
-      // Обрабатываем редирект
-      if (data.redirect) {
-        handleRedirectResponse(data, container, url, options);
-        return;
-      }
-
-      // Обрабатываем ошибку валидации
-      if (data.error) {
-        console.error('Validation error:', data.error);
-        cleanRedirect();
-        return;
-      }
-
-      // Обновляем контент
-      updatePageContent(data, container, scrollToTop);
-    })
-    .catch(error => {
-      if (error.name === 'AbortError') {
-        console.log('Request was aborted');
-        return;
-      }
-
-      console.error('Error fetching blog articles:', error);
-
-      if (retryOnError && retryCount < MAX_RETRIES) {
-        retryCount++;
-        console.log(`Retrying request (${retryCount}/${MAX_RETRIES})...`);
-        setTimeout(() => {
-          reloadBlogContent(container, url, options);
-        }, RETRY_DELAY * retryCount);
-      } else {
-        showErrorMessage(container, error);
-      }
-    })
-    .finally(() => {
-      isLoading = false;
-      currentRequest = null;
-      if (loader) {
-        hideInElement(loader);
-      }
-    });
+  return blogAjaxManager.loadContent(container, url, options);
 }
 
 /**
  * Валидация параметров запроса
  * Зачем: предотвращение некорректных состояний URL
+ * REFACTORED: Now uses store validation with safety checks
  */
 function validateRequestParams() {
+  if (typeof Alpine !== 'undefined' && Alpine.store) {
+    try {
+      const store = Alpine.store('blog');
+      if (store) {
+        store.updateFromURL();
+        return store.validateFilters();
+      }
+    } catch (e) {
+      console.warn('Store not available for validation, falling back to basic validation');
+    }
+  }
+  
+  // Fallback validation without store
   const urlParams = new URLSearchParams(window.location.search);
   const page = parseInt(urlParams.get('page')) || 1;
   const category = urlParams.get('category');
   const search = urlParams.get('search');
 
-  // Проверяем валидность номера страницы
-  if (page < 1 || page > 1000) {
-    return false;
-  }
-
-  // Проверяем длину поискового запроса
-  if (search && (search.length > 255 || search.length < 1)) {
-    return false;
-  }
-
-  // Проверяем валидность категории (базовая проверка на спецсимволы)
-  if (category && !/^[a-zA-Z0-9\-_]+$/.test(category)) {
-    return false;
-  }
-
+  if (page < 1 || page > 1000) return false;
+  if (search && (search.length > 255 || search.length < 1)) return false;
+  if (category && !/^[a-zA-Z0-9\-_]*$/.test(category)) return false;
+  
   return true;
 }
 
-/**
- * Построение URL запроса с валидацией
- * Зачем: корректное формирование запросов к API
- */
-function buildRequestUrl(baseUrl) {
-  const currentUrl = new URL(window.location.href);
-  const requestUrl = new URL(baseUrl, window.location.origin);
-
-  // Копируем только валидные параметры
-  const validParams = ['page', 'category', 'search'];
-  validParams.forEach(param => {
-    const value = currentUrl.searchParams.get(param);
-    if (value) {
-      requestUrl.searchParams.set(param, value);
-    }
-  });
-
-  return requestUrl.toString();
-}
-
-/**
- * Обработка ответа с редиректом
- * Зачем: корректная обработка серверных редиректов
- */
-function handleRedirectResponse(data, container, url, options) {
-  console.log('Handling redirect to:', data.url);
-
-  const redirectUrl = new URL(data.url);
-  const redirectParams = new URLSearchParams(redirectUrl.search);
-
-  // Обновляем состояние браузера
-  const stateData = {
-    category: redirectParams.get('category') || '',
-    page: redirectParams.get('page') || '1',
-  };
-
-  window.history.pushState(stateData, '', data.url);
-
-  // Обновляем состояние сайдбара
-  updateCategorySidebarState(stateData.category);
-
-  // Перезагружаем контент с новым URL
-  reloadBlogContent(container, url, { ...options, showLoader: false });
-}
-
-/**
- * Обновление контента страницы
- * Зачем: безопасное обновление DOM с проверками
- */
-function updatePageContent(data, container, scrollToTop) {
-  try {
-    // Обновляем основной контент
-    if (data.html) {
-      container.innerHTML = data.html;
-    }
-
-    // Обновляем классы контейнера в зависимости от результатов
-    if (data.count === 0 && data.totalCount === 0) {
-      container.classList.add('blog-list__no-results');
-    } else {
-      container.classList.remove('blog-list__no-results');
-    }
-
-    // Обновляем пагинацию
-    updatePaginationContent(data);
-
-    // Переинициализируем компоненты
-    reinitializeComponents();
-
-    // Прокручиваем к началу если нужно
-    if (scrollToTop) {
-      container.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    // Обновляем URL для SEO
-    updateUrlForSEO(data);
-  } catch (error) {
-    console.error('Error updating page content:', error);
-    showErrorMessage(container, error);
-  }
-}
-
-/**
- * Обновление контента пагинации
- * Зачем: корректная работа с пагинацией без перезагрузки
- */
-function updatePaginationContent(data) {
-  const paginationContainer = document.getElementById('blog-pagination-container');
-  if (!paginationContainer) return;
-
-  if (data.hasPagination && data.pagination) {
-    paginationContainer.innerHTML = data.pagination;
-    paginationContainer.style.display = 'block';
-    initPaginationClickHandlers();
-  } else {
-    paginationContainer.innerHTML = '';
-    paginationContainer.style.display = 'none';
-  }
-}
-
-/**
- * Переинициализация компонентов после обновления DOM
- * Зачем: восстановление функциональности после изменения контента
- */
-function reinitializeComponents() {
-  try {
-    // Уничтожаем существующие slick карусели перед переинициализацией
-    destroyExistingCarousels();
-
-    // Переинициализируем карусели
-    setTimeout(() => {
-      initAlsowInterestingArticlesCarousel();
-      initReadOftenArticlesCarousel();
-    }, 100);
-  } catch (error) {
-    console.error('Error reinitializing components:', error);
-  }
-}
-
-/**
- * Уничтожение существующих каруселей
- * Зачем: предотвращение конфликтов при переинициализации
- */
-function destroyExistingCarousels() {
-  const carousels = [
-    '#alsow-interesting-articles-carousel-container',
-    '#read-often-articles-carousel-container',
-  ];
-
-  carousels.forEach(selector => {
-    const $carousel = $(selector);
-    if ($carousel.length && $carousel.hasClass('slick-initialized')) {
-      try {
-        $carousel.slick('destroy');
-      } catch (error) {
-        console.warn(`Error destroying carousel ${selector}:`, error);
-      }
-    }
-  });
-}
-
-/**
- * Чистый редирект без параметров
- * Зачем: возврат к базовому состоянию при ошибках
- */
-function cleanRedirect() {
-  const cleanUrl = new URL(window.location.pathname, window.location.origin);
-  window.history.pushState({}, '', cleanUrl.toString());
-  window.location.reload();
-}
-
-/**
- * Показ сообщения об ошибке
- * Зачем: информирование пользователя о проблемах
- */
-function showErrorMessage(container, error) {
-  const errorHtml = `
-    <div class="blog-error-message empty-landing">
-      <h3>Произошла ошибка при загрузке</h3>
-      <p>Пожалуйста, обновите страницу или попробуйте позже.</p>
-      <button onclick="window.location.reload()" class="btn _flex _green _medium min-120">Обновить страницу</button>
-    </div>
-  `;
-  container.innerHTML = errorHtml;
-}
-
-/**
- * Обновление URL для SEO
- * Зачем: поддержка корректных URL для поисковых систем
- */
-function updateUrlForSEO(data) {
-  if (data.currentCategory) {
-    document.title = `${data.currentCategory.name} - Блог`;
-  } else if (data.totalCount !== undefined) {
-    document.title = `Блог - ${data.totalCount} статей`;
-  }
-}
+// Note: Functions like buildRequestUrl, handleRedirectResponse, updatePageContent, etc.
+// have been moved to blogAjaxManager for better centralization and state management
 
 // Глобальная переменная для хранения обработчика пагинации
 let currentPaginationHandler = null;
@@ -349,16 +81,33 @@ function initPaginationClickHandlers() {
 /**
  * Обработка кликов по ссылкам пагинации
  * Зачем: AJAX навигация без перезагрузки страницы
+ * REFACTORED: Now uses store and ajax manager with safety checks
  */
 function handlePaginationClick(event) {
   event.preventDefault();
 
-  if (isLoading) {
-    console.log('Request already in progress, ignoring click');
-    return;
+  // Check if store is available and loading
+  if (typeof Alpine !== 'undefined' && Alpine.store) {
+    try {
+      const store = Alpine.store('blog');
+      if (store && store.loading) {
+        console.log('Request already in progress, ignoring click');
+        return;
+      }
+    } catch (e) {
+      // Continue without store check
+    }
   }
 
-  const url = new URL(event.target.href);
+  // Get the anchor element - event.target might be a child element
+  const linkElement = event.target.closest('a') || event.target;  
+  const href = linkElement.href;
+  if (!href) {
+    console.error('No href found on pagination link');
+    return;
+  }
+  
+  const url = new URL(href);
   const page = parseInt(url.searchParams.get('page')) || 1;
 
   // Валидация номера страницы
@@ -377,8 +126,8 @@ function handlePaginationClick(event) {
 
   console.log('Navigating to page:', page);
 
-  // Обновляем URL браузера
-  updateBrowserUrl({ page: page });
+  // Use ajax manager navigation
+  blogAjaxManager.goToPage(page);
 
   // Перезагружаем контент
   reloadBlogContent(blogContainer, ajaxUrl);
@@ -387,6 +136,7 @@ function handlePaginationClick(event) {
 /**
  * Инициализация фильтрации по категориям
  * Зачем: AJAX фильтрация без перезагрузки
+ * REFACTORED: Now uses store and ajax manager
  */
 function initCategoryFiltering() {
   const blogContainer = document.getElementById('blog-articles-container');
@@ -404,40 +154,28 @@ function initCategoryFiltering() {
 
     event.preventDefault();
 
-    if (isLoading) {
-      console.log('Request already in progress, ignoring category click');
-      return;
+    // Check if store is available and loading
+    if (typeof Alpine !== 'undefined' && Alpine.store) {
+      try {
+        const store = Alpine.store('blog');
+        if (store && store.loading) {
+          console.log('Request already in progress, ignoring category click');
+          return;
+        }
+      } catch (e) {
+        // Continue without store check
+      }
     }
 
     const categorySlug = categoryLink.getAttribute('data-category-slug') || '';
 
     console.log('Category clicked:', categorySlug || 'all');
 
-    // Обновляем активное состояние в сайдбаре
+    // Use ajax manager for category navigation
+    blogAjaxManager.setCategory(categorySlug);
+
+    // Обновляем активное состояние в сайдбаре (preserve existing DOM approach)
     updateCategorySidebarState(categorySlug);
-
-    // Формируем новые параметры URL
-    const urlParams = new URLSearchParams(window.location.search);
-
-    if (categorySlug) {
-      urlParams.set('category', categorySlug);
-    } else {
-      urlParams.delete('category');
-    }
-
-    urlParams.delete('page'); // Сбрасываем на первую страницу при смене категории
-
-    // Обновляем URL браузера
-    const newUrl =
-      window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
-    window.history.pushState(
-      {
-        category: categorySlug,
-        page: '1',
-      },
-      '',
-      newUrl
-    );
 
     // Перезагружаем контент блога
     reloadBlogContent(blogContainer, ajaxUrl);
@@ -480,11 +218,18 @@ function initBlogPagination() {
   }
 
   // Обработчик навигации браузера (кнопки назад/вперед)
-  window.addEventListener('popstate', function (event) {
+  window.addEventListener('popstate', function () {
     if (blogContainer && ajaxUrl) {
-      // Предотвращаем обработку если уже идет загрузка
-      if (isLoading) {
-        return;
+      // Check if store is available and loading
+      if (typeof Alpine !== 'undefined' && Alpine.store) {
+        try {
+          const store = Alpine.store('blog');
+          if (store && store.loading) {
+            return;
+          }
+        } catch (e) {
+          // Continue without store check
+        }
       }
 
       console.log('Popstate event triggered, reloading content');
@@ -506,8 +251,23 @@ function initBlogPagination() {
 /**
  * Инициализация состояния сайдбара на основе URL
  * Зачем: корректное отображение активной категории при загрузке страницы
+ * REFACTORED: Now uses store state with safety checks
  */
 function initSidebarState() {
+  if (typeof Alpine !== 'undefined' && Alpine.store) {
+    try {
+      const store = Alpine.store('blog');
+      if (store) {
+        store.updateFromURL();
+        updateCategorySidebarState(store.filters.category);
+        return;
+      }
+    } catch (e) {
+      console.warn('Store not available for sidebar state, falling back to URL params');
+    }
+  }
+  
+  // Fallback: get category from URL directly
   const urlParams = new URLSearchParams(window.location.search);
   const categorySlug = urlParams.get('category') || '';
   updateCategorySidebarState(categorySlug);
@@ -583,11 +343,11 @@ function initOptimizedBlogSearch() {
   });
 
   // Обработчик ESC для сброса поиска
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && searchInput.value.trim()) {
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && searchInput.value.trim()) {
       searchInput.value = '';
-      const event = new Event('input');
-      searchInput.dispatchEvent(event);
+      const inputEvent = new Event('input');
+      searchInput.dispatchEvent(inputEvent);
     }
   });
 }
@@ -595,13 +355,31 @@ function initOptimizedBlogSearch() {
 /**
  * Инициализация поиска в блоке фильтров
  * Зачем: новый дизайн поиска с интеграцией в систему фильтров
+ * REFACTORED: Now uses store state with safety checks
  */
 function initFilterSearch(searchInput) {
-  // Устанавливаем значение из URL если есть
-  const urlParams = new URLSearchParams(window.location.search);
-  const searchParam = urlParams.get('search');
-  if (searchParam) {
-    searchInput.value = searchParam;
+  // Устанавливаем значение из store если доступен
+  if (typeof Alpine !== 'undefined' && Alpine.store) {
+    try {
+      const store = Alpine.store('blog');
+      if (store) {
+        store.updateFromURL();
+        if (store.filters.search) {
+          searchInput.value = store.filters.search;
+        }
+      }
+    } catch (e) {
+      console.warn('Store not available for search init, falling back to URL params');
+    }
+  }
+  
+  // Fallback: get search from URL directly if store not available
+  if (!searchInput.value) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchParam = urlParams.get('search');
+    if (searchParam) {
+      searchInput.value = searchParam;
+    }
   }
 
   // Debounced обработчик поиска
@@ -632,6 +410,7 @@ function initFilterSearch(searchInput) {
 /**
  * Обработка поиска из блока фильтров
  * Зачем: централизованная обработка поиска с обновлением URL
+ * REFACTORED: Now uses store and ajax manager
  */
 function handleFilterSearch(query) {
   const blogContainer = document.getElementById('blog-articles-container');
@@ -641,22 +420,8 @@ function handleFilterSearch(query) {
 
   console.log('Filter search triggered:', query);
 
-  // Обновляем URL параметры
-  const urlParams = new URLSearchParams(window.location.search);
-
-  if (query.length > 0) {
-    urlParams.set('search', query);
-  } else {
-    urlParams.delete('search');
-  }
-
-  // Сбрасываем страницу при поиске
-  urlParams.delete('page');
-
-  // Обновляем URL браузера
-  const newUrl =
-    window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
-  window.history.pushState({ search: query }, '', newUrl);
+  // Use ajax manager for search
+  blogAjaxManager.setSearch(query);
 
   // Перезагружаем контент
   reloadBlogContent(blogContainer, ajaxUrl);
@@ -717,11 +482,20 @@ function initBlogSorting() {
 /**
  * Обработка клика по кнопке сортировки
  * Зачем: переключение сортировки и обновление контента
+ * REFACTORED: Now uses store and ajax manager
  */
 function handleSortingClick(button) {
-  if (isLoading) {
-    console.log('Request already in progress, ignoring sort click');
-    return;
+  // Check if store is available and loading
+  if (typeof Alpine !== 'undefined' && Alpine.store) {
+    try {
+      const store = Alpine.store('blog');
+      if (store && store.loading) {
+        console.log('Request already in progress, ignoring sort click');
+        return;
+      }
+    } catch (e) {
+      // Continue without store check
+    }
   }
 
   const blogContainer = document.getElementById('blog-articles-container');
@@ -744,10 +518,29 @@ function handleSortingClick(button) {
     sortType = 'latest'; // По умолчанию
   }
 
-  // Получаем текущие параметры URL
-  const urlParams = new URLSearchParams(window.location.search);
-  const currentSort = urlParams.get('sort') || 'latest';
-  const currentDirection = urlParams.get('direction') || 'desc';
+  // Get current sort state from store or URL fallback
+  let currentSort = 'latest';
+  let currentDirection = 'desc';
+  
+  if (typeof Alpine !== 'undefined' && Alpine.store) {
+    try {
+      const store = Alpine.store('blog');
+      if (store) {
+        currentSort = store.filters.sort;
+        currentDirection = store.filters.direction;
+      }
+    } catch (e) {
+      // Fallback to URL params
+      const urlParams = new URLSearchParams(window.location.search);
+      currentSort = urlParams.get('sort') || 'latest';
+      currentDirection = urlParams.get('direction') || 'desc';
+    }
+  } else {
+    // Fallback to URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    currentSort = urlParams.get('sort') || 'latest';
+    currentDirection = urlParams.get('direction') || 'desc';
+  }
 
   // Определяем новое направление сортировки
   let newDirection;
@@ -761,18 +554,11 @@ function handleSortingClick(button) {
 
   console.log('Sorting:', { sortType, newDirection, currentSort, currentDirection });
 
-  // Обновляем URL параметры
-  urlParams.set('sort', sortType);
-  urlParams.set('direction', newDirection);
-  urlParams.delete('page'); // Сбрасываем на первую страницу
+  // Use ajax manager for sorting
+  blogAjaxManager.setSort(sortType, newDirection);
 
-  // Обновляем состояние кнопок
+  // Обновляем состояние кнопок (preserve existing DOM approach)
   updateSortingButtonsState(sortType, newDirection);
-
-  // Обновляем URL браузера
-  const newUrl =
-    window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
-  window.history.pushState({ sort: sortType, direction: newDirection }, '', newUrl);
 
   // Перезагружаем контент
   reloadBlogContent(blogContainer, ajaxUrl);
@@ -841,7 +627,19 @@ function initPreloadSystem() {
       if (!e.target || typeof e.target.closest !== 'function') return;
 
       const paginationLink = e.target.closest('#blog-pagination-container .pagination-list a');
-      if (!paginationLink || isLoading) return;
+      
+      // Check if store is available and loading
+      let isStoreLoading = false;
+      if (typeof Alpine !== 'undefined' && Alpine.store) {
+        try {
+          const store = Alpine.store('blog');
+          isStoreLoading = store && store.loading;
+        } catch (e) {
+          // Continue without store check
+        }
+      }
+      
+      if (!paginationLink || isStoreLoading) return;
 
       const url = new URL(paginationLink.href);
       const page = url.searchParams.get('page');
@@ -868,11 +666,12 @@ function initPreloadSystem() {
 /**
  * Основная функция инициализации
  * Зачем: централизованная настройка всех компонентов
+ * REFACTORED: Now includes store initialization with proper timing
  */
 document.addEventListener('DOMContentLoaded', function () {
   console.log('Initializing blog functionality...');
 
-  // Инициализируем основные компоненты
+  // Инициализируем основные компоненты (работают без store)
   initBlogPagination();
   initCategoryFiltering();
   initSidebarState();
@@ -887,6 +686,20 @@ document.addEventListener('DOMContentLoaded', function () {
   initReadOftenArticlesCarousel();
 
   console.log('Blog functionality initialized successfully');
+});
+
+// Initialize store-dependent functionality when Alpine is ready
+document.addEventListener('alpine:ready', function () {
+  console.log('Alpine is ready, initializing store-dependent functionality...');
+  blogAjaxManager.initFromURL();
+});
+
+// Fallback initialization for cases where Alpine might be started elsewhere
+document.addEventListener('alpine:init', function () {
+  console.log('Alpine initialized, setting up store...');
+  setTimeout(() => {
+    blogAjaxManager.initFromURL();
+  }, 100);
 });
 
 // Экспорт основных функций для внешнего использования

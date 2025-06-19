@@ -1,0 +1,479 @@
+import Alpine from 'alpinejs'
+import { ajaxFetcher } from '../components/fetcher/ajax-fetcher'
+import { showInElement, hideInElement } from '../components/loader'
+
+/**
+ * Blog AJAX Manager
+ * Unified AJAX management with state integration
+ * Uses existing ajax-fetcher infrastructure and DOM manipulation principles
+ */
+export class BlogAjaxManager {
+    constructor() {
+        // Initialize store reference, will be set when Alpine is ready
+        this.store = null;
+        this.MAX_RETRIES = 3;
+        this.RETRY_DELAY = 1000;
+        
+        // Try to get store if Alpine is already available
+        this.tryInitStore();
+    }
+    
+    /**
+     * Try to initialize store reference
+     */
+    tryInitStore() {
+        if (typeof Alpine !== 'undefined' && Alpine.store) {
+            try {
+                this.store = Alpine.store('blog');
+            } catch (e) {
+                // Store not yet registered, will be set later
+                this.store = null;
+            }
+        }
+    }
+    
+    /**
+     * Get store with fallback handling
+     */
+    getStore() {
+        if (!this.store && typeof Alpine !== 'undefined' && Alpine.store) {
+            this.tryInitStore();
+        }
+        return this.store;
+    }
+
+    /**
+     * Main content loading method
+     * Replaces reloadBlogContent with store integration
+     */
+    async loadContent(container, url, options = {}) {
+        const {
+            scrollToTop = true,
+            showLoader = true,
+            validateParams = true,
+            retryOnError = true,
+        } = options;
+
+        const store = this.getStore();
+        if (!store) {
+            console.warn('Store not available, falling back to basic functionality');
+            return;
+        }
+
+        // Prevent multiple simultaneous requests
+        if (store.loading && store.currentRequest) {
+            store.currentRequest.abort();
+        }
+
+        // Validate parameters using store
+        if (validateParams && !store.validateFilters()) {
+            console.warn('Invalid request parameters detected, redirecting to clean state');
+            this.cleanRedirect();
+            return;
+        }
+
+        console.log('Loading blog content...', { url, options });
+
+        // Set loading state
+        store.setLoading(true);
+        const loader = showLoader ? showInElement(container) : null;
+
+        // Build request URL using store
+        const requestUrl = store.buildRequestURL(url);
+
+        try {
+            // Create AbortController for request cancellation
+            const controller = new AbortController();
+            store.setCurrentRequest(controller);
+
+            const startTime = Date.now();
+
+            // Make AJAX request using existing ajax-fetcher
+            const response = await this.makeRequest(requestUrl, controller.signal);
+            
+            const loadTime = Date.now() - startTime;
+            store.setStats({ loadTime });
+
+            console.log('AJAX response received:', response);
+            store.setRetryCount(0); // Reset retry count on success
+
+            // Handle redirect response
+            if (response.redirect) {
+                this.handleRedirectResponse(response, container, url, options);
+                return;
+            }
+
+            // Handle validation error
+            if (response.error) {
+                console.error('Validation error:', response.error);
+                this.cleanRedirect();
+                return;
+            }
+
+            // Update content and state
+            this.updatePageContent(response, container, scrollToTop);
+
+        } catch (error) {
+            if (error.name === 'AbortError') {
+                console.log('Request was aborted');
+                return;
+            }
+
+            console.error('Error fetching blog articles:', error);
+
+            if (retryOnError && store.retryCount < this.MAX_RETRIES) {
+                store.setRetryCount(store.retryCount + 1);
+                console.log(`Retrying request (${store.retryCount}/${this.MAX_RETRIES})...`);
+                
+                setTimeout(() => {
+                    this.loadContent(container, url, options);
+                }, this.RETRY_DELAY * store.retryCount);
+            } else {
+                this.showErrorMessage(container, error);
+            }
+        } finally {
+            store.setLoading(false);
+            store.setCurrentRequest(null);
+            if (loader) {
+                hideInElement(loader);
+            }
+        }
+    }
+
+    /**
+     * Make HTTP request using existing ajax-fetcher
+     */
+    async makeRequest(url, signal) {
+        return new Promise((resolve, reject) => {
+            ajaxFetcher.get(url, null, {
+                beforeSendCallback: (jqXHR) => {
+                    // Attach abort signal
+                    if (signal) {
+                        signal.addEventListener('abort', () => {
+                            jqXHR.abort();
+                        });
+                    }
+                },
+                successCallback: (data) => {
+                    resolve(data);
+                },
+                errorCallback: (jqXHR, textStatus, errorThrown) => {
+                    if (textStatus === 'abort') {
+                        const abortError = new Error('Request aborted');
+                        abortError.name = 'AbortError';
+                        reject(abortError);
+                    } else {
+                        reject(new Error(`HTTP ${jqXHR.status}: ${errorThrown}`));
+                    }
+                }
+            });
+        });
+    }
+
+    /**
+     * Handle redirect response with store integration
+     */
+    handleRedirectResponse(data, container, url, options) {
+        console.log('Handling redirect to:', data.url);
+
+        const store = this.getStore();
+        if (!store) return;
+
+        const redirectUrl = new URL(data.url);
+        const redirectParams = new URLSearchParams(redirectUrl.search);
+
+        // Update store filters from redirect URL
+        store.setFilters({
+            category: redirectParams.get('category') || '',
+            page: parseInt(redirectParams.get('page')) || 1,
+            search: redirectParams.get('search') || '',
+            sort: redirectParams.get('sort') || 'latest',
+            direction: redirectParams.get('direction') || 'desc'
+        });
+
+        // Update browser state
+        window.history.pushState(
+            { filters: store.filters }, 
+            '', 
+            data.url
+        );
+
+        // Update category sidebar state
+        this.updateCategorySidebarState(store.filters.category);
+
+        // Reload content with new URL
+        this.loadContent(container, url, { ...options, showLoader: false });
+    }
+
+    /**
+     * Update page content and store state
+     * Preserves existing DOM manipulation principles
+     */
+    updatePageContent(data, container, scrollToTop) {
+        try {
+            const store = this.getStore();
+            
+            // Update main content (preserve existing DOM approach)
+            if (data.html) {
+                container.innerHTML = data.html;
+            }
+
+            // Update store data if available
+            if (store) {
+                store.setStats({
+                    currentCount: data.count || 0,
+                    totalCount: data.totalCount || 0
+                });
+
+                store.setPagination({
+                    currentPage: data.currentPage || 1,
+                    totalPages: data.totalPages || 1,
+                    hasPagination: data.hasPagination || false,
+                    hasNext: data.currentPage < data.totalPages,
+                    hasPrev: data.currentPage > 1
+                });
+
+                if (data.currentCategory) {
+                    store.setCurrentCategory(data.currentCategory);
+                }
+            }
+
+            // Update container classes (preserve existing approach)
+            if (data.count === 0 && data.totalCount === 0) {
+                container.classList.add('blog-list__no-results');
+            } else {
+                container.classList.remove('blog-list__no-results');
+            }
+
+            // Update pagination content (preserve existing DOM approach)
+            this.updatePaginationContent(data);
+
+            // Reinitialize components (preserve existing approach)
+            this.reinitializeComponents();
+
+            // Scroll to top if needed (preserve existing behavior)
+            if (scrollToTop) {
+                container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            // Update URL for SEO (preserve existing approach)
+            this.updateUrlForSEO(data);
+
+        } catch (error) {
+            console.error('Error updating page content:', error);
+            this.showErrorMessage(container, error);
+        }
+    }
+
+    /**
+     * Update pagination content (preserve existing DOM approach)
+     */
+    updatePaginationContent(data) {
+        const paginationContainer = document.getElementById('blog-pagination-container');
+        if (!paginationContainer) return;
+
+        if (data.hasPagination && data.pagination) {
+            paginationContainer.innerHTML = data.pagination;
+            paginationContainer.style.display = 'block';
+        } else {
+            paginationContainer.innerHTML = '';
+            paginationContainer.style.display = 'none';
+        }
+    }
+
+    /**
+     * Reinitialize components (preserve existing approach)
+     */
+    reinitializeComponents() {
+        try {
+            // Destroy existing slick carousels
+            this.destroyExistingCarousels();
+
+            // Reinitialize carousels with delay
+            setTimeout(() => {
+                // Import and call carousel initialization functions
+                import('../components/blogs').then(({ 
+                    initAlsowInterestingArticlesCarousel, 
+                    initReadOftenArticlesCarousel 
+                }) => {
+                    initAlsowInterestingArticlesCarousel();
+                    initReadOftenArticlesCarousel();
+                }).catch(() => {
+                    console.warn('Could not reinitialize carousels');
+                });
+            }, 100);
+        } catch (error) {
+            console.error('Error reinitializing components:', error);
+        }
+    }
+
+    /**
+     * Destroy existing carousels (preserve existing approach)
+     */
+    destroyExistingCarousels() {
+        const carousels = [
+            '#alsow-interesting-articles-carousel-container',
+            '#read-often-articles-carousel-container',
+        ];
+
+        carousels.forEach(selector => {
+            const $carousel = $(selector);
+            if ($carousel.length && $carousel.hasClass('slick-initialized')) {
+                try {
+                    $carousel.slick('destroy');
+                } catch (error) {
+                    console.warn(`Error destroying carousel ${selector}:`, error);
+                }
+            }
+        });
+    }
+
+    /**
+     * Update category sidebar state (preserve existing approach)
+     */
+    updateCategorySidebarState(categorySlug) {
+        const sidebar = document.querySelector('[data-blog-sidebar]');
+        if (!sidebar) return;
+
+        // Remove active class from all elements
+        sidebar.querySelectorAll('.blog-nav li').forEach(li => {
+            li.classList.remove('is-active');
+        });
+
+        // Add active class to selected category
+        const targetLink = sidebar.querySelector(`[data-category-slug="${categorySlug || ''}"]`);
+        if (targetLink) {
+            targetLink.closest('li').classList.add('is-active');
+        }
+    }
+
+    /**
+     * Clean redirect (preserve existing approach)
+     */
+    cleanRedirect() {
+        const cleanUrl = new URL(window.location.pathname, window.location.origin);
+        window.history.pushState({}, '', cleanUrl.toString());
+        window.location.reload();
+    }
+
+    /**
+     * Show error message (preserve existing approach)
+     */
+    showErrorMessage(container, error) {
+        const errorHtml = `
+            <div class="blog-error-message empty-landing">
+                <h3>Произошла ошибка при загрузке</h3>
+                <p>Пожалуйста, обновите страницу или попробуйте позже.</p>
+                <button onclick="window.location.reload()" class="btn _flex _green _medium min-120">Обновить страницу</button>
+            </div>
+        `;
+        container.innerHTML = errorHtml;
+    }
+
+    /**
+     * Update URL for SEO (preserve existing approach)
+     */
+    updateUrlForSEO(data) {
+        if (data.currentCategory) {
+            document.title = `${data.currentCategory.name} - Блог`;
+        } else if (data.totalCount !== undefined) {
+            document.title = `Блог - ${data.totalCount} статей`;
+        }
+    }
+
+    /**
+     * Navigation methods with store integration
+     */
+    goToPage(page) {
+        const store = this.getStore();
+        if (!store) return;
+        
+        store.setFilters({ ...store.filters, page });
+        this.syncUrlWithStore();
+    }
+
+    setCategory(categorySlug) {
+        const store = this.getStore();
+        if (!store) return;
+        
+        store.setFilters({ 
+            ...store.filters, 
+            category: categorySlug, 
+            page: 1 
+        });
+        this.syncUrlWithStore();
+    }
+
+    setSearch(searchQuery) {
+        const store = this.getStore();
+        if (!store) return;
+        
+        store.setFilters({ 
+            ...store.filters, 
+            search: searchQuery, 
+            page: 1 
+        });
+        this.syncUrlWithStore();
+    }
+
+    setSort(sortType, direction = 'desc') {
+        const store = this.getStore();
+        if (!store) return;
+        
+        store.setFilters({ 
+            ...store.filters, 
+            sort: sortType, 
+            direction, 
+            page: 1 
+        });
+        this.syncUrlWithStore();
+    }
+
+    /**
+     * Sync URL with store state
+     */
+    syncUrlWithStore() {
+        const store = this.getStore();
+        if (!store) return;
+        
+        const params = store.filterParams;
+        const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+        
+        // Create a serializable copy of filters for history state
+        const serializableFilters = {
+            category: store.filters.category || '',
+            page: store.filters.page || 1,
+            search: store.filters.search || '',
+            sort: store.filters.sort || 'latest',
+            direction: store.filters.direction || 'desc'
+        };
+        
+        window.history.pushState(
+            { filters: serializableFilters }, 
+            '', 
+            newUrl
+        );
+    }
+
+    /**
+     * Initialize from current URL
+     */
+    initFromURL() {
+        const store = this.getStore();
+        if (store) {
+            store.updateFromURL();
+        } else {
+            // If Alpine isn't ready, defer initialization
+            console.warn('Alpine store not ready, deferring URL initialization');
+            document.addEventListener('alpine:init', () => {
+                const deferredStore = this.getStore();
+                if (deferredStore) {
+                    deferredStore.updateFromURL();
+                }
+            });
+        }
+    }
+}
+
+// Create and export singleton instance
+export const blogAjaxManager = new BlogAjaxManager();
