@@ -151,7 +151,7 @@ class PromocodeServiceAdvancedTest extends TestCase
         // Создаем много промокодов без пользователей (чтобы избежать constraint violations)
         for ($i = 0; $i < 100; $i++) { // Уменьшаем количество для стабильности
             Promocode::factory()->create([
-                'promocode' => 'PERF_'.$i,
+                'promocode' => 'PERF_' . $i,
             ]);
         }
 
@@ -407,15 +407,22 @@ class PromocodeServiceAdvancedTest extends TestCase
         $memoryBefore = memory_get_usage();
 
         $user = User::factory()->create([
-            'messenger_contact' => '@large_memory_test_user',
+            'messenger_contact' => '@large_memory_test_user_' . uniqid(),
         ]);
 
-        // Создаем много промокодов и активаций
+        // Создаем много промокодов
         $promocodes = Promocode::factory()->count(100)->create();
 
-        foreach ($promocodes as $promocode) {
+        // Создаем несколько пользователей заранее для переиспользования
+        $testUsers = User::factory()->count(10)->create();
+
+        foreach ($promocodes as $index => $promocode) {
+            // Переиспользуем существующих пользователей вместо создания новых
+            $existingUser = $testUsers[$index % 10];
+
             PromocodeActivation::factory()->count(10)->create([
                 'promocode_id' => $promocode->id,
+                'user_id' => $existingUser->id, // Используем существующего пользователя
             ]);
         }
 
