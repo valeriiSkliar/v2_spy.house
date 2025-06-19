@@ -60,6 +60,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'queued_subscription_id',
         'balance_version',
         'is_trial_period',
+        'trial_period_used',
     ];
 
     /**
@@ -491,10 +492,19 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $this->update([
             'is_trial_period' => true,
+            'trial_period_used' => true,
             'subscription_time_start' => now(),
             'subscription_time_end' => now()->addDays(7),
             'subscription_is_expired' => false,
         ]);
+    }
+
+    /**
+     * Проверить, был ли триал период уже использован
+     */
+    public function hasTrialPeriodBeenUsed(): bool
+    {
+        return $this->trial_period_used;
     }
 
     /**

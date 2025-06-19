@@ -96,8 +96,8 @@ class EmailVerificationController extends Controller
         }
 
         if ($user->markEmailAsVerified()) {
-            // Активируем триал период на 7 дней
-            if (!$user->hasActiveSubscription() && !$user->isTrialPeriod()) {
+            // Активируем триал период на 7 дней только если он еще не был использован
+            if (!$user->hasActiveSubscription() && !$user->isTrialPeriod() && !$user->hasTrialPeriodBeenUsed()) {
                 $user->activateTrialPeriod();
             }
 

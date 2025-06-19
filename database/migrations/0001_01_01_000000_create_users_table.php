@@ -41,6 +41,7 @@ return new class extends Migration
 
             // Financial system fields
             $table->boolean('is_trial_period')->default(false)->comment('Flag for 7-day trial period activation');
+            $table->boolean('trial_period_used')->default(false)->comment('Flag indicating if trial period was ever used');
             $table->decimal('available_balance', 10, 2)->default(0.00)->comment('User available balance for payments');
             $table->unsignedBigInteger('subscription_id')->nullable()->comment('Current active subscription');
             $table->timestamp('subscription_time_start')->nullable()->comment('Current subscription start time');

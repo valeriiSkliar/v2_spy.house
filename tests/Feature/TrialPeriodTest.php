@@ -43,6 +43,7 @@ class TrialPeriodTest extends TestCase
 
         // Проверяем что триал активирован
         $this->assertTrue($user->is_trial_period);
+        $this->assertTrue($user->trial_period_used);
         $this->assertTrue($user->isTrialPeriod());
         $this->assertNotNull($user->subscription_time_start);
         $this->assertNotNull($user->subscription_time_end);
@@ -145,7 +146,8 @@ class TrialPeriodTest extends TestCase
         $user = User::factory()->create([
             'email_verified_at' => null,
             'is_trial_period' => false,
-            'subscription_id' => 1,
+            'trial_period_used' => false,
+            'subscription_id' => null, // Remove foreign key reference
             'subscription_time_start' => now()->subDays(1),
             'subscription_time_end' => now()->addDays(30),
             'subscription_is_expired' => false,
@@ -168,5 +170,38 @@ class TrialPeriodTest extends TestCase
         // Проверяем что триал НЕ активирован
         $this->assertFalse($user->is_trial_period);
         $this->assertFalse($user->isTrialPeriod());
+        $this->assertFalse($user->trial_period_used);
+    }
+
+    /**
+     * Тест что триал не активируется если он уже был использован ранее
+     */
+    public function test_trial_not_activated_if_already_used(): void
+    {
+        /** @var User $user */
+        $user = User::factory()->create([
+            'email_verified_at' => null,
+            'is_trial_period' => false,
+            'trial_period_used' => true, // Триал уже был использован
+        ]);
+
+        // Устанавливаем код верификации в кэш
+        $verificationCode = '123456';
+        Cache::put('email_verification_code:' . $user->id, $verificationCode, 600);
+
+        // Отправляем POST запрос для подтверждения email
+        $response = $this->actingAs($user)->postJson('/email/verify', [
+            'verification_code' => $verificationCode,
+        ]);
+
+        $response->assertJson(['success' => true]);
+
+        // Обновляем пользователя из БД
+        $user->refresh();
+
+        // Проверяем что триал НЕ активирован повторно
+        $this->assertFalse($user->is_trial_period);
+        $this->assertFalse($user->isTrialPeriod());
+        $this->assertTrue($user->trial_period_used); // Флаг использования остается true
     }
 }

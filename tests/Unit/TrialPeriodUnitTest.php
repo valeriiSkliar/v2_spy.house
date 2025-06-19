@@ -25,6 +25,7 @@ class TrialPeriodUnitTest extends TestCase
         $user->activateTrialPeriod();
 
         $this->assertTrue($user->is_trial_period);
+        $this->assertTrue($user->trial_period_used);
         $this->assertTrue($user->isTrialPeriod());
         $this->assertNotNull($user->subscription_time_start);
         $this->assertNotNull($user->subscription_time_end);
@@ -113,5 +114,25 @@ class TrialPeriodUnitTest extends TestCase
         ]);
 
         $this->assertEquals(0, $userNoTrial->getTrialDaysLeft());
+    }
+
+    /**
+     * Тест проверки использования триала
+     */
+    public function test_has_trial_period_been_used(): void
+    {
+        // Пользователь без использования триала
+        $userWithoutTrial = User::factory()->create([
+            'trial_period_used' => false,
+        ]);
+
+        $this->assertFalse($userWithoutTrial->hasTrialPeriodBeenUsed());
+
+        // Пользователь с использованным триалом
+        $userWithUsedTrial = User::factory()->create([
+            'trial_period_used' => true,
+        ]);
+
+        $this->assertTrue($userWithUsedTrial->hasTrialPeriodBeenUsed());
     }
 }

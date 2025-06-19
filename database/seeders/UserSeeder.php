@@ -33,6 +33,8 @@ class UserSeeder extends Seeder
             'subscription_is_expired' => false,
             'queued_subscription_id' => null,
             'balance_version' => 1,
+            'is_trial_period' => false,
+            'trial_period_used' => false,
 
         ]);
     }
