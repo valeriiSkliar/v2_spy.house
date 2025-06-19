@@ -42,9 +42,9 @@ window.serverData = {
     
     // Фильтры
     filters: {
-        search: '{{ $filters['search'] ?? '' }}',
-        category: '{{ $filters['category'] ?? '' }}',
-        sort: '{{ $filters['sort'] ?? 'latest' }}',
+        search: @json($filters['search'] ?? ''),
+        category: @json($filters['category'] ?? ''),
+        sort: @json($filters['sort'] ?? 'latest'),
         direction: 'desc'
     },
     
@@ -53,7 +53,7 @@ window.serverData = {
     popularPosts: @json($categories['popularPosts']),
     
     // AJAX URL
-    ajaxUrl: '{{ route('api.blog.list') }}'
+    ajaxUrl: @json(route('api.blog.list'))
 };
 </script>
 
