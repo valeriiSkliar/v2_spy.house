@@ -179,7 +179,7 @@ export function initBlogSearchComponent() {
     // Initialize component
     init() {
       // Create debounced search function that delegates to store
-      this.debouncedSearchFn = debounce((query) => {
+      this.debouncedSearchFn = debounce(query => {
         this.handleSearch(query);
       }, 300);
 
@@ -221,7 +221,7 @@ export function initBlogSearchComponent() {
       if (!store) return;
 
       const trimmedQuery = query ? query.trim() : '';
-      
+
       if (trimmedQuery) {
         store.setSearch(trimmedQuery);
       } else {
@@ -255,6 +255,61 @@ export function initBlogSearchComponent() {
         UIHelpers.clearFieldError(searchInput);
       }
     },
+
+    // Sorting functionality
+    get currentSort() {
+      return this.$store.blog?.filters?.sort || 'latest';
+    },
+
+    get currentDirection() {
+      return this.$store.blog?.filters?.direction || 'desc';
+    },
+
+    get isPopularSortActive() {
+      return this.currentSort === 'popular';
+    },
+
+    get isViewsSortActive() {
+      return this.currentSort === 'views';
+    },
+
+    // Toggle sorting direction for current sort type
+    toggleSortDirection(sortType) {
+      const store = this.$store.blog;
+      if (!store || this.isLoading) return;
+
+      // If clicking the same sort type, toggle direction
+      if (this.currentSort === sortType) {
+        const newDirection = this.currentDirection === 'desc' ? 'asc' : 'desc';
+        store.setSort(sortType, newDirection);
+      } else {
+        // If different sort type, set with default direction
+        store.setSort(sortType, 'desc');
+      }
+    },
+
+    // Set specific sort with direction
+    setSort(sortType, direction = 'desc') {
+      const store = this.$store.blog;
+      if (!store || this.isLoading) return;
+
+      store.setSort(sortType, direction);
+    },
+
+    // Get CSS classes for sort button
+    // getSortButtonClasses(sortType) {
+    //   // const baseClasses = 'w-100 btn _flex _medium sorting-btn';
+    //   const isActive = this.currentSort === sortType;
+    //   const isAsc = this.currentDirection === 'asc';
+
+    //   if (isActive && isAsc) {
+    //     return `asc`;
+    //   } else if (isActive) {
+    //     return ``;
+    //   }
+
+    //   return baseClasses;
+    // },
   }));
 }
 

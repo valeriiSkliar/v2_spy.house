@@ -64,6 +64,26 @@
             transform: rotate(360deg);
         }
     }
+
+    /* Sorting button styles */
+    .sorting-btn.active {
+        background-color: var(--primary-color, #007bff);
+        color: white;
+        border-color: var(--primary-color, #007bff);
+    }
+
+    .sorting-btn.active.asc .sorting-btn__icon::before {
+        transform: rotate(180deg);
+    }
+
+    .sorting-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .sorting-btn__icon {
+        transition: transform 0.2s ease;
+    }
 </style>
 
 <div class="blog-filter" x-data="blogSearchComponent()">
@@ -92,14 +112,26 @@
         <div class="blog-filter-order">
             <div class="blog-filter-order__label">Сортировка:</div>
             <div class="blog-filter-order__item">
-                <!-- asc desc -->
-                <button class="w-100 btn _flex _medium sorting-btn asc">Популярные <span
-                        class="sorting-btn__icon"></span></button>
+                <button class="w-100 btn _flex _medium sorting-btn" :class="isPopularSortActive ? currentDirection : ''"
+                    x-on:click="toggleSortDirection('popular')" :disabled="isLoading" type="button">
+                    Популярные
+                    <span class="sorting-btn__icon"></span>
+                </button>
             </div>
             <div class="blog-filter-order__item">
-                <button class="w-100 btn _flex _medium sorting-btn">Просматрывамые <span
-                        class="sorting-btn__icon"></span></button>
+                <button class="w-100 btn _flex _medium sorting-btn" :class="isViewsSortActive ? currentDirection : ''"
+                    x-on:click="toggleSortDirection('views')" :disabled="isLoading" type="button">
+                    Просматриваемые
+                    <span class="sorting-btn__icon"></span>
+                </button>
             </div>
+            {{-- <div class="blog-filter-order__item">
+                <button class="w-100 btn _flex _medium sorting-btn" :class="getSortButtonClasses('latest')"
+                    x-on:click="toggleSortDirection('latest')" :disabled="isLoading" type="button">
+                    Новые
+                    <span class="sorting-btn__icon"></span>
+                </button>
+            </div> --}}
         </div>
     </div>
 </div>
