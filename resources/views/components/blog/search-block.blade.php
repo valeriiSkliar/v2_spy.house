@@ -112,26 +112,21 @@
         <div class="blog-filter-order">
             <div class="blog-filter-order__label">Сортировка:</div>
             <div class="blog-filter-order__item">
-                <button class="w-100 btn _flex _medium sorting-btn" :class="isPopularSortActive ? currentDirection : ''"
+                <button class="w-100 btn _flex _medium sorting-btn"
+                    x-bind:class="isPopularSortActive ? currentDirection : ''"
                     x-on:click="toggleSortDirection('popular')" :disabled="isLoading" type="button">
                     Популярные
                     <span class="sorting-btn__icon"></span>
                 </button>
             </div>
             <div class="blog-filter-order__item">
-                <button class="w-100 btn _flex _medium sorting-btn" :class="isViewsSortActive ? currentDirection : ''"
-                    x-on:click="toggleSortDirection('views')" :disabled="isLoading" type="button">
+                <button class="w-100 btn _flex _medium sorting-btn"
+                    x-bind:class="isViewsSortActive ? currentDirection : ''" x-on:click="toggleSortDirection('views')"
+                    :disabled="isLoading" type="button">
                     Просматриваемые
                     <span class="sorting-btn__icon"></span>
                 </button>
             </div>
-            {{-- <div class="blog-filter-order__item">
-                <button class="w-100 btn _flex _medium sorting-btn" :class="getSortButtonClasses('latest')"
-                    x-on:click="toggleSortDirection('latest')" :disabled="isLoading" type="button">
-                    Новые
-                    <span class="sorting-btn__icon"></span>
-                </button>
-            </div> --}}
         </div>
     </div>
 </div>
