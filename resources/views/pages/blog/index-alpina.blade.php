@@ -5,7 +5,7 @@
 @endsection
 
 @section('page-content')
-<div x-data="blogPageSimple(serverData)" x-blog-loading="$store.blog.loading">
+<div x-data="blogPageSimple(serverData)" x-blog-loading="loading">
     <x-blog.search-block />
 
     {{-- Основной контейнер для статей --}}
@@ -22,8 +22,7 @@
     {{-- Контейнер пагинации --}}
     <div class="pagination-wrapper">
         {{-- Static Pagination (показывается до инициализации Alpine.js) --}}
-        <div id="blog-pagination-container" data-pagination-container
-            x-show="!initialized && $store.blog.pagination.hasPagination"
+        <div id="blog-pagination-container" data-pagination-container x-show="!initialized && hasPagination"
             x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
             x-transition:leave-end="opacity-0">
             @if($articles && $articles->hasPages())
@@ -32,9 +31,8 @@
         </div>
 
         {{-- Dynamic Pagination (показывается после инициализации Alpine.js) --}}
-        <div x-show="initialized && $store.blog.pagination.hasPagination"
-            x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0"
-            x-transition:enter-end="opacity-100">
+        <div x-show="initialized && hasPagination" x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
             <x-blog.pagination.dynamic-pagination />
         </div>
     </div>

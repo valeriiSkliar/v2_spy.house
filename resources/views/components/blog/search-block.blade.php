@@ -90,7 +90,7 @@
     <div class="mb-20">
         <div class="blog-filter-search">
             <span class="icon-search"></span>
-            <input type="search" placeholder="Поиск по блогу" x-model="$store.blog.filters.search" x-ref="searchInput"
+            <input type="search" placeholder="Поиск по блогу" :value="searchQuery" x-ref="searchInput"
                 x-on:input="debouncedSearch()" x-on:keyup.enter="handleSearchEnter()" :disabled="isLoading"
                 class="blog-search-input">
 

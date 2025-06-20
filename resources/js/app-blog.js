@@ -49,10 +49,9 @@ Alpine.data('blogApp', () => ({
   init() {
     console.log('Blog app initializing...');
 
-    // Restore state from URL using centralized store API
-    const store = this.$store.blog;
-    if (store && store.urlAPI) {
-      this.urlRestored = store.urlAPI.restoreFromUrl();
+    // Restore state from URL using centralized $blog API
+    if (this.$blog && this.$blog.url) {
+      this.urlRestored = this.$blog.url.restoreFromUrl();
     }
 
     // Initialize ajax manager from URL
@@ -66,33 +65,31 @@ Alpine.data('blogApp', () => ({
 
   // URL-related methods now use centralized store API
 
-  // Direct access to store for debugging
+  // Direct access to store for debugging - через $blog API
   get blogStore() {
-    return this.$store.blog;
+    return Alpine.store('blog');
   },
 
   // URL-related methods - use centralized store URL API
   get currentUrl() {
-    return this.blogStore && this.blogStore.urlAPI
-      ? this.blogStore.urlAPI.getCurrentUrl()
-      : window.location.href;
+    return this.$blog && this.$blog.url ? this.$blog.url.getCurrentUrl() : window.location.href;
   },
 
   get isUrlSynced() {
-    return this.blogStore && this.blogStore.urlAPI ? this.blogStore.urlAPI.isStateSynced() : false;
+    return this.$blog && this.$blog.url ? this.$blog.url.isStateSynced() : false;
   },
 
   // State restoration methods - delegate to store URL API
   restoreState() {
-    if (this.blogStore && this.blogStore.urlAPI) {
-      return this.blogStore.urlAPI.restoreFromUrl();
+    if (this.$blog && this.$blog.url) {
+      return this.$blog.url.restoreFromUrl();
     }
     return false;
   },
 
   syncWithUrl() {
-    if (this.blogStore && this.blogStore.urlAPI) {
-      this.blogStore.urlAPI.updateUrl(false); // Replace state
+    if (this.$blog && this.$blog.url) {
+      this.$blog.url.updateUrl(false); // Replace state
       return true;
     }
     return false;
@@ -123,8 +120,8 @@ Alpine.data('blogApp', () => ({
     console.log('Force syncing blog state...');
 
     // Sync URL state
-    if (this.blogStore && this.blogStore.urlAPI) {
-      this.blogStore.urlAPI.forceSync();
+    if (this.$blog && this.$blog.url) {
+      this.$blog.url.forceSync();
     }
 
     // Refresh content via Manager

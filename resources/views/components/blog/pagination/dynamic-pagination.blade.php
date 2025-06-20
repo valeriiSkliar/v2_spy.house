@@ -1,8 +1,8 @@
 {{-- Dynamic Blog Pagination Component --}}
 {{-- Использует Alpine.js для динамической навигации --}}
 
-<nav x-data="blogPaginationSimple" x-show="$store.blog.pagination.hasPagination && totalPages > 1"
-    x-blog-loading="$store.blog.loading" class="pagination-nav" role="navigation" aria-label="Blog pagination">
+<nav x-data="blogPaginationSimple" x-show="hasPagination && totalPages > 1" x-blog-loading="loading"
+    class="pagination-nav" role="navigation" aria-label="Blog pagination">
     <ul class="pagination-list">
         {{-- Previous Page Link --}}
         <li>
@@ -53,8 +53,8 @@
             Current: <span x-text="currentPage"></span> (type: <span x-text="typeof currentPage"></span>) |
             Total: <span x-text="totalPages"></span> |
             Loading: <span x-text="loading"></span><br>
-            Store currentPage: <span x-text="$store.blog.pagination.currentPage"></span> |
-            Store filters.page: <span x-text="$store.blog.filters.page"></span>
+            Component currentPage: <span x-text="currentPage"></span> |
+            Component hasPagination: <span x-text="hasPagination"></span>
         </div>
     </div>
     @endif

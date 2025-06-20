@@ -72,18 +72,22 @@ export function initSimpleBlogPage() {
       this.initialized = true;
     },
 
-    // Proxy getters for template access
+    // Proxy getters for template access - используем $blog API
     get loading() {
-      return Alpine.store('blog')?.loading || false;
+      return this.$blog?.loading() || false;
     },
     get articles() {
-      return Alpine.store('blog')?.articles || [];
+      return this.$blog?.articles() || [];
     },
     get filters() {
-      return Alpine.store('blog')?.filters || {};
+      return this.$blog?.filters() || {};
     },
     get pagination() {
-      return Alpine.store('blog')?.pagination || {};
+      return this.$blog?.pagination() || {};
+    },
+    get hasPagination() {
+      const pagination = this.$blog?.pagination();
+      return pagination?.hasPagination || false;
     },
     get hasArticles() {
       return this.articles.length > 0 || !!this.heroArticle;
@@ -113,21 +117,29 @@ export function initSimpleBlogPage() {
  */
 export function initSimpleBlogPagination() {
   Alpine.data('blogPaginationSimple', () => ({
-    // Computed properties from store
+    // Computed properties from store - используем $blog API
     get currentPage() {
-      return Alpine.store('blog')?.pagination?.currentPage || 1;
+      const pagination = this.$blog?.pagination();
+      return pagination?.currentPage || 1;
     },
     get totalPages() {
-      return Alpine.store('blog')?.pagination?.totalPages || 1;
+      const pagination = this.$blog?.pagination();
+      return pagination?.totalPages || 1;
     },
     get hasNext() {
-      return Alpine.store('blog')?.pagination?.hasNext || false;
+      const pagination = this.$blog?.pagination();
+      return pagination?.hasNext || false;
     },
     get hasPrev() {
-      return Alpine.store('blog')?.pagination?.hasPrev || false;
+      const pagination = this.$blog?.pagination();
+      return pagination?.hasPrev || false;
+    },
+    get hasPagination() {
+      const pagination = this.$blog?.pagination();
+      return pagination?.hasPagination || false;
     },
     get loading() {
-      return Alpine.store('blog')?.loading || false;
+      return this.$blog?.loading() || false;
     },
 
     // Navigation methods - delegate to Manager via operations API
@@ -195,13 +207,19 @@ export function initBlogSearchComponent() {
       console.log('Blog search component initialized');
     },
 
-    // Computed properties - pure proxies to store
+    // Computed properties - через Operations API вместо прямого $store
     get searchQuery() {
-      return this.$store.blog?.filters?.search || '';
+      // Используем Operations API для получения состояния
+      const operations = this.$blog.operations();
+      if (operations && this.$blog.filters) {
+        return this.$blog.filters().search || '';
+      }
+      return '';
     },
 
     get isLoading() {
-      return this.$store.blog?.loading || false;
+      // Используем магический метод $blog.loading() вместо $store
+      return this.$blog.loading() || false;
     },
 
     get hasActiveSearch() {
@@ -209,15 +227,13 @@ export function initBlogSearchComponent() {
     },
 
     get searchStatus() {
-      const store = this.$store.blog;
-      if (!store) return '';
-
       if (this.isLoading) {
         return 'Поиск...';
       }
 
       if (this.hasActiveSearch) {
-        const count = store.stats?.currentCount || 0;
+        const searchStats = this.$blog.searchStats();
+        const count = searchStats?.currentResults || 0;
         return `Найдено: ${count} статей`;
       }
 
@@ -271,13 +287,13 @@ export function initBlogSearchComponent() {
       }
     },
 
-    // Sorting functionality
+    // Sorting functionality - через $blog API
     get currentSort() {
-      return this.$store.blog?.filters?.sort || 'latest';
+      return this.$blog.filters()?.sort || 'latest';
     },
 
     get currentDirection() {
-      return this.$store.blog?.filters?.direction || 'desc';
+      return this.$blog.filters()?.direction || 'desc';
     },
 
     get isPopularSortActive() {
@@ -338,21 +354,25 @@ export function initBlogCategoriesComponent() {
       console.log('Blog categories component initialized');
     },
 
-    // Computed properties - pure proxies to store
+    // Computed properties - через $blog API вместо прямого $store
     get categories() {
-      return this.$store.blog?.categories || [];
+      // Используем $blog magic method для доступа к состоянию
+      const articles = this.$blog.articles();
+      const state = this.$blog.state;
+      return state ? state.getCategories() : [];
     },
 
     get currentCategory() {
-      return this.$store.blog?.currentCategory || null;
+      const state = this.$blog.state;
+      return state ? state.getCurrentCategory() : null;
     },
 
     get isLoading() {
-      return this.$store.blog?.loading || false;
+      return this.$blog.loading() || false;
     },
 
     get activeCategory() {
-      return this.$store.blog?.filters?.category || '';
+      return this.$blog.filters()?.category || '';
     },
 
     // Check if category is currently selected
