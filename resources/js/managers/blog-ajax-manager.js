@@ -20,6 +20,9 @@ export class BlogAjaxManager {
 
     // Try to get store if Alpine is already available
     this.tryInitStore();
+
+    // Set up coordination with Store events
+    this.setupStoreCoordination();
   }
 
   /**
@@ -670,6 +673,23 @@ export class BlogAjaxManager {
     const cleanUrl = new URL(window.location.pathname, window.location.origin);
     window.history.pushState({}, '', cleanUrl.toString());
     window.location.reload();
+  }
+
+  /**
+   * Set up coordination with Store via custom events
+   * Store handles popstate and dispatches custom event, Manager handles content loading
+   * This ensures proper separation while avoiding duplicate listeners
+   */
+  setupStoreCoordination() {
+    // Listen for Store navigation events instead of popstate directly
+    document.addEventListener('blog:state-changed', event => {
+      console.log('Manager: Store state changed, reloading content', event.detail);
+
+      // Small delay to ensure state is fully updated
+      setTimeout(() => {
+        this.loadFromCurrentState();
+      }, 10);
+    });
   }
 }
 

@@ -336,13 +336,17 @@ export const blogStore = {
     console.log('Handling popstate event - updating from URL');
     this.updateFromURL();
 
-    // Trigger content reload if AJAX manager is available
-    if (
-      window.blogAjaxManager &&
-      typeof window.blogAjaxManager.loadFromCurrentState === 'function'
-    ) {
-      window.blogAjaxManager.loadFromCurrentState();
-    }
+    // Dispatch custom event to notify Manager about state change
+    // This maintains separation: Store manages state, Manager handles content loading
+    document.dispatchEvent(
+      new CustomEvent('blog:state-changed', {
+        detail: {
+          source: 'popstate',
+          filters: this.filters,
+          timestamp: Date.now(),
+        },
+      })
+    );
   },
 
   // NEW: Update URL without triggering popstate
@@ -910,29 +914,6 @@ export function initBlogStore(Alpine) {
       }
       console.warn('Blog Manager operations not available');
       return {};
-    },
-
-    // DEPRECATED: Direct navigation methods (use operations instead)
-    // These are kept for backward compatibility but should use operations API
-    goToPage: page => {
-      const ops = window.blogAjaxManager?.operationsAPI;
-      return ops ? ops.goToPage(page) : false;
-    },
-    setCategory: slug => {
-      const ops = window.blogAjaxManager?.operationsAPI;
-      return ops ? ops.setCategory(slug) : false;
-    },
-    setSearch: query => {
-      const ops = window.blogAjaxManager?.operationsAPI;
-      return ops ? ops.setSearch(query) : false;
-    },
-    clearSearch: () => {
-      const ops = window.blogAjaxManager?.operationsAPI;
-      return ops ? ops.clearSearch() : false;
-    },
-    setSort: (type, direction) => {
-      const ops = window.blogAjaxManager?.operationsAPI;
-      return ops ? ops.setSort(type, direction) : false;
     },
   }));
 
