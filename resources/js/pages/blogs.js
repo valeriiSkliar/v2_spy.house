@@ -325,80 +325,80 @@ function initSidebarState() {
  * Оптимизированная инициализация поиска
  * Зачем: интеграция поиска с общей системой состояний
  */
-function initOptimizedBlogSearch() {
-  // Новый поиск в блоке фильтров
-  const filterSearchInput = document.querySelector('.blog-filter-search input[type="search"]');
+// function initOptimizedBlogSearch() {
+//   // Новый поиск в блоке фильтров
+//   const filterSearchInput = document.querySelector('.blog-filter-search input[type="search"]');
 
-  // Старый поиск в форме
-  const searchForm = document.querySelector('.search-form form');
-  const searchInput = document.querySelector('.search-form input[type="search"]');
+//   // Старый поиск в форме
+//   const searchForm = document.querySelector('.search-form form');
+//   const searchInput = document.querySelector('.search-form input[type="search"]');
 
-  // Инициализируем новый поиск в блоке фильтров
-  if (filterSearchInput) {
-    initFilterSearch(filterSearchInput);
-  }
+//   // Инициализируем новый поиск в блоке фильтров
+//   if (filterSearchInput) {
+//     initFilterSearch(filterSearchInput);
+//   }
 
-  // Поддерживаем старый поиск для обратной совместимости
-  if (!searchForm || !searchInput) {
-    return;
-  }
+//   // Поддерживаем старый поиск для обратной совместимости
+//   if (!searchForm || !searchInput) {
+//     return;
+//   }
 
-  // Обработчик изменения поискового запроса
-  let searchTimeout;
-  searchInput.addEventListener('input', function (e) {
-    const query = searchInput.value.trim();
+//   // Обработчик изменения поискового запроса
+//   let searchTimeout;
+//   searchInput.addEventListener('input', function (e) {
+//     const query = searchInput.value.trim();
 
-    // Очищаем предыдущий таймаут
-    clearTimeout(searchTimeout);
+//     // Очищаем предыдущий таймаут
+//     clearTimeout(searchTimeout);
 
-    // Если запрос короткий, возвращаемся к обычному режиму
-    if (query.length < 3) {
-      const blogContainer = document.getElementById('blog-articles-container');
-      const ajaxUrl = blogContainer?.getAttribute('data-blog-ajax-url');
+//     // Если запрос короткий, возвращаемся к обычному режиму
+//     if (query.length < 3) {
+//       const blogContainer = document.getElementById('blog-articles-container');
+//       const ajaxUrl = blogContainer?.getAttribute('data-blog-ajax-url');
 
-      if (ajaxUrl) {
-        // Убираем параметр поиска из URL
-        const urlParams = new URLSearchParams(window.location.search);
-        urlParams.delete('search');
-        const newUrl =
-          window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
-        window.history.pushState({}, '', newUrl);
+//       if (ajaxUrl) {
+//         // Убираем параметр поиска из URL
+//         const urlParams = new URLSearchParams(window.location.search);
+//         urlParams.delete('search');
+//         const newUrl =
+//           window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+//         window.history.pushState({}, '', newUrl);
 
-        // Перезагружаем контент
-        reloadBlogContent(blogContainer, ajaxUrl);
-      }
-      return;
-    }
+//         // Перезагружаем контент
+//         reloadBlogContent(blogContainer, ajaxUrl);
+//       }
+//       return;
+//     }
 
-    // Устанавливаем задержку для избежания частых запросов
-    searchTimeout = setTimeout(() => {
-      performIntegratedSearch(query);
-    }, 300);
-  });
+//     // Устанавливаем задержку для избежания частых запросов
+//     searchTimeout = setTimeout(() => {
+//       performIntegratedSearch(query);
+//     }, 300);
+//   });
 
-  // Обработчик отправки формы поиска
-  searchForm.addEventListener('submit', function (e) {
-    e.preventDefault();
-    const query = searchInput.value.trim();
+//   // Обработчик отправки формы поиска
+//   searchForm.addEventListener('submit', function (e) {
+//     e.preventDefault();
+//     const query = searchInput.value.trim();
 
-    if (query.length >= 3) {
-      // Переходим на страницу поиска
-      const url = new URL(window.location.href);
-      url.pathname = '/blog/search';
-      url.searchParams.set('q', query);
-      window.location.href = url.toString();
-    }
-  });
+//     if (query.length >= 3) {
+//       // Переходим на страницу поиска
+//       const url = new URL(window.location.href);
+//       url.pathname = '/blog/search';
+//       url.searchParams.set('q', query);
+//       window.location.href = url.toString();
+//     }
+//   });
 
-  // Обработчик ESC для сброса поиска
-  document.addEventListener('keydown', function (event) {
-    if (event.key === 'Escape' && searchInput.value.trim()) {
-      searchInput.value = '';
-      const inputEvent = new Event('input');
-      searchInput.dispatchEvent(inputEvent);
-    }
-  });
-}
+//   // Обработчик ESC для сброса поиска
+//   document.addEventListener('keydown', function (event) {
+//     if (event.key === 'Escape' && searchInput.value.trim()) {
+//       searchInput.value = '';
+//       const inputEvent = new Event('input');
+//       searchInput.dispatchEvent(inputEvent);
+//     }
+//   });
+// }
 
 /**
  * Инициализация поиска в блоке фильтров
