@@ -24,6 +24,8 @@
     </main>
 </div>
 @endsection
+{{-- Loading overlay --}}
+<x-common.fullscreen-loader :active="false" />
 
 @push('scripts')
 @vite(['resources/js/app-blog.js'])

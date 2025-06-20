@@ -51,8 +51,7 @@
     </a>
     @endsection
 
-    {{-- Loading overlay --}}
-    <x-common.fullscreen-loader :active="false" x-bind:class="{ 'active': $store.blog.loading }" />
+
 </div>
 
 {{-- CSS для пагинации --}}

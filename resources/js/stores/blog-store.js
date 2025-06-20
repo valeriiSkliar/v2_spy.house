@@ -4,12 +4,18 @@
  * Replaces global variables and provides reactive state
  */
 import { ValidationMethods } from '../validation/validation-constants.js';
+import loader from '../components/loader.js';
+import { showInElement, hideInElement } from '../components/loader.js';
 
 export const blogStore = {
   // Loading state
   loading: false,
   currentRequest: null,
   retryCount: 0,
+  
+  // Loader management
+  currentInlineLoader: null,
+  showFullscreenLoader: false,
 
   // Content data
   articles: [],
@@ -123,8 +129,58 @@ export const blogStore = {
   },
 
   // Actions
-  setLoading(state) {
-    this.loading = state;
+  setLoading(isLoading, options = {}) {
+    const { useFullscreenLoader = true, container = null } = options;
+    
+    this.loading = isLoading;
+    console.log('Loading state changed:', isLoading, options);
+    
+    if (isLoading) {
+      if (useFullscreenLoader) {
+        this.showLoader();
+      } else if (container) {
+        this.showInlineLoader(container);
+      }
+    } else {
+      this.hideAllLoaders();
+    }
+  },
+
+  // Centralized loader management methods
+  showLoader() {
+    this.showFullscreenLoader = true;
+    loader.show();
+    console.log('Fullscreen loader shown');
+  },
+
+  hideLoader() {
+    this.showFullscreenLoader = false;
+    loader.hide();
+    console.log('Fullscreen loader hidden');
+  },
+
+  showInlineLoader(container) {
+    // Hide any existing inline loader first
+    this.hideInlineLoader();
+    
+    if (container) {
+      this.currentInlineLoader = showInElement(container);
+      console.log('Inline loader shown in container:', container);
+    }
+  },
+
+  hideInlineLoader() {
+    if (this.currentInlineLoader) {
+      hideInElement(this.currentInlineLoader);
+      this.currentInlineLoader = null;
+      console.log('Inline loader hidden');
+    }
+  },
+
+  hideAllLoaders() {
+    this.hideLoader();
+    this.hideInlineLoader();
+    console.log('All loaders hidden');
   },
 
   setCurrentRequest(request) {
@@ -551,6 +607,9 @@ export const blogStore = {
   // NEW: Clean redirect (clear all parameters)
   cleanRedirect() {
     console.log('Store performing clean redirect');
+
+    // Show loader before page reload using centralized method
+    this.showLoader();
 
     // Reset filters to defaults
     this.resetFilters();

@@ -1,6 +1,5 @@
 import Alpine from 'alpinejs';
 import { blogAPI } from '../components/fetcher/ajax-fetcher';
-import { ValidationMethods } from '../validation/validation-constants.js';
 
 /**
  * Blog AJAX Manager
@@ -46,7 +45,7 @@ export class BlogAjaxManager {
    * Uses centralized blogAPI with built-in retry logic
    */
   async loadContent(container, url, options = {}) {
-    const { scrollToTop = true, validateParams = true } = options;
+    const { scrollToTop = false, validateParams = true, useInlineLoader = true } = options;
 
     const store = this.getStore();
     if (!store) {
@@ -66,7 +65,7 @@ export class BlogAjaxManager {
         this.cleanRedirect();
         return;
       }
-      
+
       // Validation is handled by middleware, store validation is sufficient for client-side checks
     }
 
@@ -77,8 +76,11 @@ export class BlogAjaxManager {
       console.log('Search active:', store.filters.search);
     }
 
-    // Set loading state - UI components will react to store.loading
-    store.setLoading(true);
+    // Set loading state with centralized loader management
+    const loaderOptions = useInlineLoader
+      ? { useFullscreenLoader: false, container }
+      : { useFullscreenLoader: true };
+    store.setLoading(true, loaderOptions);
 
     // Build request URL using store
     const requestUrl = store.buildRequestURL(url);
@@ -117,7 +119,6 @@ export class BlogAjaxManager {
     } finally {
       store.setLoading(false);
       store.setCurrentRequest(null);
-      // UI components will react to store.loading = false
     }
   }
 
@@ -307,9 +308,10 @@ export class BlogAjaxManager {
   cleanRedirect() {
     const store = this.getStore();
     if (store && typeof store.cleanRedirect === 'function') {
+      // Store handles loader management internally
       store.cleanRedirect();
     } else {
-      // Fallback if store is not available
+      // Fallback if store is not available - no loader management
       const cleanUrl = new URL(window.location.pathname, window.location.origin);
       window.history.pushState({}, '', cleanUrl.toString());
       window.location.reload();
