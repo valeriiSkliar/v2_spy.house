@@ -4,6 +4,7 @@
  * Replaces global variables and provides reactive state
  */
 import { ValidationMethods } from '../validation/validation-constants.js';
+
 export const blogStore = {
   // Loading state
   loading: false,
@@ -521,10 +522,14 @@ export const blogStore = {
     this.persistFilters();
 
     // Update browser history
-    window.history.pushState({ 
-      blogFilters: redirectFilters,
-      timestamp: Date.now()
-    }, '', redirectUrl);
+    window.history.pushState(
+      {
+        blogFilters: redirectFilters,
+        timestamp: Date.now(),
+      },
+      '',
+      redirectUrl
+    );
 
     // Trigger content reload
     this.loadContent();
@@ -533,14 +538,14 @@ export const blogStore = {
   // NEW: Clean redirect (clear all parameters)
   cleanRedirect() {
     console.log('Store performing clean redirect');
-    
+
     // Reset filters to defaults
     this.resetFilters();
-    
+
     // Create clean URL
     const cleanUrl = new URL(window.location.pathname, window.location.origin);
     window.history.pushState({}, '', cleanUrl.toString());
-    
+
     // Reload page
     window.location.reload();
   },
@@ -567,8 +572,11 @@ export const blogStore = {
     // Validate page number
     if (page < 1 || page > 1000) return false;
 
-    // Search validation is handled by middleware, basic client-side check for length is sufficient
-    if (search && (search.trim().length < 2 || search.trim().length > 255)) return false;
+    // Use centralized search validation
+    if (search) {
+      const searchValidation = ValidationMethods.validateBlogSearch(search);
+      if (!searchValidation.isValid) return false;
+    }
 
     // Validate category slug
     if (category && !/^[a-zA-Z0-9\-_]*$/.test(category)) return false;

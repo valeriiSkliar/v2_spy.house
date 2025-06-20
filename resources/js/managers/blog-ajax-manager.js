@@ -1,6 +1,5 @@
 import Alpine from 'alpinejs';
 import { blogAPI } from '../components/fetcher/ajax-fetcher';
-import { hideInElement, showInElement } from '../components/loader';
 import { ValidationMethods } from '../validation/validation-constants.js';
 
 /**
@@ -47,7 +46,7 @@ export class BlogAjaxManager {
    * Uses centralized blogAPI with built-in retry logic
    */
   async loadContent(container, url, options = {}) {
-    const { scrollToTop = true, showLoader = true, validateParams = true } = options;
+    const { scrollToTop = true, validateParams = true } = options;
 
     const store = this.getStore();
     if (!store) {
@@ -78,9 +77,8 @@ export class BlogAjaxManager {
       console.log('Search active:', store.filters.search);
     }
 
-    // Set loading state
+    // Set loading state - UI components will react to store.loading
     store.setLoading(true);
-    const loader = showLoader ? showInElement(container) : null;
 
     // Build request URL using store
     const requestUrl = store.buildRequestURL(url);
@@ -119,9 +117,7 @@ export class BlogAjaxManager {
     } finally {
       store.setLoading(false);
       store.setCurrentRequest(null);
-      if (loader) {
-        hideInElement(loader);
-      }
+      // UI components will react to store.loading = false
     }
   }
 

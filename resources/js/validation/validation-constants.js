@@ -68,11 +68,11 @@ export const IP_RESTRICTION_CONFIG = {
 };
 
 export const BLOG_SEARCH_CONFIG = {
-  minLength: 2,
+  minLength: 3,
   maxLength: 255,
   pattern: VALIDATION_PATTERNS.blogSearch,
   errorMessage:
-    'Поисковый запрос должен содержать от 2 до 255 символов и не содержать недопустимых символов',
+    'Поисковый запрос должен содержать от 3 до 255 символов и не содержать недопустимых символов',
   securityPattern: /<script|javascript:|data:|vbscript:/i,
   securityErrorMessage: 'Поисковый запрос содержит недопустимые символы',
 };

@@ -172,21 +172,21 @@ export function initSimpleBlogPagination() {
 }
 
 /**
- * Simple blog search component - works directly with store
+ * Simple blog search component - pure proxy to store
  */
 export function initBlogSearchComponent() {
   Alpine.data('blogSearchComponent', () => ({
     // Initialize component
     init() {
-      // Создаем debounced функцию поиска
-      this.debouncedSearchFn = debounce(query => {
-        this.performSearch(query);
+      // Create debounced search function that delegates to store
+      this.debouncedSearchFn = debounce((query) => {
+        this.handleSearch(query);
       }, 300);
 
       console.log('Blog search component initialized');
     },
 
-    // Computed properties from store
+    // Computed properties - pure proxies to store
     get searchQuery() {
       return this.$store.blog?.filters?.search || '';
     },
@@ -199,7 +199,6 @@ export function initBlogSearchComponent() {
       return this.searchQuery && this.searchQuery.length > 0;
     },
 
-    // Get search status message
     get searchStatus() {
       const store = this.$store.blog;
       if (!store) return '';
@@ -216,28 +215,17 @@ export function initBlogSearchComponent() {
       return '';
     },
 
-    // Perform search via store - simplified without validation duplication
-    performSearch(query) {
+    // Simple handlers - delegate to store
+    handleSearch(query) {
+      const store = this.$store.blog;
+      if (!store) return;
+
       const trimmedQuery = query ? query.trim() : '';
-      if (trimmedQuery.length < 3) {
-        return;
-      }
-
-      console.log('Performing search:', trimmedQuery);
-
-      try {
-        const store = this.$store.blog;
-        if (store && typeof store.setSearch === 'function') {
-          if (trimmedQuery) {
-            store.setSearch(trimmedQuery);
-          } else {
-            store.clearSearch();
-          }
-        } else {
-          console.error('Blog store not available for search');
-        }
-      } catch (error) {
-        console.error('Search error:', error);
+      
+      if (trimmedQuery) {
+        store.setSearch(trimmedQuery);
+      } else {
+        store.clearSearch();
       }
     },
 
@@ -249,30 +237,19 @@ export function initBlogSearchComponent() {
 
     // Handle search on Enter key
     handleSearchEnter() {
-      // Отменяем debounce и выполняем поиск немедленно
       this.debouncedSearchFn.cancel();
       const query = this.$refs.searchInput?.value || '';
-      this.performSearch(query);
+      this.handleSearch(query);
     },
 
-    // Clear search
+    // Clear search - simple proxy
     clearSearch() {
-      this.clearValidationError();
-
-      try {
-        const store = this.$store.blog;
-        if (store && typeof store.clearSearch === 'function') {
-          store.clearSearch();
-        } else {
-          console.error('Blog store not available for clearing search');
-        }
-      } catch (error) {
-        console.error('Clear search error:', error);
+      const store = this.$store.blog;
+      if (store && typeof store.clearSearch === 'function') {
+        store.clearSearch();
       }
-    },
 
-    // Clear validation error
-    clearValidationError() {
+      // Clear UI errors
       const searchInput = this.$refs.searchInput;
       if (searchInput) {
         UIHelpers.clearFieldError(searchInput);
