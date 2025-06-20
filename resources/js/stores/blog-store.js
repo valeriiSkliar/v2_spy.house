@@ -288,11 +288,24 @@ export const blogStore = {
   updateURL(pushState = true) {
     const url = new URL(window.location);
 
+    console.log('updateURL called with filters:', this.filters);
+
+    // Clear existing blog-related parameters first
+    url.searchParams.delete('page');
+    url.searchParams.delete('category');
+    url.searchParams.delete('search');
+    url.searchParams.delete('sort');
+    url.searchParams.delete('direction');
+
     // Add current filter values
     const params = this.filterParams;
+    console.log('filterParams:', Array.from(params.entries()));
+    
     params.forEach((value, key) => {
       url.searchParams.set(key, value);
     });
+
+    console.log('Final URL before history update:', url.toString());
 
     // Create a simple, cloneable state object (avoid complex objects)
     const stateData = {
@@ -314,6 +327,7 @@ export const blogStore = {
     }
 
     console.log('URL updated:', url.toString());
+    console.log('Current window.location.href:', window.location.href);
   },
 
   // NEW: Get current URL with filters
@@ -369,6 +383,85 @@ export const blogStore = {
     });
   },
 
+  // Unified navigation method - consolidates navigation from all components
+  navigate(filters) {
+    // Update filters without URL update (to avoid double update)
+    this.filters = {
+      ...this.filters,
+      ...filters,
+    };
+    this.persistFilters();
+    
+    // Update URL once
+    this.updateURL(true);
+    
+    // Load content
+    this.loadContent();
+  },
+
+  // Navigation helper methods
+  goToPage(page) {
+    const targetPage = parseInt(page);
+    if (targetPage < 1 || targetPage > this.pagination.totalPages || this.loading) {
+      return false;
+    }
+    this.navigate({ ...this.filters, page: targetPage });
+    return true;
+  },
+
+  goToNextPage() {
+    if (this.pagination.hasNext && !this.loading) {
+      return this.goToPage(this.pagination.currentPage + 1);
+    }
+    return false;
+  },
+
+  goToPrevPage() {
+    if (this.pagination.hasPrev && !this.loading) {
+      return this.goToPage(this.pagination.currentPage - 1);
+    }
+    return false;
+  },
+
+  goToFirstPage() {
+    if (this.pagination.currentPage > 1 && !this.loading) {
+      return this.goToPage(1);
+    }
+    return false;
+  },
+
+  goToLastPage() {
+    if (this.pagination.currentPage < this.pagination.totalPages && !this.loading) {
+      return this.goToPage(this.pagination.totalPages);
+    }
+    return false;
+  },
+
+  setCategory(categorySlug) {
+    if (this.loading) return false;
+    this.navigate({ ...this.filters, category: categorySlug, page: 1 });
+    return true;
+  },
+
+  setSearch(searchQuery) {
+    if (this.loading) return false;
+    this.navigate({ ...this.filters, search: searchQuery, page: 1 });
+    return true;
+  },
+
+  setSort(sortType, direction = 'desc') {
+    if (this.loading) return false;
+    this.navigate({ ...this.filters, sort: sortType, direction, page: 1 });
+    return true;
+  },
+
+  // Content loading method
+  loadContent() {
+    if (window.blogAjaxManager && typeof window.blogAjaxManager.loadFromCurrentState === 'function') {
+      window.blogAjaxManager.loadFromCurrentState();
+    }
+  },
+
   // NEW: Navigate to specific URL state
   navigateToState(filters, replaceState = false) {
     // Update filters
@@ -379,12 +472,7 @@ export const blogStore = {
     this.updateURL(!replaceState);
 
     // Trigger content reload
-    if (
-      window.blogAjaxManager &&
-      typeof window.blogAjaxManager.loadFromCurrentState === 'function'
-    ) {
-      window.blogAjaxManager.loadFromCurrentState();
-    }
+    this.loadContent();
   },
 
   // NEW: Check if current state matches URL
@@ -619,6 +707,22 @@ export const blogStore = {
 // Export function to register store with Alpine after initialization
 export function initBlogStore(Alpine) {
   Alpine.store('blog', blogStore);
+  
+  // Add simplified $blog magic method
+  Alpine.magic('blog', () => ({
+    store: Alpine.store('blog'),
+    // Direct access to navigation methods
+    goToPage: (page) => Alpine.store('blog').goToPage(page),
+    setCategory: (slug) => Alpine.store('blog').setCategory(slug),
+    setSearch: (query) => Alpine.store('blog').setSearch(query),
+    setSort: (type, direction) => Alpine.store('blog').setSort(type, direction),
+    // Quick access to state
+    loading: () => Alpine.store('blog').loading,
+    filters: () => Alpine.store('blog').filters,
+    articles: () => Alpine.store('blog').articles,
+    pagination: () => Alpine.store('blog').pagination,
+  }));
+  
   // Initialize store after registration
   blogStore.init();
 }

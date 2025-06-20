@@ -348,20 +348,7 @@ export class BlogAjaxManager {
   }
 
   /**
-   * Navigation methods with store integration
-   */
-  goToPage(page) {
-    const store = this.getStore();
-    if (!store) return;
-
-    console.log(`BlogAjaxManager: goToPage(${page})`);
-
-    store.setFilters({ ...store.filters, page });
-    this.loadFromCurrentState();
-  }
-
-  /**
-   * NEW: Загрузка контента на основе текущего состояния store
+   * Load content based on current store state
    */
   loadFromCurrentState() {
     const store = this.getStore();
@@ -373,8 +360,8 @@ export class BlogAjaxManager {
       return;
     }
 
-    // Строим URL для запроса на основе текущих фильтров
-    const baseUrl = '/api/blog/list'; // используем API endpoint
+    // Build URL for request based on current filters
+    const baseUrl = '/api/blog/list';
     const requestUrl = store.buildRequestURL(baseUrl);
 
     console.log('Loading content from current state:', requestUrl);
@@ -384,65 +371,6 @@ export class BlogAjaxManager {
       showLoader: true,
       validateParams: true,
     });
-  }
-
-  setCategory(categorySlug) {
-    const store = this.getStore();
-    if (!store) return;
-
-    store.setFilters({
-      ...store.filters,
-      category: categorySlug,
-      page: 1,
-    });
-    this.syncUrlWithStore();
-  }
-
-  setSearch(searchQuery) {
-    const store = this.getStore();
-    if (!store) return;
-
-    store.setFilters({
-      ...store.filters,
-      search: searchQuery,
-      page: 1,
-    });
-    this.syncUrlWithStore();
-  }
-
-  setSort(sortType, direction = 'desc') {
-    const store = this.getStore();
-    if (!store) return;
-
-    store.setFilters({
-      ...store.filters,
-      sort: sortType,
-      direction,
-      page: 1,
-    });
-    this.syncUrlWithStore();
-  }
-
-  /**
-   * Sync URL with store state
-   */
-  syncUrlWithStore() {
-    const store = this.getStore();
-    if (!store) return;
-
-    const params = store.filterParams;
-    const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
-
-    // Create a serializable copy of filters for history state
-    const serializableFilters = {
-      category: store.filters.category || '',
-      page: store.filters.page || 1,
-      search: store.filters.search || '',
-      sort: store.filters.sort || 'latest',
-      direction: store.filters.direction || 'desc',
-    };
-
-    window.history.pushState({ filters: serializableFilters }, '', newUrl);
   }
 
   /**

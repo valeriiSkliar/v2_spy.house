@@ -12,19 +12,17 @@ import persist from '@alpinejs/persist';
 import Alpine from 'alpinejs';
 
 // Blog store and components
-import { initBlogPageComponent } from './components/blogs/blog-page-component';
-import { initBlogPaginationComponent } from './components/blogs/blog-pagination-component';
+import { initSimpleBlogComponents } from './components/blogs/blog-simple-components';
 import { initBlogStore } from './stores/blog-store';
 
 // Blog managers and services
 import { blogAjaxManager } from './managers/blog-ajax-manager';
 
 // Legacy blog functionality for backward compatibility
-import './pages/blogs';
+// import './pages/blogs';
 
 // Alpine.js extensions
 import { initBlogDirectives } from './alpine/directives';
-import { initBlogMagicMethods } from './alpine/magic-methods';
 
 // Configure Alpine plugins
 Alpine.plugin(persist);
@@ -35,15 +33,11 @@ Alpine.plugin(intersect);
 // Initialize blog store after plugins are configured
 initBlogStore(Alpine);
 
-// Initialize blog page component
-initBlogPageComponent();
-
-// Initialize blog pagination component
-initBlogPaginationComponent();
+// Initialize simplified blog components
+initSimpleBlogComponents();
 
 // Initialize Alpine extensions
 initBlogDirectives();
-initBlogMagicMethods();
 
 // Simplified global blog app component
 Alpine.data('blogApp', () => ({

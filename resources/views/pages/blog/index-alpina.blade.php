@@ -5,12 +5,12 @@
 @endsection
 
 @section('page-content')
-<div x-data="blogPage" x-init="initFromServer(serverData)" x-blog-loading="loading" x-blog-url-watcher>
+<div x-data="blogPageSimple(serverData)" x-blog-loading="$store.blog.loading">
     <x-blog.search-block />
 
     {{-- Основной контейнер для статей --}}
     <div data-blog-ajax-url="{{ route('api.blog.list') }}" id="blog-articles-container" class="blog-list"
-        :class="{ 'blog-list__no-results': showNoResults }" x-blog-scroll-restore>
+        :class="{ 'blog-list__no-results': showNoResults }">
         {{-- Server-side rendered content --}}
         @if($articles->count() > 0)
         <x-blog.list.articles-list :articles="$articles->skip(1)" :heroArticle="$articles->first()" />
@@ -22,7 +22,7 @@
     {{-- Контейнер пагинации --}}
     <div class="pagination-wrapper">
         {{-- Static Pagination (показывается до инициализации Alpine.js) --}}
-        <div id="blog-pagination-container" data-pagination-container x-show="!initialized && showPagination"
+        <div id="blog-pagination-container" data-pagination-container x-show="!initialized && $store.blog.pagination.hasPagination"
             x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
             x-transition:leave-end="opacity-0">
             @if($articles->hasPages())
@@ -31,14 +31,14 @@
         </div>
 
         {{-- Dynamic Pagination (показывается после инициализации Alpine.js) --}}
-        <div x-show="initialized && showPagination" x-transition:enter="transition ease-out duration-200"
+        <div x-show="initialized && $store.blog.pagination.hasPagination" x-transition:enter="transition ease-out duration-200"
             x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
             <x-blog.pagination.dynamic-pagination />
         </div>
     </div>
 
     {{-- Loading overlay --}}
-    <div x-show="loading" x-transition class="blog-loading-overlay"
+    <div x-show="$store.blog.loading" x-transition class="blog-loading-overlay"
         style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center;">
         <div class="loading-spinner">
             <div

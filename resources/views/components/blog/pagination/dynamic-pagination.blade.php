@@ -1,13 +1,15 @@
 {{-- Dynamic Blog Pagination Component --}}
 {{-- Использует Alpine.js для динамической навигации --}}
 
-<nav x-data="blogPagination" x-show="hasPagination && totalPages > 1" x-blog-loading="loading" class="pagination-nav"
+<nav x-data="blogPaginationSimple" x-show="$store.blog.pagination.hasPagination && totalPages > 1" x-blog-loading="$store.blog.loading" class="pagination-nav"
     role="navigation" aria-label="Blog pagination">
     <ul class="pagination-list">
         {{-- Previous Page Link --}}
         <li>
-            <a x-bind:class="getNavClasses('prev')" x-bind:aria-disabled="isFirstPage" x-blog-paginate.prev
-                href="javascript:void(0)" x-on:click="goToPrev()">
+            <a :class="['pagination-link', 'prev', { 'disabled': currentPage === 1 || loading }]" 
+               :aria-disabled="currentPage === 1 || loading" 
+               x-blog-paginate.prev
+               href="javascript:void(0)">
                 <span class="icon-prev"></span>
                 <span class="pagination-link__txt">{{ __('pagination.previous') }}</span>
             </a>
@@ -21,17 +23,21 @@
                 </template>
 
                 <template x-if="page !== '...'">
-                    <a x-bind:class="getPageClasses(page)" x-bind:aria-current="page === currentPage ? 'page' : null"
-                        x-blog-paginate="page" href="javascript:void(0)" x-on:click="handlePageClick($event, page)"
-                        x-text="page"></a>
+                    <a :class="['pagination-link', { 'active': page === currentPage }]" 
+                       :aria-current="page === currentPage ? 'page' : null"
+                       x-blog-paginate="page" 
+                       href="javascript:void(0)" 
+                       x-text="page"></a>
                 </template>
             </li>
         </template>
 
         {{-- Next Page Link --}}
         <li>
-            <a x-bind:class="getNavClasses('next')" x-bind:aria-disabled="isLastPage" x-blog-paginate.next
-                href="javascript:void(0)" x-on:click="goToNext()">
+            <a :class="['pagination-link', 'next', { 'disabled': currentPage === totalPages || loading }]" 
+               :aria-disabled="currentPage === totalPages || loading" 
+               x-blog-paginate.next
+               href="javascript:void(0)">
                 <span class="pagination-link__txt">{{ __('pagination.next') }}</span>
                 <span class="icon-next"></span>
             </a>
@@ -47,10 +53,6 @@
     {{-- Debug info (только в development режиме) --}}
     @if(config('app.debug'))
     <div x-show="false" class="pagination-debug" style="margin-top: 10px; font-size: 12px; color: #666;">
-        <button x-on:click="debug()"
-            style="background: #f0f0f0; border: 1px solid #ccc; padding: 4px 8px; border-radius: 3px;">
-            Debug Pagination
-        </button>
         <div style="margin-top: 5px;">
             Current: <span x-text="currentPage"></span> |
             Total: <span x-text="totalPages"></span> |
