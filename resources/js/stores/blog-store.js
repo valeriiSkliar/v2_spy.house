@@ -220,7 +220,7 @@ export const blogStore = {
   },
 
   get isFiltered() {
-    return this.filters.category || this.filters.search || this.filters.sort !== 'latest';
+    return !!(this.filters.category || this.filters.search || this.filters.sort !== 'latest');
   },
 
   get filterParams() {
