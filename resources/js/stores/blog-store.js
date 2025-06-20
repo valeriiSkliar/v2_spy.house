@@ -3,16 +3,15 @@
  * Centralized state management for blog functionality
  * Replaces global variables and provides reactive state
  */
+import loader, { hideInElement, showInElement } from '../components/loader.js';
 import { ValidationMethods } from '../validation/validation-constants.js';
-import loader from '../components/loader.js';
-import { showInElement, hideInElement } from '../components/loader.js';
 
 export const blogStore = {
   // Loading state
   loading: false,
   currentRequest: null,
   retryCount: 0,
-  
+
   // Loader management
   currentInlineLoader: null,
   showFullscreenLoader: false,
@@ -116,7 +115,8 @@ export const blogStore = {
     // Initialize from URL on first load
     this.initFromURL();
 
-    // NOTE: popstate listener is handled by app-blog.js to avoid conflicts
+    // Setup URL listeners directly in store
+    this.setupUrlListeners();
   },
 
   // Save filters to sessionStorage
@@ -131,10 +131,10 @@ export const blogStore = {
   // Actions
   setLoading(isLoading, options = {}) {
     const { useFullscreenLoader = true, container = null } = options;
-    
+
     this.loading = isLoading;
     console.log('Loading state changed:', isLoading, options);
-    
+
     if (isLoading) {
       if (useFullscreenLoader) {
         this.showLoader();
@@ -162,7 +162,7 @@ export const blogStore = {
   showInlineLoader(container) {
     // Hide any existing inline loader first
     this.hideInlineLoader();
-    
+
     if (container) {
       this.currentInlineLoader = showInElement(container);
       console.log('Inline loader shown in container:', container);
@@ -570,7 +570,7 @@ export const blogStore = {
     this.loadContent();
   },
 
-  // NEW: Handle redirect responses from server
+  // NEW: Handle redirect responses from server - centralized redirect handling
   handleRedirectResponse(redirectUrl) {
     console.log('Store handling redirect to:', redirectUrl);
 
@@ -635,6 +635,88 @@ export const blogStore = {
     };
 
     return JSON.stringify(urlFilters) === JSON.stringify(this.filters);
+  },
+
+  // NEW: Setup URL listeners - centralized URL event handling
+  setupUrlListeners() {
+    // Listen for browser back/forward navigation
+    window.addEventListener('popstate', event => {
+      console.log('Popstate event detected, updating blog state via store');
+      this.handlePopState();
+    });
+
+    // Listen for hash changes (secondary navigation)
+    window.addEventListener('hashchange', () => {
+      console.log('Hash change detected');
+      // Could handle anchor navigation here if needed
+    });
+
+    // When page is about to unload, save scroll position
+    window.addEventListener('beforeunload', () => {
+      const position = window.pageYOffset || document.documentElement.scrollTop;
+      sessionStorage.setItem('blog_scroll_position', position.toString());
+    });
+
+    // When user returns to tab, check if URL state is in sync
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        if (!this.isStateInSync()) {
+          console.log('Page became visible, syncing state with URL');
+          this.updateFromURL();
+        }
+      }
+    });
+  },
+
+  // NEW: Restore state from URL with scroll position
+  restoreStateFromURL() {
+    console.log('Restoring blog state from URL...');
+
+    try {
+      // Check if URL has any blog-related parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const hasFilters =
+        urlParams.has('page') ||
+        urlParams.has('category') ||
+        urlParams.has('search') ||
+        urlParams.has('sort') ||
+        urlParams.has('direction');
+
+      if (hasFilters) {
+        console.log('URL contains filters, restoring state...');
+        this.initFromURL();
+
+        // Restore scroll position if available
+        setTimeout(() => {
+          const savedPosition = sessionStorage.getItem('blog_scroll_position');
+          if (savedPosition) {
+            const position = parseInt(savedPosition);
+            window.scrollTo({ top: position, behavior: 'smooth' });
+          }
+        }, 500); // Delay to allow content loading
+
+        return true;
+      }
+    } catch (error) {
+      console.error('Error restoring from URL:', error);
+    }
+
+    return false;
+  },
+
+  // NEW: Force state synchronization (emergency method)
+  forceSyncState() {
+    console.log('Force syncing blog state...');
+
+    this.updateFromURL();
+
+    // Trigger content reload if needed
+    if (
+      window.blogAjaxManager &&
+      typeof window.blogAjaxManager.loadFromCurrentState === 'function'
+    ) {
+      window.blogAjaxManager.loadFromCurrentState();
+    }
   },
 
   // Validation methods
@@ -869,13 +951,59 @@ export const blogStore = {
       hasResults: this.stats.currentCount > 0,
     };
   },
+
+  // CENTRALIZED URL API - single interface for all URL operations
+  // This API consolidates all URL-related logic that was previously scattered
+  // across blog-store.js, blog-ajax-manager.js, and app-blog.js
+  // Usage: store.urlAPI.methodName() or this.$blog.url.methodName()
+  urlAPI: {
+    // Get current URL state
+    getCurrentUrl() {
+      return blogStore.getCurrentURL();
+    },
+
+    // Check if state is synced with URL
+    isStateSynced() {
+      return blogStore.isStateInSync();
+    },
+
+    // Update URL with current state
+    updateUrl(pushState = true) {
+      return blogStore.updateURL(pushState);
+    },
+
+    // Restore state from current URL
+    restoreFromUrl() {
+      return blogStore.restoreStateFromURL();
+    },
+
+    // Handle server redirects
+    handleRedirect(redirectUrl) {
+      return blogStore.handleRedirectResponse(redirectUrl);
+    },
+
+    // Force synchronization
+    forceSync() {
+      return blogStore.forceSyncState();
+    },
+
+    // Navigate to specific state
+    navigateToState(filters, replaceState = false) {
+      return blogStore.navigateToState(filters, replaceState);
+    },
+
+    // Clean redirect (remove all parameters)
+    cleanRedirect() {
+      return blogStore.cleanRedirect();
+    },
+  },
 };
 
 // Export function to register store with Alpine after initialization
 export function initBlogStore(Alpine) {
   Alpine.store('blog', blogStore);
 
-  // Add simplified $blog magic method
+  // Add simplified $blog magic method with URL API access
   Alpine.magic('blog', () => ({
     store: Alpine.store('blog'),
     // Direct access to navigation methods
@@ -892,6 +1020,8 @@ export function initBlogStore(Alpine) {
     // Search-specific helpers
     hasActiveSearch: () => Alpine.store('blog').hasActiveSearch,
     searchStats: () => Alpine.store('blog').searchStats,
+    // URL API access
+    url: Alpine.store('blog').urlAPI,
   }));
 
   // Initialize store after registration

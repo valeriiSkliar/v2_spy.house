@@ -123,19 +123,19 @@ export class BlogAjaxManager {
   }
 
   /**
-   * Handle redirect response with store integration
+   * Handle redirect response - delegate to store URL API
    */
   handleRedirectResponse(data, container, url, options) {
     const store = this.getStore();
     if (!store) return;
 
-    // Delegate URL handling to store
-    if (typeof store.handleRedirectResponse === 'function') {
-      store.handleRedirectResponse(data.url);
+    // Use centralized URL API from store
+    if (store.urlAPI && typeof store.urlAPI.handleRedirect === 'function') {
+      store.urlAPI.handleRedirect(data.url);
       // Update category sidebar state after redirect
       this.updateCategorySidebarState(store.filters.category);
     } else {
-      console.warn('Store does not support redirect handling');
+      console.warn('Store URL API not available');
     }
   }
 
@@ -305,15 +305,16 @@ export class BlogAjaxManager {
   }
 
   /**
-   * Clean redirect (delegate to store)
+   * Clean redirect - delegate to store URL API
    */
   cleanRedirect() {
     const store = this.getStore();
-    if (store && typeof store.cleanRedirect === 'function') {
-      // Store handles loader management internally
-      store.cleanRedirect();
+    if (store && store.urlAPI && typeof store.urlAPI.cleanRedirect === 'function') {
+      // Use centralized URL API
+      store.urlAPI.cleanRedirect();
     } else {
-      // Fallback if store is not available - no loader management
+      // Fallback if store URL API is not available
+      console.warn('Store URL API not available, using fallback redirect');
       const cleanUrl = new URL(window.location.pathname, window.location.origin);
       window.history.pushState({}, '', cleanUrl.toString());
       window.location.reload();
@@ -376,19 +377,20 @@ export class BlogAjaxManager {
   }
 
   /**
-   * Initialize from current URL
+   * Initialize from current URL - delegate to store URL API
    */
   initFromURL() {
     const store = this.getStore();
-    if (store) {
-      store.updateFromURL();
+    if (store && store.urlAPI) {
+      // Use centralized URL API to restore state from URL
+      store.urlAPI.restoreFromUrl();
     } else {
       // If Alpine isn't ready, defer initialization
       console.warn('Alpine store not ready, deferring URL initialization');
       document.addEventListener('alpine:init', () => {
         const deferredStore = this.getStore();
-        if (deferredStore) {
-          deferredStore.updateFromURL();
+        if (deferredStore && deferredStore.urlAPI) {
+          deferredStore.urlAPI.restoreFromUrl();
         }
       });
     }

@@ -49,8 +49,11 @@ Alpine.data('blogApp', () => ({
   init() {
     console.log('Blog app initializing...');
 
-    // NEW: Restore state from URL first (highest priority)
-    this.restoreFromURL();
+    // Restore state from URL using centralized store API
+    const store = this.$store.blog;
+    if (store && store.urlAPI) {
+      this.urlRestored = store.urlAPI.restoreFromUrl();
+    }
 
     // Initialize ajax manager from URL
     blogAjaxManager.initFromURL();
@@ -58,131 +61,47 @@ Alpine.data('blogApp', () => ({
     // Mark as initialized
     this.initialized = true;
 
-    // NEW: Setup URL change listeners
-    this.setupUrlListeners();
-
-    // NEW: Setup page visibility listeners (for tab restoration)
-    this.setupVisibilityListeners();
-
     console.log('Blog app initialized successfully');
   },
 
-  // NEW: Restore state from URL on app start
-  restoreFromURL() {
-    console.log('Restoring blog state from URL...');
-
-    const store = this.$store.blog;
-    if (!store) {
-      console.warn('Blog store not available for URL restoration');
-      return;
-    }
-
-    try {
-      // Check if URL has any blog-related parameters
-      const urlParams = new URLSearchParams(window.location.search);
-      const hasFilters =
-        urlParams.has('page') ||
-        urlParams.has('category') ||
-        urlParams.has('search') ||
-        urlParams.has('sort') ||
-        urlParams.has('direction');
-
-      if (hasFilters) {
-        console.log('URL contains filters, restoring state...');
-        store.initFromURL();
-        this.urlRestored = true;
-
-        // Restore scroll position if available
-        setTimeout(() => {
-          const savedPosition = sessionStorage.getItem('blog_scroll_position');
-          if (savedPosition) {
-            const position = parseInt(savedPosition);
-            window.scrollTo({ top: position, behavior: 'smooth' });
-          }
-        }, 500); // Delay to allow content loading
-      }
-    } catch (error) {
-      console.error('Error restoring from URL:', error);
-    }
-  },
-
-  // NEW: Setup URL change listeners
-  setupUrlListeners() {
-    // Listen for browser back/forward navigation
-    window.addEventListener('popstate', event => {
-      console.log('Popstate event detected, updating blog state');
-      const store = this.$store.blog;
-
-      if (store && typeof store.handlePopState === 'function') {
-        store.handlePopState();
-      }
-    });
-
-    // Listen for hash changes (secondary navigation)
-    window.addEventListener('hashchange', () => {
-      console.log('Hash change detected');
-      // Could handle anchor navigation here if needed
-    });
-  },
-
-  // NEW: Setup page visibility listeners
-  setupVisibilityListeners() {
-    // When user returns to tab, check if URL state is in sync
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden && this.initialized) {
-        const store = this.$store.blog;
-        if (store && !store.isStateInSync()) {
-          console.log('Page became visible, syncing state with URL');
-          store.updateFromURL();
-        }
-      }
-    });
-
-    // When page is about to unload, save scroll position
-    window.addEventListener('beforeunload', () => {
-      const store = this.$store.blog;
-      if (store) {
-        const position = window.pageYOffset || document.documentElement.scrollTop;
-        sessionStorage.setItem('blog_scroll_position', position.toString());
-      }
-    });
-  },
+  // URL-related methods now use centralized store API
 
   // Direct access to store for debugging
   get blogStore() {
     return this.$store.blog;
   },
 
-  // NEW: URL-related methods for components
+  // URL-related methods - use centralized store URL API
   get currentUrl() {
-    return this.blogStore ? this.blogStore.getCurrentURL() : window.location.href;
+    return this.blogStore && this.blogStore.urlAPI
+      ? this.blogStore.urlAPI.getCurrentUrl()
+      : window.location.href;
   },
 
   get isUrlSynced() {
-    return this.blogStore ? this.blogStore.isStateInSync() : false;
+    return this.blogStore && this.blogStore.urlAPI ? this.blogStore.urlAPI.isStateSynced() : false;
   },
 
-  // NEW: State restoration methods
+  // State restoration methods - delegate to store URL API
   restoreState() {
-    if (this.blogStore && typeof this.blogStore.updateFromURL === 'function') {
-      this.blogStore.updateFromURL();
-      return true;
+    if (this.blogStore && this.blogStore.urlAPI) {
+      return this.blogStore.urlAPI.restoreFromUrl();
     }
     return false;
   },
 
   syncWithUrl() {
-    if (this.blogStore && typeof this.blogStore.updateURL === 'function') {
-      this.blogStore.updateURL(false); // Replace state
+    if (this.blogStore && this.blogStore.urlAPI) {
+      this.blogStore.urlAPI.updateUrl(false); // Replace state
       return true;
     }
     return false;
   },
 
-  // NEW: Navigation methods with URL sync
+  // Navigation methods - delegate to store URL API
   navigateTo(filters, replaceState = false) {
-    if (this.blogStore && typeof this.blogStore.navigateToState === 'function') {
-      this.blogStore.navigateToState(filters, replaceState);
+    if (this.blogStore && this.blogStore.urlAPI) {
+      this.blogStore.urlAPI.navigateToState(filters, replaceState);
     }
   },
 
@@ -198,20 +117,12 @@ Alpine.data('blogApp', () => ({
     }
   },
 
-  // NEW: Force state synchronization (emergency method)
+  // Force state synchronization - delegate to store URL API
   forceSyncState() {
     console.log('Force syncing blog state...');
 
-    if (this.blogStore) {
-      this.blogStore.updateFromURL();
-
-      // Trigger content reload if needed
-      if (
-        window.blogAjaxManager &&
-        typeof window.blogAjaxManager.loadFromCurrentState === 'function'
-      ) {
-        window.blogAjaxManager.loadFromCurrentState();
-      }
+    if (this.blogStore && this.blogStore.urlAPI) {
+      this.blogStore.urlAPI.forceSync();
     }
   },
 }));
