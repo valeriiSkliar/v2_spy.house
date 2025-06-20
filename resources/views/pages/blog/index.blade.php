@@ -21,11 +21,11 @@
 
 </div>
 
-<div class="full-width">
+{{-- <div class="full-width">
     <a href="#" target="_blank" class="banner-item">
         <img src="/img/665479769a2c02372b9aeb068bd2ba2a.gif" alt="">
     </a>
-</div>
+</div> --}}
 
 {{-- AJAX container for pagination --}}
 <div id="blog-pagination-container" data-pagination-container>

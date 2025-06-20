@@ -132,12 +132,11 @@ export class BlogAjaxManager {
     // Delegate URL handling to store
     if (typeof store.handleRedirectResponse === 'function') {
       store.handleRedirectResponse(data.url);
+      // Update category sidebar state after redirect
+      this.updateCategorySidebarState(store.filters.category);
     } else {
       console.warn('Store does not support redirect handling');
     }
-
-    // Update category sidebar state
-    this.updateCategorySidebarState(store.filters.category);
   }
 
   /**
@@ -172,6 +171,9 @@ export class BlogAjaxManager {
           store.setCurrentCategory(data.currentCategory);
         }
       }
+
+      // Update category sidebar state based on current filters
+      this.updateCategorySidebarState(store.filters.category);
 
       // Update container classes (preserve existing approach)
       if (data.count === 0 && data.totalCount === 0) {

@@ -1,19 +1,22 @@
-<nav class="blog-layout__nav" data-blog-sidebar>
+<nav class="blog-layout__nav" data-blog-sidebar x-data="blogCategoriesComponent">
     <ul class="blog-nav">
         @php
         $activeCategory = $currentCategory ? $currentCategory : null;
         $activeCategoryId = $activeCategory ? $activeCategory->id : null;
         @endphp
         {{-- All categories link --}}
-        <li class="{{ !$activeCategory ? 'is-active' : '' }}">
-            <a href="{{ route('blog.index') }}" data-category-slug="" data-ajax-category-link>
+        <li :class="{ 'is-active': isAllCategoriesActive() }">
+            <a href="{{ route('blog.index') }}" 
+               @click.prevent="clearCategory()" 
+               data-category-slug="">
                 <span>{{ __('blogs.all_categories') }}</span>
             </a>
         </li>
         @foreach($categories['categories'] as $category)
-        <li class="{{ $category->id == $activeCategoryId ? 'is-active' : '' }}">
-            <a href="{{ route('blog.category', $category->slug) }}" data-category-slug="{{ $category->slug }}"
-                data-ajax-category-link>
+        <li :class="{ 'is-active': isCategoryActive('{{ $category->slug }}') }">
+            <a href="{{ route('blog.category', $category->slug) }}" 
+               @click.prevent="selectCategory('{{ $category->slug }}')"
+               data-category-slug="{{ $category->slug }}">
                 <span>{{ $category->name }}</span>
                 <span class="blog-nav__count">{{ $category->posts_count }}</span>
             </a>

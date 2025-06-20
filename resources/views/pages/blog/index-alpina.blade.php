@@ -39,11 +39,6 @@
         </div>
     </div>
 
-    {{-- <div class="full-width">
-        <a href="#" target="_blank" class="banner-item">
-            <img src="/img/665479769a2c02372b9aeb068bd2ba2a.gif" alt="">
-        </a>
-    </div> --}}
 
     @section('bottom-banner')
     <a href="#" target="_blank" class="banner-item mb-20">

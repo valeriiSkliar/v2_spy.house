@@ -36,6 +36,7 @@ export function initSimpleBlogPage() {
       if (data.articles) store.setArticles(data.articles);
       if (data.categories) store.setCategories(data.categories);
       if (data.popularPosts) store.setPopularPosts(data.popularPosts);
+      if (data.currentCategory) store.setCurrentCategory(data.currentCategory);
 
       // Set pagination and sync with filters.page
       if (data.totalPages || data.currentPage) {
@@ -48,9 +49,16 @@ export function initSimpleBlogPage() {
           hasPrev: currentPage > 1,
         });
 
-        // Синхронизируем filters.page с pagination.currentPage
-        if (data.filters && data.filters.page !== currentPage) {
-          store.setFilters({ ...store.filters, page: currentPage });
+        // Синхронизируем filters с server data
+        if (data.filters) {
+          const updatedFilters = { ...store.filters };
+          if (data.filters.page !== currentPage) updatedFilters.page = currentPage;
+          if (data.filters.category !== undefined) updatedFilters.category = data.filters.category;
+          if (data.filters.search !== undefined) updatedFilters.search = data.filters.search;
+          if (data.filters.sort !== undefined) updatedFilters.sort = data.filters.sort;
+          if (data.filters.direction !== undefined) updatedFilters.direction = data.filters.direction;
+          
+          store.setFilters(updatedFilters);
         }
       }
 
@@ -320,10 +328,116 @@ export function initBlogSearchComponent() {
 }
 
 /**
+ * Simple blog categories component - handles category navigation
+ */
+export function initBlogCategoriesComponent() {
+  Alpine.data('blogCategoriesComponent', () => ({
+    // Initialize component
+    init() {
+      console.log('Blog categories component initialized');
+    },
+
+    // Computed properties - pure proxies to store
+    get categories() {
+      return this.$store.blog?.categories || [];
+    },
+
+    get currentCategory() {
+      return this.$store.blog?.currentCategory || null;
+    },
+
+    get isLoading() {
+      return this.$store.blog?.loading || false;
+    },
+
+    get activeCategory() {
+      return this.$store.blog?.filters?.category || '';
+    },
+
+    // Check if category is currently selected
+    isCategoryActive(categorySlug) {
+      return this.activeCategory === categorySlug;
+    },
+
+    // Check if "All categories" is active
+    isAllCategoriesActive() {
+      return !this.activeCategory || this.activeCategory === '';
+    },
+
+    // Handle category selection
+    selectCategory(categorySlug) {
+      const store = this.$store.blog;
+      if (!store || this.isLoading) return;
+
+      // If already selected, do nothing
+      if (this.isCategoryActive(categorySlug)) {
+        console.log('Category already selected:', categorySlug);
+        return;
+      }
+
+      console.log('Selecting category:', categorySlug);
+      store.setCategory(categorySlug);
+    },
+
+    // Clear category selection (show all)
+    clearCategory() {
+      const store = this.$store.blog;
+      if (!store || this.isLoading) return;
+
+      if (this.isAllCategoriesActive()) {
+        console.log('All categories already selected');
+        return;
+      }
+
+      console.log('Clearing category selection');
+      store.clearCategory();
+    },
+
+    // Get category display information
+    getCategoryInfo(category) {
+      return {
+        id: category.id,
+        name: category.name,
+        slug: category.slug,
+        postsCount: category.posts_count || 0,
+        isActive: this.isCategoryActive(category.slug),
+      };
+    },
+
+    // Get CSS classes for category link
+    getCategoryClasses(categorySlug) {
+      const baseClasses = 'category-link';
+      const isActive = this.isCategoryActive(categorySlug);
+      const isLoading = this.isLoading;
+
+      return [
+        baseClasses,
+        isActive ? 'is-active' : '',
+        isLoading ? 'is-loading' : '',
+      ].filter(Boolean).join(' ');
+    },
+
+    // Get CSS classes for "All categories" link
+    getAllCategoriesClasses() {
+      const baseClasses = 'category-link all-categories';
+      const isActive = this.isAllCategoriesActive();
+      const isLoading = this.isLoading;
+
+      return [
+        baseClasses,
+        isActive ? 'is-active' : '',
+        isLoading ? 'is-loading' : '',
+      ].filter(Boolean).join(' ');
+    },
+  }));
+}
+
+/**
  * Initialize all simple components
  */
 export function initSimpleBlogComponents() {
   initSimpleBlogPage();
   initSimpleBlogPagination();
   initBlogSearchComponent();
+  initBlogCategoriesComponent();
 }
