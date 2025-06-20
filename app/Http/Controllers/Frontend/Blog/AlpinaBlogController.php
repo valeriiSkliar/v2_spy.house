@@ -5,91 +5,64 @@ namespace App\Http\Controllers\Frontend\Blog;
 use App\Http\Controllers\Frontend\Blog\BaseBlogController;
 use App\Models\Frontend\Blog\BlogPost;
 use App\Models\Frontend\Blog\PostCategory;
+use App\Traits\Frontend\BlogQueryTrait;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 
 class AlpinaBlogController extends BaseBlogController
 {
+    use BlogQueryTrait;
+
     public function index(Request $request)
     {
-        $articlesQuery = BlogPost::query()
-            ->with(['author', 'categories'])
-            ->where('is_published', true);
-
-        $searchQuery = $request->input('search');
+        // Получаем параметры (валидация уже выполнена в middleware)
+        $currentPage = (int) $request->get('page', 1);
         $categorySlug = $request->input('category');
+        $search = $this->sanitizeInput($request->input('search', ''));
         $sort = $request->input('sort', 'latest');
         $direction = $request->input('direction', 'desc');
 
-        // Применяем фильтр поиска
-        if ($searchQuery) {
-            $searchQuery = $this->sanitizeInput($searchQuery);
-            $articlesQuery->where('title', 'like', '%' . $searchQuery . '%');
+        // Строим основной запрос
+        $queryResult = $this->buildArticlesQuery($search, $categorySlug, $sort, $direction);
+        $query = $queryResult['query'];
+        $currentCategory = $queryResult['category'];
+        $totalCount = $queryResult['total'];
+
+        // Проверяем валидность пагинации
+        $paginationCheck = $this->validatePagination($totalCount, $currentPage, $request);
+        if ($paginationCheck) {
+            return $paginationCheck;
         }
 
-        // Применяем фильтр категории
-        $currentCategory = null;
-        if ($categorySlug) {
-            $currentCategory = \App\Models\Frontend\Blog\PostCategory::where('slug', $categorySlug)->first();
-            if ($currentCategory) {
-                $articlesQuery->whereHas('categories', function ($q) use ($currentCategory) {
-                    $q->where('post_categories.id', $currentCategory->id);
-                });
-            }
-        }
-
-        // Применяем сортировку
-        switch ($sort) {
-            case 'popular':
-                $articlesQuery->orderBy('views_count', $direction);
-                break;
-            case 'views':
-                $articlesQuery->orderBy('views_count', $direction);
-                break;
-            case 'latest':
-            default:
-                $articlesQuery->orderBy('created_at', $direction);
-                break;
-        }
-
-        $totalArticlesCount = $articlesQuery->count();
-
-        // Проверяем валидность пагинации ПЕРЕД выполнением запроса
-        $currentPage = (int) $request->get('page', 1);
-        $maxPages = max(1, ceil($totalArticlesCount / 12));
-
-        if ($currentPage > $maxPages && $totalArticlesCount > 0) {
-            // Редиректим на последнюю доступную страницу
-            $redirectParams = $request->except('page');
-            if ($maxPages > 1) {
-                $redirectParams['page'] = $maxPages;
-            }
-            return redirect()->route('blog.index', $redirectParams);
-        }
-
-        $paginatedArticles = $articlesQuery->paginate(12)->appends($request->all());
+        // Получаем данные для текущей страницы
+        $articlesData = $this->getArticlesForPage($query, $currentPage, $totalCount);
+        $heroArticle = $articlesData['heroArticle'];
+        $articles = $articlesData['articles'];
 
         // Получаем данные для сайдбара
         $sidebarData = $this->getSidebarData();
 
         return view('pages.blog.index-alpina', [
             'breadcrumbs' => [],
-            'heroArticle' => $paginatedArticles->first(),
-            'articles' => $paginatedArticles,
+            'heroArticle' => $heroArticle,
+            'articles' => $articles,
             'categories' => $sidebarData,
             'currentCategory' => $currentCategory,
             'filters' => [
-                'search' => $searchQuery,
+                'search' => $search,
                 'category' => $categorySlug,
                 'sort' => $sort,
                 'direction' => $direction
             ],
-            'query' => $searchQuery,
-            'currentPage' => $paginatedArticles->currentPage(),
-            'totalPages' => $paginatedArticles->lastPage(),
-            'totalCount' => $totalArticlesCount,
+            'query' => $search,
+            'currentPage' => $articles->currentPage(),
+            'totalPages' => $articles->lastPage(),
+            'totalCount' => $totalCount,
         ]);
     }
+
+
     private function getSidebarData(): array
     {
         $locale = app()->getLocale();

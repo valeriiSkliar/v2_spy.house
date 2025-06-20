@@ -12,8 +12,8 @@
     <div data-blog-ajax-url="{{ route('api.blog.list') }}" id="blog-articles-container" class="blog-list"
         :class="{ 'blog-list__no-results': showNoResults }">
         {{-- Server-side rendered content --}}
-        @if($articles->count() > 0)
-        <x-blog.list.articles-list :articles="$articles->skip(1)" :heroArticle="$articles->first()" />
+        @if(($articles && $articles->count() > 0) || $heroArticle)
+        <x-blog.list.articles-list :articles="$articles" :heroArticle="$heroArticle" />
         @else
         <x-blog.blog-no-results-found :query="$query" />
         @endif
@@ -26,7 +26,7 @@
             x-show="!initialized && $store.blog.pagination.hasPagination"
             x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
             x-transition:leave-end="opacity-0">
-            @if($articles->hasPages())
+            @if($articles && $articles->hasPages())
             {{ $articles->links() }}
             @endif
         </div>
@@ -67,21 +67,21 @@
     // Серверные данные для инициализации Alpine.js компонента
 window.serverData = {
     // Статьи
-    articles: @json($articles->skip(1)->values()),
-    heroArticle: @json($articles->first()),
+    articles: @json($articles ? $articles->items() : []),
+    heroArticle: @json($heroArticle),
     totalCount: {{ $totalCount }},
     
     // Пагинация
     currentPage: {{ $currentPage }},
     totalPages: {{ $totalPages }},
-    hasPagination: {{ $articles->hasPages() ? 'true' : 'false' }},
+    hasPagination: {{ ($articles && $articles->hasPages()) ? 'true' : 'false' }},
     
     // Фильтры
     filters: {
         search: @json($filters['search'] ?? ''),
         category: @json($filters['category'] ?? ''),
         sort: @json($filters['sort'] ?? 'latest'),
-        direction: 'desc'
+        direction: @json($filters['direction'] ?? 'desc')
     },
     
     // Данные для сайдбара
