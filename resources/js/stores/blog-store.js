@@ -3,6 +3,7 @@
  * Centralized state management for blog functionality
  * Replaces global variables and provides reactive state
  */
+import { ValidationMethods } from '../validation/validation-constants.js';
 export const blogStore = {
   // Loading state
   loading: false,
@@ -108,10 +109,7 @@ export const blogStore = {
     // Initialize from URL on first load
     this.initFromURL();
 
-    // Listen for popstate events (browser back/forward)
-    window.addEventListener('popstate', () => {
-      this.handlePopState();
-    });
+    // NOTE: popstate listener is handled by app-blog.js to avoid conflicts
   },
 
   // Save filters to sessionStorage
@@ -356,6 +354,7 @@ export const blogStore = {
   },
 
   clearSearch() {
+    console.log('Clearing search from store');
     this.setFilters({
       ...this.filters,
       search: '',
@@ -450,8 +449,25 @@ export const blogStore = {
   },
 
   setSearch(searchQuery) {
-    if (this.loading) return false;
-    this.navigate({ ...this.filters, search: searchQuery, page: 1 });
+    if (this.loading) {
+      console.warn('Search blocked: content is loading');
+      return false;
+    }
+
+    const query = searchQuery ? searchQuery.trim() : '';
+
+    // Search validation is handled by middleware, basic client-side check is sufficient
+
+    console.log('Setting search query:', query);
+
+    this.navigate({
+      ...this.filters,
+      search: query,
+      page: 1,
+      // Сбрасываем категорию при поиске, если нужно
+      // category: query ? '' : this.filters.category
+    });
+
     return true;
   },
 
@@ -484,6 +500,51 @@ export const blogStore = {
     this.loadContent();
   },
 
+  // NEW: Handle redirect responses from server
+  handleRedirectResponse(redirectUrl) {
+    console.log('Store handling redirect to:', redirectUrl);
+
+    const url = new URL(redirectUrl);
+    const urlParams = new URLSearchParams(url.search);
+
+    // Extract filters from redirect URL
+    const redirectFilters = {
+      category: urlParams.get('category') || '',
+      page: parseInt(urlParams.get('page')) || 1,
+      search: urlParams.get('search') || '',
+      sort: urlParams.get('sort') || 'latest',
+      direction: urlParams.get('direction') || 'desc',
+    };
+
+    // Update filters without triggering URL update (since we're already updating)
+    this.filters = { ...this.filters, ...redirectFilters };
+    this.persistFilters();
+
+    // Update browser history
+    window.history.pushState({ 
+      blogFilters: redirectFilters,
+      timestamp: Date.now()
+    }, '', redirectUrl);
+
+    // Trigger content reload
+    this.loadContent();
+  },
+
+  // NEW: Clean redirect (clear all parameters)
+  cleanRedirect() {
+    console.log('Store performing clean redirect');
+    
+    // Reset filters to defaults
+    this.resetFilters();
+    
+    // Create clean URL
+    const cleanUrl = new URL(window.location.pathname, window.location.origin);
+    window.history.pushState({}, '', cleanUrl.toString());
+    
+    // Reload page
+    window.location.reload();
+  },
+
   // NEW: Check if current state matches URL
   isStateInSync() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -506,8 +567,8 @@ export const blogStore = {
     // Validate page number
     if (page < 1 || page > 1000) return false;
 
-    // Validate search query
-    if (search && (search.length > 255 || search.length < 1)) return false;
+    // Search validation is handled by middleware, basic client-side check for length is sufficient
+    if (search && (search.trim().length < 2 || search.trim().length > 255)) return false;
 
     // Validate category slug
     if (category && !/^[a-zA-Z0-9\-_]*$/.test(category)) return false;
@@ -711,6 +772,23 @@ export const blogStore = {
   get areCarouselsReady() {
     return this.carousels.alsowInteresting.initialized && this.carousels.readOften.initialized;
   },
+
+  // NEW: Check if search is active
+  get hasActiveSearch() {
+    return this.filters.search && this.filters.search.length > 0;
+  },
+
+  // NEW: Get search statistics
+  get searchStats() {
+    if (!this.hasActiveSearch) return null;
+
+    return {
+      query: this.filters.search,
+      totalResults: this.stats.totalCount,
+      currentResults: this.stats.currentCount,
+      hasResults: this.stats.currentCount > 0,
+    };
+  },
 };
 
 // Export function to register store with Alpine after initialization
@@ -724,12 +802,16 @@ export function initBlogStore(Alpine) {
     goToPage: page => Alpine.store('blog').goToPage(page),
     setCategory: slug => Alpine.store('blog').setCategory(slug),
     setSearch: query => Alpine.store('blog').setSearch(query),
+    clearSearch: () => Alpine.store('blog').clearSearch(),
     setSort: (type, direction) => Alpine.store('blog').setSort(type, direction),
     // Quick access to state
     loading: () => Alpine.store('blog').loading,
     filters: () => Alpine.store('blog').filters,
     articles: () => Alpine.store('blog').articles,
     pagination: () => Alpine.store('blog').pagination,
+    // Search-specific helpers
+    hasActiveSearch: () => Alpine.store('blog').hasActiveSearch,
+    searchStats: () => Alpine.store('blog').searchStats,
   }));
 
   // Initialize store after registration

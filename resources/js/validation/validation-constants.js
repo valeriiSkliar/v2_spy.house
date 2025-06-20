@@ -10,6 +10,7 @@ export const VALIDATION_PATTERNS = {
   login: /^[a-zA-Z0-9_]+$/,
   email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
   verificationCode: /^\d{6}$/,
+  blogSearch: /^[a-zA-Zа-яА-Я0-9\s\-_.,:;!?()]+$/u,
 };
 
 export const MESSENGER_CONFIG = {
@@ -64,6 +65,16 @@ export const IP_RESTRICTION_CONFIG = {
   maxIpAddresses: 50,
   errorMessage: 'Please enter valid IP addresses (one per line, max 50)',
   ipv4Pattern: /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/,
+};
+
+export const BLOG_SEARCH_CONFIG = {
+  minLength: 2,
+  maxLength: 255,
+  pattern: VALIDATION_PATTERNS.blogSearch,
+  errorMessage:
+    'Поисковый запрос должен содержать от 2 до 255 символов и не содержать недопустимых символов',
+  securityPattern: /<script|javascript:|data:|vbscript:/i,
+  securityErrorMessage: 'Поисковый запрос содержит недопустимые символы',
 };
 
 /**
@@ -236,7 +247,7 @@ export const ValidationMethods = {
    */
   validateIpAddress(ip) {
     if (!ip || !ip.trim()) return false;
-    
+
     const ipv4Match = ip.trim().match(IP_RESTRICTION_CONFIG.ipv4Pattern);
     if (!ipv4Match) return false;
 
@@ -269,5 +280,67 @@ export const ValidationMethods = {
     }
 
     return ips.every(ip => this.validateIpAddress(ip));
+  },
+
+  /**
+   * Validate blog search query
+   * @param {string} value - The search query to validate
+   * @returns {object} - Validation result with isValid and errors
+   */
+  validateBlogSearch(value) {
+    const result = {
+      isValid: true,
+      errors: [],
+    };
+
+    // Empty search is valid (clears search)
+    if (!value || !value.trim()) {
+      return result;
+    }
+
+    const trimmed = value.trim();
+
+    // Length validation
+    if (trimmed.length < BLOG_SEARCH_CONFIG.minLength) {
+      result.isValid = false;
+      result.errors.push({
+        message: `Минимальная длина поиска ${BLOG_SEARCH_CONFIG.minLength} символа`,
+      });
+    }
+
+    if (trimmed.length > BLOG_SEARCH_CONFIG.maxLength) {
+      result.isValid = false;
+      result.errors.push({
+        message: `Максимальная длина поиска ${BLOG_SEARCH_CONFIG.maxLength} символов`,
+      });
+    }
+
+    // Security validation
+    if (BLOG_SEARCH_CONFIG.securityPattern.test(trimmed)) {
+      result.isValid = false;
+      result.errors.push({
+        message: BLOG_SEARCH_CONFIG.securityErrorMessage,
+      });
+    }
+
+    // Pattern validation
+    if (!BLOG_SEARCH_CONFIG.pattern.test(trimmed)) {
+      result.isValid = false;
+      result.errors.push({
+        message: BLOG_SEARCH_CONFIG.errorMessage,
+      });
+    }
+
+    return result;
+  },
+
+  /**
+   * Get blog search error message
+   * @param {string} value - The search query
+   * @returns {string|null} - Error message or null if valid
+   */
+  getBlogSearchErrorMessage(value) {
+    const validation = this.validateBlogSearch(value);
+    return validation.isValid ? null : validation.errors[0]?.message || null;
   },
 };

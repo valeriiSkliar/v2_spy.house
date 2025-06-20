@@ -1,6 +1,7 @@
 import Alpine from 'alpinejs';
 import { blogAPI } from '../components/fetcher/ajax-fetcher';
 import { hideInElement, showInElement } from '../components/loader';
+import { ValidationMethods } from '../validation/validation-constants.js';
 
 /**
  * Blog AJAX Manager
@@ -59,14 +60,23 @@ export class BlogAjaxManager {
       store.currentRequest.abort();
     }
 
-    // Validate parameters using store
-    if (validateParams && !store.validateFilters()) {
-      console.warn('Invalid request parameters detected, redirecting to clean state');
-      this.cleanRedirect();
-      return;
+    // Validate parameters using store and centralized validation
+    if (validateParams) {
+      if (!store.validateFilters()) {
+        console.warn('Invalid request parameters detected, redirecting to clean state');
+        this.cleanRedirect();
+        return;
+      }
+      
+      // Validation is handled by middleware, store validation is sufficient for client-side checks
     }
 
     console.log('Loading blog content...', { url, options });
+
+    // Log search state if active
+    if (store.hasActiveSearch) {
+      console.log('Search active:', store.filters.search);
+    }
 
     // Set loading state
     store.setLoading(true);
@@ -74,6 +84,8 @@ export class BlogAjaxManager {
 
     // Build request URL using store
     const requestUrl = store.buildRequestURL(url);
+
+    console.log('Request URL built:', requestUrl);
 
     try {
       const startTime = Date.now();
@@ -117,38 +129,18 @@ export class BlogAjaxManager {
    * Handle redirect response with store integration
    */
   handleRedirectResponse(data, container, url, options) {
-    console.log('Handling redirect to:', data.url);
-
     const store = this.getStore();
     if (!store) return;
 
-    const redirectUrl = new URL(data.url);
-    const redirectParams = new URLSearchParams(redirectUrl.search);
-
-    // Update store filters from redirect URL
-    store.setFilters({
-      category: redirectParams.get('category') || '',
-      page: parseInt(redirectParams.get('page')) || 1,
-      search: redirectParams.get('search') || '',
-      sort: redirectParams.get('sort') || 'latest',
-      direction: redirectParams.get('direction') || 'desc',
-    });
-
-    // Update browser state with serializable data
-    const serializableFilters = {
-      page: store.filters.page,
-      category: store.filters.category || '',
-      search: store.filters.search || '',
-      sort: store.filters.sort || 'latest',
-      direction: store.filters.direction || 'desc',
-    };
-    window.history.pushState({ filters: serializableFilters }, '', data.url);
+    // Delegate URL handling to store
+    if (typeof store.handleRedirectResponse === 'function') {
+      store.handleRedirectResponse(data.url);
+    } else {
+      console.warn('Store does not support redirect handling');
+    }
 
     // Update category sidebar state
     this.updateCategorySidebarState(store.filters.category);
-
-    // Reload content with new URL
-    this.loadContent(container, url, { ...options, showLoader: false });
   }
 
   /**
@@ -314,12 +306,18 @@ export class BlogAjaxManager {
   }
 
   /**
-   * Clean redirect (preserve existing approach)
+   * Clean redirect (delegate to store)
    */
   cleanRedirect() {
-    const cleanUrl = new URL(window.location.pathname, window.location.origin);
-    window.history.pushState({}, '', cleanUrl.toString());
-    window.location.reload();
+    const store = this.getStore();
+    if (store && typeof store.cleanRedirect === 'function') {
+      store.cleanRedirect();
+    } else {
+      // Fallback if store is not available
+      const cleanUrl = new URL(window.location.pathname, window.location.origin);
+      window.history.pushState({}, '', cleanUrl.toString());
+      window.location.reload();
+    }
   }
 
   /**
@@ -340,8 +338,12 @@ export class BlogAjaxManager {
    * Update URL for SEO (preserve existing approach)
    */
   updateUrlForSEO(data) {
+    const store = this.getStore();
+
     if (data.currentCategory) {
       document.title = `${data.currentCategory.name} - Блог`;
+    } else if (store && store.hasActiveSearch) {
+      document.title = `Поиск "${store.filters.search}" - Блог`;
     } else if (data.totalCount !== undefined) {
       document.title = `Блог - ${data.totalCount} статей`;
     }

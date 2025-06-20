@@ -3,7 +3,7 @@
 @section('content')
 
 <div class="search-bg"></div>
-@include('partials.blog.search-form')
+{{-- @include('partials.blog.search-form') --}}
 <div class="wrapper _page">
     @include('partials.blog.header')
     <main class="main">

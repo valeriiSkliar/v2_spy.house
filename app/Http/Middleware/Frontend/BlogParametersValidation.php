@@ -96,12 +96,14 @@ class BlogParametersValidation
             'search' => [
                 'string',
                 'max:255',
-                'min:1',
+                'min:2',
+                'regex:/^[a-zA-Zа-яА-Я0-9\s\-_.,:;!?()]+$/u',
             ],
             'q' => [ // Для API поиска
                 'string',
                 'max:255',
-                'min:3',
+                'min:2',
+                'regex:/^[a-zA-Zа-яА-Я0-9\s\-_.,:;!?()]+$/u',
             ],
             'sort' => [
                 'string',

@@ -7,21 +7,42 @@ use App\Models\Frontend\Blog\BlogPost;
 use App\Models\Frontend\Blog\PostCategory;
 use App\Traits\Frontend\BlogQueryTrait;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 
 class AlpinaBlogController extends BaseBlogController
 {
     use BlogQueryTrait;
 
+    const CACHE_TTL = 300; // 5 minutes
+
     public function index(Request $request)
     {
-        // Получаем параметры (валидация уже выполнена в middleware)
+        // Валидация выполняется через middleware BlogParametersValidation
+
+        // Получаем параметры
         $currentPage = (int) $request->get('page', 1);
         $categorySlug = $request->input('category');
         $search = $this->sanitizeInput($request->input('search', ''));
         $sort = $request->input('sort', 'latest');
         $direction = $request->input('direction', 'desc');
+
+        // Создаем ключ кеша для запроса (только для поиска и категорий)
+        $cacheKey = null;
+        if ($search || $categorySlug) {
+            $cacheKey = $this->generateCacheKey($currentPage, $categorySlug, $search, $sort, $direction);
+            
+            // Пытаемся получить данные из кеша для AJAX запросов
+            if ($request->ajax()) {
+                $cachedResult = Cache::get($cacheKey);
+                if ($cachedResult) {
+                    return response()->json($cachedResult);
+                }
+            }
+        }
 
         // Строим основной запрос
         $queryResult = $this->buildArticlesQuery($search, $categorySlug, $sort, $direction);
@@ -39,6 +60,18 @@ class AlpinaBlogController extends BaseBlogController
         $articlesData = $this->getArticlesForPage($query, $currentPage, $totalCount);
         $heroArticle = $articlesData['heroArticle'];
         $articles = $articlesData['articles'];
+
+        // Если это AJAX запрос, возвращаем JSON
+        if ($request->ajax()) {
+            $response = $this->buildAjaxResponse($articlesData, $currentCategory, $totalCount, $search);
+            
+            // Кешируем результат если это поиск или категория
+            if ($cacheKey) {
+                Cache::put($cacheKey, $response, self::CACHE_TTL);
+            }
+            
+            return response()->json($response);
+        }
 
         // Получаем данные для сайдбара
         $sidebarData = $this->getSidebarData();
@@ -92,5 +125,165 @@ class AlpinaBlogController extends BaseBlogController
             'categories' => $categories,
             'popularPosts' => $popularPosts,
         ];
+    }
+
+
+    /**
+     * Генерация ключа кеша
+     */
+    private function generateCacheKey(int $page, ?string $category, ?string $search, string $sort = 'latest', string $direction = 'desc'): string
+    {
+        return sprintf(
+            'blog_ajax_%s_%s_%s_%s_%d',
+            $category ?: 'all',
+            md5($search ?: ''),
+            $sort,
+            $direction,
+            $page
+        );
+    }
+
+    /**
+     * Построение AJAX ответа
+     */
+    private function buildAjaxResponse(array $articlesData, $currentCategory, int $totalCount, ?string $search): array
+    {
+        $heroArticle = $articlesData['heroArticle'];
+        $articles = $articlesData['articles'];
+
+        // Если нет статей
+        if ($articles->count() === 0 && !$heroArticle) {
+            $queryText = $this->getQueryText($currentCategory, $search);
+            $html = view('components.blog.blog-no-results-found', ['query' => $queryText])->render();
+
+            return [
+                'html' => $html,
+                'pagination' => '',
+                'hasPagination' => false,
+                'currentPage' => 1,
+                'totalPages' => 0,
+                'count' => 0,
+                'currentCategory' => $this->formatCategoryResponse($currentCategory),
+                'totalCount' => 0,
+            ];
+        }
+
+        // Генерируем HTML статей
+        $articlesHtml = view('components.blog.list.articles-list', compact('articles', 'heroArticle'))->render();
+
+        // Генерируем пагинацию
+        $shouldShowPagination = $this->shouldShowPagination($totalCount, $heroArticle);
+        $paginationHtml = '';
+
+        if ($shouldShowPagination && $articles->hasPages()) {
+            $articles->withPath(route('blog.index'));
+            $paginationHtml = $articles->links()->toHtml();
+        }
+
+        return [
+            'html' => $articlesHtml,
+            'pagination' => $paginationHtml,
+            'hasPagination' => $shouldShowPagination && $articles->hasPages(),
+            'currentPage' => $articles->currentPage(),
+            'totalPages' => $articles->lastPage(),
+            'count' => $articles->count(),
+            'currentCategory' => $this->formatCategoryResponse($currentCategory),
+            'totalCount' => $totalCount,
+        ];
+    }
+
+    /**
+     * Определение нужно ли показывать пагинацию
+     */
+    private function shouldShowPagination(int $totalCount, $heroArticle): bool
+    {
+        return ($totalCount > self::ARTICLES_PER_PAGE) ||
+            ($heroArticle && $totalCount > self::ARTICLES_PER_PAGE + 1);
+    }
+
+    /**
+     * Получение текста запроса для отображения
+     */
+    private function getQueryText($currentCategory, ?string $search): string
+    {
+        if ($currentCategory && !$search) {
+            return $currentCategory->name;
+        }
+
+        return $search ?: '';
+    }
+
+    /**
+     * Форматирование ответа категории
+     */
+    private function formatCategoryResponse($currentCategory): ?array
+    {
+        if (!$currentCategory) {
+            return null;
+        }
+
+        return [
+            'id' => $currentCategory->id,
+            'name' => $currentCategory->name,
+            'slug' => $currentCategory->slug,
+        ];
+    }
+
+    /**
+     * Валидация пагинации для AJAX запросов (переопределяет метод из трейта)
+     */
+    protected function validatePagination(int $totalCount, int $currentPage, Request $request)
+    {
+        // Если нет статей, но есть поисковый запрос или категория - показываем "нет результатов"
+        if ($totalCount === 0) {
+            $hasSearchOrCategory = $request->filled('search') || $request->filled('category');
+
+            if ($hasSearchOrCategory) {
+                // Не делаем редирект, позволяем показать "нет результатов"
+                return null;
+            }
+
+            // Только если нет фильтров - редиректим на главную
+            if ($request->ajax()) {
+                return response()->json([
+                    'redirect' => true,
+                    'url' => $this->buildRedirectUrl($request, 1, true),
+                ]);
+            }
+
+            return redirect()->route('blog.index');
+        }
+
+        // Вычисляем максимальное количество страниц
+        $maxPages = $this->calculateMaxPages($totalCount, $currentPage);
+
+        // Если текущая страница превышает максимум
+        if ($currentPage > $maxPages && $maxPages > 0) {
+            $redirectPage = $maxPages;
+            if ($request->ajax()) {
+                return response()->json([
+                    'redirect' => true,
+                    'url' => $this->buildRedirectUrl($request, $redirectPage),
+                ]);
+            }
+
+            return redirect()->route('blog.index', $this->buildRedirectParams($request, $redirectPage));
+        }
+
+        return null;
+    }
+
+    /**
+     * Построение URL для редиректа
+     */
+    private function buildRedirectUrl(Request $request, int $page, bool $resetAll = false): string
+    {
+        if ($resetAll) {
+            return route('blog.index');
+        }
+
+        $params = $this->buildRedirectParams($request, $page);
+
+        return route('blog.index', $params);
     }
 }

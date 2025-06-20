@@ -4,6 +4,8 @@
  */
 
 import Alpine from 'alpinejs';
+import debounce from 'lodash.debounce';
+import UIHelpers from '../../validation/core/ui-helpers.js';
 
 /**
  * Simple blog page data - minimal replacement for blog-page-component
@@ -170,9 +172,120 @@ export function initSimpleBlogPagination() {
 }
 
 /**
+ * Simple blog search component - works directly with store
+ */
+export function initBlogSearchComponent() {
+  Alpine.data('blogSearchComponent', () => ({
+    // Initialize component
+    init() {
+      // Создаем debounced функцию поиска
+      this.debouncedSearchFn = debounce(query => {
+        this.performSearch(query);
+      }, 300);
+
+      console.log('Blog search component initialized');
+    },
+
+    // Computed properties from store
+    get searchQuery() {
+      return this.$store.blog?.filters?.search || '';
+    },
+
+    get isLoading() {
+      return this.$store.blog?.loading || false;
+    },
+
+    get hasActiveSearch() {
+      return this.searchQuery && this.searchQuery.length > 0;
+    },
+
+    // Get search status message
+    get searchStatus() {
+      const store = this.$store.blog;
+      if (!store) return '';
+
+      if (this.isLoading) {
+        return 'Поиск...';
+      }
+
+      if (this.hasActiveSearch) {
+        const count = store.stats?.currentCount || 0;
+        return `Найдено: ${count} статей`;
+      }
+
+      return '';
+    },
+
+    // Perform search via store - simplified without validation duplication
+    performSearch(query) {
+      const trimmedQuery = query ? query.trim() : '';
+      if (trimmedQuery.length < 3) {
+        return;
+      }
+
+      console.log('Performing search:', trimmedQuery);
+
+      try {
+        const store = this.$store.blog;
+        if (store && typeof store.setSearch === 'function') {
+          if (trimmedQuery) {
+            store.setSearch(trimmedQuery);
+          } else {
+            store.clearSearch();
+          }
+        } else {
+          console.error('Blog store not available for search');
+        }
+      } catch (error) {
+        console.error('Search error:', error);
+      }
+    },
+
+    // Debounced search for input events
+    debouncedSearch() {
+      const query = this.$refs.searchInput?.value || '';
+      this.debouncedSearchFn(query);
+    },
+
+    // Handle search on Enter key
+    handleSearchEnter() {
+      // Отменяем debounce и выполняем поиск немедленно
+      this.debouncedSearchFn.cancel();
+      const query = this.$refs.searchInput?.value || '';
+      this.performSearch(query);
+    },
+
+    // Clear search
+    clearSearch() {
+      this.clearValidationError();
+
+      try {
+        const store = this.$store.blog;
+        if (store && typeof store.clearSearch === 'function') {
+          store.clearSearch();
+        } else {
+          console.error('Blog store not available for clearing search');
+        }
+      } catch (error) {
+        console.error('Clear search error:', error);
+      }
+    },
+
+    // Clear validation error
+    clearValidationError() {
+      const searchInput = this.$refs.searchInput;
+      if (searchInput) {
+        UIHelpers.clearFieldError(searchInput);
+      }
+    },
+  }));
+}
+
+/**
  * Initialize all simple components
  */
 export function initSimpleBlogComponents() {
   initSimpleBlogPage();
   initSimpleBlogPagination();
+  initBlogSearchComponent();
 }
