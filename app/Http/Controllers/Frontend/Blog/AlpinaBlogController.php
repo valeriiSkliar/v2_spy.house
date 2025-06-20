@@ -34,7 +34,7 @@ class AlpinaBlogController extends BaseBlogController
         $cacheKey = null;
         if ($search || $categorySlug) {
             $cacheKey = $this->generateCacheKey($currentPage, $categorySlug, $search, $sort, $direction);
-            
+
             // Пытаемся получить данные из кеша для AJAX запросов
             if ($request->ajax()) {
                 $cachedResult = Cache::get($cacheKey);
@@ -64,12 +64,12 @@ class AlpinaBlogController extends BaseBlogController
         // Если это AJAX запрос, возвращаем JSON
         if ($request->ajax()) {
             $response = $this->buildAjaxResponse($articlesData, $currentCategory, $totalCount, $search);
-            
+
             // Кешируем результат если это поиск или категория
             if ($cacheKey) {
                 Cache::put($cacheKey, $response, self::CACHE_TTL);
             }
-            
+
             return response()->json($response);
         }
 
@@ -151,6 +151,15 @@ class AlpinaBlogController extends BaseBlogController
         $heroArticle = $articlesData['heroArticle'];
         $articles = $articlesData['articles'];
 
+        // ИСПРАВЛЕНИЕ: Получаем текущие фильтры из request для синхронизации с фронтендом
+        $currentFilters = [
+            'page' => $articles->currentPage(),
+            'category' => request()->input('category', ''),
+            'search' => request()->input('search', ''),
+            'sort' => request()->input('sort', 'latest'),
+            'direction' => request()->input('direction', 'desc'),
+        ];
+
         // Если нет статей
         if ($articles->count() === 0 && !$heroArticle) {
             $queryText = $this->getQueryText($currentCategory, $search);
@@ -165,6 +174,7 @@ class AlpinaBlogController extends BaseBlogController
                 'count' => 0,
                 'currentCategory' => $this->formatCategoryResponse($currentCategory),
                 'totalCount' => 0,
+                'filters' => $currentFilters, // ДОБАВЛЕНО: фильтры для синхронизации состояния
             ];
         }
 
@@ -189,6 +199,7 @@ class AlpinaBlogController extends BaseBlogController
             'count' => $articles->count(),
             'currentCategory' => $this->formatCategoryResponse($currentCategory),
             'totalCount' => $totalCount,
+            'filters' => $currentFilters, // ДОБАВЛЕНО: фильтры для синхронизации состояния
         ];
     }
 

@@ -140,6 +140,15 @@ class ApiBlogController extends BaseBlogController
         $heroArticle = $articlesData['heroArticle'];
         $articles = $articlesData['articles'];
 
+        // ИСПРАВЛЕНИЕ: Получаем текущие фильтры из request для синхронизации с фронтендом
+        $currentFilters = [
+            'page' => $articles->currentPage(),
+            'category' => request()->input('category', ''),
+            'search' => request()->input('search', ''),
+            'sort' => request()->input('sort', 'latest'),
+            'direction' => request()->input('direction', 'desc'),
+        ];
+
         // Если нет статей (не должно происходить из-за валидации выше)
         if ($articles->count() === 0 && ! $heroArticle) {
             $queryText = $this->getQueryText($currentCategory, $search);
@@ -154,6 +163,7 @@ class ApiBlogController extends BaseBlogController
                 'count' => 0,
                 'currentCategory' => $this->formatCategoryResponse($currentCategory),
                 'totalCount' => 0,
+                'filters' => $currentFilters, // ДОБАВЛЕНО: фильтры для синхронизации состояния
             ];
         }
 
@@ -178,6 +188,7 @@ class ApiBlogController extends BaseBlogController
             'count' => $articles->count(),
             'currentCategory' => $this->formatCategoryResponse($currentCategory),
             'totalCount' => $totalCount,
+            'filters' => $currentFilters, // ДОБАВЛЕНО: фильтры для синхронизации состояния
         ];
     }
 

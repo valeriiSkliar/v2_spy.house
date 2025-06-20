@@ -168,6 +168,21 @@ export class BlogAjaxManager {
         if (data.currentCategory) {
           store.setCurrentCategory(data.currentCategory);
         }
+
+        // ИСПРАВЛЕНИЕ: Синхронизируем фильтры с ответом сервера
+        // Это критично для корректного отображения состояния сортировки
+        if (data.filters) {
+          const serverFilters = {
+            page: data.filters.page || data.currentPage || 1,
+            category: data.filters.category || '',
+            search: data.filters.search || '',
+            sort: data.filters.sort || 'latest',
+            direction: data.filters.direction || 'desc',
+          };
+
+          console.log('Синхронизирую фильтры с сервером:', serverFilters);
+          store.setFilters(serverFilters);
+        }
       }
 
       // Update category sidebar state based on current filters

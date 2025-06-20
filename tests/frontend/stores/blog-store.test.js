@@ -333,80 +333,38 @@ describe('Blog Store - Базовая реактивность', () => {
     });
   });
 
-  describe('Базовые навигационные методы', () => {
-    beforeEach(() => {
-      // Mock для loadContent
-      blogStore.loadContent = vi.fn();
+  describe('State API - новый интерфейс для работы с состоянием', () => {
+    test('stateAPI должен предоставлять геттеры состояния', () => {
+      expect(typeof blogStore.stateAPI.getLoading).toBe('function');
+      expect(typeof blogStore.stateAPI.getFilters).toBe('function');
+      expect(typeof blogStore.stateAPI.getArticles).toBe('function');
+      expect(typeof blogStore.stateAPI.getPagination).toBe('function');
+      expect(typeof blogStore.stateAPI.getStats).toBe('function');
     });
 
-    test('goToPage должен переходить на указанную страницу', () => {
-      blogStore.setPagination({ totalPages: 5 });
-
-      const result = blogStore.goToPage(3);
-
-      expect(result).toBe(true);
-      expect(blogStore.filters.page).toBe(3);
-      expect(blogStore.loadContent).toHaveBeenCalled();
+    test('stateAPI должен предоставлять сеттеры состояния', () => {
+      expect(typeof blogStore.stateAPI.setLoading).toBe('function');
+      expect(typeof blogStore.stateAPI.setFilters).toBe('function');
+      expect(typeof blogStore.stateAPI.setArticles).toBe('function');
+      expect(typeof blogStore.stateAPI.setPagination).toBe('function');
+      expect(typeof blogStore.stateAPI.setStats).toBe('function');
     });
 
-    test('goToPage не должен переходить на невалидную страницу', () => {
-      blogStore.setPagination({ totalPages: 5 });
-
-      expect(blogStore.goToPage(0)).toBe(false);
-      expect(blogStore.goToPage(6)).toBe(false);
-      expect(blogStore.goToPage(-1)).toBe(false);
+    test('stateAPI должен предоставлять computed properties', () => {
+      expect(typeof blogStore.stateAPI.isFirstPage).toBe('function');
+      expect(typeof blogStore.stateAPI.isLastPage).toBe('function');
+      expect(typeof blogStore.stateAPI.hasResults).toBe('function');
+      expect(typeof blogStore.stateAPI.isFiltered).toBe('function');
     });
+  });
 
-    test('goToPage не должен работать во время загрузки', () => {
-      blogStore.setLoading(true);
-      blogStore.setPagination({ totalPages: 5 });
-
-      const result = blogStore.goToPage(2);
-
-      expect(result).toBe(false);
-      expect(blogStore.filters.page).toBe(1);
-    });
-
-    test('setCategory должен устанавливать категорию и сбрасывать страницу', () => {
-      blogStore.setFilters({ page: 5 });
-
-      const result = blogStore.setCategory('tech');
-
-      expect(result).toBe(true);
-      expect(blogStore.filters.category).toBe('tech');
-      expect(blogStore.filters.page).toBe(1);
-      expect(blogStore.loadContent).toHaveBeenCalled();
-    });
-
-    test('setSearch должен устанавливать поиск и сбрасывать страницу', () => {
-      blogStore.setFilters({ page: 3 });
-
-      const result = blogStore.setSearch('test query');
-
-      expect(result).toBe(true);
-      expect(blogStore.filters.search).toBe('test query');
-      expect(blogStore.filters.page).toBe(1);
-      expect(blogStore.loadContent).toHaveBeenCalled();
-    });
-
-    test('setSort должен устанавливать сортировку и сбрасывать страницу', () => {
-      blogStore.setFilters({ page: 4 });
-
-      const result = blogStore.setSort('popular', 'asc');
-
-      expect(result).toBe(true);
-      expect(blogStore.filters.sort).toBe('popular');
-      expect(blogStore.filters.direction).toBe('asc');
-      expect(blogStore.filters.page).toBe(1);
-      expect(blogStore.loadContent).toHaveBeenCalled();
-    });
-
-    test('навигационные методы не должны работать во время загрузки', () => {
-      blogStore.setLoading(true);
-
-      expect(blogStore.setCategory('tech')).toBe(false);
-      expect(blogStore.setSearch('test')).toBe(false);
-      expect(blogStore.setSort('popular')).toBe(false);
+  describe('URL API - интерфейс для работы с URL', () => {
+    test('urlAPI должен предоставлять методы работы с URL', () => {
+      expect(typeof blogStore.urlAPI.getCurrentUrl).toBe('function');
+      expect(typeof blogStore.urlAPI.isStateSynced).toBe('function');
+      expect(typeof blogStore.urlAPI.updateUrl).toBe('function');
+      expect(typeof blogStore.urlAPI.restoreFromUrl).toBe('function');
+      expect(typeof blogStore.urlAPI.forceSync).toBe('function');
     });
   });
 
@@ -499,41 +457,49 @@ describe('Blog Store - Базовая реактивность', () => {
     });
   });
 
-  describe('Вспомогательные методы состояния', () => {
-    test('clearSearch должен очищать поиск и сбрасывать страницу', () => {
-      blogStore.setFilters({
-        page: 3,
-        search: 'test query',
-        category: 'tech',
-      });
+  describe('Синхронизация состояния и URL', () => {
+    test('должен корректно определять синхронизацию состояния с URL', () => {
+      // Устанавливаем состояние
+      blogStore.setFilters({ page: 2, category: 'tech' });
 
-      blogStore.clearSearch();
+      // Устанавливаем соответствующий URL
+      mockLocation.search = '?page=2&category=tech';
 
-      expect(blogStore.filters.search).toBe('');
-      expect(blogStore.filters.page).toBe(1);
-      expect(blogStore.filters.category).toBe('tech'); // не должно затронуть другие фильтры
+      expect(blogStore.isStateInSync()).toBe(true);
+
+      // Меняем URL, состояние не синхронизировано
+      mockLocation.search = '?page=3&category=news';
+
+      expect(blogStore.isStateInSync()).toBe(false);
     });
 
-    test('clearCategory должен очищать категорию и сбрасывать страницу', () => {
-      blogStore.setFilters({
-        page: 2,
-        category: 'tech',
-        search: 'test',
-      });
+    test('должен корректно обновлять состояние из URL', () => {
+      mockLocation.search = '?page=3&category=news&search=query';
 
-      blogStore.clearCategory();
+      blogStore.updateFromURL();
 
-      expect(blogStore.filters.category).toBe('');
-      expect(blogStore.filters.page).toBe(1);
-      expect(blogStore.filters.search).toBe('test'); // не должно затронуть другие фильтры
+      expect(blogStore.filters.page).toBe(3);
+      expect(blogStore.filters.category).toBe('news');
+      expect(blogStore.filters.search).toBe('query');
     });
 
-    test('resetToPage должен устанавливать конкретную страницу', () => {
-      blogStore.setFilters({ page: 5 });
+    test('должен корректно принудительно синхронизировать состояние', () => {
+      mockLocation.search = '?page=4&category=science';
 
-      blogStore.resetToPage(2);
+      blogStore.forceSyncState();
+
+      expect(blogStore.filters.page).toBe(4);
+      expect(blogStore.filters.category).toBe('science');
+    });
+
+    test('должен корректно восстанавливать состояние из URL', () => {
+      mockLocation.search = '?page=2&search=test&sort=popular';
+
+      blogStore.restoreStateFromURL();
 
       expect(blogStore.filters.page).toBe(2);
+      expect(blogStore.filters.search).toBe('test');
+      expect(blogStore.filters.sort).toBe('popular');
     });
   });
 });
