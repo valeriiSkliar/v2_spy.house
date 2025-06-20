@@ -2,9 +2,16 @@ import Alpine from 'alpinejs';
 import { blogAPI } from '../components/fetcher/ajax-fetcher';
 
 /**
- * Blog AJAX Manager
- * Unified AJAX management with state integration
- * Uses existing ajax-fetcher infrastructure and DOM manipulation principles
+ * Blog AJAX Manager - Thin coordination layer over blogAPI
+ *
+ * AFTER REFACTORING: This manager is now a lightweight coordinator that:
+ * - Delegates all AJAX operations to blogAPI (centralized in ajax-fetcher.js)
+ * - Manages state synchronization with Alpine store
+ * - Coordinates DOM updates and component reinitialisation
+ * - All error handling is centralized in blogAPI.blogErrorHandler
+ * - All URL operations delegated to store.urlAPI
+ *
+ * This follows the pattern: blogAPI (AJAX) -> manager (coordination) -> store (state)
  */
 export class BlogAjaxManager {
   constructor() {
@@ -40,9 +47,8 @@ export class BlogAjaxManager {
   }
 
   /**
-   * Main content loading method
-   * Replaces reloadBlogContent with store integration
-   * Uses centralized blogAPI with built-in retry logic
+   * Main content loading method - thin layer over blogAPI
+   * Coordinates between blogAPI and store state management
    */
   async loadContent(container, url, options = {}) {
     const { scrollToTop = false, validateParams = true, useInlineLoader = true } = options;
@@ -58,23 +64,14 @@ export class BlogAjaxManager {
       store.currentRequest.abort();
     }
 
-    // Validate parameters using store and centralized validation
-    if (validateParams) {
-      if (!store.validateFilters()) {
-        console.warn('Invalid request parameters detected, redirecting to clean state');
-        this.cleanRedirect();
-        return;
-      }
-
-      // Validation is handled by middleware, store validation is sufficient for client-side checks
+    // Validate parameters using store
+    if (validateParams && !store.validateFilters()) {
+      console.warn('Invalid request parameters detected, redirecting to clean state');
+      this.cleanRedirect();
+      return;
     }
 
     console.log('Loading blog content...', { url, options });
-
-    // Log search state if active
-    if (store.hasActiveSearch) {
-      console.log('Search active:', store.filters.search);
-    }
 
     // Set loading state with centralized loader management
     const loaderOptions = useInlineLoader
@@ -85,18 +82,19 @@ export class BlogAjaxManager {
     // Build request URL using store
     const requestUrl = store.buildRequestURL(url);
 
-    console.log('Request URL built:', requestUrl);
-
     try {
-      const startTime = Date.now();
-
-      // Используем централизованный blogAPI вместо собственного makeRequest
-      const response = await blogAPI.loadArticles(requestUrl);
-
-      const loadTime = Date.now() - startTime;
-      store.setStats({ loadTime });
+      // Use centralized blogAPI method with full error handling
+      const response = await blogAPI.loadBlogContent(requestUrl, {
+        container,
+        validateParams,
+      });
 
       console.log('AJAX response received:', response);
+
+      // Update store with performance metrics
+      if (response.loadTime) {
+        store.setStats({ loadTime: response.loadTime });
+      }
 
       // Handle redirect response
       if (response.redirect) {
@@ -111,11 +109,14 @@ export class BlogAjaxManager {
         return;
       }
 
-      // Update content and state
+      // Update content and state - this is the main coordination logic
       this.updatePageContent(response, container, scrollToTop);
     } catch (error) {
-      console.error('Error fetching blog articles:', error);
-      this.showErrorMessage(container, error);
+      // Error handling is now centralized in blogAPI
+      // Only handle coordination issues here
+      if (!error.handled) {
+        console.error('Unhandled error in blog content loading:', error);
+      }
     } finally {
       store.setLoading(false);
       store.setCurrentRequest(null);
@@ -197,7 +198,10 @@ export class BlogAjaxManager {
       this.updateUrlForSEO(data);
     } catch (error) {
       console.error('Error updating page content:', error);
-      this.showErrorMessage(container, error);
+      // Use centralized error handling from blogAPI
+      if (container) {
+        container.innerHTML = blogAPI.blogErrorHandler.generateErrorHtml(error);
+      }
     }
   }
 
@@ -321,19 +325,7 @@ export class BlogAjaxManager {
     }
   }
 
-  /**
-   * Show error message (preserve existing approach)
-   */
-  showErrorMessage(container, error) {
-    const errorHtml = `
-            <div class="blog-error-message empty-landing">
-                <h3>Произошла ошибка при загрузке</h3>
-                <p>Пожалуйста, обновите страницу или попробуйте позже.</p>
-                <button onclick="window.location.reload()" class="btn _flex _green _medium min-120">Обновить страницу</button>
-            </div>
-        `;
-    container.innerHTML = errorHtml;
-  }
+  // ERROR HANDLING REMOVED: Now handled centrally in blogAPI.blogErrorHandler
 
   /**
    * Update URL for SEO (preserve existing approach)
@@ -351,7 +343,7 @@ export class BlogAjaxManager {
   }
 
   /**
-   * Load content based on current store state
+   * Load content based on current store state - thin coordination method
    */
   loadFromCurrentState() {
     const store = this.getStore();
@@ -363,16 +355,15 @@ export class BlogAjaxManager {
       return;
     }
 
-    // Build URL for request based on current filters
+    // Use simplified coordination - all AJAX logic is in blogAPI
     const baseUrl = '/api/blog/list';
-    const requestUrl = store.buildRequestURL(baseUrl);
 
-    console.log('Loading content from current state:', requestUrl);
+    console.log('Loading content from current state via blogAPI...');
 
     this.loadContent(container, baseUrl, {
       scrollToTop: true,
-      showLoader: true,
       validateParams: true,
+      useInlineLoader: true, // Use inline loader for state changes
     });
   }
 
@@ -398,4 +389,5 @@ export class BlogAjaxManager {
 }
 
 // Create and export singleton instance
+// This manager is now a thin coordination layer over blogAPI
 export const blogAjaxManager = new BlogAjaxManager();

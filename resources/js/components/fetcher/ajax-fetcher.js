@@ -235,7 +235,12 @@ document.addEventListener('DOMContentLoaded', initAjaxFetcher);
 
 /**
  * Blog-specific API methods for centralized HTTP handling
- * Provides unified interface for all blog AJAX requests with retry logic and error handling
+ *
+ * AFTER REFACTORING: This is now the SINGLE SOURCE for all blog AJAX operations
+ * - Centralizes all HTTP requests, retry logic, and error handling
+ * - All manager classes should delegate AJAX operations to these methods
+ * - Provides unified interface with consistent error handling
+ * - Contains complete error handling logic that was previously scattered
  */
 const blogAPI = {
   // Configuration
@@ -251,6 +256,33 @@ const blogAPI = {
       if (xhr.status === 422) {
         // Validation error - redirect to clean state
         window.location.href = window.location.pathname;
+      }
+    },
+
+    // NEW: Generate error HTML for display in containers
+    generateErrorHtml: error => {
+      return `
+        <div class="blog-error-message empty-landing">
+          <h3>Произошла ошибка при загрузке</h3>
+          <p>Пожалуйста, обновите страницу или попробуйте позже.</p>
+          <button onclick="window.location.reload()" class="btn _flex _green _medium min-120">Обновить страницу</button>
+        </div>
+      `;
+    },
+
+    // NEW: Handle various types of load errors with appropriate actions
+    handleContentLoadError: (xhr, container) => {
+      console.error('Content load error:', xhr);
+
+      if (xhr.status === 422) {
+        // Validation error - redirect to clean state
+        window.location.href = window.location.pathname;
+        return;
+      }
+
+      // For other errors, show error message in container
+      if (container) {
+        container.innerHTML = blogAPI.blogErrorHandler.generateErrorHtml(xhr);
       }
     },
 
@@ -303,6 +335,45 @@ const blogAPI = {
         return blogAPI.loadArticles(url, params, retryCount + 1);
       }
       throw error;
+    }
+  },
+
+  /**
+   * NEW: Load blog content with full error handling and validation
+   * This method consolidates all AJAX logic that was scattered in the manager
+   * Used by BlogAjaxManager as the single point for content loading
+   */
+  loadBlogContent: async (url, options = {}) => {
+    const { container = null, retryCount = 0, validateParams = true } = options;
+
+    try {
+      const startTime = Date.now();
+
+      // Load articles using existing method with retry logic
+      const response = await blogAPI.loadArticles(url, {}, retryCount);
+
+      const loadTime = Date.now() - startTime;
+
+      // Add performance metrics to response
+      return {
+        ...response,
+        loadTime,
+        success: true,
+      };
+    } catch (error) {
+      console.error('Error in loadBlogContent:', error);
+
+      // Handle error using centralized error handler
+      if (container) {
+        blogAPI.blogErrorHandler.handleContentLoadError(error, container);
+      }
+
+      // Re-throw for manager to handle if needed
+      throw {
+        ...error,
+        handled: !!container, // Mark if error was displayed to user
+        success: false,
+      };
     }
   },
 
