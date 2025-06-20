@@ -355,7 +355,7 @@ export const blogStore = {
 
   clearSearch() {
     console.log('Clearing search from store');
-    this.setFilters({
+    this.navigate({
       ...this.filters,
       search: '',
       page: 1,
@@ -363,7 +363,7 @@ export const blogStore = {
   },
 
   clearCategory() {
-    this.setFilters({
+    this.navigate({
       ...this.filters,
       category: '',
       page: 1,
