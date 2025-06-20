@@ -164,6 +164,12 @@ export const blogStore = {
       ...this.filters,
       ...newFilters,
     };
+
+    // Синхронизируем pagination.currentPage с filters.page
+    if (newFilters.page !== undefined) {
+      this.pagination.currentPage = newFilters.page;
+    }
+
     // Persist filters whenever they change
     this.persistFilters();
 
@@ -300,7 +306,7 @@ export const blogStore = {
     // Add current filter values
     const params = this.filterParams;
     console.log('filterParams:', Array.from(params.entries()));
-    
+
     params.forEach((value, key) => {
       url.searchParams.set(key, value);
     });
@@ -391,10 +397,10 @@ export const blogStore = {
       ...filters,
     };
     this.persistFilters();
-    
+
     // Update URL once
     this.updateURL(true);
-    
+
     // Load content
     this.loadContent();
   },
@@ -457,7 +463,10 @@ export const blogStore = {
 
   // Content loading method
   loadContent() {
-    if (window.blogAjaxManager && typeof window.blogAjaxManager.loadFromCurrentState === 'function') {
+    if (
+      window.blogAjaxManager &&
+      typeof window.blogAjaxManager.loadFromCurrentState === 'function'
+    ) {
       window.blogAjaxManager.loadFromCurrentState();
     }
   },
@@ -707,14 +716,14 @@ export const blogStore = {
 // Export function to register store with Alpine after initialization
 export function initBlogStore(Alpine) {
   Alpine.store('blog', blogStore);
-  
+
   // Add simplified $blog magic method
   Alpine.magic('blog', () => ({
     store: Alpine.store('blog'),
     // Direct access to navigation methods
-    goToPage: (page) => Alpine.store('blog').goToPage(page),
-    setCategory: (slug) => Alpine.store('blog').setCategory(slug),
-    setSearch: (query) => Alpine.store('blog').setSearch(query),
+    goToPage: page => Alpine.store('blog').goToPage(page),
+    setCategory: slug => Alpine.store('blog').setCategory(slug),
+    setSearch: query => Alpine.store('blog').setSearch(query),
     setSort: (type, direction) => Alpine.store('blog').setSort(type, direction),
     // Quick access to state
     loading: () => Alpine.store('blog').loading,
@@ -722,7 +731,7 @@ export function initBlogStore(Alpine) {
     articles: () => Alpine.store('blog').articles,
     pagination: () => Alpine.store('blog').pagination,
   }));
-  
+
   // Initialize store after registration
   blogStore.init();
 }

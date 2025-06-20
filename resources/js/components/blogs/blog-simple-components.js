@@ -35,15 +35,21 @@ export function initSimpleBlogPage() {
       if (data.categories) store.setCategories(data.categories);
       if (data.popularPosts) store.setPopularPosts(data.popularPosts);
 
-      // Set pagination
+      // Set pagination and sync with filters.page
       if (data.totalPages || data.currentPage) {
+        const currentPage = data.currentPage || 1;
         store.setPagination({
-          currentPage: data.currentPage || 1,
+          currentPage: currentPage,
           totalPages: data.totalPages || 1,
           hasPagination: (data.totalPages || 1) > 1,
-          hasNext: (data.currentPage || 1) < (data.totalPages || 1),
-          hasPrev: (data.currentPage || 1) > 1,
+          hasNext: currentPage < (data.totalPages || 1),
+          hasPrev: currentPage > 1,
         });
+
+        // Синхронизируем filters.page с pagination.currentPage
+        if (data.filters && data.filters.page !== currentPage) {
+          store.setFilters({ ...store.filters, page: currentPage });
+        }
       }
 
       // Set stats
@@ -56,18 +62,38 @@ export function initSimpleBlogPage() {
     },
 
     // Proxy getters for template access
-    get loading() { return Alpine.store('blog')?.loading || false; },
-    get articles() { return Alpine.store('blog')?.articles || []; },
-    get filters() { return Alpine.store('blog')?.filters || {}; },
-    get pagination() { return Alpine.store('blog')?.pagination || {}; },
-    get hasArticles() { return this.articles.length > 0 || !!this.heroArticle; },
-    get showNoResults() { return !this.hasArticles && !this.loading; },
+    get loading() {
+      return Alpine.store('blog')?.loading || false;
+    },
+    get articles() {
+      return Alpine.store('blog')?.articles || [];
+    },
+    get filters() {
+      return Alpine.store('blog')?.filters || {};
+    },
+    get pagination() {
+      return Alpine.store('blog')?.pagination || {};
+    },
+    get hasArticles() {
+      return this.articles.length > 0 || !!this.heroArticle;
+    },
+    get showNoResults() {
+      return !this.hasArticles && !this.loading;
+    },
 
     // Navigation methods - delegate to store
-    goToPage(page) { return Alpine.store('blog')?.goToPage(page); },
-    setCategory(slug) { return Alpine.store('blog')?.setCategory(slug); },
-    setSearch(query) { return Alpine.store('blog')?.setSearch(query); },
-    clearFilters() { return Alpine.store('blog')?.resetFilters(); },
+    goToPage(page) {
+      return Alpine.store('blog')?.goToPage(page);
+    },
+    setCategory(slug) {
+      return Alpine.store('blog')?.setCategory(slug);
+    },
+    setSearch(query) {
+      return Alpine.store('blog')?.setSearch(query);
+    },
+    clearFilters() {
+      return Alpine.store('blog')?.resetFilters();
+    },
   }));
 }
 
@@ -77,23 +103,43 @@ export function initSimpleBlogPage() {
 export function initSimpleBlogPagination() {
   Alpine.data('blogPaginationSimple', () => ({
     // Computed properties from store
-    get currentPage() { return Alpine.store('blog')?.pagination?.currentPage || 1; },
-    get totalPages() { return Alpine.store('blog')?.pagination?.totalPages || 1; },
-    get hasNext() { return Alpine.store('blog')?.pagination?.hasNext || false; },
-    get hasPrev() { return Alpine.store('blog')?.pagination?.hasPrev || false; },
-    get loading() { return Alpine.store('blog')?.loading || false; },
+    get currentPage() {
+      return Alpine.store('blog')?.pagination?.currentPage || 1;
+    },
+    get totalPages() {
+      return Alpine.store('blog')?.pagination?.totalPages || 1;
+    },
+    get hasNext() {
+      return Alpine.store('blog')?.pagination?.hasNext || false;
+    },
+    get hasPrev() {
+      return Alpine.store('blog')?.pagination?.hasPrev || false;
+    },
+    get loading() {
+      return Alpine.store('blog')?.loading || false;
+    },
 
     // Navigation methods - delegate to store
-    goToPage(page) { return Alpine.store('blog')?.goToPage(page); },
-    goToNext() { return Alpine.store('blog')?.goToNextPage(); },
-    goToPrev() { return Alpine.store('blog')?.goToPrevPage(); },
-    goToFirst() { return Alpine.store('blog')?.goToFirstPage(); },
-    goToLast() { return Alpine.store('blog')?.goToLastPage(); },
+    goToPage(page) {
+      return Alpine.store('blog')?.goToPage(page);
+    },
+    goToNext() {
+      return Alpine.store('blog')?.goToNextPage();
+    },
+    goToPrev() {
+      return Alpine.store('blog')?.goToPrevPage();
+    },
+    goToFirst() {
+      return Alpine.store('blog')?.goToFirstPage();
+    },
+    goToLast() {
+      return Alpine.store('blog')?.goToLastPage();
+    },
 
     // Generate visible pages for pagination UI
     getVisiblePages() {
-      const current = this.currentPage;
-      const total = this.totalPages;
+      const current = parseInt(this.currentPage) || 1;
+      const total = parseInt(this.totalPages) || 1;
       const delta = 2;
 
       if (total <= 7) {

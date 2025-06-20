@@ -192,7 +192,7 @@ export class BlogAjaxManager {
       }
 
       // Update pagination content (preserve existing DOM approach)
-      this.updatePaginationContent(data);
+      // this.updatePaginationContent(data);
 
       // Reinitialize components (preserve existing approach)
       this.reinitializeComponents();
