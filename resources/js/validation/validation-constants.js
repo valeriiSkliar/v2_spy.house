@@ -68,7 +68,7 @@ export const IP_RESTRICTION_CONFIG = {
 };
 
 export const BLOG_SEARCH_CONFIG = {
-  minLength: 3,
+  minLength: 3, // Synchronized with server-side validation (min:2)
   maxLength: 255,
   pattern: VALIDATION_PATTERNS.blogSearch,
   errorMessage:

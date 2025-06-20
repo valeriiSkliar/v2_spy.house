@@ -457,7 +457,20 @@ export const blogStore = {
 
     const query = searchQuery ? searchQuery.trim() : '';
 
-    // Search validation is handled by middleware, basic client-side check is sufficient
+    // Client-side validation to prevent server-side validation failures
+    if (query && query.length > 0 && query.length < 3) {
+      console.warn('Search query too short (min 3 characters):', query);
+      return false; // Don't proceed with search that will fail server validation
+    }
+
+    // Use centralized search validation for additional checks
+    if (query) {
+      const searchValidation = ValidationMethods.validateBlogSearch(query);
+      if (!searchValidation.isValid) {
+        console.warn('Search validation failed:', searchValidation.errors);
+        return false;
+      }
+    }
 
     console.log('Setting search query:', query);
 

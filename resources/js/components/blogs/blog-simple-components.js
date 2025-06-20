@@ -222,6 +222,12 @@ export function initBlogSearchComponent() {
 
       const trimmedQuery = query ? query.trim() : '';
 
+      // Validate minimum length to match server-side validation (min:3)
+      if (trimmedQuery && trimmedQuery.length < 3) {
+        console.log('Search query too short, ignoring:', trimmedQuery);
+        return; // Don't proceed with search if less than 3 characters
+      }
+
       if (trimmedQuery) {
         store.setSearch(trimmedQuery);
       } else {
