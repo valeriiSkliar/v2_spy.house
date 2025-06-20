@@ -1,7 +1,7 @@
 <style>
     .search-clear-btn {
         position: absolute;
-        right: 40px;
+        right: 60px;
         top: 50%;
         transform: translateY(-50%);
         background: none;
@@ -81,9 +81,9 @@
             </button>
 
             <!-- Индикатор загрузки -->
-            <div x-show="isLoading" class="search-loading">
+            {{-- <div x-show="isLoading" class="search-loading">
                 <span class="loading-spinner"></span>
-            </div>
+            </div> --}}
         </div>
 
 
