@@ -1,8 +1,3 @@
-import {
-  initAlsowInterestingArticlesCarousel,
-  initCommentPagination,
-  initReadOftenArticlesCarousel,
-} from '@/components/blogs';
 import Alpine from 'alpinejs';
 import { blogAjaxManager } from '../managers/blog-ajax-manager';
 
@@ -96,7 +91,7 @@ function handlePaginationClick(event) {
   console.log('Navigating to page:', page, 'via store');
 
   // Use store navigation
-  store.goToPage(page);
+  store.operations().goToPage(page);
 }
 
 /**
@@ -157,12 +152,12 @@ document.addEventListener('alpine:ready', function () {
 // Export essential functions for legacy compatibility
 export {
   initBlogPagination,
+  initBlogSorting,
   initCategoryFiltering,
+  initFilterSearch,
   initPaginationClickHandlers,
+  initSidebarState,
   reloadBlogContent,
   updateCategorySidebarState,
   validateRequestParams,
-  initSidebarState,
-  initBlogSorting,
-  initFilterSearch,
 };

@@ -410,22 +410,8 @@ export const blogStore = {
     return url.toString();
   },
 
-  clearSearch() {
-    console.log('Clearing search from store');
-    this.navigate({
-      ...this.filters,
-      search: '',
-      page: 1,
-    });
-  },
-
-  clearCategory() {
-    this.navigate({
-      ...this.filters,
-      category: '',
-      page: 1,
-    });
-  },
+  // REMOVED: Navigation methods moved to Manager for better separation of concerns
+  // All navigation logic (goToPage, setSearch, setCategory, etc.) is now in BlogAjaxManager
 
   buildRequestURL(baseUrl) {
     const requestUrl = new URL(baseUrl, window.location.origin);
@@ -438,189 +424,9 @@ export const blogStore = {
     return requestUrl.toString();
   },
 
-  resetToPage(page = 1) {
-    this.setFilters({
-      ...this.filters,
-      page,
-    });
-  },
-
-  // Unified navigation method - consolidates navigation from all components
-  navigate(filters) {
-    // Update filters without URL update (to avoid double update)
-    this.filters = {
-      ...this.filters,
-      ...filters,
-    };
-    this.persistFilters();
-
-    // Update URL once
-    this.updateURL(true);
-
-    // Load content
-    this.loadContent();
-  },
-
-  // Navigation helper methods
-  goToPage(page) {
-    const targetPage = parseInt(page);
-    if (targetPage < 1 || targetPage > this.pagination.totalPages || this.loading) {
-      return false;
-    }
-    this.navigate({ ...this.filters, page: targetPage });
-    return true;
-  },
-
-  goToNextPage() {
-    if (this.pagination.hasNext && !this.loading) {
-      return this.goToPage(this.pagination.currentPage + 1);
-    }
-    return false;
-  },
-
-  goToPrevPage() {
-    if (this.pagination.hasPrev && !this.loading) {
-      return this.goToPage(this.pagination.currentPage - 1);
-    }
-    return false;
-  },
-
-  goToFirstPage() {
-    if (this.pagination.currentPage > 1 && !this.loading) {
-      return this.goToPage(1);
-    }
-    return false;
-  },
-
-  goToLastPage() {
-    if (this.pagination.currentPage < this.pagination.totalPages && !this.loading) {
-      return this.goToPage(this.pagination.totalPages);
-    }
-    return false;
-  },
-
-  setCategory(categorySlug) {
-    if (this.loading) return false;
-    this.navigate({ ...this.filters, category: categorySlug, page: 1 });
-    return true;
-  },
-
-  setSearch(searchQuery) {
-    if (this.loading) {
-      console.warn('Search blocked: content is loading');
-      return false;
-    }
-
-    const query = searchQuery ? searchQuery.trim() : '';
-
-    // Client-side validation to prevent server-side validation failures
-    if (query && query.length > 0 && query.length < 3) {
-      console.warn('Search query too short (min 3 characters):', query);
-      return false; // Don't proceed with search that will fail server validation
-    }
-
-    // Use centralized search validation for additional checks
-    if (query) {
-      const searchValidation = ValidationMethods.validateBlogSearch(query);
-      if (!searchValidation.isValid) {
-        console.warn('Search validation failed:', searchValidation.errors);
-        return false;
-      }
-    }
-
-    console.log('Setting search query:', query);
-
-    this.navigate({
-      ...this.filters,
-      search: query,
-      page: 1,
-      // Сбрасываем категорию при поиске, если нужно
-      // category: query ? '' : this.filters.category
-    });
-
-    return true;
-  },
-
-  setSort(sortType, direction = 'desc') {
-    if (this.loading) return false;
-    this.navigate({ ...this.filters, sort: sortType, direction, page: 1 });
-    return true;
-  },
-
-  // Content loading method
-  loadContent() {
-    if (
-      window.blogAjaxManager &&
-      typeof window.blogAjaxManager.loadFromCurrentState === 'function'
-    ) {
-      window.blogAjaxManager.loadFromCurrentState();
-    }
-  },
-
-  // NEW: Navigate to specific URL state
-  navigateToState(filters, replaceState = false) {
-    // Update filters
-    this.filters = { ...this.filters, ...filters };
-    this.persistFilters();
-
-    // Update URL
-    this.updateURL(!replaceState);
-
-    // Trigger content reload
-    this.loadContent();
-  },
-
-  // NEW: Handle redirect responses from server - centralized redirect handling
-  handleRedirectResponse(redirectUrl) {
-    console.log('Store handling redirect to:', redirectUrl);
-
-    const url = new URL(redirectUrl);
-    const urlParams = new URLSearchParams(url.search);
-
-    // Extract filters from redirect URL
-    const redirectFilters = {
-      category: urlParams.get('category') || '',
-      page: parseInt(urlParams.get('page')) || 1,
-      search: urlParams.get('search') || '',
-      sort: urlParams.get('sort') || 'latest',
-      direction: urlParams.get('direction') || 'desc',
-    };
-
-    // Update filters without triggering URL update (since we're already updating)
-    this.filters = { ...this.filters, ...redirectFilters };
-    this.persistFilters();
-
-    // Update browser history
-    window.history.pushState(
-      {
-        blogFilters: redirectFilters,
-        timestamp: Date.now(),
-      },
-      '',
-      redirectUrl
-    );
-
-    // Trigger content reload
-    this.loadContent();
-  },
-
-  // NEW: Clean redirect (clear all parameters)
-  cleanRedirect() {
-    console.log('Store performing clean redirect');
-
-    // Show loader before page reload using centralized method
-    this.showLoader();
-
-    // Reset filters to defaults
-    this.resetFilters();
-
-    // Create clean URL
-    const cleanUrl = new URL(window.location.pathname, window.location.origin);
-    window.history.pushState({}, '', cleanUrl.toString());
-
-    // Reload page
-    window.location.reload();
-  },
+  // REMOVED: Navigation and content loading methods moved to Manager
+  // Methods like navigateToState, handleRedirectResponse, cleanRedirect
+  // are now handled by Manager for better separation of concerns
 
   // NEW: Check if current state matches URL
   isStateInSync() {
@@ -704,19 +510,11 @@ export const blogStore = {
     return false;
   },
 
-  // NEW: Force state synchronization (emergency method)
+  // NEW: Force state synchronization (emergency method) - pure state operation
   forceSyncState() {
     console.log('Force syncing blog state...');
-
     this.updateFromURL();
-
-    // Trigger content reload if needed
-    if (
-      window.blogAjaxManager &&
-      typeof window.blogAjaxManager.loadFromCurrentState === 'function'
-    ) {
-      window.blogAjaxManager.loadFromCurrentState();
-    }
+    // Content reload should be triggered by Manager, not Store
   },
 
   // Validation methods
@@ -952,9 +750,107 @@ export const blogStore = {
     };
   },
 
-  // CENTRALIZED URL API - single interface for all URL operations
-  // This API consolidates all URL-related logic that was previously scattered
-  // across blog-store.js, blog-ajax-manager.js, and app-blog.js
+  // STATE API - Pure state management interface (no business logic)
+  // This API provides controlled access to store state
+  // Usage: store.stateAPI.methodName() or this.$blog.state.methodName()
+  stateAPI: {
+    // State getters - read-only access to state
+    getLoading() {
+      return blogStore.loading;
+    },
+
+    getFilters() {
+      return { ...blogStore.filters };
+    },
+
+    getArticles() {
+      return [...blogStore.articles];
+    },
+
+    getCategories() {
+      return [...blogStore.categories];
+    },
+
+    getPagination() {
+      return { ...blogStore.pagination };
+    },
+
+    getStats() {
+      return { ...blogStore.stats };
+    },
+
+    getCurrentCategory() {
+      return blogStore.currentCategory;
+    },
+
+    // State setters - controlled state mutation
+    setLoading(isLoading, options = {}) {
+      return blogStore.setLoading(isLoading, options);
+    },
+
+    setFilters(newFilters) {
+      return blogStore.setFilters(newFilters);
+    },
+
+    setArticles(articles) {
+      return blogStore.setArticles(articles);
+    },
+
+    setCategories(categories) {
+      return blogStore.setCategories(categories);
+    },
+
+    setPagination(paginationData) {
+      return blogStore.setPagination(paginationData);
+    },
+
+    setStats(newStats) {
+      return blogStore.setStats(newStats);
+    },
+
+    setCurrentCategory(category) {
+      return blogStore.setCurrentCategory(category);
+    },
+
+    // Computed state getters
+    isFirstPage() {
+      return blogStore.isFirstPage;
+    },
+
+    isLastPage() {
+      return blogStore.isLastPage;
+    },
+
+    hasResults() {
+      return blogStore.hasResults;
+    },
+
+    isFiltered() {
+      return blogStore.isFiltered;
+    },
+
+    hasActiveSearch() {
+      return blogStore.hasActiveSearch;
+    },
+
+    // State validation
+    validateCurrentState() {
+      return blogStore.validateFilters();
+    },
+
+    // Reset methods
+    resetState() {
+      return blogStore.resetState();
+    },
+
+    resetFilters() {
+      return blogStore.resetFilters();
+    },
+  },
+
+  // PURE URL API - URL state management only (no navigation logic)
+  // This API handles only URL synchronization and state restoration
+  // Navigation logic moved to Manager for better separation
   // Usage: store.urlAPI.methodName() or this.$blog.url.methodName()
   urlAPI: {
     // Get current URL state
@@ -967,35 +863,23 @@ export const blogStore = {
       return blogStore.isStateInSync();
     },
 
-    // Update URL with current state
+    // Update URL with current state (pure URL operation)
     updateUrl(pushState = true) {
       return blogStore.updateURL(pushState);
     },
 
-    // Restore state from current URL
+    // Restore state from current URL (pure state operation)
     restoreFromUrl() {
       return blogStore.restoreStateFromURL();
     },
 
-    // Handle server redirects
-    handleRedirect(redirectUrl) {
-      return blogStore.handleRedirectResponse(redirectUrl);
-    },
-
-    // Force synchronization
+    // Force synchronization (pure state operation)
     forceSync() {
       return blogStore.forceSyncState();
     },
 
-    // Navigate to specific state
-    navigateToState(filters, replaceState = false) {
-      return blogStore.navigateToState(filters, replaceState);
-    },
-
-    // Clean redirect (remove all parameters)
-    cleanRedirect() {
-      return blogStore.cleanRedirect();
-    },
+    // REMOVED: Navigation methods moved to Manager
+    // handleRedirect, navigateToState, cleanRedirect are now in Manager
   },
 };
 
@@ -1003,25 +887,53 @@ export const blogStore = {
 export function initBlogStore(Alpine) {
   Alpine.store('blog', blogStore);
 
-  // Add simplified $blog magic method with URL API access
+  // Add simplified $blog magic method with clear API separation
   Alpine.magic('blog', () => ({
-    store: Alpine.store('blog'),
-    // Direct access to navigation methods
-    goToPage: page => Alpine.store('blog').goToPage(page),
-    setCategory: slug => Alpine.store('blog').setCategory(slug),
-    setSearch: query => Alpine.store('blog').setSearch(query),
-    clearSearch: () => Alpine.store('blog').clearSearch(),
-    setSort: (type, direction) => Alpine.store('blog').setSort(type, direction),
-    // Quick access to state
+    // Pure state access via State API
+    state: Alpine.store('blog').stateAPI,
+
+    // Quick access to read-only state (for convenience)
     loading: () => Alpine.store('blog').loading,
     filters: () => Alpine.store('blog').filters,
     articles: () => Alpine.store('blog').articles,
     pagination: () => Alpine.store('blog').pagination,
-    // Search-specific helpers
     hasActiveSearch: () => Alpine.store('blog').hasActiveSearch,
     searchStats: () => Alpine.store('blog').searchStats,
-    // URL API access
+
+    // URL operations (pure state/URL sync)
     url: Alpine.store('blog').urlAPI,
+
+    // Operations API access - delegate to Manager
+    operations: () => {
+      if (window.blogAjaxManager && window.blogAjaxManager.operationsAPI) {
+        return window.blogAjaxManager.operationsAPI;
+      }
+      console.warn('Blog Manager operations not available');
+      return {};
+    },
+
+    // DEPRECATED: Direct navigation methods (use operations instead)
+    // These are kept for backward compatibility but should use operations API
+    goToPage: page => {
+      const ops = window.blogAjaxManager?.operationsAPI;
+      return ops ? ops.goToPage(page) : false;
+    },
+    setCategory: slug => {
+      const ops = window.blogAjaxManager?.operationsAPI;
+      return ops ? ops.setCategory(slug) : false;
+    },
+    setSearch: query => {
+      const ops = window.blogAjaxManager?.operationsAPI;
+      return ops ? ops.setSearch(query) : false;
+    },
+    clearSearch: () => {
+      const ops = window.blogAjaxManager?.operationsAPI;
+      return ops ? ops.clearSearch() : false;
+    },
+    setSort: (type, direction) => {
+      const ops = window.blogAjaxManager?.operationsAPI;
+      return ops ? ops.setSort(type, direction) : false;
+    },
   }));
 
   // Initialize store after registration

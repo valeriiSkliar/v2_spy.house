@@ -56,8 +56,9 @@ export function initSimpleBlogPage() {
           if (data.filters.category !== undefined) updatedFilters.category = data.filters.category;
           if (data.filters.search !== undefined) updatedFilters.search = data.filters.search;
           if (data.filters.sort !== undefined) updatedFilters.sort = data.filters.sort;
-          if (data.filters.direction !== undefined) updatedFilters.direction = data.filters.direction;
-          
+          if (data.filters.direction !== undefined)
+            updatedFilters.direction = data.filters.direction;
+
           store.setFilters(updatedFilters);
         }
       }
@@ -91,18 +92,18 @@ export function initSimpleBlogPage() {
       return !this.hasArticles && !this.loading;
     },
 
-    // Navigation methods - delegate to store
+    // Navigation methods - delegate to Manager via operations API
     goToPage(page) {
-      return Alpine.store('blog')?.goToPage(page);
+      return this.$blog.operations()?.goToPage(page) || false;
     },
     setCategory(slug) {
-      return Alpine.store('blog')?.setCategory(slug);
+      return this.$blog.operations()?.setCategory(slug) || false;
     },
     setSearch(query) {
-      return Alpine.store('blog')?.setSearch(query);
+      return this.$blog.operations()?.setSearch(query) || false;
     },
     clearFilters() {
-      return Alpine.store('blog')?.resetFilters();
+      return this.$blog.operations()?.clearFilters() || false;
     },
   }));
 }
@@ -129,21 +130,21 @@ export function initSimpleBlogPagination() {
       return Alpine.store('blog')?.loading || false;
     },
 
-    // Navigation methods - delegate to store
+    // Navigation methods - delegate to Manager via operations API
     goToPage(page) {
-      return Alpine.store('blog')?.goToPage(page);
+      return this.$blog.operations()?.goToPage(page) || false;
     },
     goToNext() {
-      return Alpine.store('blog')?.goToNextPage();
+      return this.$blog.operations()?.goToNextPage() || false;
     },
     goToPrev() {
-      return Alpine.store('blog')?.goToPrevPage();
+      return this.$blog.operations()?.goToPrevPage() || false;
     },
     goToFirst() {
-      return Alpine.store('blog')?.goToFirstPage();
+      return this.$blog.operations()?.goToFirstPage() || false;
     },
     goToLast() {
-      return Alpine.store('blog')?.goToLastPage();
+      return this.$blog.operations()?.goToLastPage() || false;
     },
 
     // Generate visible pages for pagination UI
@@ -223,10 +224,10 @@ export function initBlogSearchComponent() {
       return '';
     },
 
-    // Simple handlers - delegate to store
+    // Simple handlers - delegate to Manager operations API
     handleSearch(query) {
-      const store = this.$store.blog;
-      if (!store) return;
+      const operations = this.$blog.operations();
+      if (!operations) return;
 
       const trimmedQuery = query ? query.trim() : '';
 
@@ -237,9 +238,9 @@ export function initBlogSearchComponent() {
       }
 
       if (trimmedQuery) {
-        store.setSearch(trimmedQuery);
+        operations.setSearch(trimmedQuery);
       } else {
-        store.clearSearch();
+        operations.clearSearch();
       }
     },
 
@@ -256,11 +257,11 @@ export function initBlogSearchComponent() {
       this.handleSearch(query);
     },
 
-    // Clear search - simple proxy
+    // Clear search - delegate to Manager
     clearSearch() {
-      const store = this.$store.blog;
-      if (store && typeof store.clearSearch === 'function') {
-        store.clearSearch();
+      const operations = this.$blog.operations();
+      if (operations) {
+        operations.clearSearch();
       }
 
       // Clear UI errors
@@ -287,27 +288,27 @@ export function initBlogSearchComponent() {
       return this.currentSort === 'views';
     },
 
-    // Toggle sorting direction for current sort type
+    // Toggle sorting direction for current sort type - delegate to Manager
     toggleSortDirection(sortType) {
-      const store = this.$store.blog;
-      if (!store || this.isLoading) return;
+      const operations = this.$blog.operations();
+      if (!operations || this.isLoading) return;
 
       // If clicking the same sort type, toggle direction
       if (this.currentSort === sortType) {
         const newDirection = this.currentDirection === 'desc' ? 'asc' : 'desc';
-        store.setSort(sortType, newDirection);
+        operations.setSort(sortType, newDirection);
       } else {
         // If different sort type, set with default direction
-        store.setSort(sortType, 'desc');
+        operations.setSort(sortType, 'desc');
       }
     },
 
-    // Set specific sort with direction
+    // Set specific sort with direction - delegate to Manager
     setSort(sortType, direction = 'desc') {
-      const store = this.$store.blog;
-      if (!store || this.isLoading) return;
+      const operations = this.$blog.operations();
+      if (!operations || this.isLoading) return;
 
-      store.setSort(sortType, direction);
+      operations.setSort(sortType, direction);
     },
 
     // Get CSS classes for sort button
@@ -364,10 +365,10 @@ export function initBlogCategoriesComponent() {
       return !this.activeCategory || this.activeCategory === '';
     },
 
-    // Handle category selection
+    // Handle category selection - delegate to Manager
     selectCategory(categorySlug) {
-      const store = this.$store.blog;
-      if (!store || this.isLoading) return;
+      const operations = this.$blog.operations();
+      if (!operations || this.isLoading) return;
 
       // If already selected, do nothing
       if (this.isCategoryActive(categorySlug)) {
@@ -376,13 +377,13 @@ export function initBlogCategoriesComponent() {
       }
 
       console.log('Selecting category:', categorySlug);
-      store.setCategory(categorySlug);
+      operations.setCategory(categorySlug);
     },
 
-    // Clear category selection (show all)
+    // Clear category selection (show all) - delegate to Manager
     clearCategory() {
-      const store = this.$store.blog;
-      if (!store || this.isLoading) return;
+      const operations = this.$blog.operations();
+      if (!operations || this.isLoading) return;
 
       if (this.isAllCategoriesActive()) {
         console.log('All categories already selected');
@@ -390,7 +391,7 @@ export function initBlogCategoriesComponent() {
       }
 
       console.log('Clearing category selection');
-      store.clearCategory();
+      operations.clearCategory();
     },
 
     // Get category display information
@@ -410,11 +411,9 @@ export function initBlogCategoriesComponent() {
       const isActive = this.isCategoryActive(categorySlug);
       const isLoading = this.isLoading;
 
-      return [
-        baseClasses,
-        isActive ? 'is-active' : '',
-        isLoading ? 'is-loading' : '',
-      ].filter(Boolean).join(' ');
+      return [baseClasses, isActive ? 'is-active' : '', isLoading ? 'is-loading' : '']
+        .filter(Boolean)
+        .join(' ');
     },
 
     // Get CSS classes for "All categories" link
@@ -423,11 +422,9 @@ export function initBlogCategoriesComponent() {
       const isActive = this.isAllCategoriesActive();
       const isLoading = this.isLoading;
 
-      return [
-        baseClasses,
-        isActive ? 'is-active' : '',
-        isLoading ? 'is-loading' : '',
-      ].filter(Boolean).join(' ');
+      return [baseClasses, isActive ? 'is-active' : '', isLoading ? 'is-loading' : '']
+        .filter(Boolean)
+        .join(' ');
     },
   }));
 }

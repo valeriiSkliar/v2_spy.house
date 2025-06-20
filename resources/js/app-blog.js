@@ -98,10 +98,11 @@ Alpine.data('blogApp', () => ({
     return false;
   },
 
-  // Navigation methods - delegate to store URL API
+  // Navigation methods - delegate to Manager operations API
   navigateTo(filters, replaceState = false) {
-    if (this.blogStore && this.blogStore.urlAPI) {
-      this.blogStore.urlAPI.navigateToState(filters, replaceState);
+    const operations = this.$blog?.operations();
+    if (operations) {
+      operations.validateAndNavigate(filters);
     }
   },
 
@@ -117,12 +118,19 @@ Alpine.data('blogApp', () => ({
     }
   },
 
-  // Force state synchronization - delegate to store URL API
+  // Force state synchronization - coordinate between URL and Manager
   forceSyncState() {
     console.log('Force syncing blog state...');
 
+    // Sync URL state
     if (this.blogStore && this.blogStore.urlAPI) {
       this.blogStore.urlAPI.forceSync();
+    }
+
+    // Refresh content via Manager
+    const operations = this.$blog?.operations();
+    if (operations) {
+      operations.refreshContent();
     }
   },
 }));

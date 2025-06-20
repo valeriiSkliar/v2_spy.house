@@ -98,7 +98,7 @@ export class BlogAjaxManager {
 
       // Handle redirect response
       if (response.redirect) {
-        this.handleRedirectResponse(response, container, url, options);
+        this.handleRedirectResponseFromServer(response, container, url, options);
         return;
       }
 
@@ -124,19 +124,16 @@ export class BlogAjaxManager {
   }
 
   /**
-   * Handle redirect response - delegate to store URL API
+   * Handle redirect response - now uses Manager's own redirect handling
    */
-  handleRedirectResponse(data, container, url, options) {
-    const store = this.getStore();
-    if (!store) return;
+  handleRedirectResponseFromServer(data, container, url, options) {
+    // Use Manager's own redirect handling (moved from store)
+    this.handleRedirectResponse(data.url);
 
-    // Use centralized URL API from store
-    if (store.urlAPI && typeof store.urlAPI.handleRedirect === 'function') {
-      store.urlAPI.handleRedirect(data.url);
-      // Update category sidebar state after redirect
+    // Update category sidebar state after redirect
+    const store = this.getStore();
+    if (store) {
       this.updateCategorySidebarState(store.filters.category);
-    } else {
-      console.warn('Store URL API not available');
     }
   }
 
@@ -386,8 +383,281 @@ export class BlogAjaxManager {
       });
     }
   }
+
+  // MANAGER API - Business operations interface
+  // This API provides high-level operations that coordinate between blogAPI and store
+  // Usage: blogAjaxManager.operationsAPI.methodName()
+  get operationsAPI() {
+    return {
+      // Navigation operations - moved from store for better separation
+      goToPage: page => this.goToPage(page),
+      goToNextPage: () => this.goToNextPage(),
+      goToPrevPage: () => this.goToPrevPage(),
+      goToFirstPage: () => this.goToFirstPage(),
+      goToLastPage: () => this.goToLastPage(),
+
+      // Filter operations
+      setCategory: categorySlug => this.setCategory(categorySlug),
+      setSearch: searchQuery => this.setSearch(searchQuery),
+      setSort: (sortType, direction) => this.setSort(sortType, direction),
+      clearSearch: () => this.clearSearch(),
+      clearCategory: () => this.clearCategory(),
+      clearFilters: () => this.clearFilters(),
+
+      // Content operations
+      loadContent: (container, url, options) => this.loadContent(container, url, options),
+      loadFromCurrentState: () => this.loadFromCurrentState(),
+
+      // State operations
+      refreshContent: () => this.refreshContent(),
+      validateAndNavigate: filters => this.validateAndNavigate(filters),
+
+      // Navigation and redirect operations - moved from store
+      handleRedirect: redirectUrl => this.handleRedirectResponse(redirectUrl),
+      navigateToState: (filters, replaceState) => this.navigateToState(filters, replaceState),
+      cleanRedirect: () => this.cleanRedirect(),
+    };
+  }
+
+  // Navigation methods - moved from store to manager for better separation
+  goToPage(page) {
+    const store = this.getStore();
+    if (!store) return false;
+
+    const targetPage = parseInt(page);
+    if (targetPage < 1 || targetPage > store.pagination.totalPages || store.loading) {
+      return false;
+    }
+
+    // Update filters via state API
+    store.stateAPI.setFilters({ ...store.filters, page: targetPage });
+
+    // Load content using manager coordination
+    this.loadFromCurrentState();
+    return true;
+  }
+
+  goToNextPage() {
+    const store = this.getStore();
+    if (!store) return false;
+
+    if (store.pagination.hasNext && !store.loading) {
+      return this.goToPage(store.pagination.currentPage + 1);
+    }
+    return false;
+  }
+
+  goToPrevPage() {
+    const store = this.getStore();
+    if (!store) return false;
+
+    if (store.pagination.hasPrev && !store.loading) {
+      return this.goToPage(store.pagination.currentPage - 1);
+    }
+    return false;
+  }
+
+  goToFirstPage() {
+    const store = this.getStore();
+    if (!store) return false;
+
+    if (store.pagination.currentPage > 1 && !store.loading) {
+      return this.goToPage(1);
+    }
+    return false;
+  }
+
+  goToLastPage() {
+    const store = this.getStore();
+    if (!store) return false;
+
+    if (store.pagination.currentPage < store.pagination.totalPages && !store.loading) {
+      return this.goToPage(store.pagination.totalPages);
+    }
+    return false;
+  }
+
+  setCategory(categorySlug) {
+    const store = this.getStore();
+    if (!store || store.loading) return false;
+
+    // Update filters via state API and navigate
+    const newFilters = { ...store.filters, category: categorySlug, page: 1 };
+    return this.validateAndNavigate(newFilters);
+  }
+
+  async setSearch(searchQuery) {
+    const store = this.getStore();
+    if (!store) return false;
+
+    if (store.loading) {
+      console.warn('Search blocked: content is loading');
+      return false;
+    }
+
+    const query = searchQuery ? searchQuery.trim() : '';
+
+    // Client-side validation to prevent server-side validation failures
+    if (query && query.length > 0 && query.length < 3) {
+      console.warn('Search query too short (min 3 characters):', query);
+      return false;
+    }
+
+    // Use centralized search validation
+    if (query) {
+      const { ValidationMethods } = await import('../validation/validation-constants.js');
+      const searchValidation = ValidationMethods.validateBlogSearch(query);
+      if (!searchValidation.isValid) {
+        console.warn('Search validation failed:', searchValidation.errors);
+        return false;
+      }
+    }
+
+    console.log('Setting search query:', query);
+
+    // Update filters and navigate
+    const newFilters = { ...store.filters, search: query, page: 1 };
+    return this.validateAndNavigate(newFilters);
+  }
+
+  setSort(sortType, direction = 'desc') {
+    const store = this.getStore();
+    if (!store || store.loading) return false;
+
+    const newFilters = { ...store.filters, sort: sortType, direction, page: 1 };
+    return this.validateAndNavigate(newFilters);
+  }
+
+  clearSearch() {
+    const store = this.getStore();
+    if (!store) return false;
+
+    console.log('Clearing search from manager');
+    const newFilters = { ...store.filters, search: '', page: 1 };
+    return this.validateAndNavigate(newFilters);
+  }
+
+  clearCategory() {
+    const store = this.getStore();
+    if (!store) return false;
+
+    const newFilters = { ...store.filters, category: '', page: 1 };
+    return this.validateAndNavigate(newFilters);
+  }
+
+  clearFilters() {
+    const store = this.getStore();
+    if (!store) return false;
+
+    const defaultFilters = {
+      page: 1,
+      category: '',
+      search: '',
+      sort: 'latest',
+      direction: 'desc',
+    };
+    return this.validateAndNavigate(defaultFilters);
+  }
+
+  // NEW: Unified navigation method with validation
+  validateAndNavigate(filters) {
+    const store = this.getStore();
+    if (!store) return false;
+
+    // Update filters via state API
+    store.stateAPI.setFilters(filters);
+
+    // Update URL via URL API
+    if (store.urlAPI) {
+      store.urlAPI.updateUrl(true);
+    }
+
+    // Load content
+    this.loadFromCurrentState();
+    return true;
+  }
+
+  // NEW: Refresh current content
+  refreshContent() {
+    console.log('Refreshing content via manager...');
+    this.loadFromCurrentState();
+  }
+
+  // NEW: Handle redirect responses from server - moved from store
+  handleRedirectResponse(redirectUrl) {
+    console.log('Manager handling redirect to:', redirectUrl);
+
+    const store = this.getStore();
+    if (!store) return;
+
+    const url = new URL(redirectUrl);
+    const urlParams = new URLSearchParams(url.search);
+
+    // Extract filters from redirect URL
+    const redirectFilters = {
+      category: urlParams.get('category') || '',
+      page: parseInt(urlParams.get('page')) || 1,
+      search: urlParams.get('search') || '',
+      sort: urlParams.get('sort') || 'latest',
+      direction: urlParams.get('direction') || 'desc',
+    };
+
+    // Update state via State API
+    store.stateAPI.setFilters(redirectFilters);
+
+    // Update URL via URL API
+    if (store.urlAPI) {
+      store.urlAPI.updateUrl(false); // Replace state since we're handling redirect
+    }
+
+    // Load content via Manager
+    this.loadFromCurrentState();
+  }
+
+  // NEW: Navigate to specific state - moved from store
+  navigateToState(filters, replaceState = false) {
+    const store = this.getStore();
+    if (!store) return;
+
+    // Update state via State API
+    store.stateAPI.setFilters(filters);
+
+    // Update URL via URL API
+    if (store.urlAPI) {
+      store.urlAPI.updateUrl(!replaceState);
+    }
+
+    // Load content via Manager
+    this.loadFromCurrentState();
+  }
+
+  // NEW: Clean redirect - moved from store
+  cleanRedirect() {
+    console.log('Manager performing clean redirect');
+
+    const store = this.getStore();
+    if (store) {
+      // Show loader before page reload
+      store.stateAPI.setLoading(true);
+
+      // Reset filters to defaults via State API
+      const defaultFilters = {
+        page: 1,
+        category: '',
+        search: '',
+        sort: 'latest',
+        direction: 'desc',
+      };
+      store.stateAPI.setFilters(defaultFilters);
+    }
+
+    // Create clean URL and reload
+    const cleanUrl = new URL(window.location.pathname, window.location.origin);
+    window.history.pushState({}, '', cleanUrl.toString());
+    window.location.reload();
+  }
 }
 
 // Create and export singleton instance
-// This manager is now a thin coordination layer over blogAPI
+// This manager is now a coordination layer with clear API for operations
 export const blogAjaxManager = new BlogAjaxManager();
