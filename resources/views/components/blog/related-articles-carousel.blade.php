@@ -1,6 +1,6 @@
 @props(['relatedPosts' => [], 'heading' => __('blogs.it_will_also_be_interesting')])
 
-{{-- <div id="alsow-interesting-articles-carousel" class="pt-1">
+<div id="alsow-interesting-articles-carousel" class="pt-1">
     <div class="d-flex align-items-center justify-content-between mb-20">
         <h2 class="font-20 mb-0 mr-3">{{ $heading }}</h2>
         <x-common.carousel-controls prevId="alsow-interesting-articles-carousel-prev"
@@ -20,4 +20,4 @@
             @endforeach
         </div>
     </div>
-</div> --}}
+</div>

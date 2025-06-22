@@ -252,11 +252,8 @@ function reinitializeComponents() {
     // Уничтожаем существующие slick карусели перед переинициализацией
     destroyExistingCarousels();
 
-    // Переинициализируем карусели
-    setTimeout(() => {
-      initAlsowInterestingArticlesCarousel();
-      initReadOftenArticlesCarousel();
-    }, 100);
+    // Переинициализируем карусели через универсальную функцию
+    initUniversalCarousels();
   } catch (error) {
     console.error('Error reinitializing components:', error);
   }
@@ -894,21 +891,63 @@ function initPreloadSystem() {
 }
 
 /**
- * Основная функция инициализации
- * Зачем: централизованная настройка всех компонентов
+ * Инициализация компонентов для страницы списка статей
+ * Зачем: функциональность специфичная для /blog
  */
-document.addEventListener('DOMContentLoaded', function () {
-  console.log('Initializing blog functionality...');
+function initBlogListPage() {
+  const blogContainer = document.getElementById('blog-articles-container');
+  if (!blogContainer) return false;
 
-  // Инициализируем основные компоненты
+  console.log('Initializing blog list page functionality...');
+
+  // Инициализируем компоненты только для страницы списка
   initBlogPagination();
   initCategoryFiltering();
   initSidebarState();
   initOptimizedBlogSearch();
   initBlogSorting();
-  initResponsiveHandlers();
   initPreloadSystem();
 
+  return true;
+}
+
+/**
+ * Инициализация компонентов для страницы отдельной статьи
+ * Зачем: функциональность специфичная для /blog/{slug}
+ */
+function initBlogShowPage() {
+  const articleContainer = document.querySelector('.article._big._single');
+  if (!articleContainer) return false;
+
+  console.log('Initializing blog show page functionality...');
+
+  // Здесь можно добавить специфичную логику для страницы статьи
+  // Пока что просто возвращаем true
+  return true;
+}
+
+/**
+ * Универсальная инициализация каруселей
+ * Зачем: карусели могут быть на любой странице блога
+ */
+function initUniversalCarousels() {
+  console.log('Initializing universal carousels...');
+
+  // Инициализируем карусели независимо от типа страницы
+  const alsowCarouselResult = initAlsowInterestingArticlesCarousel();
+  const readOftenCarouselResult = initReadOftenArticlesCarousel();
+
+  console.log('Carousel initialization results:', {
+    alsowCarousel: alsowCarouselResult,
+    readOftenCarousel: readOftenCarouselResult,
+  });
+}
+
+/**
+ * Универсальная инициализация комментариев
+ * Зачем: комментарии есть на странице отдельной статьи
+ */
+function initUniversalComments() {
   // Инициализируем компоненты комментариев
   initCommentPagination();
 
@@ -918,11 +957,34 @@ document.addEventListener('DOMContentLoaded', function () {
     initUniversalCommentForm(commentForm);
     initReplyButtons(commentForm);
   }
+}
 
-  initAlsowInterestingArticlesCarousel();
-  initReadOftenArticlesCarousel();
+/**
+ * Основная функция инициализации
+ * Зачем: централизованная настройка всех компонентов с определением типа страницы
+ */
+document.addEventListener('DOMContentLoaded', function () {
+  console.log('Initializing blog functionality...');
 
-  console.log('Blog functionality initialized successfully');
+  // Определяем тип страницы и инициализируем соответствующие компоненты
+  const isListPage = initBlogListPage();
+  const isShowPage = initBlogShowPage();
+
+  // Универсальные компоненты для всех страниц блога (только один раз)
+  initResponsiveHandlers();
+
+  // Инициализируем карусели только один раз с задержкой
+  setTimeout(() => {
+    initUniversalCarousels();
+  }, 200);
+
+  initUniversalComments();
+
+  console.log('Blog functionality initialized successfully', {
+    isListPage,
+    isShowPage,
+    currentPath: window.location.pathname,
+  });
 });
 
 // Экспорт основных функций для внешнего использования
