@@ -1,8 +1,9 @@
 @props(['popularPosts' => [], 'heading' => __('blogs.read_often')])
-<div class="pt-2">
+<div id="read-often-articles-carousel-header" class="pt-2">
     <div class="d-flex align-items-center justify-content-between mb-20">
         <h2 class="font-20 mb-0">{{ $heading }}</h2>
-        <x-common.carousel-controls prevId="read-often-articles-carousel-prev" nextId="read-often-articles-carousel-next" />
+        <x-common.carousel-controls prevId="read-often-articles-carousel-prev"
+            nextId="read-often-articles-carousel-next" />
 
     </div>
     <div class="carousel-container" id="read-often-articles-carousel-container">
