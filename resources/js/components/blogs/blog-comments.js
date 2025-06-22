@@ -435,6 +435,13 @@ export function initReplyButtons(commentForm) {
 // Инициализация при загрузке DOM
 document.addEventListener('DOMContentLoaded', function () {
   initCommentPagination();
+
+  // Инициализируем форму комментария если она существует
+  const commentForm = $('#universal-comment-form');
+  if (commentForm.length) {
+    initUniversalCommentForm(commentForm);
+    initReplyButtons(commentForm);
+  }
 });
 
 // Экспорт всех функций

@@ -473,14 +473,14 @@ class ApiBlogController extends BaseBlogController
         $limit = 1; // 1 comment
         $window = 60; // per 60 seconds (1 minute)
 
-        // if (! $this->checkAntiFlood($userId, $action, $limit, $window)) {
-        //     $errorMessage = __('blogs.comments.flood_protection_message');
-        //     if ($request->expectsJson()) {
-        //         return response()->json(['success' => false, 'message' => $errorMessage], 429); // 429 Too Many Requests
-        //     }
+        if (! $this->checkAntiFlood($userId, $action, $limit, $window)) {
+            $errorMessage = __('blogs.comments.flood_protection_message');
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $errorMessage], 429); // 429 Too Many Requests
+            }
 
-        //     return redirect()->back()->withInput();
-        // }
+            return redirect()->back()->withInput();
+        }
         // --- Anti-Flood Check End ---
         // Валидация входных данных
         $validator = Validator::make($request->all(), [
