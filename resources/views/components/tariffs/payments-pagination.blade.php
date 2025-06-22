@@ -7,7 +7,7 @@
         <li>
             <a class="pagination-link prev {{ $pagination->onFirstPage() ? 'disabled' : '' }}"
                 aria-disabled="{{ $pagination->onFirstPage() ? 'true' : 'false' }}"
-                href="{{ $pagination->onFirstPage() ? '' : $pagination->previousPageUrl() }}"
+                href="{{ $pagination->onFirstPage() ? '#' : $pagination->previousPageUrl() }}"
                 data-page="{{ $pagination->onFirstPage() ? '' : $pagination->currentPage() - 1 }}">
                 <span class="icon-prev"></span>
                 <span class="pagination-link__txt">{{ __('tariffs.previous') }}</span>
@@ -26,7 +26,7 @@
         <li>
             <a class="pagination-link next {{ $pagination->hasMorePages() ? '' : 'disabled' }}"
                 aria-disabled="{{ $pagination->hasMorePages() ? 'false' : 'true' }}"
-                href="{{ $pagination->hasMorePages() ? $pagination->nextPageUrl() : '' }}"
+                href="{{ $pagination->hasMorePages() ? $pagination->nextPageUrl() : '#' }}"
                 data-page="{{ $pagination->hasMorePages() ? $pagination->currentPage() + 1 : '' }}">
                 <span class="pagination-link__txt">{{ __('tariffs.next') }}</span>
                 <span class="icon-next"></span>

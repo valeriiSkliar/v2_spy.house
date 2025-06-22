@@ -20,8 +20,8 @@ return '?' . http_build_query($params);
 // Создаем URL для предыдущей страницы
 $prevParams = $queryParams;
 $prevParams['page'] = $currentPage - 1;
-$prevUrl = $currentPage <= 1 ? '' : buildUrl($prevParams); // Создаем URL для следующей страницы
-    $nextParams=$queryParams; $nextParams['page']=$currentPage + 1; $nextUrl=$currentPage>= $totalPages ? '' :
+$prevUrl = $currentPage <= 1 ? '#' : buildUrl($prevParams); // Создаем URL для следующей страницы
+    $nextParams=$queryParams; $nextParams['page']=$currentPage + 1; $nextUrl=$currentPage>= $totalPages ? '#' :
     buildUrl($nextParams);
     @endphp
 

@@ -129,7 +129,12 @@ document.addEventListener('DOMContentLoaded', function () {
     paginationLinks.forEach(link => {
       link.addEventListener('click', function (e) {
         e.preventDefault();
-        const url = new URL(link.href);
+
+        // Проверяем валидность href перед созданием URL
+        const href = link.href;
+        if (!href || href === '' || href === '#') return;
+
+        const url = new URL(href);
 
         // Update browser URL
         const searchParams = Object.fromEntries(url.searchParams);

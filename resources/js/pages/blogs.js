@@ -358,7 +358,29 @@ function handlePaginationClick(event) {
     return;
   }
 
-  const url = new URL(event.target.href);
+  // Ищем ближайшую ссылку в пределах пагинации
+  let targetLink = event.target;
+
+  // Если кликнули не на ссылку, ищем родительскую ссылку в пределах пагинации
+  if (targetLink.tagName !== 'A') {
+    targetLink = targetLink.closest('#blog-pagination-container .pagination-list a');
+  }
+
+  // Проверяем что нашли валидную ссылку
+  if (!targetLink || targetLink.tagName !== 'A') {
+    console.log('No valid pagination link found, ignoring click');
+    return;
+  }
+
+  // Проверяем валидность href
+  const href = targetLink.href;
+  console.log('href', targetLink.tagName, href);
+  if (!href || href === '' || href === '#') {
+    console.log('Invalid or empty href, ignoring click');
+    return;
+  }
+
+  const url = new URL(href);
   const page = parseInt(url.searchParams.get('page')) || 1;
 
   // Валидация номера страницы
@@ -843,7 +865,11 @@ function initPreloadSystem() {
       const paginationLink = e.target.closest('#blog-pagination-container .pagination-list a');
       if (!paginationLink || isLoading) return;
 
-      const url = new URL(paginationLink.href);
+      // Проверяем валидность href перед созданием URL
+      const href = paginationLink.href;
+      if (!href || href === '' || href === '#') return;
+
+      const url = new URL(href);
       const page = url.searchParams.get('page');
 
       if (page) {

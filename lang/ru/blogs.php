@@ -20,9 +20,9 @@ return [
     ],
     'comments' => [
         'title' => 'Комментарии',
-        'leave_comment' => 'Оставить комментарий',
+        'leave_comment' => 'Чтобы оставить комментарий',
         'login' => 'Войдите',
-        'to_service' => 'в наш сервис Spy.house',
+        'to_service' => 'в ваш аккаунт Spy.house',
         'leave_reply' => 'Оставить ответ',
         'reply' => 'Ответить',
         'cancel' => 'Отмена',
@@ -38,7 +38,7 @@ return [
     'article_rating' => [
         'leave_rating' => 'Чтобы оставить оценку, пожалуйста,',
         'login' => 'войдите',
-        'to_service' => 'в наш сервис Spy.house',
+        'to_service' => 'в ваш аккаунт Spy.house',
         'rate_this_article' => 'Оцените эту статью',
         'rate_from_1_to_5' => 'Оцените от 1 до 5',
         'thank_you_for_rating' => 'Спасибо за оценку!',
