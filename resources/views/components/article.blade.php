@@ -26,6 +26,9 @@
         {{ $category ?? '' }}
     </div>
     @else
+    @if(isset($description) && $description)
+    <div class="article__desc">{{ $description }}</div>
+    @endif
     <div class="article__cat">
         {{ $category ?? '' }}
     </div>

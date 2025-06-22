@@ -29,6 +29,10 @@
             <a href="{{ route('blog.show', $article->slug) }}" class="article__title">{{ $article->title }}</a>
         </x-slot>
 
+        <x-slot name="description">
+            {{ $article->summary }}
+        </x-slot>
+
         <x-slot name="category">
             <div class="cat-links">
                 @foreach($article->categories as $category)
