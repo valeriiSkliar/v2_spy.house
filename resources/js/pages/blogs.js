@@ -2,6 +2,8 @@ import {
   initAlsowInterestingArticlesCarousel,
   initCommentPagination,
   initReadOftenArticlesCarousel,
+  initReplyButtons,
+  initUniversalCommentForm,
 } from '@/components/blogs';
 import { hideInElement, showInElement } from '../components/loader';
 import { updateBrowserUrl } from '../helpers/update-browser-url';
@@ -909,6 +911,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Инициализируем компоненты комментариев
   initCommentPagination();
+
+  // Инициализируем форму комментария если она существует
+  const commentForm = $('#universal-comment-form');
+  if (commentForm.length) {
+    initUniversalCommentForm(commentForm);
+    initReplyButtons(commentForm);
+  }
+
   initAlsowInterestingArticlesCarousel();
   initReadOftenArticlesCarousel();
 
