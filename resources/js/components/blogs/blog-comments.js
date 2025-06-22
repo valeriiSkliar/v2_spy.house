@@ -183,16 +183,20 @@ function loadComments(slug, page) {
     .then(data => {
       if (data.success) {
         // Update comments
-        $(commentsList).html(data.commentsHtml);
+        $(commentsList).html(data.html);
 
         // Update pagination
-        $(paginationContainer).html(data.paginationHtml);
+        $(paginationContainer).html(data.pagination);
 
         // Reinitialize pagination after DOM update
         initCommentPagination();
 
-        // Reinitialize reply buttons
-        initReplyButtons(commentForm);
+        // КРИТИЧНО: Переинициализируем форму комментария после обновления DOM
+        const updatedCommentForm = $('#universal-comment-form');
+        if (updatedCommentForm.length) {
+          initUniversalCommentForm(updatedCommentForm);
+          initReplyButtons(updatedCommentForm);
+        }
 
         // Scroll to comments section
         document.getElementById('comments').scrollIntoView({ behavior: 'smooth' });
@@ -346,17 +350,15 @@ export function initUniversalCommentForm(commentForm) {
     e.preventDefault();
 
     const form = $(this);
-    const submitButton = form.find('button[type="submit"]');
+    const container = form[0].closest('#comments'); // Получаем DOM элемент для лоадера
 
     // Validate form
     if (!validateCommentForm(form)) {
       return;
     }
 
-    // Disable submit button to prevent double submission
-    submitButton.prop('disabled', true);
-    const originalButtonText = submitButton.html();
-    submitButton.html('<i class="fas fa-spinner fa-spin"></i> Отправка...');
+    // Показываем лоадер для всей формы (как при пагинации)
+    const loader = showInElement(container);
 
     const formData = new FormData(this);
     const actionUrl = form.attr('action');
@@ -412,9 +414,10 @@ export function initUniversalCommentForm(commentForm) {
         createAndShowToast('Ошибка отправки комментария', 'error');
       })
       .finally(() => {
-        // Re-enable submit button
-        submitButton.prop('disabled', false);
-        submitButton.html(originalButtonText);
+        // Скрываем лоадер
+        if (loader) {
+          hideInElement(loader);
+        }
       });
   });
 }
