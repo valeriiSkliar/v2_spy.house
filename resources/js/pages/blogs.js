@@ -124,6 +124,8 @@ function validateRequestParams() {
   const page = parseInt(urlParams.get('page')) || 1;
   const category = urlParams.get('category');
   const search = urlParams.get('search');
+  const sort = urlParams.get('sort');
+  const direction = urlParams.get('direction');
 
   // Проверяем валидность номера страницы
   if (page < 1 || page > 1000) {
@@ -140,6 +142,15 @@ function validateRequestParams() {
     return false;
   }
 
+  // Проверяем валидность параметров сортировки
+  if (sort && !['latest', 'popular', 'views'].includes(sort)) {
+    return false;
+  }
+
+  if (direction && !['asc', 'desc'].includes(direction)) {
+    return false;
+  }
+
   return true;
 }
 
@@ -152,7 +163,7 @@ function buildRequestUrl(baseUrl) {
   const requestUrl = new URL(baseUrl, window.location.origin);
 
   // Копируем только валидные параметры
-  const validParams = ['page', 'category', 'search'];
+  const validParams = ['page', 'category', 'search', 'sort', 'direction'];
   validParams.forEach(param => {
     const value = currentUrl.searchParams.get(param);
     if (value) {
