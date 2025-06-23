@@ -43,11 +43,40 @@ if (token) {
 }
 
 /**
+ * Статическая карта компонентов для поддержки Vite динамических импортов
+ * Vite требует статических путей для анализа зависимостей
+ */
+const componentMap: Record<string, () => Promise<{ default: Component }>> = {
+    // Основные компоненты
+    'ExampleCounter': () => import('./vue-components/ExampleCounter.vue'),
+    
+    // Креативы
+    'CreativesFiltersComponent': () => import('./vue-components/creatives/FiltersComponent.vue'),
+    
+    // Добавьте здесь новые компоненты по мере создания
+};
+
+/**
+ * Функция для динамической загрузки компонента
+ */
+function loadComponent(componentName: string): Promise<{ default: Component }> {
+    const loader = componentMap[componentName];
+    
+    if (loader) {
+        return loader();
+    }
+    
+    // Fallback: попытка загрузки через прямой путь (может не работать с Vite)
+    console.warn(`Компонент ${componentName} не найден в статической карте. Попытка прямой загрузки...`);
+    return import(`./vue-components/${componentName}.vue`);
+}
+
+/**
  * Функция для инициализации Vue островков на странице
  */
 export function initVueIslands(): void {
     // Ищем все элементы с атрибутом data-vue-component
-    const vueElements = document.querySelectorAll('[data-vue-component]') as NodeListOf<VueIslandElement>;
+    const vueElements = document.querySelectorAll('[data-vue-component]:not([data-vue-initialized])') as NodeListOf<VueIslandElement>;
     
     vueElements.forEach((element: VueIslandElement) => {
         const componentName = element.getAttribute('data-vue-component');
@@ -57,6 +86,9 @@ export function initVueIslands(): void {
             console.warn('Не указано имя компонента для элемента:', element);
             return;
         }
+        
+        // Помечаем элемент как обрабатываемый
+        element.setAttribute('data-vue-initialized', 'true');
         
         // Парсим пропсы если есть
         let props: VueIslandProps = {};
@@ -69,7 +101,7 @@ export function initVueIslands(): void {
         }
         
         // Динамически импортируем и монтируем компонент
-        import(`./vue-components/${componentName}.vue`)
+        loadComponent(componentName)
             .then((module: { default: Component }) => {
                 const component = module.default;
                 const app: App = createApp(component, props);
@@ -87,6 +119,8 @@ export function initVueIslands(): void {
             })
             .catch((error: Error) => {
                 console.error(`Ошибка загрузки Vue компонента ${componentName}:`, error);
+                // Удаляем флаг инициализации при ошибке
+                element.removeAttribute('data-vue-initialized');
             });
     });
 }
@@ -98,17 +132,8 @@ export function reinitializeVueIslands(container?: Element): void {
     const searchContainer = container || document;
     const newElements = searchContainer.querySelectorAll('[data-vue-component]:not([data-vue-initialized])') as NodeListOf<VueIslandElement>;
     
-    newElements.forEach((element: VueIslandElement) => {
-        element.setAttribute('data-vue-initialized', 'true');
-        const componentName = element.getAttribute('data-vue-component');
-        
-        if (componentName) {
-            console.log(`Переинициализация Vue компонента: ${componentName}`);
-        }
-    });
-    
-    // Запускаем инициализацию только для новых элементов
     if (newElements.length > 0) {
+        console.log(`Найдено ${newElements.length} новых Vue компонентов для инициализации`);
         initVueIslands();
     }
 }
