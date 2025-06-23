@@ -206,9 +206,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import { useFiltersStore } from '../../stores/creatives';
-import type { FilterState } from '../../types/creatives.d';
+import type { FilterState } from '../../types/creatives';
 import BaseSelect from '../ui/BaseSelect.vue';
 import DateSelect from '../ui/DateSelect.vue';
 import MultiSelect from '../ui/MultiSelect.vue';
@@ -262,6 +262,15 @@ onMounted(() => {
   window.addEventListener('resize', handleResize);
 
   console.log('Filters store инициализирован:', storeInstance.filters);
+
+  // Уведомляем о готовности компонента после следующего тика
+  setTimeout(() => {
+    // Генерируем событие готовности компонента
+    const event = new CustomEvent('vue-component-ready', {
+      detail: { component: 'CreativesFiltersComponent' },
+    });
+    document.dispatchEvent(event);
+  }, 100);
 });
 
 onUnmounted(() => {

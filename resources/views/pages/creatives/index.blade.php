@@ -44,7 +44,7 @@
         </div>
     </div>
 
-    <x-creatives.vue.filters :filters="json_encode($filters)" />
+    <x-creatives.vue.filters :filters="$filters" />
 
     {{-- Подключение скрипта Vue островков --}}
     @vite(['resources/js/vue-islands.ts'])

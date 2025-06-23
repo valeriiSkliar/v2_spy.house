@@ -112,8 +112,19 @@ export function initVueIslands(): void {
                 // Глобальные свойства для всех компонентов
                 app.config.globalProperties.$http = axios;
                 
-                // Монтируем компонент
-                app.mount(element);
+                // Скрываем placeholder сразу при начале монтирования
+                const placeholder = element.querySelector('[data-vue-placeholder]') as HTMLElement;
+                if (placeholder) {
+                    placeholder.style.display = 'none';
+                }
+                
+                // Создаем контейнер для Vue компонента
+                const vueContainer = document.createElement('div');
+                vueContainer.classList.add('vue-component-content');
+                element.appendChild(vueContainer);
+                
+                // Монтируем компонент в отдельный контейнер
+                app.mount(vueContainer);
                 
                 console.log(`Vue компонент ${componentName} успешно инициализирован`);
             })
@@ -148,4 +159,33 @@ window.initVueIslands = initVueIslands;
 document.addEventListener('blog:content-updated', (event: Event) => {
     const customEvent = event as CustomEvent;
     reinitializeVueIslands(customEvent.detail?.container);
+});
+
+/**
+ * Управление placeholder'ами компонентов
+ */
+function hidePlaceholder(element: HTMLElement): void {
+    const placeholder = element.querySelector('[data-vue-placeholder]') as HTMLElement;
+    if (placeholder) {
+        // Удаляем placeholder полностью (он уже скрыт при монтировании)
+        placeholder.remove();
+    }
+    
+    // Помечаем контейнер как готовый
+    element.classList.add('vue-component-ready');
+}
+
+// Обработчик событий готовности компонентов
+document.addEventListener('vue-component-ready', (event: Event) => {
+    const customEvent = event as CustomEvent;
+    const componentName = customEvent.detail?.component;
+    
+    console.log(`Компонент ${componentName} готов к отображению`);
+    
+    // Ищем соответствующий элемент компонента
+    const componentElement = document.querySelector(`[data-vue-component="${componentName}"]`) as HTMLElement;
+    
+    if (componentElement) {
+        hidePlaceholder(componentElement);
+    }
 }); 
