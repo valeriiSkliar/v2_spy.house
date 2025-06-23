@@ -1,0 +1,72 @@
+.filters-placeholder {
+  opacity: 1;
+  transition: opacity 0.3s ease-out;
+
+  .placeholder-shimmer {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+    pointer-events: none;
+    user-select: none;
+    border-radius: 10px;
+    &--red {
+      background: linear-gradient(90deg, #eec9c9 25%, #927878 50%, #eec9c9 75%);
+      background-size: 200% 100%;
+    }
+  }
+
+  .placeholder-input {
+    height: 20px;
+    background: transparent;
+    color: #999;
+    border: none;
+    outline: none;
+    pointer-events: none;
+  }
+
+  .form-search {
+    position: relative;
+    .icon-search {
+      font-size: 16px;
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      -webkit-transform: translateY(-50%);
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+  }
+
+  .reset-btn .btn-icon:after {
+    width: 11px;
+    height: 11px;
+    background: #f7e2e2;
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    border-radius: 3px 0 0 0;
+    transition: 0.3s;
+    display: none;
+  }
+
+  .base-select {
+    background: inherit;
+    min-height: 40px;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  /* Скрываем placeholder когда Vue компонент готов */
+  .vue-component-ready .filters-placeholder {
+    display: none !important;
+  }
+}

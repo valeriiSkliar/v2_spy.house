@@ -44,11 +44,11 @@
         </div>
     </div>
 
-    <div data-vue-component="CreativesFiltersComponent" data-vue-props='{
-        "initialFilters": {{ json_encode($filters) }}
-    }'></div>
+    <x-creatives.vue.filters :filters="json_encode($filters)" />
+
     {{-- Подключение скрипта Vue островков --}}
     @vite(['resources/js/vue-islands.ts'])
+
 
 </div>
 @endsection
