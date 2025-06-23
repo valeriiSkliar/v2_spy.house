@@ -27,6 +27,9 @@ export default defineConfig({
       refresh: true,
     }),
   ],
+  esbuild: {
+    target: 'es2020',
+  },
   resolve: {
     alias: {
       '@': '/resources/js',
