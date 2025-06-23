@@ -208,12 +208,13 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useFiltersStore } from '../../stores/creatives';
+import type { FilterState } from '../../types/creatives.d';
 import BaseSelect from '../ui/BaseSelect.vue';
 import DateSelect from '../ui/DateSelect.vue';
 import MultiSelect from '../ui/MultiSelect.vue';
 
 interface Props {
-  initialFilters?: Partial<typeof useFiltersStore.prototype.filters>;
+  initialFilters?: Partial<FilterState>;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -229,6 +230,8 @@ function initStore() {
   }
   return store;
 }
+
+console.log(props.initialFilters);
 
 // Локальное состояние для мобильного интерфейса
 const isMobileFiltersOpen = ref(false);
@@ -249,15 +252,16 @@ onMounted(() => {
   // Инициализируем store и применяем начальные фильтры
   const storeInstance = initStore();
 
-  // Применяем переданные фильтры
-  if (props.initialFilters) {
-    Object.assign(storeInstance.filters, props.initialFilters);
+  // Применяем переданные фильтры через специальный метод
+  if (props.initialFilters && Object.keys(props.initialFilters).length > 0) {
+    storeInstance.initializeFromProps(props.initialFilters);
+    console.log('Applied initial filters:', props.initialFilters);
   }
 
   // Добавляем обработчик resize
   window.addEventListener('resize', handleResize);
 
-  console.log('Filters store инициализирован:', storeInstance);
+  console.log('Filters store инициализирован:', storeInstance.filters);
 });
 
 onUnmounted(() => {

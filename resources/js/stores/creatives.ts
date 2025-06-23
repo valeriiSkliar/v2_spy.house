@@ -56,6 +56,48 @@ export const useFiltersStore = defineStore('filters', () => {
   ]);
 
   // Методы
+  function initializeFromProps(initialFilters: Partial<FilterState>): void {
+    if (initialFilters.searchKeyword !== undefined) {
+      filters.searchKeyword = initialFilters.searchKeyword;
+    }
+    if (initialFilters.country !== undefined) {
+      filters.country = initialFilters.country;
+    }
+    if (initialFilters.onlyAdult !== undefined) {
+      filters.onlyAdult = initialFilters.onlyAdult;
+    }
+    if (initialFilters.dateCreation !== undefined) {
+      filters.dateCreation = initialFilters.dateCreation;
+    }
+    if (initialFilters.sortBy !== undefined) {
+      filters.sortBy = initialFilters.sortBy;
+    }
+    if (initialFilters.periodDisplay !== undefined) {
+      filters.periodDisplay = initialFilters.periodDisplay;
+    }
+    if (initialFilters.advertisingNetworks !== undefined) {
+      filters.advertisingNetworks = [...initialFilters.advertisingNetworks];
+    }
+    if (initialFilters.languages !== undefined) {
+      filters.languages = [...initialFilters.languages];
+    }
+    if (initialFilters.operatingSystems !== undefined) {
+      filters.operatingSystems = [...initialFilters.operatingSystems];
+    }
+    if (initialFilters.browsers !== undefined) {
+      filters.browsers = [...initialFilters.browsers];
+    }
+    if (initialFilters.devices !== undefined) {
+      filters.devices = [...initialFilters.devices];
+    }
+    if (initialFilters.imageSizes !== undefined) {
+      filters.imageSizes = [...initialFilters.imageSizes];
+    }
+    if (initialFilters.savedSettings !== undefined) {
+      filters.savedSettings = [...initialFilters.savedSettings];
+    }
+  }
+
   function toggleDetailedFilters(): void {
     filters.isDetailedVisible = !filters.isDetailedVisible;
   }
@@ -141,6 +183,7 @@ export const useFiltersStore = defineStore('filters', () => {
     sortOptions,
     dateRanges,
     hasActiveFilters,
+    initializeFromProps,
     toggleDetailedFilters,
     setSearchKeyword,
     setCountry,

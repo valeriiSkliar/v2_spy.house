@@ -84,7 +84,7 @@ onUnmounted(() => {
 });
 </script>
 
-<style scoped>
+<style lang="scss">
 .filter-date-select {
   position: relative;
   display: flex;
@@ -105,6 +105,11 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   border-radius: 4px;
+
+  span {
+    font-size: 14px;
+    font-weight: 500;
+  }
 }
 
 .date-select-field:hover {

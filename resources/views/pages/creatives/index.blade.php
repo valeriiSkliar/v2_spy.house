@@ -45,12 +45,8 @@
     </div>
 
     <div data-vue-component="CreativesFiltersComponent" data-vue-props='{
-                    "initialFilters": {
-                        "searchKeyword": "{{ request()->get(' search', '' ) }}", "country"
-        : "{{ request()->get('country', 'All Categories') }}" , "onlyAdult" : {{ request()->get('adult', 'false') }}
-        }
-        }'
-        ></div>
+        "initialFilters": {{ json_encode($filters) }}
+    }'></div>
     {{-- Подключение скрипта Vue островков --}}
     @vite(['resources/js/vue-islands.ts'])
 

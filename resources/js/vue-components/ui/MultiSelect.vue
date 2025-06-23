@@ -276,7 +276,7 @@ onUnmounted(() => {
 }
 
 .multi-select__arrow::before {
-  content: '▼';
+  /* content: '▼'; */
   font-size: 10px;
   color: #666;
 }

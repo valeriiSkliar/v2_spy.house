@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Test\CreativesController;
+use App\Http\Controllers\Frontend\Creatives\CreativesController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('creatives')

@@ -79,7 +79,7 @@ onUnmounted(() => {
 });
 </script>
 
-<style scoped>
+<!-- <style scoped>
 .base-select {
   position: relative;
 }
@@ -141,4 +141,4 @@ onUnmounted(() => {
 .base-select__option:last-child {
   border-bottom: none;
 }
-</style>
+</style> -->
