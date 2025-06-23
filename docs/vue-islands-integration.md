@@ -333,3 +333,100 @@ onMounted(() => {
   watch(() => storeInstance.count, ...);
 });
 ```
+
+## Анализ возможных Vue островков для страницы Creatives
+
+### 1. Фильтрация и поиск (высокий приоритет)
+
+#### `CreativesFilterComponent`
+
+- **Местоположение**: блок `.filter`
+- **Функциональность**: поиск, фильтры по стране/дате/категориям, сохранение настроек
+- **Store**: `useCreativesFilterStore` для синхронизации всех фильтров
+
+#### `FilterTabsComponent`
+
+- **Местоположение**: `.filter-push` (Push/In Page/Facebook/TikTok)
+- **Функциональность**: переключение типов креативов с счетчиками
+- **Shared state**: с основным фильтром
+
+### 2. Список креативов (высокий приоритет)
+
+#### `CreativesListComponent`
+
+- **Местоположение**: `.creatives-list`
+- **Функциональность**: отображение, пагинация, lazy loading
+- **Store**: `useCreativesStore` для данных креативов
+
+#### `CreativeItemComponent`
+
+- **Местоположение**: каждый `.creative-item`
+- **Функциональность**: воспроизведение видео, копирование, избранное
+- **Props**: данные креатива из API
+
+### 3. Детали креатива (средний приоритет)
+
+#### `CreativeDetailsComponent`
+
+- **Местоположение**: `.creative-details`
+- **Функциональность**: модальное окно с деталями, похожие креативы
+- **Store**: синхронизация с выбранным креативом
+
+### 4. Пользовательские действия (средний приоритет)
+
+#### `FavoritesManagerComponent`
+
+- **Местоположение**: кнопка "Favorites" и все `.btn-favorite`
+- **Функциональность**: управление избранным с локальным состоянием
+- **Store**: `useFavoritesStore` для синхронизации между островками
+
+#### `UserSettingsComponent`
+
+- **Местоположение**: селектор "On page — 12", языковое меню
+- **Функциональность**: настройки отображения, язык, тариф
+- **Store**: `useUserPreferencesStore`
+
+### 5. Интерактивные элементы (низкий приоритет)
+
+#### `VideoPlayerComponent`
+
+- **Местоположение**: все `.creative-video`
+- **Функциональность**: воспроизведение с контролами, preview
+- **Standalone**: может работать независимо
+
+#### `CopyButtonComponent`
+
+- **Местоположение**: все `.js-copy`
+- **Функциональность**: копирование с уведомлениями
+- **Lightweight**: простой компонент без store
+
+## Рекомендуемая последовательность внедрения:
+
+1. **Фаза 1**: `CreativesFilterComponent` + `FilterTabsComponent`
+2. **Фаза 2**: `CreativesListComponent` + `FavoritesManagerComponent`
+3. **Фаза 3**: `CreativeDetailsComponent` + `VideoPlayerComponent`
+4. **Фаза 4**: остальные вспомогательные компоненты
+
+## Архитектура Stores:
+
+```typescript
+// resources/js/stores/creatives.ts
+export const useCreativesStore = defineStore('creatives', () => {
+  const items = ref([]);
+  const filters = ref({});
+  const pagination = ref({});
+  const selectedCreative = ref(null);
+
+  // API методы
+  const loadCreatives = async filters => {
+    /* */
+  };
+  const toggleFavorite = async id => {
+    /* */
+  };
+
+  return { items, filters, pagination, selectedCreative, loadCreatives, toggleFavorite };
+});
+```
+
+Этот подход позволит постепенно мигрировать статичный HTML к интерактивным Vue компонентам, сохраняя существующий дизайн и функциональность.
