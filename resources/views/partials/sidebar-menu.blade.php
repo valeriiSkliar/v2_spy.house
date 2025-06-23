@@ -1,8 +1,8 @@
 <nav class="aside-menu">
     <ul>
-        {{-- <li><a href="{{ route('creatives.index') }}"
+        <li><a href="{{ route('creatives.index') }}"
                 class="{{ request()->routeIs('creatives*') ? 'active' : '' }}"><span class="icon-creatives"></span>
-                <span class="aside-menu__txt">{{__('sidebar.creatives')}}</span></a></li> --}}
+                <span class="aside-menu__txt">{{__('sidebar.creatives')}}</span></a></li>
         <li><a href="{{ route('landings.index') }}" class="{{ request()->routeIs('landings*') ? 'active' : '' }}"><span
                     class="icon-landings"></span> <span class="aside-menu__txt">{{__('sidebar.landings')}}</span></a>
         </li>
