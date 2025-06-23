@@ -29,6 +29,7 @@
   "dependencies": {
     "@types/jquery": "^3.5.32",
     "@types/slick-carousel": "^1.6.40",
+    "@vitejs/plugin-vue": "^5.2.4",
     "bootstrap-select": "^1.13.18",
     "counterup": "^1.0.2",
     "css-element-queries": "^1.2.3",
@@ -38,8 +39,10 @@
     "lodash.debounce": "^4.0.8",
     "lodash.throttle": "^4.1.1",
     "navigo": "^8.11.1",
+    "pinia": "^2.3.1",
     "slick-carousel": "^1.8.1",
     "sweetalert2": "^11.22.0",
-    "swiper": "^11.2.6"
+    "swiper": "^11.2.6",
+    "vue": "^3.5.17"
   }
 }
