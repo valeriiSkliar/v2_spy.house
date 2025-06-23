@@ -30,6 +30,7 @@
     "@types/jquery": "^3.5.32",
     "@types/slick-carousel": "^1.6.40",
     "@vitejs/plugin-vue": "^5.2.4",
+    "@vueuse/core": "^13.4.0",
     "bootstrap-select": "^1.13.18",
     "counterup": "^1.0.2",
     "css-element-queries": "^1.2.3",
