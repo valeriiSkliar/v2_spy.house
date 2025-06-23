@@ -30,7 +30,11 @@
     },
 
     /* Types */
-    "types": ["vite/client", "node", "jquery", "alpinejs"]
+    "types": ["vite/client", "node", "jquery"],
+
+    /* Vue 3 support */
+    "jsx": "preserve",
+    "jsxImportSource": "vue"
   },
   "include": [
     "resources/js/**/*.ts",

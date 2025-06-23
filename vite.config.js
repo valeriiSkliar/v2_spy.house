@@ -1,8 +1,10 @@
+import vue from '@vitejs/plugin-vue';
 import laravel from 'laravel-vite-plugin';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [
+    vue(),
     laravel({
       input: [
         'resources/js/finances.js',
@@ -23,6 +25,7 @@ export default defineConfig({
         'resources/js/tariffs-payments.js',
         'resources/js/tariffs.js',
         'resources/js/pages/blogs.js',
+        'resources/js/vue-islands.ts',
       ],
       refresh: true,
     }),
