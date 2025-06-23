@@ -54,11 +54,21 @@
 
             <!-- Выбор даты создания -->
             <div class="col-12 col-md-6 col-lg-3 mb-10 w-lg-1 flex-grow-1">
-              <DateSelect
+              <!-- <DateSelect
                 :value="initStore().filters.dateCreation"
                 :options="initStore().dateRanges"
                 placeholder="Date of creation"
                 @update:value="initStore().setDateCreation($event)"
+              /> -->
+              <DateSelect
+                v-model:value="initStore().filters.dateCreation"
+                :options="initStore().dateRanges"
+                :enable-custom-date="true"
+                :mode="'range'"
+                :date-format="'d-m-Y'"
+                placeholder="Select date range"
+                custom-date-label="Pick Custom Date"
+                @custom-date-selected="handleCustomDateSelected"
               />
             </div>
 
@@ -210,7 +220,7 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import { useFiltersStore } from '../../stores/creatives';
 import type { FilterState } from '../../types/creatives';
 import BaseSelect from '../ui/BaseSelect.vue';
-import DateSelect from '../ui/DateSelect.vue';
+import DateSelect from '../ui/DateSelect_with_flatpickr.vue';
 import MultiSelect from '../ui/MultiSelect.vue';
 
 interface Props {
@@ -238,6 +248,13 @@ const isMobileFiltersOpen = ref(false);
 
 function toggleMobileFilters(): void {
   isMobileFiltersOpen.value = !isMobileFiltersOpen.value;
+}
+
+function handleCustomDateSelected(dates: Date[]): void {
+  if (dates.length > 0) {
+    const dateString = dates[0].toISOString().split('T')[0];
+    initStore().setDateCreation(dateString);
+  }
 }
 
 // Обработчик изменения размера экрана
