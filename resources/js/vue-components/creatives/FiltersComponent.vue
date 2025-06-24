@@ -223,7 +223,7 @@
     </div>
 
     <!-- URL Sync Status (только в development режиме) -->
-    <div v-if="isDevelopment && enableUrlSync" class="url-sync-status">✅ URL Sync Active</div>
+    <!-- <div v-if="isDevelopment && enableUrlSync" class="url-sync-status">✅ URL Sync Active</div> -->
 
     <!-- Loading indicator когда опции ещё загружаются -->
     <div v-if="!isComponentReady" class="options-loading">
