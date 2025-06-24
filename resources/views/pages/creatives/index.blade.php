@@ -41,6 +41,27 @@
     {{-- Подключение скрипта Vue островков --}}
     @vite(['resources/js/vue-islands.ts'])
 
+    {{--
+    Пример конфигурации Vue Islands (опционально):
+
+    <script type="module">
+        import { configureVueIslands } from '@/vue-islands';
+    
+    // Development конфигурация (по умолчанию)
+    configureVueIslands({
+        cleanupProps: true,           // Очищать props после инициализации
+        cleanupDelay: 1000,          // Задержка перед очисткой
+        preservePropsInDev: true,    // Сохранять props в development режиме
+    });
+    
+    // Продакшн конфигурация
+    configureVueIslands({
+        cleanupProps: true,
+        cleanupDelay: 500,           // Быстрая очистка
+        preservePropsInDev: false,   // Очищать даже в dev
+    });
+    </script>
+    --}}
 
 </div>
 @endsection

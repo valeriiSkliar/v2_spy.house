@@ -23,6 +23,9 @@ declare global {
     'tabs:changed': CustomEvent<{ activeTab: string; previousTab: string; tabOption: any }>;
     'creatives:tab-changed': CustomEvent<{ previousTab: string; currentTab: string; tabOption: any }>;
     'vue-component-ready': CustomEvent<{ component: string; props: any; timestamp: string }>;
+    
+    // Vue Islands events
+    'vue-component-props-cleaned': CustomEvent<{ componentName: string; element: HTMLElement; dataSize: number; timestamp: string }>;
   }
 } 
 
