@@ -61,7 +61,6 @@ export const useFiltersStore = defineStore('filters', () => {
     { value: 'last30', label: 'Last 30 days' },
     { value: 'thisMonth', label: 'This month' },
     { value: 'lastMonth', label: 'Last month' },
-    { value: 'custom', label: 'Custom Range' }
   ];
 
   // Реактивные опции для селектов (могут обновляться от сервера)
