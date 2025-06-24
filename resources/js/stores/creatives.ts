@@ -174,7 +174,6 @@ export const useFiltersStore = defineStore('filters', () => {
    * Устанавливает опции для селектов от сервера
    */
   function setSelectOptions(options: any): void {
-    console.log('Setting select options:', options);
     
     // Устанавливаем опции стран
     if (options.countries && Array.isArray(options.countries)) {
@@ -265,7 +264,6 @@ export const useFiltersStore = defineStore('filters', () => {
    * Устанавливает опции и счетчики для вкладок
    */
   function setTabOptions(options: any): void {
-    console.log('Setting tab options:', options);
     
     if (options.availableTabs && Array.isArray(options.availableTabs)) {
       tabs.availableTabs = [...options.availableTabs];
@@ -284,7 +282,6 @@ export const useFiltersStore = defineStore('filters', () => {
    * Устанавливает переводы
    */
   function setTranslations(translationsData: Record<string, string>): void {
-    console.log('Setting translations:', translationsData);
     translations.value = { ...translationsData };
   }
 
@@ -300,11 +297,8 @@ export const useFiltersStore = defineStore('filters', () => {
    * Store является единственным источником истины
    */
   function initializeFilters(propsFilters?: Partial<FilterState>, selectOptions?: any, translationsData?: Record<string, string>, tabsOptions?: any): void {
-    console.log('Initializing filters store...');
     
     // 1. Базовое состояние уже установлено (defaultFilters, defaultTabs)
-    console.log('Default filters:', defaultFilters);
-    console.log('Default tabs:', defaultTabs);
     
     // 2. Устанавливаем опции для селектов
     if (selectOptions) {
@@ -318,7 +312,6 @@ export const useFiltersStore = defineStore('filters', () => {
     
     // 4. Применяем props (для локализации и серверных настроек)
     if (propsFilters && Object.keys(propsFilters).length > 0) {
-      console.log('Applying props to filters:', propsFilters);
       Object.assign(filters, propsFilters);
     }
 
@@ -335,7 +328,6 @@ export const useFiltersStore = defineStore('filters', () => {
   function initUrlSync(): void {
     if (urlSync) return; // Уже инициализирован
 
-    console.log('Initializing URL sync...');
     urlSync = useCreativesUrlSync();
     setupUrlSyncWatchers();
     
@@ -348,10 +340,8 @@ export const useFiltersStore = defineStore('filters', () => {
       );
       
       if (hasUrlParams) {
-        console.log('Loading state from URL');
         loadFromUrl();
       } else {
-        console.log('No URL params, syncing current state to URL');
         // Синхронизируем текущее состояние store с URL
         urlSync!.syncWithFilterState(
           JSON.parse(JSON.stringify(filters)), 
@@ -371,7 +361,6 @@ export const useFiltersStore = defineStore('filters', () => {
     // Создаем debounced функции с lodash
     const debouncedStoreToUrl = debounce(() => {
       if (urlSync && isUrlSyncEnabled.value) {
-        console.log('Syncing store to URL:', { filters: filters, activeTab: tabs.activeTab });
         
         // Создаем копию состояния для избежания проблем с Proxy
         const filtersCopy = JSON.parse(JSON.stringify(filters));
@@ -383,7 +372,6 @@ export const useFiltersStore = defineStore('filters', () => {
 
     const debouncedUrlToStore = debounce((newUrlState: any) => {
       if (urlSync && isUrlSyncEnabled.value) {
-        console.log('Syncing URL to store:', newUrlState);
         const updates = urlSync.getFilterStateUpdates();
         updateFromUrl(updates);
       }
@@ -421,13 +409,11 @@ export const useFiltersStore = defineStore('filters', () => {
 
     // Загружаем состояние фильтров
     const filterUpdates = urlSync.getFilterStateUpdates();
-    console.log('Loading filters from URL updates:', filterUpdates);
     updateFromUrl(filterUpdates);
     
     // Загружаем активную вкладку
     const activeTabFromUrl = urlSync.getActiveTabFromUrl();
     if (activeTabFromUrl !== tabs.activeTab) {
-      console.log('Loading active tab from URL:', activeTabFromUrl);
       tabs.activeTab = activeTabFromUrl;
     }
   }
@@ -452,7 +438,6 @@ export const useFiltersStore = defineStore('filters', () => {
         }
         
         if (hasChanged) {
-          console.log(`Updating from URL: ${key} =`, value);
           
           if (Array.isArray(value)) {
             // Создаем новый массив для реактивности
@@ -479,7 +464,6 @@ export const useFiltersStore = defineStore('filters', () => {
   function setSearchKeyword(keyword: string): void {
     // Избегаем ненужных обновлений если значение не изменилось
     if (filters.searchKeyword !== keyword) {
-      console.log('Setting search keyword:', keyword);
       filters.searchKeyword = keyword;
     }
   }
@@ -510,7 +494,6 @@ export const useFiltersStore = defineStore('filters', () => {
       // Создаем новый массив для обеспечения реактивности
       const newValues = [...currentValues, value];
       (filters[field] as any) = newValues;
-      console.log(`Added ${value} to ${field}:`, newValues);
     }
   }
 
@@ -521,26 +504,22 @@ export const useFiltersStore = defineStore('filters', () => {
       // Создаем новый массив для обеспечения реактивности
       const newValues = currentValues.filter(item => item !== value);
       (filters[field] as any) = newValues;
-      console.log(`Removed ${value} from ${field}:`, newValues);
     }
   }
 
   function resetFilters(): void {
     // Сбрасываем к дефолтным значениям
     Object.assign(filters, defaultFilters);
-    console.log('Filters reset to defaults');
   }
 
   function saveSettings(): void {
     // Логика сохранения настроек
-    console.log('Saving filters:', filters);
     // Здесь можно отправить данные на сервер
   }
 
   // Методы для вкладок
   function setActiveTab(tabValue: string): void {
     if (tabs.availableTabs.includes(tabValue) && tabs.activeTab !== tabValue) {
-      console.log('Setting active tab:', tabValue);
       const previousTab = tabs.activeTab;
       tabs.activeTab = tabValue;
       
@@ -557,12 +536,10 @@ export const useFiltersStore = defineStore('filters', () => {
   }
 
   function setTabCounts(counts: Record<string, string | number>): void {
-    console.log('Setting tab counts:', counts);
     tabs.tabCounts = { ...tabs.tabCounts, ...counts };
   }
 
   function setAvailableTabs(newTabs: string[]): void {
-    console.log('Setting available tabs:', newTabs);
     tabs.availableTabs = [...newTabs];
     
     // Проверяем что текущая вкладка все еще доступна
@@ -574,7 +551,6 @@ export const useFiltersStore = defineStore('filters', () => {
   function resetTabs(): void {
     // Сбрасываем к дефолтным значениям
     Object.assign(tabs, defaultTabs);
-    console.log('Tabs reset to defaults');
   }
 
   // === МЕТОДЫ ДЛЯ КРЕАТИВОВ ===
@@ -618,20 +594,16 @@ export const useFiltersStore = defineStore('filters', () => {
       
       // Проверяем, не выполняется ли уже такой же запрос
       if (requestKey === lastRequestKey.value && creativesService.isLoading(creativesFilters)) {
-        console.log('Пропускаем дублированный запрос');
         return;
       }
 
       lastRequestKey.value = requestKey;
 
-      console.log('Загружаем креативы с фильтрами:', creativesFilters);
-      console.log('Активная вкладка:', tabs.activeTab);
 
       // Загружаем данные через CreativesService
       const data = await creativesService.loadCreatives(creativesFilters);
       
       creativesData.value = data;
-      console.log('Креативы загружены:', data);
 
     } catch (error) {
       console.error('Ошибка загрузки креативов:', error);
