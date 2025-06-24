@@ -1,7 +1,7 @@
 import { FilterOption, FilterState } from '@/types/creatives';
 import { defineStore } from 'pinia';
-import { computed, reactive, ref } from 'vue';
-
+import { computed, reactive, ref, watch } from 'vue';
+import { useCreativesUrlSync } from '../composables/useCreativesUrlSync';
 
 export const useFiltersStore = defineStore('filters', () => {
   // Состояние фильтров
@@ -21,6 +21,10 @@ export const useFiltersStore = defineStore('filters', () => {
     onlyAdult: false,
     savedSettings: []
   });
+
+  // URL синхронизация (инициализируется по требованию)
+  let urlSync: ReturnType<typeof useCreativesUrlSync> | null = null;
+  let isUrlSyncEnabled = ref(false);
 
   // Опции для селектов
   const countryOptions = ref<FilterOption[]>([
@@ -57,45 +61,134 @@ export const useFiltersStore = defineStore('filters', () => {
 
   // Методы
   function initializeFromProps(initialFilters: Partial<FilterState>): void {
-    if (initialFilters.searchKeyword !== undefined) {
-      filters.searchKeyword = initialFilters.searchKeyword;
-    }
-    if (initialFilters.country !== undefined) {
-      filters.country = initialFilters.country;
-    }
-    if (initialFilters.onlyAdult !== undefined) {
-      filters.onlyAdult = initialFilters.onlyAdult;
-    }
-    if (initialFilters.dateCreation !== undefined) {
-      filters.dateCreation = initialFilters.dateCreation;
-    }
-    if (initialFilters.sortBy !== undefined) {
-      filters.sortBy = initialFilters.sortBy;
-    }
-    if (initialFilters.periodDisplay !== undefined) {
-      filters.periodDisplay = initialFilters.periodDisplay;
-    }
-    if (initialFilters.advertisingNetworks !== undefined) {
-      filters.advertisingNetworks = [...initialFilters.advertisingNetworks];
-    }
-    if (initialFilters.languages !== undefined) {
-      filters.languages = [...initialFilters.languages];
-    }
-    if (initialFilters.operatingSystems !== undefined) {
-      filters.operatingSystems = [...initialFilters.operatingSystems];
-    }
-    if (initialFilters.browsers !== undefined) {
-      filters.browsers = [...initialFilters.browsers];
-    }
-    if (initialFilters.devices !== undefined) {
-      filters.devices = [...initialFilters.devices];
-    }
-    if (initialFilters.imageSizes !== undefined) {
-      filters.imageSizes = [...initialFilters.imageSizes];
-    }
-    if (initialFilters.savedSettings !== undefined) {
-      filters.savedSettings = [...initialFilters.savedSettings];
-    }
+    console.log('initializeFromProps called with:', initialFilters);
+    
+    Object.entries(initialFilters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        const filterKey = key as keyof FilterState;
+        console.log(`Setting ${key} to:`, value, typeof value);
+        
+        if (Array.isArray(value)) {
+          (filters[filterKey] as any) = [...value];
+        } else if (typeof value === 'string' && value !== 'undefined') {
+          // Специальная обработка булевых значений переданных как строки
+          if (filterKey === 'onlyAdult' && (value === 'true' || value === 'false')) {
+            (filters[filterKey] as any) = value === 'true';
+          } else {
+            (filters[filterKey] as any) = value;
+          }
+        } else if (typeof value === 'boolean') {
+          (filters[filterKey] as any) = value;
+        } else {
+          (filters[filterKey] as any) = value;
+        }
+      }
+    });
+    
+    console.log('Filters after initialization:', { ...filters });
+  }
+
+  // URL синхронизация методы
+  function initUrlSync(): void {
+    if (urlSync) return; // Уже инициализирован
+
+    console.log('Initializing URL sync with current filters:', { ...filters });
+
+    // Инициализируем URL синхронизацию с текущим состоянием
+    urlSync = useCreativesUrlSync({
+      searchKeyword: filters.searchKeyword || '',
+      country: filters.country !== 'All Categories' ? filters.country : '',
+      dateCreation: filters.dateCreation !== 'Date of creation' ? filters.dateCreation : '',
+      sortBy: filters.sortBy !== 'By creation date' ? filters.sortBy : '',
+      periodDisplay: filters.periodDisplay !== 'Period of display' ? filters.periodDisplay : '',
+      advertisingNetworks: filters.advertisingNetworks.length > 0 ? [...filters.advertisingNetworks] : [],
+      languages: filters.languages.length > 0 ? [...filters.languages] : [],
+      operatingSystems: filters.operatingSystems.length > 0 ? [...filters.operatingSystems] : [],
+      browsers: filters.browsers.length > 0 ? [...filters.browsers] : [],
+      devices: filters.devices.length > 0 ? [...filters.devices] : [],
+      imageSizes: filters.imageSizes.length > 0 ? [...filters.imageSizes] : [],
+      onlyAdult: filters.onlyAdult || false,
+      savedSettings: filters.savedSettings.length > 0 ? [...filters.savedSettings] : [],
+      isDetailedVisible: filters.isDetailedVisible || false,
+    });
+
+    // Настраиваем двустороннюю синхронизацию с задержкой
+    setTimeout(() => {
+      setupUrlSyncWatchers();
+      isUrlSyncEnabled.value = true;
+      
+      // Загружаем состояние из URL только если в URL есть параметры
+      const hasUrlParams = Object.keys(urlSync!.urlParams).some(key => 
+        key.startsWith('cr_') && urlSync!.urlParams[key]
+      );
+      
+      if (hasUrlParams) {
+        console.log('Loading filters from URL...');
+        loadFromUrl();
+      } else {
+        console.log('No URL parameters found, keeping current filters');
+      }
+    }, 100);
+  }
+
+  function setupUrlSyncWatchers(): void {
+    if (!urlSync) return;
+
+    // Store -> URL синхронизация
+    watch(
+      filters,
+      () => {
+        if (urlSync && isUrlSyncEnabled.value) {
+          console.log('Syncing store to URL:', { ...filters });
+          urlSync.syncWithFilterState(filters);
+        }
+      },
+      { deep: true }
+    );
+
+    // URL -> Store синхронизация
+    watch(
+      () => urlSync?.state.value,
+      (newUrlState) => {
+        if (newUrlState && isUrlSyncEnabled.value) {
+          console.log('Syncing URL to store:', newUrlState);
+          const updates = urlSync!.getFilterStateUpdates();
+          updateFromUrl(updates);
+        }
+      },
+      { deep: true }
+    );
+  }
+
+  function loadFromUrl(): void {
+    if (!urlSync) return;
+
+    const updates = urlSync.getFilterStateUpdates();
+    console.log('Loading from URL updates:', updates);
+    updateFromUrl(updates);
+  }
+
+  function updateFromUrl(updates: Partial<FilterState>): void {
+    // Временно отключаем URL синхронизацию чтобы избежать циклов
+    isUrlSyncEnabled.value = false;
+
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        const filterKey = key as keyof FilterState;
+        console.log(`Updating from URL: ${key} =`, value);
+        
+        if (Array.isArray(value)) {
+          (filters[filterKey] as any) = [...value];
+        } else {
+          (filters[filterKey] as any) = value;
+        }
+      }
+    });
+
+    // Включаем обратно URL синхронизацию
+    setTimeout(() => {
+      isUrlSyncEnabled.value = true;
+    }, 50);
   }
 
   function toggleDetailedFilters(): void {
@@ -183,6 +276,8 @@ export const useFiltersStore = defineStore('filters', () => {
     sortOptions,
     dateRanges,
     hasActiveFilters,
+    
+    // Основные методы
     initializeFromProps,
     toggleDetailedFilters,
     setSearchKeyword,
@@ -194,6 +289,11 @@ export const useFiltersStore = defineStore('filters', () => {
     addToMultiSelect,
     removeFromMultiSelect,
     resetFilters,
-    saveSettings
+    saveSettings,
+
+    // URL синхронизация
+    initUrlSync,
+    urlSync: () => urlSync,
+    isUrlSyncEnabled,
   };
 });

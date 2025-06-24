@@ -212,36 +212,46 @@
         </div>
       </div>
     </div>
+
+    <!-- URL Sync Status (только в development режиме) -->
+    <div v-if="isDevelopment && enableUrlSync" class="url-sync-status">✅ URL Sync Active</div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
+import type { FilterState } from '@/types/creatives';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useFiltersStore } from '../../stores/creatives';
-import type { FilterState } from '../../types/creatives';
 import BaseSelect from '../ui/BaseSelect.vue';
 import DateSelect from '../ui/DateSelect_with_flatpickr.vue';
 import MultiSelect from '../ui/MultiSelect.vue';
 
 interface Props {
   initialFilters?: Partial<FilterState>;
+  enableUrlSync?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   initialFilters: () => ({}),
+  enableUrlSync: true,
 });
 
-// Ленивая инициализация store согласно архитектуре островков
-let store: ReturnType<typeof useFiltersStore>;
+// Store instance
+let storeInstance: ReturnType<typeof useFiltersStore> | null = null;
 
+// Development mode check
+const isDevelopment = computed(() => import.meta.env.DEV);
+
+// Инициализация store
 function initStore() {
-  if (!store) {
-    store = useFiltersStore();
-  }
-  return store;
+  if (storeInstance) return storeInstance;
+
+  storeInstance = useFiltersStore();
+  console.log('Filters store создан');
+  return storeInstance;
 }
 
-console.log(props.initialFilters);
+console.log('FiltersComponent props:', props.initialFilters);
 
 // Локальное состояние для мобильного интерфейса
 const isMobileFiltersOpen = ref(false);
@@ -264,30 +274,40 @@ function handleResize(): void {
   }
 }
 
-// Lifecycle hooks
-onMounted(() => {
-  // Инициализируем store и применяем начальные фильтры
-  const storeInstance = initStore();
+onMounted(async () => {
+  console.log('FiltersComponent props:', props);
 
-  // Применяем переданные фильтры через специальный метод
+  // 1. Инициализируем store
+  const store = initStore();
+
+  // 2. Применяем начальные фильтры из props (если есть)
   if (props.initialFilters && Object.keys(props.initialFilters).length > 0) {
-    storeInstance.initializeFromProps(props.initialFilters);
     console.log('Applied initial filters:', props.initialFilters);
+    store.initializeFromProps(props.initialFilters);
   }
+
+  // 3. Инициализируем URL синхронизацию (если включена)
+  if (props.enableUrlSync) {
+    console.log('URL synchronization initialized');
+    store.initUrlSync();
+  }
+
+  console.log('Filters store инициализирован:', store.filters);
+
+  // Эмитим событие готовности компонента
+  const event = new CustomEvent('vue-component-ready', {
+    detail: {
+      component: 'CreativesFiltersComponent',
+      props: props,
+      filters: store.filters,
+      urlSyncEnabled: props.enableUrlSync,
+      timestamp: new Date().toISOString(),
+    },
+  });
+  document.dispatchEvent(event);
 
   // Добавляем обработчик resize
   window.addEventListener('resize', handleResize);
-
-  console.log('Filters store инициализирован:', storeInstance.filters);
-
-  // Уведомляем о готовности компонента после следующего тика
-  setTimeout(() => {
-    // Генерируем событие готовности компонента
-    const event = new CustomEvent('vue-component-ready', {
-      detail: { component: 'CreativesFiltersComponent' },
-    });
-    document.dispatchEvent(event);
-  }, 100);
 });
 
 onUnmounted(() => {
@@ -313,5 +333,18 @@ onUnmounted(() => {
 
 .icon-up {
   transition: transform 0.3s ease;
+}
+
+/* Индикатор URL синхронизации для отладки */
+.url-sync-status {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: #4ade80;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 9999;
 }
 </style>
