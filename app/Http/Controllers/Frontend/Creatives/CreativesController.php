@@ -50,6 +50,7 @@ class CreativesController extends FrontendController
             'filterByCountry' => 'Фильтр по стране',
             'filterByDateCreation' => 'Фильтр по дате создания',
             'savePresetButton' => 'Сохранить настройки',
+            'resetButton' => 'Сбросить',
         ];
 
 
