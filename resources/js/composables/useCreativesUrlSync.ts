@@ -69,25 +69,27 @@ function urlStateToFilterState(urlState: CreativesUrlState): Partial<FilterState
 /**
  * Композабл для синхронизации фильтров креативов с URL
  * 
- * @param initialState - Начальное состояние фильтров
+ * @param initialState - Начальное состояние фильтров (опционально)
  */
 export function useCreativesUrlSync(initialState?: Partial<CreativesUrlState>) {
-    // Создаем начальное состояние с безопасными значениями по умолчанию
+    // Создаем начальное состояние с пустыми значениями по умолчанию (URL как source of truth)
     const safeInitialState: CreativesUrlState = {
-        searchKeyword: initialState?.searchKeyword || '',
-        country: initialState?.country || '',
-        dateCreation: initialState?.dateCreation || '',
-        sortBy: initialState?.sortBy || '',
-        periodDisplay: initialState?.periodDisplay || '',
-        advertisingNetworks: Array.isArray(initialState?.advertisingNetworks) ? [...initialState.advertisingNetworks] : [],
-        languages: Array.isArray(initialState?.languages) ? [...initialState.languages] : [],
-        operatingSystems: Array.isArray(initialState?.operatingSystems) ? [...initialState.operatingSystems] : [],
-        browsers: Array.isArray(initialState?.browsers) ? [...initialState.browsers] : [],
-        devices: Array.isArray(initialState?.devices) ? [...initialState.devices] : [],
-        imageSizes: Array.isArray(initialState?.imageSizes) ? [...initialState.imageSizes] : [],
-        onlyAdult: initialState?.onlyAdult || false,
-        savedSettings: Array.isArray(initialState?.savedSettings) ? [...initialState.savedSettings] : [],
-        isDetailedVisible: initialState?.isDetailedVisible || false,
+        searchKeyword: '',
+        country: '',
+        dateCreation: '',
+        sortBy: '',
+        periodDisplay: '',
+        advertisingNetworks: [],
+        languages: [],
+        operatingSystems: [],
+        browsers: [],
+        devices: [],
+        imageSizes: [],
+        onlyAdult: false,
+        savedSettings: [],
+        isDetailedVisible: false,
+        // Применяем переданные значения если есть
+        ...initialState
     };
 
     const urlSync = useUrlSync(safeInitialState, {
@@ -118,7 +120,7 @@ export function useCreativesUrlSync(initialState?: Partial<CreativesUrlState>) {
                 if (typeof value === 'boolean') {
                     return value ? '1' : '';
                 }
-                // Не сериализуем значения по умолчанию
+                // Не сериализуем пустые значения и дефолтные значения
                 if (value === '' || value === 'All Categories' || value === 'Date of creation' || 
                     value === 'By creation date' || value === 'Period of display') {
                     return '';

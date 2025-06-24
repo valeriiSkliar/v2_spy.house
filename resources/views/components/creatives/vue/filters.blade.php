@@ -1,6 +1,7 @@
-@props(['filters' => []])
+@props(['filters' => [], 'selectOptions' => []])
 <div class="vue-component-wrapper" data-vue-component="CreativesFiltersComponent" data-vue-props='{
-        "initialFilters": {{ json_encode($filters) }}
+        "initialFilters": {{ json_encode($filters) }},
+        "selectOptions": {{ json_encode($selectOptions) }}
     }'>
     <div class="filters-placeholder" data-vue-placeholder>
         <div class="filter">

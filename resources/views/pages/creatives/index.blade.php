@@ -44,7 +44,7 @@
         </div>
     </div>
 
-    <x-creatives.vue.filters :filters="$filters" />
+    <x-creatives.vue.filters :filters="$filters" :selectOptions="$selectOptions" />
 
     {{-- Подключение скрипта Vue островков --}}
     @vite(['resources/js/vue-islands.ts'])

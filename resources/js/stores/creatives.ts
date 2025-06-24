@@ -4,8 +4,8 @@ import { computed, reactive, ref, watch } from 'vue';
 import { useCreativesUrlSync } from '../composables/useCreativesUrlSync';
 
 export const useFiltersStore = defineStore('filters', () => {
-  // Состояние фильтров
-  const filters = reactive<FilterState>({
+  // Состояние фильтров с дефолтными значениями
+  const defaultFilters: FilterState = {
     isDetailedVisible: false,
     searchKeyword: '',
     country: 'All Categories',
@@ -20,14 +20,17 @@ export const useFiltersStore = defineStore('filters', () => {
     imageSizes: [],
     onlyAdult: false,
     savedSettings: []
-  });
+  };
 
-  // URL синхронизация (инициализируется по требованию)
+  // Состояние фильтров - единственный источник истины
+  const filters = reactive<FilterState>({ ...defaultFilters });
+
+  // URL синхронизация
   let urlSync: ReturnType<typeof useCreativesUrlSync> | null = null;
   let isUrlSyncEnabled = ref(false);
 
-  // Опции для селектов
-  const countryOptions = ref<FilterOption[]>([
+  // Опции для селектов (базовые + от сервера)
+  const baseCountryOptions: FilterOption[] = [
     { value: 'all', label: 'All Categories' },
     { value: 'advertising', label: 'Advertising Networks' },
     { value: 'affiliate', label: 'Affiliate Programs' },
@@ -42,14 +45,14 @@ export const useFiltersStore = defineStore('filters', () => {
     { value: 'notifications', label: 'Notification and Newsletter Services' },
     { value: 'payments', label: 'Payment Services' },
     { value: 'other', label: 'Other Services and Utilities' }
-  ]);
+  ];
 
-  const sortOptions = ref<FilterOption[]>([
+  const baseSortOptions: FilterOption[] = [
     { value: 'creation', label: 'By creation date' },
     { value: 'activity', label: 'By days of activity' }
-  ]);
+  ];
 
-  const dateRanges = ref<FilterOption[]>([
+  const baseDateRanges: FilterOption[] = [
     { value: 'today', label: 'Today' },
     { value: 'yesterday', label: 'Yesterday' },
     { value: 'last7', label: 'Last 7 days' },
@@ -57,79 +60,110 @@ export const useFiltersStore = defineStore('filters', () => {
     { value: 'thisMonth', label: 'This month' },
     { value: 'lastMonth', label: 'Last month' },
     { value: 'custom', label: 'Custom Range' }
-  ]);
+  ];
+
+  // Реактивные опции для селектов (могут обновляться от сервера)
+  const countryOptions = ref<FilterOption[]>([...baseCountryOptions]);
+  const sortOptions = ref<FilterOption[]>([...baseSortOptions]);
+  const dateRanges = ref<FilterOption[]>([...baseDateRanges]);
+
+  // Опции для мультиселектов (от сервера)
+  const multiSelectOptions = reactive<{
+    advertisingNetworks: Record<string, string>;
+    languages: Record<string, string>;
+    operatingSystems: Record<string, string>;
+    browsers: Record<string, string>;
+    devices: Record<string, string>;
+    imageSizes: Record<string, string>;
+  }>({
+    advertisingNetworks: {},
+    languages: {},
+    operatingSystems: {},
+    browsers: {},
+    devices: {},
+    imageSizes: {},
+  });
 
   // Методы
-  function initializeFromProps(initialFilters: Partial<FilterState>): void {
-    console.log('initializeFromProps called with:', initialFilters);
+  
+  /**
+   * Устанавливает опции для селектов от сервера
+   */
+  function setSelectOptions(options: any): void {
+    console.log('Setting select options:', options);
     
-    Object.entries(initialFilters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        const filterKey = key as keyof FilterState;
-        console.log(`Setting ${key} to:`, value, typeof value);
-        
-        if (Array.isArray(value)) {
-          (filters[filterKey] as any) = [...value];
-        } else if (typeof value === 'string' && value !== 'undefined') {
-          // Специальная обработка булевых значений переданных как строки
-          if (filterKey === 'onlyAdult' && (value === 'true' || value === 'false')) {
-            (filters[filterKey] as any) = value === 'true';
-          } else {
-            (filters[filterKey] as any) = value;
-          }
-        } else if (typeof value === 'boolean') {
-          (filters[filterKey] as any) = value;
-        } else {
-          (filters[filterKey] as any) = value;
-        }
-      }
-    });
+    if (options.advertisingNetworks) {
+      multiSelectOptions.advertisingNetworks = { ...options.advertisingNetworks };
+    }
+    if (options.languages) {
+      multiSelectOptions.languages = { ...options.languages };
+    }
+    if (options.operatingSystems) {
+      multiSelectOptions.operatingSystems = { ...options.operatingSystems };
+    }
+    if (options.browsers) {
+      multiSelectOptions.browsers = { ...options.browsers };
+    }
+    if (options.devices) {
+      multiSelectOptions.devices = { ...options.devices };
+    }
+    if (options.imageSizes) {
+      multiSelectOptions.imageSizes = { ...options.imageSizes };
+    }
+  }
+
+  /**
+   * Инициализирует store с четким приоритетом: URL → Props → Defaults
+   * Store является единственным источником истины
+   */
+  function initializeFilters(propsFilters?: Partial<FilterState>, selectOptions?: any): void {
+    console.log('Initializing filters store...');
     
-    console.log('Filters after initialization:', { ...filters });
+    // 1. Базовое состояние уже установлено (defaultFilters)
+    console.log('Default filters:', defaultFilters);
+    
+    // 2. Устанавливаем опции для селектов
+    if (selectOptions) {
+      setSelectOptions(selectOptions);
+    }
+    
+    // 3. Применяем props (для локализации и серверных настроек)
+    if (propsFilters && Object.keys(propsFilters).length > 0) {
+      console.log('Applying props to filters:', propsFilters);
+      Object.assign(filters, propsFilters);
+    }
+
+    // 4. Инициализируем URL синхронизацию (URL имеет наивысший приоритет)
+    initUrlSync();
   }
 
   // URL синхронизация методы
   function initUrlSync(): void {
     if (urlSync) return; // Уже инициализирован
 
-    console.log('Initializing URL sync with current filters:', { ...filters });
-
-    // Инициализируем URL синхронизацию с текущим состоянием
-    urlSync = useCreativesUrlSync({
-      searchKeyword: filters.searchKeyword || '',
-      country: filters.country !== 'All Categories' ? filters.country : '',
-      dateCreation: filters.dateCreation !== 'Date of creation' ? filters.dateCreation : '',
-      sortBy: filters.sortBy !== 'By creation date' ? filters.sortBy : '',
-      periodDisplay: filters.periodDisplay !== 'Period of display' ? filters.periodDisplay : '',
-      advertisingNetworks: filters.advertisingNetworks.length > 0 ? [...filters.advertisingNetworks] : [],
-      languages: filters.languages.length > 0 ? [...filters.languages] : [],
-      operatingSystems: filters.operatingSystems.length > 0 ? [...filters.operatingSystems] : [],
-      browsers: filters.browsers.length > 0 ? [...filters.browsers] : [],
-      devices: filters.devices.length > 0 ? [...filters.devices] : [],
-      imageSizes: filters.imageSizes.length > 0 ? [...filters.imageSizes] : [],
-      onlyAdult: filters.onlyAdult || false,
-      savedSettings: filters.savedSettings.length > 0 ? [...filters.savedSettings] : [],
-      isDetailedVisible: filters.isDetailedVisible || false,
-    });
-
-    // Настраиваем двустороннюю синхронизацию с задержкой
+    console.log('Initializing URL sync...');
+    urlSync = useCreativesUrlSync();
+    setupUrlSyncWatchers();
+    
+    // Проверяем есть ли URL параметры
     setTimeout(() => {
-      setupUrlSyncWatchers();
       isUrlSyncEnabled.value = true;
       
-      // Загружаем состояние из URL только если в URL есть параметры
       const hasUrlParams = Object.keys(urlSync!.urlParams).some(key => 
         key.startsWith('cr_') && urlSync!.urlParams[key]
       );
       
       if (hasUrlParams) {
-        console.log('Loading filters from URL...');
+        console.log('Loading filters from URL');
         loadFromUrl();
       } else {
-        console.log('No URL parameters found, keeping current filters');
+        console.log('No URL params, syncing current state to URL');
+        // Синхронизируем текущее состояние store с URL
+        urlSync!.syncWithFilterState(JSON.parse(JSON.stringify(filters)));
       }
     }, 100);
   }
+
 
   function setupUrlSyncWatchers(): void {
     if (!urlSync) return;
@@ -295,19 +329,9 @@ export const useFiltersStore = defineStore('filters', () => {
   }
 
   function resetFilters(): void {
-    filters.searchKeyword = '';
-    filters.country = 'All Categories';
-    filters.dateCreation = 'Date of creation';
-    filters.sortBy = 'By creation date';
-    filters.periodDisplay = 'Period of display';
-    filters.advertisingNetworks = [];
-    filters.languages = [];
-    filters.operatingSystems = [];
-    filters.browsers = [];
-    filters.devices = [];
-    filters.imageSizes = [];
-    filters.onlyAdult = false;
-    filters.savedSettings = [];
+    // Сбрасываем к дефолтным значениям
+    Object.assign(filters, defaultFilters);
+    console.log('Filters reset to defaults');
   }
 
   function saveSettings(): void {
@@ -335,10 +359,12 @@ export const useFiltersStore = defineStore('filters', () => {
     countryOptions,
     sortOptions,
     dateRanges,
+    multiSelectOptions,
     hasActiveFilters,
     
     // Основные методы
-    initializeFromProps,
+    initializeFilters,
+    setSelectOptions,
     toggleDetailedFilters,
     setSearchKeyword,
     setCountry,

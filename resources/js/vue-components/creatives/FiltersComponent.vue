@@ -113,6 +113,7 @@
           <div class="col-12 col-md-6 col-lg-3 mb-15">
             <MultiSelect
               :values="initStore().filters.advertisingNetworks"
+              :options="getMultiSelectOptions('advertisingNetworks')"
               placeholder="Advertising networks"
               @add="initStore().addToMultiSelect('advertisingNetworks', $event)"
               @remove="initStore().removeFromMultiSelect('advertisingNetworks', $event)"
@@ -123,6 +124,7 @@
           <div class="col-12 col-md-6 col-lg-3 mb-15">
             <MultiSelect
               :values="initStore().filters.languages"
+              :options="getMultiSelectOptions('languages')"
               placeholder="Languages"
               @add="initStore().addToMultiSelect('languages', $event)"
               @remove="initStore().removeFromMultiSelect('languages', $event)"
@@ -133,6 +135,7 @@
           <div class="col-12 col-md-6 col-lg-3 mb-15">
             <MultiSelect
               :values="initStore().filters.operatingSystems"
+              :options="getMultiSelectOptions('operatingSystems')"
               placeholder="Operation systems"
               @add="initStore().addToMultiSelect('operatingSystems', $event)"
               @remove="initStore().removeFromMultiSelect('operatingSystems', $event)"
@@ -143,6 +146,7 @@
           <div class="col-12 col-md-6 col-lg-3 mb-15">
             <MultiSelect
               :values="initStore().filters.browsers"
+              :options="getMultiSelectOptions('browsers')"
               placeholder="Browsers"
               @add="initStore().addToMultiSelect('browsers', $event)"
               @remove="initStore().removeFromMultiSelect('browsers', $event)"
@@ -153,6 +157,7 @@
           <div class="col-12 col-md-6 col-lg-3 mb-15">
             <MultiSelect
               :values="initStore().filters.devices"
+              :options="getMultiSelectOptions('devices')"
               placeholder="Devices"
               @add="initStore().addToMultiSelect('devices', $event)"
               @remove="initStore().removeFromMultiSelect('devices', $event)"
@@ -163,6 +168,7 @@
           <div class="col-12 col-md-6 col-lg-3 mb-15">
             <MultiSelect
               :values="initStore().filters.imageSizes"
+              :options="getMultiSelectOptions('imageSizes')"
               placeholder="Image sizes"
               @add="initStore().addToMultiSelect('imageSizes', $event)"
               @remove="initStore().removeFromMultiSelect('imageSizes', $event)"
@@ -188,6 +194,7 @@
           <div class="col-12 col-md-6 col-lg-3 mb-15">
             <MultiSelect
               :values="initStore().filters.savedSettings"
+              :options="[]"
               placeholder="Saved settings"
               @add="initStore().addToMultiSelect('savedSettings', $event)"
               @remove="initStore().removeFromMultiSelect('savedSettings', $event)"
@@ -228,11 +235,13 @@ import MultiSelect from '../ui/MultiSelect.vue';
 
 interface Props {
   initialFilters?: Partial<FilterState>;
+  selectOptions?: any;
   enableUrlSync?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   initialFilters: () => ({}),
+  selectOptions: () => ({}),
   enableUrlSync: true,
 });
 
@@ -251,7 +260,7 @@ function initStore() {
   return storeInstance;
 }
 
-console.log('FiltersComponent props:', props.initialFilters);
+console.log('FiltersComponent props:', props.initialFilters, props.selectOptions);
 
 // Локальное состояние для мобильного интерфейса
 const isMobileFiltersOpen = ref(false);
@@ -267,6 +276,17 @@ function handleCustomDateSelected(dates: Date[]): void {
   }
 }
 
+// Получение опций для мультиселектов
+function getMultiSelectOptions(field: string): Array<{ value: string; label: string }> {
+  const store = initStore();
+  const options = (store.multiSelectOptions as any)[field] || {};
+
+  return Object.entries(options).map(([value, label]) => ({
+    value,
+    label: String(label),
+  }));
+}
+
 // Обработчик изменения размера экрана
 function handleResize(): void {
   if (window.innerWidth >= 768) {
@@ -277,20 +297,12 @@ function handleResize(): void {
 onMounted(async () => {
   console.log('FiltersComponent props:', props);
 
-  // 1. Инициализируем store
+  // 1. Инициализируем store с унифицированным подходом
+  // Приоритет: URL → Props → Defaults
   const store = initStore();
 
-  // 2. Применяем начальные фильтры из props (если есть)
-  if (props.initialFilters && Object.keys(props.initialFilters).length > 0) {
-    console.log('Applied initial filters:', props.initialFilters);
-    store.initializeFromProps(props.initialFilters);
-  }
-
-  // 3. Инициализируем URL синхронизацию (если включена)
-  if (props.enableUrlSync) {
-    console.log('URL synchronization initialized');
-    store.initUrlSync();
-  }
+  console.log('Initializing filters with unified approach...');
+  store.initializeFilters(props.initialFilters, props.selectOptions);
 
   console.log('Filters store инициализирован:', store.filters);
 
