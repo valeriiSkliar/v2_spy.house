@@ -317,6 +317,12 @@ function initializeFlatpickr(): void {
           flatpickrContainer.value.appendChild(calendar);
         }
       }
+
+      // Проверяем начальное значение и синхронизируем состояние
+      if (props.value && props.value.startsWith('custom_')) {
+        console.log('Flatpickr ready, syncing initial custom value:', props.value);
+        syncFromPropValue(props.value);
+      }
     },
   };
 
@@ -420,8 +426,74 @@ watch(
         hideCalendar();
       }
     }
-  }
+
+    // Если новое значение является кастомной датой, восстанавливаем состояние
+    if (newValue && newValue.startsWith('custom_') && !isCustomDate.value) {
+      console.log('Restoring custom date state from URL/prop:', newValue);
+      syncFromPropValue(newValue);
+    }
+  },
+  { immediate: true } // Запускаем watcher сразу при инициализации
 );
+
+/**
+ * Синхронизирует состояние компонента с пропом value для кастомных дат
+ */
+function syncFromPropValue(value: string): void {
+  if (!value || !value.startsWith('custom_')) {
+    return;
+  }
+
+  console.log('Syncing component state from custom value:', value);
+
+  // Устанавливаем флаг кастомной даты
+  isCustomDate.value = true;
+
+  // Парсим даты из значения
+  const customPart = value.replace('custom_', '');
+  const dates: Date[] = [];
+
+  if (customPart.includes('_to_')) {
+    // Range date
+    const [startStr, endStr] = customPart.split('_to_');
+    const startDate = new Date(startStr);
+    const endDate = new Date(endStr);
+
+    if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+      dates.push(startDate, endDate);
+    }
+  } else {
+    // Single date
+    const date = new Date(customPart);
+    if (!isNaN(date.getTime())) {
+      dates.push(date);
+    }
+  }
+
+  // Синхронизируем с flatpickr если он инициализирован
+  if (flatpickrInstance && dates.length > 0) {
+    try {
+      // Устанавливаем даты в flatpickr
+      flatpickrInstance.setDate(dates, false); // false чтобы не вызывать onChange
+
+      console.log('Flatpickr dates synchronized:', dates);
+    } catch (error) {
+      console.error('Error syncing dates with flatpickr:', error);
+    }
+  } else if (dates.length > 0) {
+    // Если flatpickr еще не инициализирован, сохраняем даты для последующей синхронизации
+    setTimeout(() => {
+      if (flatpickrInstance) {
+        try {
+          flatpickrInstance.setDate(dates, false);
+          console.log('Flatpickr dates synchronized (delayed):', dates);
+        } catch (error) {
+          console.error('Error syncing dates with flatpickr (delayed):', error);
+        }
+      }
+    }, 200);
+  }
+}
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside);

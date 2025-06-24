@@ -9,6 +9,7 @@ const mockFlatpickrInstance = {
   close: vi.fn(),
   clear: vi.fn(),
   destroy: vi.fn(),
+  setDate: vi.fn(),
   selectedDates: [] as Date[],
   calendarContainer: document.createElement('div'),
 };
@@ -446,7 +447,7 @@ describe('DateSelect_with_flatpickr', () => {
     it('shows incomplete range status', async () => {
       wrapper = mount(DateSelectWithFlatpickr, {
         props: {
-          value: 'custom_2024-01-15',
+          value: '',
           options: defaultOptions,
           enableCustomDate: true,
           mode: 'range',
@@ -457,7 +458,7 @@ describe('DateSelect_with_flatpickr', () => {
       await nextTick();
       await new Promise(resolve => setTimeout(resolve, 150));
 
-      // Set component state to custom date and mock flatpickr instance with incomplete range
+      // Manually set the custom date state and incomplete range
       wrapper.vm.isCustomDate = true;
       const startDate = new Date('2024-01-15');
       mockFlatpickrInstance.selectedDates = [startDate];
@@ -860,6 +861,84 @@ describe('DateSelect_with_flatpickr', () => {
           mode: 'range',
           dateFormat: 'Y-m-d',
         })
+      );
+    });
+
+    it('automatically detects custom date from initial prop value', async () => {
+      const customDateValue = 'custom_2025-06-08_to_2025-06-26';
+      
+      wrapper = mount(DateSelectWithFlatpickr, {
+        props: {
+          value: customDateValue,
+          options: defaultOptions,
+          enableCustomDate: true,
+          mode: 'range',
+        },
+      });
+
+      // Wait for component initialization and watcher to run
+      await nextTick();
+      await new Promise(resolve => setTimeout(resolve, 150));
+
+      // Should automatically detect custom date and set the flag
+      expect(wrapper.vm.isCustomDate).toBe(true);
+      
+      // Should display the custom date in label
+      const label = wrapper.find('.date-select-field span').text();
+      expect(label).toContain('6/8/2025 - 6/26/2025');
+    });
+
+    it('calls syncFromPropValue when flatpickr is ready with custom value', async () => {
+      const customDateValue = 'custom_2025-06-08';
+      
+      wrapper = mount(DateSelectWithFlatpickr, {
+        props: {
+          value: customDateValue,
+          options: defaultOptions,
+          enableCustomDate: true,
+          mode: 'single',
+        },
+      });
+
+      // Wait for flatpickr initialization
+      await nextTick();
+      await new Promise(resolve => setTimeout(resolve, 150));
+
+      // Simulate the onReady callback
+      const configCall = mockFlatpickr.mock.calls[0];
+      const config = configCall[1];
+      config.onReady();
+
+      // Should automatically set custom date state
+      expect(wrapper.vm.isCustomDate).toBe(true);
+    });
+
+    it('synchronizes flatpickr dates when restoring from URL', async () => {
+      const customDateValue = 'custom_2025-06-08_to_2025-06-26';
+      
+      wrapper = mount(DateSelectWithFlatpickr, {
+        props: {
+          value: customDateValue,
+          options: defaultOptions,
+          enableCustomDate: true,
+          mode: 'range',
+        },
+      });
+
+      // Wait for initialization
+      await nextTick();
+      await new Promise(resolve => setTimeout(resolve, 150));
+
+      // Mock flatpickr setDate method
+      mockFlatpickrInstance.setDate = vi.fn();
+
+      // Manually call syncFromPropValue to test the sync logic
+      wrapper.vm.syncFromPropValue(customDateValue);
+
+      // Should call setDate with the parsed dates
+      expect(mockFlatpickrInstance.setDate).toHaveBeenCalledWith(
+        [new Date('2025-06-08'), new Date('2025-06-26')],
+        false
       );
     });
   });
