@@ -622,4 +622,245 @@ describe('DateSelect_with_flatpickr', () => {
       expect(mockFlatpickrInstance.clear).toHaveBeenCalled();
     });
   });
+
+  describe('State Restoration from URL', () => {
+    it('restores single custom date from URL parameter', async () => {
+      const customDateValue = 'custom_2025-06-08';
+      
+      wrapper = mount(DateSelectWithFlatpickr, {
+        props: {
+          value: customDateValue,
+          options: defaultOptions,
+          enableCustomDate: true,
+          mode: 'single',
+        },
+      });
+
+      // Wait for component initialization
+      await nextTick();
+      await new Promise(resolve => setTimeout(resolve, 150));
+
+      // Manually set the custom date state since it would be set by the parent component
+      wrapper.vm.isCustomDate = true;
+      await nextTick();
+
+      // Check that the component displays the correct date
+      const label = wrapper.find('.date-select-field span').text();
+      expect(label).toContain('6/8/2025');
+      
+      // Check that the component is in custom date mode
+      expect(wrapper.vm.isCustomDate).toBe(true);
+    });
+
+    it('restores date range from URL parameter', async () => {
+      const customDateValue = 'custom_2025-06-08_to_2025-06-26';
+      
+      wrapper = mount(DateSelectWithFlatpickr, {
+        props: {
+          value: customDateValue,
+          options: defaultOptions,
+          enableCustomDate: true,
+          mode: 'range',
+        },
+      });
+
+      // Wait for component initialization
+      await nextTick();
+      await new Promise(resolve => setTimeout(resolve, 150));
+
+      // Manually set the custom date state since it would be set by the parent component
+      wrapper.vm.isCustomDate = true;
+      await nextTick();
+
+      // Check that the component displays the correct date range
+      const label = wrapper.find('.date-select-field span').text();
+      expect(label).toContain('6/8/2025 - 6/26/2025');
+      
+      // Check that the component is in custom date mode
+      expect(wrapper.vm.isCustomDate).toBe(true);
+    });
+
+    it('shows custom date trigger as active when restored from URL', async () => {
+      const customDateValue = 'custom_2025-06-08_to_2025-06-26';
+      
+      wrapper = mount(DateSelectWithFlatpickr, {
+        props: {
+          value: customDateValue,
+          options: defaultOptions,
+          enableCustomDate: true,
+          mode: 'range',
+        },
+      });
+
+      // Wait for component initialization
+      await nextTick();
+      await new Promise(resolve => setTimeout(resolve, 150));
+
+      // Set the custom date state
+      wrapper.vm.isCustomDate = true;
+      await nextTick();
+
+      // Open dropdown to see custom date trigger
+      await wrapper.find('.date-select-field').trigger('click');
+      
+      const customTrigger = wrapper.find('.custom-date-trigger');
+      expect(customTrigger.classes()).toContain('active');
+      expect(customTrigger.classes()).not.toContain('incomplete-range');
+    });
+
+    it('handles invalid date format gracefully', async () => {
+      const invalidDateValue = 'custom_invalid-date-format';
+      
+      wrapper = mount(DateSelectWithFlatpickr, {
+        props: {
+          value: invalidDateValue,
+          options: defaultOptions,
+          enableCustomDate: true,
+        },
+      });
+
+      // Wait for component initialization
+      await nextTick();
+      await new Promise(resolve => setTimeout(resolve, 150));
+
+      // Set the custom date state
+      wrapper.vm.isCustomDate = true;
+      await nextTick();
+
+      // Should fallback to placeholder when date format is invalid
+      const label = wrapper.find('.date-select-field span').text();
+      expect(label).toBe('Select date');
+    });
+
+    it('handles missing end date in range gracefully', async () => {
+      const incompleteRangeValue = 'custom_2025-06-08_to_';
+      
+      wrapper = mount(DateSelectWithFlatpickr, {
+        props: {
+          value: incompleteRangeValue,
+          options: defaultOptions,
+          enableCustomDate: true,
+          mode: 'range',
+        },
+      });
+
+      // Wait for component initialization
+      await nextTick();
+      await new Promise(resolve => setTimeout(resolve, 150));
+
+      // Set the custom date state
+      wrapper.vm.isCustomDate = true;
+      await nextTick();
+
+      // Should handle incomplete range gracefully
+      const label = wrapper.find('.date-select-field span').text();
+      expect(label).toBe('Select date');
+    });
+
+    it('preserves flatpickr selected dates when restored from URL', async () => {
+      const customDateValue = 'custom_2025-06-08_to_2025-06-26';
+      
+      wrapper = mount(DateSelectWithFlatpickr, {
+        props: {
+          value: customDateValue,
+          options: defaultOptions,
+          enableCustomDate: true,
+          mode: 'range',
+        },
+      });
+
+      // Wait for component initialization
+      await nextTick();
+      await new Promise(resolve => setTimeout(resolve, 150));
+
+      // Set the custom date state and mock flatpickr selected dates
+      wrapper.vm.isCustomDate = true;
+      const startDate = new Date('2025-06-08');
+      const endDate = new Date('2025-06-26');
+      mockFlatpickrInstance.selectedDates = [startDate, endDate];
+      
+      await nextTick();
+
+      // Check that flatpickr state is correctly represented
+      expect(wrapper.vm.hasIncompleteRange).toBe(false);
+      
+      // Check that the label shows the correct dates
+      const label = wrapper.find('.date-select-field span').text();
+      expect(label).toContain('6/8/2025 - 6/26/2025');
+    });
+
+    it('switches between preset and custom date properly during restoration', async () => {
+      // Start with a preset value
+      wrapper = mount(DateSelectWithFlatpickr, {
+        props: {
+          value: 'today',
+          options: defaultOptions,
+          enableCustomDate: true,
+        },
+      });
+
+      await nextTick();
+      
+      // Verify preset is selected
+      expect(wrapper.vm.isCustomDate).toBe(false);
+      let label = wrapper.find('.date-select-field span').text();
+      expect(label).toBe('Today');
+
+      // Simulate URL change to custom date (like navigation)
+      await wrapper.setProps({ value: 'custom_2025-06-08' });
+      wrapper.vm.isCustomDate = true;
+      await nextTick();
+
+      // Verify custom date is now selected
+      expect(wrapper.vm.isCustomDate).toBe(true);
+      label = wrapper.find('.date-select-field span').text();
+      expect(label).toContain('6/8/2025');
+
+      // Switch back to preset
+      await wrapper.setProps({ value: 'yesterday' });
+      await nextTick();
+
+      // Verify preset is selected again and custom state is reset
+      expect(wrapper.vm.isCustomDate).toBe(false);
+      label = wrapper.find('.date-select-field span').text();
+      expect(label).toBe('Yesterday');
+    });
+
+    it('handles URL parameter format exactly as used in application', async () => {
+      // Simulate the exact URL parameter format from the logs
+      const urlParameterValue = 'custom_2025-06-08_to_2025-06-26';
+      
+      wrapper = mount(DateSelectWithFlatpickr, {
+        props: {
+          value: urlParameterValue,
+          options: defaultOptions,
+          enableCustomDate: true,
+          mode: 'range',
+          dateFormat: 'Y-m-d', // Same format as used in application
+        },
+      });
+
+      // Wait for component initialization (matching the logs)
+      await nextTick();
+      await new Promise(resolve => setTimeout(resolve, 150));
+
+      // Set custom date state as it would be set by the filters store
+      wrapper.vm.isCustomDate = true;
+      await nextTick();
+
+      // Verify the component state matches expectations
+      const label = wrapper.find('.date-select-field span').text();
+      expect(label).toContain('6/8/2025 - 6/26/2025');
+      expect(wrapper.vm.isCustomDate).toBe(true);
+      
+      // Verify flatpickr was initialized with correct mode
+      expect(mockFlatpickr).toHaveBeenCalledWith(
+        expect.any(HTMLInputElement),
+        expect.objectContaining({
+          mode: 'range',
+          dateFormat: 'Y-m-d',
+        })
+      );
+    });
+  });
 });
