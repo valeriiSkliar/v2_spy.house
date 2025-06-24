@@ -371,6 +371,13 @@ class CreativesService {
   updateConfig(config: Partial<CreativesServiceConfig>): void {
     this.config = { ...this.config, ...config };
   }
+
+  /**
+   * Публичный метод для тестирования предобработки фильтров
+   */
+  public testPreprocessFilters(filters: CreativesFilters): CreativesFilters {
+    return this.preprocessFilters(filters);
+  }
 }
 
 // Экспортируем типы для использования в других модулях

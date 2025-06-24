@@ -44,35 +44,18 @@ describe('CreativesService', () => {
   });
 
   describe('Предварительная обработка фильтров', () => {
-    it('должен устанавливать значения по умолчанию', async () => {
-      // Мокаем API запрос для получения доступа к обработанным фильтрам
-      vi.spyOn(creativesService, 'loadCreatives').mockImplementation(async filters => {
-        // Проверяем что значения по умолчанию установлены
-        expect(filters.page).toBe(1);
-        expect(filters.perPage).toBe(12);
-        expect(filters.sortBy).toBe('creation');
-        expect(filters.country).toBe('All Categories');
-        expect(filters.onlyAdult).toBe(false);
+    it('должен устанавливать значения по умолчанию', () => {
+      const service = new CreativesService();
 
-        return {
-          items: [],
-          pagination: {
-            total: 0,
-            perPage: 12,
-            currentPage: 1,
-            lastPage: 1,
-            from: 0,
-            to: 0,
-          },
-          meta: {
-            hasSearch: false,
-            activeFiltersCount: 0,
-            cacheKey: 'test',
-          },
-        };
-      });
+      // Используем публичный тестовый метод
+      const processedFilters = service.testPreprocessFilters({});
 
-      await creativesService.loadCreatives({});
+      // Проверяем что значения по умолчанию установлены
+      expect(processedFilters.page).toBe(1);
+      expect(processedFilters.perPage).toBe(12);
+      expect(processedFilters.sortBy).toBe('creation');
+      expect(processedFilters.country).toBe('All Categories');
+      expect(processedFilters.onlyAdult).toBe(false);
     });
 
     it('должен очищать пустые значения', async () => {
@@ -153,11 +136,31 @@ describe('CreativesService', () => {
     it('должен предотвращать дублирование запросов', async () => {
       const service = new CreativesService();
 
-      // Мокаем медленный API запрос
-      const originalMakeApiRequest = service.makeApiRequest;
-      service.makeApiRequest = vi
-        .fn()
-        .mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
+      // Мокаем медленный API запрос через Object.defineProperty
+      const slowApiMock = vi.fn().mockImplementation(
+        () =>
+          new Promise(resolve =>
+            setTimeout(
+              () =>
+                resolve({
+                  data: [],
+                  total: 0,
+                  per_page: 12,
+                  current_page: 1,
+                  last_page: 1,
+                  from: 0,
+                  to: 0,
+                }),
+              100
+            )
+          )
+      );
+
+      Object.defineProperty(service, 'makeApiRequest', {
+        value: slowApiMock,
+        writable: true,
+        configurable: true,
+      });
 
       const filters = { searchKeyword: 'test' };
 
