@@ -134,29 +134,67 @@ export const useFiltersStore = defineStore('filters', () => {
   function setupUrlSyncWatchers(): void {
     if (!urlSync) return;
 
-    // Store -> URL синхронизация
+    let isStoreUpdating = false;
+    let isUrlUpdating = false;
+    let storeToUrlTimeout: ReturnType<typeof setTimeout> | null = null;
+    let urlToStoreTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    // Store -> URL синхронизация с дебаунсингом
     watch(
       filters,
       () => {
-        if (urlSync && isUrlSyncEnabled.value) {
-          console.log('Syncing store to URL:', { ...filters });
-          urlSync.syncWithFilterState(filters);
+        if (urlSync && isUrlSyncEnabled.value && !isUrlUpdating) {
+          // Очищаем предыдущий таймер
+          if (storeToUrlTimeout) {
+            clearTimeout(storeToUrlTimeout);
+          }
+          
+          isStoreUpdating = true;
+          
+          // Дебаунсинг для предотвращения частых обновлений
+          storeToUrlTimeout = setTimeout(() => {
+            if (urlSync && isUrlSyncEnabled.value) {
+              console.log('Syncing store to URL:', { ...filters });
+              
+              // Создаем копию состояния для избежания проблем с Proxy
+              const filtersCopy = JSON.parse(JSON.stringify(filters));
+              urlSync.syncWithFilterState(filtersCopy);
+            }
+            
+            isStoreUpdating = false;
+            storeToUrlTimeout = null;
+          }, 150);
         }
       },
-      { deep: true }
+      { deep: true, flush: 'post' }
     );
 
-    // URL -> Store синхронизация
+    // URL -> Store синхронизация с дебаунсингом
     watch(
       () => urlSync?.state.value,
       (newUrlState) => {
-        if (newUrlState && isUrlSyncEnabled.value) {
-          console.log('Syncing URL to store:', newUrlState);
-          const updates = urlSync!.getFilterStateUpdates();
-          updateFromUrl(updates);
+        if (newUrlState && isUrlSyncEnabled.value && !isStoreUpdating) {
+          // Очищаем предыдущий таймер
+          if (urlToStoreTimeout) {
+            clearTimeout(urlToStoreTimeout);
+          }
+          
+          isUrlUpdating = true;
+          
+          // Дебаунсинг для предотвращения частых обновлений
+          urlToStoreTimeout = setTimeout(() => {
+            if (urlSync && isUrlSyncEnabled.value) {
+              console.log('Syncing URL to store:', newUrlState);
+              const updates = urlSync.getFilterStateUpdates();
+              updateFromUrl(updates);
+            }
+            
+            isUrlUpdating = false;
+            urlToStoreTimeout = null;
+          }, 150);
         }
       },
-      { deep: true }
+      { deep: true, flush: 'post' }
     );
   }
 
@@ -175,12 +213,28 @@ export const useFiltersStore = defineStore('filters', () => {
     Object.entries(updates).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         const filterKey = key as keyof FilterState;
-        console.log(`Updating from URL: ${key} =`, value);
+        const currentValue = filters[filterKey];
         
-        if (Array.isArray(value)) {
-          (filters[filterKey] as any) = [...value];
+        // Улучшенная проверка изменений для массивов
+        let hasChanged = false;
+        if (Array.isArray(value) && Array.isArray(currentValue)) {
+          // Сравниваем длину и содержимое массивов
+          hasChanged = value.length !== currentValue.length || 
+                      !value.every((item, index) => item === currentValue[index]);
         } else {
-          (filters[filterKey] as any) = value;
+          hasChanged = currentValue !== value;
+        }
+        
+        if (hasChanged) {
+          console.log(`Updating from URL: ${key} =`, value);
+          
+          if (Array.isArray(value)) {
+            // Создаем новый массив для реактивности
+            const newArray = [...value];
+            (filters[filterKey] as any) = newArray;
+          } else {
+            (filters[filterKey] as any) = value;
+          }
         }
       }
     });
@@ -188,7 +242,7 @@ export const useFiltersStore = defineStore('filters', () => {
     // Включаем обратно URL синхронизацию
     setTimeout(() => {
       isUrlSyncEnabled.value = true;
-    }, 50);
+    }, 100);
   }
 
   function toggleDetailedFilters(): void {
@@ -222,7 +276,10 @@ export const useFiltersStore = defineStore('filters', () => {
   function addToMultiSelect(field: keyof FilterState, value: string): void {
     const currentValues = filters[field] as string[];
     if (!currentValues.includes(value)) {
-      currentValues.push(value);
+      // Создаем новый массив для обеспечения реактивности
+      const newValues = [...currentValues, value];
+      (filters[field] as any) = newValues;
+      console.log(`Added ${value} to ${field}:`, newValues);
     }
   }
 
@@ -230,7 +287,10 @@ export const useFiltersStore = defineStore('filters', () => {
     const currentValues = filters[field] as string[];
     const index = currentValues.indexOf(value);
     if (index > -1) {
-      currentValues.splice(index, 1);
+      // Создаем новый массив для обеспечения реактивности
+      const newValues = currentValues.filter(item => item !== value);
+      (filters[field] as any) = newValues;
+      console.log(`Removed ${value} from ${field}:`, newValues);
     }
   }
 

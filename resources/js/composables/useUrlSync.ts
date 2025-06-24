@@ -252,24 +252,40 @@ export function useUrlSync<T extends Record<string, any>>(
     errors.value = {};
   };
 
+  // Флаги для предотвращения циклических обновлений
+  let isUpdatingFromUrl = false;
+  let isUpdatingFromState = false;
+
   // Наблюдатель за изменениями состояния
   const stateWatcher = watch(
     state,
     () => {
-      if (history) {
+      if (history && !isUpdatingFromUrl) {
+        isUpdatingFromState = true;
         saveToUrl();
+        // Сбрасываем флаг после выполнения
+        setTimeout(() => {
+          isUpdatingFromState = false;
+        }, debounce + 50);
       }
     },
-    { deep: true }
+    { deep: true, flush: 'post' }
   );
 
   // Наблюдатель за изменениями URL (для внешних изменений)
   const urlWatcher = watch(
     urlParams,
     () => {
-      loadFromUrl();
+      if (!isUpdatingFromState) {
+        isUpdatingFromUrl = true;
+        loadFromUrl();
+        // Сбрасываем флаг после выполнения
+        setTimeout(() => {
+          isUpdatingFromUrl = false;
+        }, 100);
+      }
     },
-    { deep: true }
+    { deep: true, flush: 'post' }
   );
 
   // Инициализация: загружаем состояние из URL при создании

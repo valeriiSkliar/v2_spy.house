@@ -49,20 +49,20 @@ function filterStateToUrlState(filterState: FilterState): CreativesUrlState {
  */
 function urlStateToFilterState(urlState: CreativesUrlState): Partial<FilterState> {
     return {
-        searchKeyword: urlState.searchKeyword || '',
-        country: urlState.country || 'All Categories',
-        dateCreation: urlState.dateCreation || 'Date of creation',
-        sortBy: urlState.sortBy || 'By creation date',
-        periodDisplay: urlState.periodDisplay || 'Period of display',
+        searchKeyword: urlState.searchKeyword !== undefined ? urlState.searchKeyword : '',
+        country: urlState.country !== undefined ? urlState.country : 'All Categories',
+        dateCreation: urlState.dateCreation !== undefined ? urlState.dateCreation : 'Date of creation',
+        sortBy: urlState.sortBy !== undefined ? urlState.sortBy : 'By creation date',
+        periodDisplay: urlState.periodDisplay !== undefined ? urlState.periodDisplay : 'Period of display',
         advertisingNetworks: Array.isArray(urlState.advertisingNetworks) ? [...urlState.advertisingNetworks] : [],
         languages: Array.isArray(urlState.languages) ? [...urlState.languages] : [],
         operatingSystems: Array.isArray(urlState.operatingSystems) ? [...urlState.operatingSystems] : [],
         browsers: Array.isArray(urlState.browsers) ? [...urlState.browsers] : [],
         devices: Array.isArray(urlState.devices) ? [...urlState.devices] : [],
         imageSizes: Array.isArray(urlState.imageSizes) ? [...urlState.imageSizes] : [],
-        onlyAdult: urlState.onlyAdult || false,
+        onlyAdult: urlState.onlyAdult !== undefined ? urlState.onlyAdult : false,
         savedSettings: Array.isArray(urlState.savedSettings) ? [...urlState.savedSettings] : [],
-        isDetailedVisible: urlState.isDetailedVisible || false,
+        isDetailedVisible: urlState.isDetailedVisible !== undefined ? urlState.isDetailedVisible : false,
     };
 }
 
@@ -92,28 +92,50 @@ export function useCreativesUrlSync(initialState?: Partial<CreativesUrlState>) {
 
     const urlSync = useUrlSync(safeInitialState, {
         prefix: 'cr',
-        debounce: 300,
+        debounce: 200,
         transform: {
             serialize: (value: any) => {
-                if (Array.isArray(value)) {
-                    return value.length > 0 ? value.join(',') : '';
+                // Обрабатываем Vue реактивные массивы (Proxy)
+                if (Array.isArray(value) || (value && typeof value === 'object' && 
+                    (value.constructor === Array || value[Symbol.toStringTag] === 'Array' || 
+                     (typeof value[Symbol.iterator] === 'function' && value.length !== undefined)))) {
+                    
+                    // Безопасное преобразование в обычный массив
+                    let arrayValue;
+                    try {
+                        arrayValue = [...value]; // Spread оператор работает с итерируемыми объектами
+                    } catch (e) {
+                        arrayValue = Array.from(value); // Fallback
+                    }
+                    
+                    // Фильтруем пустые значения и приводим к строкам
+                    const cleanArray = arrayValue
+                        .filter(item => item !== null && item !== undefined && item !== '')
+                        .map(item => String(item));
+                    
+                    return cleanArray.length > 0 ? cleanArray.join(',') : '';
                 }
                 if (typeof value === 'boolean') {
                     return value ? '1' : '';
                 }
+                // Не сериализуем значения по умолчанию
+                if (value === '' || value === 'All Categories' || value === 'Date of creation' || 
+                    value === 'By creation date' || value === 'Period of display') {
+                    return '';
+                }
                 return value ? String(value) : '';
             },
             deserialize: (value: string) => {
-                if (!value || value === 'undefined') {
+                if (!value || value === 'undefined' || value === '') {
                     return '';
                 }
                 
-                // Пытаемся определить тип по значению
+                // Обрабатываем массивы
                 if (value.includes(',')) {
-                    // Это массив
                     return value.split(',').filter(v => v.trim() !== '');
                 }
                 
+                // Обрабатываем булевы значения
                 if (value === '1' || value === 'true') {
                     return true;
                 }
