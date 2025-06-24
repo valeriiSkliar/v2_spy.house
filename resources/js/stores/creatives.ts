@@ -1,4 +1,4 @@
-import { FilterOption, FilterState } from '@/types/creatives';
+import { FilterOption, FilterState, TabOption, TabsState } from '@/types/creatives';
 import debounce from 'lodash.debounce';
 import { defineStore } from 'pinia';
 import { computed, reactive, ref, watch } from 'vue';
@@ -23,8 +23,23 @@ export const useFiltersStore = defineStore('filters', () => {
     savedSettings: []
   };
 
+  // Состояние вкладок с дефолтными значениями
+  const defaultTabs: TabsState = {
+    activeTab: 'push',
+    availableTabs: ['push', 'inpage', 'facebook', 'tiktok'],
+    tabCounts: {
+      push: '170k',
+      inpage: '3.1k', 
+      facebook: '65.1k',
+      tiktok: '45.2m'
+    }
+  };
+
   // Состояние фильтров - единственный источник истины
   const filters = reactive<FilterState>({ ...defaultFilters });
+  
+  // Состояние вкладок - единственный источник истины
+  const tabs = reactive<TabsState>({ ...defaultTabs });
 
   // URL синхронизация
   let urlSync: ReturnType<typeof useCreativesUrlSync> | null = null;
@@ -76,7 +91,20 @@ export const useFiltersStore = defineStore('filters', () => {
   const devicesOptions = computed(() => multiSelectOptions.devices);
   const imageSizesOptions = computed(() => multiSelectOptions.imageSizes);
 
-  // Методы
+  // Computed свойства для вкладок
+  const tabOptions = computed((): TabOption[] => {
+    return tabs.availableTabs.map(tabValue => ({
+      value: tabValue,
+      label: getTranslation(`tabs.${tabValue}`, tabValue),
+      count: tabs.tabCounts[tabValue] || 0
+    }));
+  });
+
+  const currentTabOption = computed((): TabOption | undefined => {
+    return tabOptions.value.find(tab => tab.value === tabs.activeTab);
+  });
+
+  // Методы для фильтров
   
   /**
    * Устанавливает опции для селектов от сервера
@@ -170,6 +198,25 @@ export const useFiltersStore = defineStore('filters', () => {
   }
 
   /**
+   * Устанавливает опции и счетчики для вкладок
+   */
+  function setTabOptions(options: any): void {
+    console.log('Setting tab options:', options);
+    
+    if (options.availableTabs && Array.isArray(options.availableTabs)) {
+      tabs.availableTabs = [...options.availableTabs];
+    }
+    
+    if (options.tabCounts && typeof options.tabCounts === 'object') {
+      tabs.tabCounts = { ...options.tabCounts };
+    }
+    
+    if (options.activeTab && tabs.availableTabs.includes(options.activeTab)) {
+      tabs.activeTab = options.activeTab;
+    }
+  }
+
+  /**
    * Устанавливает переводы
    */
   function setTranslations(translationsData: Record<string, string>): void {
@@ -188,27 +235,33 @@ export const useFiltersStore = defineStore('filters', () => {
    * Инициализирует store с четким приоритетом: URL → Props → Defaults
    * Store является единственным источником истины
    */
-  function initializeFilters(propsFilters?: Partial<FilterState>, selectOptions?: any, translationsData?: Record<string, string>): void {
+  function initializeFilters(propsFilters?: Partial<FilterState>, selectOptions?: any, translationsData?: Record<string, string>, tabsOptions?: any): void {
     console.log('Initializing filters store...');
     
-    // 1. Базовое состояние уже установлено (defaultFilters)
+    // 1. Базовое состояние уже установлено (defaultFilters, defaultTabs)
     console.log('Default filters:', defaultFilters);
+    console.log('Default tabs:', defaultTabs);
     
     // 2. Устанавливаем опции для селектов
     if (selectOptions) {
       setSelectOptions(selectOptions);
     }
     
-    // 3. Применяем props (для локализации и серверных настроек)
+    // 3. Устанавливаем опции для вкладок
+    if (tabsOptions) {
+      setTabOptions(tabsOptions);
+    }
+    
+    // 4. Применяем props (для локализации и серверных настроек)
     if (propsFilters && Object.keys(propsFilters).length > 0) {
       console.log('Applying props to filters:', propsFilters);
       Object.assign(filters, propsFilters);
     }
 
-    // 4. Инициализируем URL синхронизацию (URL имеет наивысший приоритет)
+    // 5. Инициализируем URL синхронизацию (URL имеет наивысший приоритет)
     initUrlSync();
 
-    // 5. Устанавливаем переводы
+    // 6. Устанавливаем переводы
     if (translationsData) {
       setTranslations(translationsData);
     }
@@ -231,12 +284,15 @@ export const useFiltersStore = defineStore('filters', () => {
       );
       
       if (hasUrlParams) {
-        console.log('Loading filters from URL');
+        console.log('Loading state from URL');
         loadFromUrl();
       } else {
         console.log('No URL params, syncing current state to URL');
         // Синхронизируем текущее состояние store с URL
-        urlSync!.syncWithFilterState(JSON.parse(JSON.stringify(filters)));
+        urlSync!.syncWithFilterState(
+          JSON.parse(JSON.stringify(filters)), 
+          tabs.activeTab
+        );
       }
     }, 100);
   }
@@ -251,11 +307,11 @@ export const useFiltersStore = defineStore('filters', () => {
     // Создаем debounced функции с lodash
     const debouncedStoreToUrl = debounce(() => {
       if (urlSync && isUrlSyncEnabled.value) {
-        console.log('Syncing store to URL:', { ...filters });
+        console.log('Syncing store to URL:', { filters: filters, activeTab: tabs.activeTab });
         
         // Создаем копию состояния для избежания проблем с Proxy
         const filtersCopy = JSON.parse(JSON.stringify(filters));
-        urlSync.syncWithFilterState(filtersCopy);
+        urlSync.syncWithFilterState(filtersCopy, tabs.activeTab);
       }
       
       isStoreUpdating = false;
@@ -271,9 +327,9 @@ export const useFiltersStore = defineStore('filters', () => {
       isUrlUpdating = false;
     }, 300);
 
-    // Store -> URL синхронизация с debouncing
+    // Store -> URL синхронизация с debouncing (фильтры и вкладки)
     watch(
-      filters,
+      [filters, tabs],
       () => {
         if (urlSync && isUrlSyncEnabled.value && !isUrlUpdating) {
           isStoreUpdating = true;
@@ -299,9 +355,17 @@ export const useFiltersStore = defineStore('filters', () => {
   function loadFromUrl(): void {
     if (!urlSync) return;
 
-    const updates = urlSync.getFilterStateUpdates();
-    console.log('Loading from URL updates:', updates);
-    updateFromUrl(updates);
+    // Загружаем состояние фильтров
+    const filterUpdates = urlSync.getFilterStateUpdates();
+    console.log('Loading filters from URL updates:', filterUpdates);
+    updateFromUrl(filterUpdates);
+    
+    // Загружаем активную вкладку
+    const activeTabFromUrl = urlSync.getActiveTabFromUrl();
+    if (activeTabFromUrl !== tabs.activeTab) {
+      console.log('Loading active tab from URL:', activeTabFromUrl);
+      tabs.activeTab = activeTabFromUrl;
+    }
   }
 
   function updateFromUrl(updates: Partial<FilterState>): void {
@@ -343,6 +407,7 @@ export const useFiltersStore = defineStore('filters', () => {
     }, 100);
   }
 
+  // Методы для фильтров
   function toggleDetailedFilters(): void {
     filters.isDetailedVisible = !filters.isDetailedVisible;
   }
@@ -408,6 +473,46 @@ export const useFiltersStore = defineStore('filters', () => {
     // Здесь можно отправить данные на сервер
   }
 
+  // Методы для вкладок
+  function setActiveTab(tabValue: string): void {
+    if (tabs.availableTabs.includes(tabValue) && tabs.activeTab !== tabValue) {
+      console.log('Setting active tab:', tabValue);
+      const previousTab = tabs.activeTab;
+      tabs.activeTab = tabValue;
+      
+      // Эмитим событие смены вкладки для других компонентов
+      const event = new CustomEvent('creatives:tab-changed', {
+        detail: {
+          previousTab,
+          currentTab: tabValue,
+          tabOption: currentTabOption.value
+        }
+      });
+      document.dispatchEvent(event);
+    }
+  }
+
+  function setTabCounts(counts: Record<string, string | number>): void {
+    console.log('Setting tab counts:', counts);
+    tabs.tabCounts = { ...tabs.tabCounts, ...counts };
+  }
+
+  function setAvailableTabs(newTabs: string[]): void {
+    console.log('Setting available tabs:', newTabs);
+    tabs.availableTabs = [...newTabs];
+    
+    // Проверяем что текущая вкладка все еще доступна
+    if (!tabs.availableTabs.includes(tabs.activeTab)) {
+      tabs.activeTab = tabs.availableTabs[0] || 'push';
+    }
+  }
+
+  function resetTabs(): void {
+    // Сбрасываем к дефолтным значениям
+    Object.assign(tabs, defaultTabs);
+    console.log('Tabs reset to defaults');
+  }
+
   // Computed свойства
   const hasActiveFilters = computed(() => {
     return filters.searchKeyword !== '' ||
@@ -425,8 +530,16 @@ export const useFiltersStore = defineStore('filters', () => {
            filters.savedSettings.length > 0;
   });
 
+  const hasCustomTabCounts = computed(() => {
+    return Object.keys(tabs.tabCounts).length > 0;
+  });
+
   return {
+    // Состояние
     filters,
+    tabs,
+    
+    // Опции для фильтров
     countryOptions,
     sortOptions,
     dateRanges,
@@ -440,11 +553,20 @@ export const useFiltersStore = defineStore('filters', () => {
     devicesOptions,
     imageSizesOptions,
     
+    // Computed опции для вкладок
+    tabOptions,
+    currentTabOption,
+    
+    // Computed состояния
     hasActiveFilters,
+    hasCustomTabCounts,
     
     // Основные методы
     initializeFilters,
     setSelectOptions,
+    setTabOptions,
+    
+    // Методы фильтров
     toggleDetailedFilters,
     setSearchKeyword,
     setCountry,
@@ -456,6 +578,12 @@ export const useFiltersStore = defineStore('filters', () => {
     removeFromMultiSelect,
     resetFilters,
     saveSettings,
+
+    // Методы вкладок
+    setActiveTab,
+    setTabCounts,
+    setAvailableTabs,
+    resetTabs,
 
     // URL синхронизация
     initUrlSync,

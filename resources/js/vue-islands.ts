@@ -52,6 +52,7 @@ const componentMap: Record<string, () => Promise<{ default: Component }>> = {
     
     // Креативы
     'CreativesFiltersComponent': () => import('./vue-components/creatives/FiltersComponent.vue'),
+    'CreativesTabsComponent': () => import('./vue-components/creatives/TabsComponent.vue'),
     
     // Добавьте здесь новые компоненты по мере создания
 };

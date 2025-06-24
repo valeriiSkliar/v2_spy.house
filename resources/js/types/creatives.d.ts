@@ -19,3 +19,21 @@ export interface FilterState {
   onlyAdult: boolean;
   savedSettings: string[];
 }
+
+// Типы для вкладок креативов
+export interface TabOption {
+  value: string;
+  label: string;
+  count?: string | number;
+}
+
+export interface TabsState {
+  activeTab: string;
+  availableTabs: string[];
+  tabCounts: Record<string, string | number>;
+}
+
+// Комбинированное состояние всего Store
+export interface CreativesStoreState extends FilterState, TabsState {
+  // Можно добавить другие состояния (пагинация, избранное и т.д.)
+}

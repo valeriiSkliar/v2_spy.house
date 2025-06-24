@@ -272,6 +272,7 @@ interface Props {
   initialFilters?: Partial<FilterState>;
   selectOptions?: any;
   translations?: Record<string, string>;
+  tabOptions?: any;
   enableUrlSync?: boolean;
 }
 
@@ -279,6 +280,7 @@ const props = withDefaults(defineProps<Props>(), {
   initialFilters: () => ({}),
   selectOptions: () => ({}),
   translations: () => ({}),
+  tabOptions: () => ({}),
   enableUrlSync: true,
 });
 

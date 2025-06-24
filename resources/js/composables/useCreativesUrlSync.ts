@@ -6,6 +6,7 @@ import { useUrlSync } from './useUrlSync';
  * Соответствует FilterState но с опциональными полями для URL
  */
 export interface CreativesUrlState {
+    // Фильтры
     searchKeyword?: string;
     country?: string;
     dateCreation?: string;
@@ -20,12 +21,15 @@ export interface CreativesUrlState {
     onlyAdult?: boolean;
     savedSettings?: string[];
     isDetailedVisible?: boolean;
+    
+    // Вкладки
+    activeTab?: string;
 }
 
 /**
  * Преобразует FilterState в CreativesUrlState для URL синхронизации
  */
-function filterStateToUrlState(filterState: FilterState): CreativesUrlState {
+function filterStateToUrlState(filterState: FilterState, activeTab?: string): CreativesUrlState {
     return {
         searchKeyword: filterState.searchKeyword || undefined,
         country: filterState.country !== 'default' ? filterState.country : undefined,
@@ -41,6 +45,9 @@ function filterStateToUrlState(filterState: FilterState): CreativesUrlState {
         onlyAdult: filterState.onlyAdult || undefined,
         savedSettings: filterState.savedSettings?.length > 0 ? [...filterState.savedSettings] : undefined,
         isDetailedVisible: filterState.isDetailedVisible || undefined,
+        
+        // Добавляем вкладку если отличается от дефолтной
+        activeTab: activeTab && activeTab !== 'push' ? activeTab : undefined,
     };
 }
 
@@ -88,6 +95,7 @@ export function useCreativesUrlSync(initialState?: Partial<CreativesUrlState>) {
         onlyAdult: false,
         savedSettings: [],
         isDetailedVisible: false,
+        activeTab: 'push', // Дефолтная вкладка
         // Применяем переданные значения если есть
         ...initialState
     };
@@ -121,7 +129,7 @@ export function useCreativesUrlSync(initialState?: Partial<CreativesUrlState>) {
                     return value ? '1' : '';
                 }
                 // Не сериализуем пустые значения и дефолтные значения
-                if (value === '' || value === 'default') {
+                if (value === '' || value === 'default' || value === 'push') {
                     return '';
                 }
                 return value ? String(value) : '';
@@ -162,14 +170,24 @@ export function useCreativesUrlSync(initialState?: Partial<CreativesUrlState>) {
         urlSync.updateState({ [field]: [...values] });
     };
 
+    // Методы для работы с вкладками
+    const updateActiveTab = (tab: string) => {
+        urlSync.updateState({ activeTab: tab !== 'push' ? tab : undefined });
+    };
+
     // Синхронизация с FilterState
-    const syncWithFilterState = (filterState: FilterState) => {
-        const urlState = filterStateToUrlState(filterState);
+    const syncWithFilterState = (filterState: FilterState, activeTab?: string) => {
+        const urlState = filterStateToUrlState(filterState, activeTab);
         urlSync.updateState(urlState);
     };
 
     const getFilterStateUpdates = (): Partial<FilterState> => {
         return urlStateToFilterState(urlSync.state.value);
+    };
+
+    // Получение активной вкладки из URL
+    const getActiveTabFromUrl = (): string => {
+        return urlSync.state.value.activeTab || 'push';
     };
 
     return {
@@ -178,7 +196,7 @@ export function useCreativesUrlSync(initialState?: Partial<CreativesUrlState>) {
         updateState: urlSync.updateState,
         resetState: urlSync.resetState,
         
-        // Специализированные методы
+        // Специализированные методы для фильтров
         updateSearch,
         updateCountry,
         updateSort,
@@ -187,6 +205,10 @@ export function useCreativesUrlSync(initialState?: Partial<CreativesUrlState>) {
         updateOnlyAdult,
         updateDetailedVisible,
         updateMultiSelectField,
+        
+        // Специализированные методы для вкладок
+        updateActiveTab,
+        getActiveTabFromUrl,
         
         // Интеграция с FilterState
         syncWithFilterState,

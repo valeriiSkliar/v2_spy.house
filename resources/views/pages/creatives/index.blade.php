@@ -7,16 +7,7 @@
 
     <div class="row align-items-center">
         <div class="col-12 col-md-auto mb-20 flex-grow-1">
-            <div class="filter-push">
-                <button class="filter-push__item active" data-tub="Push" data-group="push">Push <span
-                        class="filter-push__count">170k</span></button>
-                <button class="filter-push__item" data-tub="In Page" data-group="push">In Page <span
-                        class="filter-push__count">3.1k</span></button>
-                <button class="filter-push__item" data-tub="Facebook" data-group="push">Facebook <span
-                        class="filter-push__count">65.1k</span></button>
-                <button class="filter-push__item" data-tub="TikTok" data-group="push">TikTok <span
-                        class="filter-push__count">45.2m</span></button>
-            </div>
+            <x-creatives.vue.tabs :initialTabs="$tabs" :tabOptions="$tabOptions" :translations="$translations" />
         </div>
         <div class="col-12 col-md-auto mb-2">
             <div class="row">

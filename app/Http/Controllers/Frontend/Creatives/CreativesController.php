@@ -28,6 +28,19 @@ class CreativesController extends FrontendController
             'savedSettings' => []
         ];
 
+        // Дефолтные значения для вкладок
+        $defaultTabs = [
+            'activeTab' => $request->get('tab', 'push'),
+            'availableTabs' => ['push', 'inpage', 'facebook', 'tiktok'],
+            'tabCounts' => [
+                'push' => 1700000,
+                'inpage' => 965100,
+                'facebook' => 65100,
+                'tiktok' => 9852000,
+                'total' => 10000000
+            ]
+        ];
+
         $translations = [
             'country' => 'Страна',
             'dateCreation' => 'Дата создания',
@@ -52,15 +65,22 @@ class CreativesController extends FrontendController
             'filterByDateCreation' => 'Фильтр по дате создания',
             'savePresetButton' => 'Сохранить настройки',
             'resetButton' => 'Сбросить',
+            // Переводы для вкладок
+            'tabs.push' => 'Push',
+            'tabs.inpage' => 'In Page',
+            'tabs.facebook' => 'Facebook',
+            'tabs.tiktok' => 'TikTok',
         ];
 
-
         $selectOptions = $this->getSelectOptions();
+        $tabOptions = $this->getTabOptions();
 
         return view('pages.creatives.index', [
-            'activeTab' => 'push',
+            'activeTab' => $defaultTabs['activeTab'],
             'filters' => $defaultFilters,
+            'tabs' => $defaultTabs,
             'selectOptions' => $selectOptions,
+            'tabOptions' => $tabOptions,
             'translations' => $translations,
         ]);
     }
@@ -184,6 +204,21 @@ class CreativesController extends FrontendController
                 ['value' => '3x4', 'label' => '3x4 (Portrait)'],
                 ['value' => '21x9', 'label' => '21x9 (Ultra-wide)'],
             ],
+        ];
+    }
+
+    public function getTabOptions()
+    {
+        return [
+            'availableTabs' => ['push', 'inpage', 'facebook', 'tiktok'],
+            'tabCounts' => [
+                'push' => 170000,
+                'inpage' => 965100,
+                'facebook' => 65100,
+                'tiktok' => 9852000,
+                'total' => 10000000
+            ],
+            'activeTab' => 'push'
         ];
     }
 }
