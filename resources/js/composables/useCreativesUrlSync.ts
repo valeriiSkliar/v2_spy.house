@@ -126,27 +126,6 @@ export function useCreativesUrlSync(initialState?: Partial<CreativesUrlState>) {
                     return '';
                 }
                 return value ? String(value) : '';
-            },
-            deserialize: (value: string) => {
-                if (!value || value === 'undefined' || value === '') {
-                    return '';
-                }
-                
-                // Обрабатываем массивы
-                if (value.includes(',')) {
-                    return value.split(',').filter(v => v.trim() !== '');
-                }
-                
-                // Обрабатываем булевы значения
-                if (value === '1' || value === 'true') {
-                    return true;
-                }
-                
-                if (value === '0' || value === 'false') {
-                    return false;
-                }
-                
-                return value;
             }
         }
     });
