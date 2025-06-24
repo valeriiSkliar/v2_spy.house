@@ -210,7 +210,6 @@ function openCustomDatePicker(): void {
       }, 200);
     } else {
       // Открываем календарь стандартным способом
-      console.log('Opening calendar...');
       flatpickrInstance.open();
 
       // Принудительно показываем если не отобразился
@@ -301,15 +300,12 @@ function initializeFlatpickr(): void {
     },
     onOpen: () => {
       isCalendarOpen.value = true;
-      console.log('Calendar opened');
     },
     onClose: () => {
       hideCalendar();
       isOpen.value = false; // Закрываем dropdown когда закрывается календарь
-      console.log('Calendar closed');
     },
     onReady: () => {
-      console.log('Flatpickr ready');
       // Если есть контейнер, перемещаем календарь туда после инициализации
       if (flatpickrContainer.value && flatpickrInstance) {
         const calendar = flatpickrInstance.calendarContainer;
@@ -320,7 +316,6 @@ function initializeFlatpickr(): void {
 
       // Проверяем начальное значение и синхронизируем состояние
       if (props.value && props.value.startsWith('custom_')) {
-        console.log('Flatpickr ready, syncing initial custom value:', props.value);
         syncFromPropValue(props.value);
       }
     },
@@ -397,7 +392,6 @@ watch(
     const isFromCustom = oldValue && oldValue.startsWith('custom_');
 
     if (isDefaultValue && isFromCustom) {
-      console.log('Resetting custom date state due to filter reset');
       // Сбрасываем состояние кастомной даты
       isCustomDate.value = false;
 
@@ -414,7 +408,6 @@ watch(
 
     // Если значение изменилось на обычную опцию, также сбрасываем кастомное состояние
     if (newValue && !newValue.startsWith('custom_') && isCustomDate.value) {
-      console.log('Resetting custom date state due to preset selection');
       isCustomDate.value = false;
 
       if (flatpickrInstance) {
@@ -429,7 +422,6 @@ watch(
 
     // Если новое значение является кастомной датой, восстанавливаем состояние
     if (newValue && newValue.startsWith('custom_') && !isCustomDate.value) {
-      console.log('Restoring custom date state from URL/prop:', newValue);
       syncFromPropValue(newValue);
     }
   },
@@ -443,8 +435,6 @@ function syncFromPropValue(value: string): void {
   if (!value || !value.startsWith('custom_')) {
     return;
   }
-
-  console.log('Syncing component state from custom value:', value);
 
   // Устанавливаем флаг кастомной даты
   isCustomDate.value = true;
@@ -475,8 +465,6 @@ function syncFromPropValue(value: string): void {
     try {
       // Устанавливаем даты в flatpickr
       flatpickrInstance.setDate(dates, false); // false чтобы не вызывать onChange
-
-      console.log('Flatpickr dates synchronized:', dates);
     } catch (error) {
       console.error('Error syncing dates with flatpickr:', error);
     }
@@ -486,7 +474,6 @@ function syncFromPropValue(value: string): void {
       if (flatpickrInstance) {
         try {
           flatpickrInstance.setDate(dates, false);
-          console.log('Flatpickr dates synchronized (delayed):', dates);
         } catch (error) {
           console.error('Error syncing dates with flatpickr (delayed):', error);
         }
