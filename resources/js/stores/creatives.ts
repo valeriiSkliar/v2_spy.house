@@ -9,10 +9,10 @@ export const useFiltersStore = defineStore('filters', () => {
   const defaultFilters: FilterState = {
     isDetailedVisible: false,
     searchKeyword: '',
-    country: 'All Categories',
+    country: 'All Countries',
     dateCreation: 'Date of creation',
     sortBy: 'By creation date',
-    periodDisplay: 'Period of display',
+    periodDisplay: 'Date of creation',
     advertisingNetworks: [],
     languages: [],
     operatingSystems: [],
@@ -30,43 +30,23 @@ export const useFiltersStore = defineStore('filters', () => {
   let urlSync: ReturnType<typeof useCreativesUrlSync> | null = null;
   let isUrlSyncEnabled = ref(false);
 
-  // Опции для селектов (базовые + от сервера)
-  const baseCountryOptions: FilterOption[] = [
-    { value: 'all', label: 'Countrise' },
-    { value: 'advertising', label: 'Advertising Networks' },
-    { value: 'affiliate', label: 'Affiliate Programs' },
-    { value: 'trackers', label: 'Trackers' },
-    { value: 'hosting', label: 'Hosting' },
-    { value: 'domain', label: 'Domain Registrars' },
-    { value: 'spy', label: 'SPY Services' },
-    { value: 'proxy', label: 'Proxy and VPN Services' },
-    { value: 'browsers', label: 'Anti-detection Browsers' },
-    { value: 'accounts', label: 'Account Purchase and Rental' },
-    { value: 'apps', label: 'Purchase and Rental of Applications' },
-    { value: 'notifications', label: 'Notification and Newsletter Services' },
-    { value: 'payments', label: 'Payment Services' },
-    { value: 'other', label: 'Other Services and Utilities' }
+  // Опции для селектов - теперь полностью от сервера с fallback
+  const defaultCountryOptions: FilterOption[] = [
+    { value: 'All Countries', label: 'All Countries' }
   ];
 
-  const baseSortOptions: FilterOption[] = [
-    { value: 'creation', label: 'By creation date' },
-    { value: 'activity', label: 'By days of activity' }
+  const defaultSortOptions: FilterOption[] = [
+    { value: 'By creation date', label: 'By creation date' }
   ];
 
-  const baseDateRanges: FilterOption[] = [
-    { value: 'Date of creation', label: 'Date of creation' }, // Дефолтная опция
-    { value: 'today', label: 'Today' },
-    { value: 'yesterday', label: 'Yesterday' },
-    { value: 'last7', label: 'Last 7 days' },
-    { value: 'last30', label: 'Last 30 days' },
-    { value: 'thisMonth', label: 'This month' },
-    { value: 'lastMonth', label: 'Last month' },
+  const defaultDateRanges: FilterOption[] = [
+    { value: 'Date of creation', label: 'Date of creation' }
   ];
 
-  // Реактивные опции для селектов (могут обновляться от сервера)
-  const countryOptions = ref<FilterOption[]>([...baseCountryOptions]);
-  const sortOptions = ref<FilterOption[]>([...baseSortOptions]);
-  const dateRanges = ref<FilterOption[]>([...baseDateRanges]);
+  // Реактивные опции для селектов (заполняются от сервера)
+  const countryOptions = ref<FilterOption[]>([...defaultCountryOptions]);
+  const sortOptions = ref<FilterOption[]>([...defaultSortOptions]);
+  const dateRanges = ref<FilterOption[]>([...defaultDateRanges]);
 
   // Опции для мультиселектов (от сервера)
   const multiSelectOptions = reactive<{
@@ -101,8 +81,19 @@ export const useFiltersStore = defineStore('filters', () => {
   function setSelectOptions(options: any): void {
     console.log('Setting select options:', options);
     
+    // Устанавливаем опции стран
     if (options.countries && Array.isArray(options.countries)) {
       countryOptions.value = [...options.countries];
+    }
+    
+    // Устанавливаем опции сортировки от сервера
+    if (options.sortOptions && Array.isArray(options.sortOptions)) {
+      sortOptions.value = [...options.sortOptions];
+    }
+    
+    // Устанавливаем опции дат от сервера
+    if (options.dateRanges && Array.isArray(options.dateRanges)) {
+      dateRanges.value = [...options.dateRanges];
     }
     
     // Преобразуем данные мультиселектов в нужный формат
@@ -397,7 +388,7 @@ export const useFiltersStore = defineStore('filters', () => {
   // Computed свойства
   const hasActiveFilters = computed(() => {
     return filters.searchKeyword !== '' ||
-           filters.country !== 'All Categories' ||
+           filters.country !== 'All Countries' ||
            filters.advertisingNetworks.length > 0 ||
            filters.languages.length > 0 ||
            filters.operatingSystems.length > 0 ||

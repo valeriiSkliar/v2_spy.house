@@ -28,10 +28,10 @@ export interface CreativesUrlState {
 function filterStateToUrlState(filterState: FilterState): CreativesUrlState {
     return {
         searchKeyword: filterState.searchKeyword || undefined,
-        country: filterState.country !== 'All Categories' ? filterState.country : undefined,
+        country: filterState.country !== 'All Countries' ? filterState.country : undefined,
         dateCreation: filterState.dateCreation !== 'Date of creation' ? filterState.dateCreation : undefined,
         sortBy: filterState.sortBy !== 'By creation date' ? filterState.sortBy : undefined,
-        periodDisplay: filterState.periodDisplay !== 'Period of display' ? filterState.periodDisplay : undefined,
+        periodDisplay: filterState.periodDisplay !== 'Date of creation' ? filterState.periodDisplay : undefined,
         advertisingNetworks: filterState.advertisingNetworks?.length > 0 ? [...filterState.advertisingNetworks] : undefined,
         languages: filterState.languages?.length > 0 ? [...filterState.languages] : undefined,
         operatingSystems: filterState.operatingSystems?.length > 0 ? [...filterState.operatingSystems] : undefined,
@@ -50,10 +50,10 @@ function filterStateToUrlState(filterState: FilterState): CreativesUrlState {
 function urlStateToFilterState(urlState: CreativesUrlState): Partial<FilterState> {
     return {
         searchKeyword: urlState.searchKeyword !== undefined ? urlState.searchKeyword : '',
-        country: urlState.country !== undefined ? urlState.country : 'All Categories',
+        country: urlState.country !== undefined ? urlState.country : 'All Countries',
         dateCreation: urlState.dateCreation !== undefined ? urlState.dateCreation : 'Date of creation',
         sortBy: urlState.sortBy !== undefined ? urlState.sortBy : 'By creation date',
-        periodDisplay: urlState.periodDisplay !== undefined ? urlState.periodDisplay : 'Period of display',
+        periodDisplay: urlState.periodDisplay !== undefined ? urlState.periodDisplay : 'Date of creation',
         advertisingNetworks: Array.isArray(urlState.advertisingNetworks) ? [...urlState.advertisingNetworks] : [],
         languages: Array.isArray(urlState.languages) ? [...urlState.languages] : [],
         operatingSystems: Array.isArray(urlState.operatingSystems) ? [...urlState.operatingSystems] : [],
@@ -121,8 +121,8 @@ export function useCreativesUrlSync(initialState?: Partial<CreativesUrlState>) {
                     return value ? '1' : '';
                 }
                 // Не сериализуем пустые значения и дефолтные значения
-                if (value === '' || value === 'All Categories' || value === 'Date of creation' || 
-                    value === 'By creation date' || value === 'Period of display') {
+                if (value === '' || value === 'All Countries' || value === 'Date of creation' || 
+                    value === 'By creation date') {
                     return '';
                 }
                 return value ? String(value) : '';
@@ -136,7 +136,7 @@ export function useCreativesUrlSync(initialState?: Partial<CreativesUrlState>) {
     };
 
     const updateCountry = (country: string) => {
-        urlSync.updateState({ country: country !== 'All Categories' ? country : '' });
+        urlSync.updateState({ country: country !== 'All Countries' ? country : '' });
     };
 
     const updateSort = (sort: string) => {
@@ -148,7 +148,7 @@ export function useCreativesUrlSync(initialState?: Partial<CreativesUrlState>) {
     };
 
     const updatePeriodDisplay = (period: string) => {
-        urlSync.updateState({ periodDisplay: period !== 'Period of display' ? period : '' });
+        urlSync.updateState({ periodDisplay: period !== 'Date of creation' ? period : '' });
     };
 
     const updateOnlyAdult = (onlyAdult: boolean) => {

@@ -222,6 +222,12 @@
 
     <!-- URL Sync Status (только в development режиме) -->
     <div v-if="isDevelopment && enableUrlSync" class="url-sync-status">✅ URL Sync Active</div>
+
+    <!-- Loading indicator когда опции ещё загружаются -->
+    <div v-if="!isComponentReady" class="options-loading">
+      <div class="loading-spinner"></div>
+      <span>Loading filter options...</span>
+    </div>
   </div>
 </template>
 
@@ -293,6 +299,21 @@ function initStore() {
 }
 
 console.log('FiltersComponent props:', props.initialFilters, props.selectOptions);
+
+// Проверка загрузки опций от сервера
+const isOptionsLoaded = computed(() => {
+  const store = initStore();
+  return (
+    store.countryOptions.length > 1 || // Больше одной дефолтной опции
+    store.sortOptions.length > 1 ||
+    store.dateRanges.length > 1
+  );
+});
+
+// Проверка готовности компонента для отображения
+const isComponentReady = computed(() => {
+  return isOptionsLoaded.value;
+});
 
 // Локальное состояние для мобильного интерфейса
 const isMobileFiltersOpen = ref(false);
@@ -444,5 +465,36 @@ onUnmounted(() => {
   border-radius: 4px;
   font-size: 12px;
   z-index: 9999;
+}
+
+/* Индикатор загрузки опций */
+.options-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  margin-top: 10px;
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e9ecef;
+  border-top-color: #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>

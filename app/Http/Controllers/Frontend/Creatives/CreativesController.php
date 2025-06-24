@@ -14,7 +14,7 @@ class CreativesController extends FrontendController
             'country' => 'All Countries',
             'dateCreation' => 'Date of creation',
             'sortBy' => 'By creation date',
-            'periodDisplay' => 'Period of display',
+            'periodDisplay' => 'Date of creation',
             'searchKeyword' => '',
             'onlyAdult' => false,
             'isDetailedVisible' => false,
@@ -28,6 +28,29 @@ class CreativesController extends FrontendController
             'savedSettings' => []
         ];
 
+        $translations = [
+            'country' => 'Страна',
+            'dateCreation' => 'Дата создания',
+            'sortBy' => 'Сортировка',
+            'periodDisplay' => 'Период отображения',
+            'searchKeyword' => 'Поиск',
+            'onlyAdult' => 'Только для взрослых',
+            'isDetailedVisible' => 'Подробный фильтр',
+            'advertisingNetworks' => 'Рекламные сети',
+            'languages' => 'Языки',
+            'operatingSystems' => 'Операционные системы',
+            'browsers' => 'Браузеры',
+            'devices' => 'Устройства',
+            'imageSizes' => 'Размеры изображений',
+            'savedSettings' => 'Сохраненные настройки',
+            'onPage' => 'На странице',
+            'favorites' => 'Избранное',
+            'filter' => 'Фильтр',
+            'filterBy' => 'Фильтр по',
+            'filterByCountry' => 'Фильтр по стране',
+            'filterByDateCreation' => 'Фильтр по дате создания',
+        ];
+
 
         $selectOptions = $this->getSelectOptions();
 
@@ -35,6 +58,7 @@ class CreativesController extends FrontendController
             'activeTab' => 'push',
             'filters' => $defaultFilters,
             'selectOptions' => $selectOptions,
+            'translations' => $translations,
         ]);
     }
 
@@ -42,13 +66,13 @@ class CreativesController extends FrontendController
     {
         return [
             'advertisingNetworks' => [
-                ['value' => 'Google', 'label' => 'Google'],
-                ['value' => 'Meta', 'label' => 'Meta'],
-                ['value' => 'Amazon', 'label' => 'Amazon'],
-                ['value' => 'Microsoft', 'label' => 'Microsoft'],
-                ['value' => 'Apple', 'label' => 'Apple'],
-                ['value' => 'Twitter', 'label' => 'Twitter'],
-                ['value' => 'TikTok', 'label' => 'TikTok'],
+                ['value' => 'GOOGLE', 'label' => 'Google'],
+                ['value' => 'META', 'label' => 'Meta'],
+                ['value' => 'AMAZON', 'label' => 'Amazon'],
+                ['value' => 'MICROSOFT', 'label' => 'Microsoft'],
+                ['value' => 'APPLE', 'label' => 'Apple'],
+                ['value' => 'TWITTER', 'label' => 'Twitter'],
+                ['value' => 'TIKTOK', 'label' => 'TikTok'],
             ],
             'countries' => [
                 [
@@ -96,6 +120,24 @@ class CreativesController extends FrontendController
                     'label' => 'Brazil',
                 ],
             ],
+            'sortOptions' => [
+                ['value' => 'By creation date', 'label' => 'By creation date'],
+                ['value' => 'By activity', 'label' => 'By days of activity'],
+                ['value' => 'By popularity', 'label' => 'By popularity'],
+                ['value' => 'By rating', 'label' => 'By rating'],
+            ],
+            'dateRanges' => [
+                ['value' => 'Date of creation', 'label' => 'Date of creation'],
+                ['value' => 'today', 'label' => 'Today'],
+                ['value' => 'yesterday', 'label' => 'Yesterday'],
+                ['value' => 'last7', 'label' => 'Last 7 days'],
+                ['value' => 'last30', 'label' => 'Last 30 days'],
+                ['value' => 'last90', 'label' => 'Last 90 days'],
+                ['value' => 'thisMonth', 'label' => 'This month'],
+                ['value' => 'lastMonth', 'label' => 'Last month'],
+                ['value' => 'thisYear', 'label' => 'This year'],
+                ['value' => 'lastYear', 'label' => 'Last year'],
+            ],
             'languages' => [
                 ['value' => 'en', 'label' => 'English'],
                 ['value' => 'ru', 'label' => 'Russian'],
@@ -104,6 +146,9 @@ class CreativesController extends FrontendController
                 ['value' => 'es', 'label' => 'Spanish'],
                 ['value' => 'it', 'label' => 'Italian'],
                 ['value' => 'pt', 'label' => 'Portuguese'],
+                ['value' => 'zh', 'label' => 'Chinese'],
+                ['value' => 'ja', 'label' => 'Japanese'],
+                ['value' => 'ko', 'label' => 'Korean'],
             ],
             'operatingSystems' => [
                 ['value' => 'Windows', 'label' => 'Windows'],
@@ -111,6 +156,7 @@ class CreativesController extends FrontendController
                 ['value' => 'Linux', 'label' => 'Linux'],
                 ['value' => 'Android', 'label' => 'Android'],
                 ['value' => 'iOS', 'label' => 'iOS'],
+                ['value' => 'Chrome OS', 'label' => 'Chrome OS'],
             ],
             'browsers' => [
                 ['value' => 'Chrome', 'label' => 'Chrome'],
@@ -118,6 +164,8 @@ class CreativesController extends FrontendController
                 ['value' => 'Safari', 'label' => 'Safari'],
                 ['value' => 'Edge', 'label' => 'Edge'],
                 ['value' => 'Opera', 'label' => 'Opera'],
+                ['value' => 'Samsung Internet', 'label' => 'Samsung Internet'],
+                ['value' => 'UC Browser', 'label' => 'UC Browser'],
             ],
             'devices' => [
                 ['value' => 'Desktop', 'label' => 'Desktop'],
@@ -127,13 +175,17 @@ class CreativesController extends FrontendController
                 ['value' => 'Smart Watch', 'label' => 'Smart Watch'],
                 ['value' => 'Smart Speaker', 'label' => 'Smart Speaker'],
                 ['value' => 'Smart Home', 'label' => 'Smart Home'],
+                ['value' => 'Gaming Console', 'label' => 'Gaming Console'],
             ],
             'imageSizes' => [
-                ['value' => '1x1', 'label' => '1x1'],
-                ['value' => '16x9', 'label' => '16x9'],
-                ['value' => '9x16', 'label' => '9x16'],
-                ['value' => '3x2', 'label' => '3x2'],
-                ['value' => '2x3', 'label' => '2x3'],
+                ['value' => '1x1', 'label' => '1x1 (Square)'],
+                ['value' => '16x9', 'label' => '16x9 (Landscape)'],
+                ['value' => '9x16', 'label' => '9x16 (Portrait)'],
+                ['value' => '3x2', 'label' => '3x2 (Classic)'],
+                ['value' => '2x3', 'label' => '2x3 (Portrait)'],
+                ['value' => '4x3', 'label' => '4x3 (Standard)'],
+                ['value' => '3x4', 'label' => '3x4 (Portrait)'],
+                ['value' => '21x9', 'label' => '21x9 (Ultra-wide)'],
             ],
         ];
     }
