@@ -139,5 +139,5 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-@import '@scss/custom/creatives/multi-select-creative.scss';
+@use '@scss/custom/creatives/multi-select-creative.scss';
 </style>

@@ -70,20 +70,28 @@ export const useFiltersStore = defineStore('filters', () => {
 
   // Опции для мультиселектов (от сервера)
   const multiSelectOptions = reactive<{
-    advertisingNetworks: Record<string, string>;
-    languages: Record<string, string>;
-    operatingSystems: Record<string, string>;
-    browsers: Record<string, string>;
-    devices: Record<string, string>;
-    imageSizes: Record<string, string>;
+    advertisingNetworks: FilterOption[];
+    languages: FilterOption[];
+    operatingSystems: FilterOption[];
+    browsers: FilterOption[];
+    devices: FilterOption[];
+    imageSizes: FilterOption[];
   }>({
-    advertisingNetworks: {},
-    languages: {},
-    operatingSystems: {},
-    browsers: {},
-    devices: {},
-    imageSizes: {},
+    advertisingNetworks: [],
+    languages: [],
+    operatingSystems: [],
+    browsers: [],
+    devices: [],
+    imageSizes: [],
   });
+
+  // Computed свойства для мультиселектов (готовые для использования в компонентах)
+  const advertisingNetworksOptions = computed(() => multiSelectOptions.advertisingNetworks);
+  const languagesOptions = computed(() => multiSelectOptions.languages);
+  const operatingSystemsOptions = computed(() => multiSelectOptions.operatingSystems);
+  const browsersOptions = computed(() => multiSelectOptions.browsers);
+  const devicesOptions = computed(() => multiSelectOptions.devices);
+  const imageSizesOptions = computed(() => multiSelectOptions.imageSizes);
 
   // Методы
   
@@ -97,23 +105,73 @@ export const useFiltersStore = defineStore('filters', () => {
       countryOptions.value = [...options.countries];
     }
     
+    // Преобразуем данные мультиселектов в нужный формат
     if (options.advertisingNetworks) {
-      multiSelectOptions.advertisingNetworks = { ...options.advertisingNetworks };
+      if (Array.isArray(options.advertisingNetworks)) {
+        // Если уже массив объектов с value/label
+        multiSelectOptions.advertisingNetworks = [...options.advertisingNetworks];
+      } else {
+        // Если Record<string, string>, преобразуем в массив объектов
+        multiSelectOptions.advertisingNetworks = Object.entries(options.advertisingNetworks).map(([key, value]) => ({
+          value: key,
+          label: value as string
+        }));
+      }
     }
+    
     if (options.languages) {
-      multiSelectOptions.languages = { ...options.languages };
+      if (Array.isArray(options.languages)) {
+        multiSelectOptions.languages = [...options.languages];
+      } else {
+        multiSelectOptions.languages = Object.entries(options.languages).map(([key, value]) => ({
+          value: key,
+          label: value as string
+        }));
+      }
     }
+    
     if (options.operatingSystems) {
-      multiSelectOptions.operatingSystems = { ...options.operatingSystems };
+      if (Array.isArray(options.operatingSystems)) {
+        multiSelectOptions.operatingSystems = [...options.operatingSystems];
+      } else {
+        multiSelectOptions.operatingSystems = Object.entries(options.operatingSystems).map(([key, value]) => ({
+          value: key,
+          label: value as string
+        }));
+      }
     }
+    
     if (options.browsers) {
-      multiSelectOptions.browsers = { ...options.browsers };
+      if (Array.isArray(options.browsers)) {
+        multiSelectOptions.browsers = [...options.browsers];
+      } else {
+        multiSelectOptions.browsers = Object.entries(options.browsers).map(([key, value]) => ({
+          value: key,
+          label: value as string
+        }));
+      }
     }
+    
     if (options.devices) {
-      multiSelectOptions.devices = { ...options.devices };
+      if (Array.isArray(options.devices)) {
+        multiSelectOptions.devices = [...options.devices];
+      } else {
+        multiSelectOptions.devices = Object.entries(options.devices).map(([key, value]) => ({
+          value: key,
+          label: value as string
+        }));
+      }
     }
+    
     if (options.imageSizes) {
-      multiSelectOptions.imageSizes = { ...options.imageSizes };
+      if (Array.isArray(options.imageSizes)) {
+        multiSelectOptions.imageSizes = [...options.imageSizes];
+      } else {
+        multiSelectOptions.imageSizes = Object.entries(options.imageSizes).map(([key, value]) => ({
+          value: key,
+          label: value as string
+        }));
+      }
     }
   }
 
@@ -356,6 +414,15 @@ export const useFiltersStore = defineStore('filters', () => {
     sortOptions,
     dateRanges,
     multiSelectOptions,
+    
+    // Computed опции для мультиселектов
+    advertisingNetworksOptions,
+    languagesOptions,
+    operatingSystemsOptions,
+    browsersOptions,
+    devicesOptions,
+    imageSizesOptions,
+    
     hasActiveFilters,
     
     // Основные методы

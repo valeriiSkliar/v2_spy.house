@@ -227,12 +227,33 @@
 
 <script setup lang="ts">
 import type { FilterState } from '@/types/creatives';
-import debounce from 'lodash.debounce';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useFiltersStore } from '../../stores/creatives';
 import BaseSelect from '../ui/BaseSelect.vue';
 import DateSelect from '../ui/DateSelect_with_flatpickr.vue';
 import MultiSelect from '../ui/MultiSelect.vue';
+
+// Простая debounce функция
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): T & { cancel: () => void } {
+  let timeout: NodeJS.Timeout | null = null;
+
+  const debounced = ((...args: Parameters<T>) => {
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  }) as T & { cancel: () => void };
+
+  debounced.cancel = () => {
+    if (timeout) {
+      clearTimeout(timeout);
+      timeout = null;
+    }
+  };
+
+  return debounced;
+}
 
 interface Props {
   initialFilters?: Partial<FilterState>;
@@ -290,12 +311,24 @@ function handleCustomDateSelected(dates: Date[]): void {
 // Получение опций для мультиселектов
 function getMultiSelectOptions(field: string): Array<{ value: string; label: string }> {
   const store = initStore();
-  const options = (store.multiSelectOptions as any)[field] || {};
 
-  return Object.entries(options).map(([value, label]) => ({
-    value,
-    label: String(label),
-  }));
+  // Получаем опции из computed свойств store
+  switch (field) {
+    case 'advertisingNetworks':
+      return store.advertisingNetworksOptions;
+    case 'languages':
+      return store.languagesOptions;
+    case 'operatingSystems':
+      return store.operatingSystemsOptions;
+    case 'browsers':
+      return store.browsersOptions;
+    case 'devices':
+      return store.devicesOptions;
+    case 'imageSizes':
+      return store.imageSizesOptions;
+    default:
+      return [];
+  }
 }
 
 // Обработчик ввода в поле поиска с debouncedом
