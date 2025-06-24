@@ -227,6 +227,7 @@
 
 <script setup lang="ts">
 import type { FilterState } from '@/types/creatives';
+import debounce from 'lodash.debounce';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useFiltersStore } from '../../stores/creatives';
 import BaseSelect from '../ui/BaseSelect.vue';
@@ -253,7 +254,13 @@ const isDevelopment = computed(() => import.meta.env.DEV);
 
 // Локальное состояние для поля поиска с дебаунсом
 const localSearchKeyword = ref('');
-let searchDebounceTimeout: ReturnType<typeof setTimeout> | null = null;
+
+// Создаем debounced функцию с помощью lodash
+const debouncedUpdateSearch = debounce((value: string) => {
+  const store = initStore();
+  console.log('Updating search keyword in store:', value);
+  store.setSearchKeyword(value);
+}, 300);
 
 // Инициализация store
 function initStore() {
@@ -291,7 +298,7 @@ function getMultiSelectOptions(field: string): Array<{ value: string; label: str
   }));
 }
 
-// Обработчик ввода в поле поиска с дебаунсом
+// Обработчик ввода в поле поиска с debouncedом
 function handleSearchInput(event: Event): void {
   const target = event.target as HTMLInputElement;
   const value = target.value;
@@ -299,17 +306,8 @@ function handleSearchInput(event: Event): void {
   // Немедленно обновляем локальное состояние для отображения
   localSearchKeyword.value = value;
 
-  // Очищаем предыдущий таймер
-  if (searchDebounceTimeout) {
-    clearTimeout(searchDebounceTimeout);
-  }
-
-  // Устанавливаем новый таймер для обновления store
-  searchDebounceTimeout = setTimeout(() => {
-    const store = initStore();
-    console.log('Updating search keyword in store:', value);
-    store.setSearchKeyword(value);
-  }, 300); // 300ms дебаунс
+  // Используем debounced функцию для обновления store
+  debouncedUpdateSearch(value);
 }
 
 // Синхронизация локального состояния с store при изменениях извне
@@ -324,11 +322,8 @@ function syncLocalSearchWithStore(): void {
 function handleResetFilters(): void {
   const store = initStore();
 
-  // Очищаем дебаунс таймер если он активен
-  if (searchDebounceTimeout) {
-    clearTimeout(searchDebounceTimeout);
-    searchDebounceTimeout = null;
-  }
+  // Отменяем pending debounced вызовы
+  debouncedUpdateSearch.cancel();
 
   // Сбрасываем фильтры в store
   store.resetFilters();
@@ -378,10 +373,8 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  // Очищаем таймер дебаунса если компонент размонтируется
-  if (searchDebounceTimeout) {
-    clearTimeout(searchDebounceTimeout);
-  }
+  // Отменяем pending debounced вызовы при размонтировании
+  debouncedUpdateSearch.cancel();
 
   window.removeEventListener('resize', handleResize);
 });

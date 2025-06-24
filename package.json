@@ -12,6 +12,7 @@
     "type-check:watch": "tsc --noEmit --watch"
   },
   "devDependencies": {
+    "@types/lodash.debounce": "^4.0.9",
     "@types/node": "^24.0.3",
     "@vitest/coverage-v8": "^3.2.1",
     "@vitest/ui": "^3.2.1",

@@ -1,4 +1,5 @@
 import { FilterOption, FilterState } from '@/types/creatives';
+import debounce from 'lodash.debounce';
 import { defineStore } from 'pinia';
 import { computed, reactive, ref, watch } from 'vue';
 import { useCreativesUrlSync } from '../composables/useCreativesUrlSync';
@@ -174,62 +175,49 @@ export const useFiltersStore = defineStore('filters', () => {
 
     let isStoreUpdating = false;
     let isUrlUpdating = false;
-    let storeToUrlTimeout: ReturnType<typeof setTimeout> | null = null;
-    let urlToStoreTimeout: ReturnType<typeof setTimeout> | null = null;
 
-    // Store -> URL синхронизация с дебаунсингом
+    // Создаем debounced функции с lodash
+    const debouncedStoreToUrl = debounce(() => {
+      if (urlSync && isUrlSyncEnabled.value) {
+        console.log('Syncing store to URL:', { ...filters });
+        
+        // Создаем копию состояния для избежания проблем с Proxy
+        const filtersCopy = JSON.parse(JSON.stringify(filters));
+        urlSync.syncWithFilterState(filtersCopy);
+      }
+      
+      isStoreUpdating = false;
+    }, 300);
+
+    const debouncedUrlToStore = debounce((newUrlState: any) => {
+      if (urlSync && isUrlSyncEnabled.value) {
+        console.log('Syncing URL to store:', newUrlState);
+        const updates = urlSync.getFilterStateUpdates();
+        updateFromUrl(updates);
+      }
+      
+      isUrlUpdating = false;
+    }, 300);
+
+    // Store -> URL синхронизация с debouncing
     watch(
       filters,
       () => {
         if (urlSync && isUrlSyncEnabled.value && !isUrlUpdating) {
-          // Очищаем предыдущий таймер
-          if (storeToUrlTimeout) {
-            clearTimeout(storeToUrlTimeout);
-          }
-          
           isStoreUpdating = true;
-          
-          // Дебаунсинг для предотвращения частых обновлений (увеличен для поиска)
-          storeToUrlTimeout = setTimeout(() => {
-            if (urlSync && isUrlSyncEnabled.value) {
-              console.log('Syncing store to URL:', { ...filters });
-              
-              // Создаем копию состояния для избежания проблем с Proxy
-              const filtersCopy = JSON.parse(JSON.stringify(filters));
-              urlSync.syncWithFilterState(filtersCopy);
-            }
-            
-            isStoreUpdating = false;
-            storeToUrlTimeout = null;
-          }, 300); // Увеличен с 150ms до 500ms для лучшей работы с поиском
+          debouncedStoreToUrl();
         }
       },
       { deep: true, flush: 'post' }
     );
 
-    // URL -> Store синхронизация с дебаунсингом
+    // URL -> Store синхронизация с debouncing
     watch(
       () => urlSync?.state.value,
       (newUrlState) => {
         if (newUrlState && isUrlSyncEnabled.value && !isStoreUpdating) {
-          // Очищаем предыдущий таймер
-          if (urlToStoreTimeout) {
-            clearTimeout(urlToStoreTimeout);
-          }
-          
           isUrlUpdating = true;
-          
-          // Дебаунсинг для предотвращения частых обновлений
-          urlToStoreTimeout = setTimeout(() => {
-            if (urlSync && isUrlSyncEnabled.value) {
-              console.log('Syncing URL to store:', newUrlState);
-              const updates = urlSync.getFilterStateUpdates();
-              updateFromUrl(updates);
-            }
-            
-            isUrlUpdating = false;
-            urlToStoreTimeout = null;
-          }, 300); // Уменьшен для быстрого отклика на URL изменения
+          debouncedUrlToStore(newUrlState);
         }
       },
       { deep: true, flush: 'post' }

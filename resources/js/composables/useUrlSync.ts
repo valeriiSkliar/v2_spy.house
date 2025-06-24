@@ -1,4 +1,5 @@
-import { useDebounceFn, useUrlSearchParams } from '@vueuse/core';
+import { useUrlSearchParams } from '@vueuse/core';
+import debounce from 'lodash.debounce';
 import { computed, onUnmounted, ref, watch, type Ref } from 'vue';
 
 // Опциональный тип для Zod схемы (может быть не установлен)
@@ -54,7 +55,7 @@ export function useUrlSync<T extends Record<string, any>>(
   options: UseUrlSyncOptions<T> = {}
 ): UseUrlSyncReturn<T> {
   const {
-    debounce = 300,
+    debounce: debounceDelay = 300,
     prefix = '',
     transform = {},
     validation,
@@ -201,7 +202,7 @@ export function useUrlSync<T extends Record<string, any>>(
   /**
    * Сохраняет состояние в URL параметры (с debounce)
    */
-  const saveToUrl = useDebounceFn((): void => {
+  const saveToUrl = debounce((): void => {
     if (!validateState(state.value)) {
       return; // Не сохраняем невалидное состояние
     }
@@ -231,7 +232,7 @@ export function useUrlSync<T extends Record<string, any>>(
       console.error('Ошибка сохранения состояния в URL:', error);
       errors.value.general = 'Ошибка обновления URL';
     }
-  }, debounce);
+  }, debounceDelay);
 
   /**
    * Обновляет состояние
@@ -266,7 +267,7 @@ export function useUrlSync<T extends Record<string, any>>(
         // Сбрасываем флаг после выполнения
         setTimeout(() => {
           isUpdatingFromState = false;
-        }, debounce + 50);
+        }, debounceDelay + 50);
       }
     },
     { deep: true, flush: 'post' }
@@ -293,6 +294,8 @@ export function useUrlSync<T extends Record<string, any>>(
 
   // Очистка при размонтировании
   onUnmounted(() => {
+    // Отменяем pending debounced вызовы
+    saveToUrl.cancel();
     stateWatcher();
     urlWatcher();
   });
