@@ -36,8 +36,8 @@
                 <input
                   type="search"
                   placeholder="Search by Keyword"
-                  :value="initStore().filters.searchKeyword"
-                  @input="initStore().setSearchKeyword(($event.target as HTMLInputElement).value)"
+                  :value="localSearchKeyword"
+                  @input="handleSearchInput"
                 />
               </div>
             </div>
@@ -87,7 +87,7 @@
         <!-- Кнопка сброса (десктоп) -->
         <div class="col-12 col-md-auto mb-10 d-none d-md-block">
           <div class="reset-btn">
-            <button class="btn-icon" @click="initStore().resetFilters()">
+            <button class="btn-icon" @click="handleResetFilters()">
               <span class="icon-clear"></span>
               <span class="ml-2 d-md-none">Reset</span>
             </button>
@@ -212,7 +212,7 @@
 
         <!-- Кнопка сброса (мобильный) -->
         <div class="reset-btn d-md-none">
-          <button class="btn-icon" @click="initStore().resetFilters()">
+          <button class="btn-icon" @click="handleResetFilters()">
             <span class="icon-clear"></span>
             <span class="ml-2">Reset</span>
           </button>
@@ -251,6 +251,10 @@ let storeInstance: ReturnType<typeof useFiltersStore> | null = null;
 // Development mode check
 const isDevelopment = computed(() => import.meta.env.DEV);
 
+// Локальное состояние для поля поиска с дебаунсом
+const localSearchKeyword = ref('');
+let searchDebounceTimeout: ReturnType<typeof setTimeout> | null = null;
+
 // Инициализация store
 function initStore() {
   if (storeInstance) return storeInstance;
@@ -287,6 +291,52 @@ function getMultiSelectOptions(field: string): Array<{ value: string; label: str
   }));
 }
 
+// Обработчик ввода в поле поиска с дебаунсом
+function handleSearchInput(event: Event): void {
+  const target = event.target as HTMLInputElement;
+  const value = target.value;
+
+  // Немедленно обновляем локальное состояние для отображения
+  localSearchKeyword.value = value;
+
+  // Очищаем предыдущий таймер
+  if (searchDebounceTimeout) {
+    clearTimeout(searchDebounceTimeout);
+  }
+
+  // Устанавливаем новый таймер для обновления store
+  searchDebounceTimeout = setTimeout(() => {
+    const store = initStore();
+    console.log('Updating search keyword in store:', value);
+    store.setSearchKeyword(value);
+  }, 300); // 300ms дебаунс
+}
+
+// Синхронизация локального состояния с store при изменениях извне
+function syncLocalSearchWithStore(): void {
+  const store = initStore();
+
+  // Инициализируем локальное значение текущим значением из store
+  localSearchKeyword.value = store.filters.searchKeyword;
+}
+
+// Кастомный resetFilters с синхронизацией локального поиска
+function handleResetFilters(): void {
+  const store = initStore();
+
+  // Очищаем дебаунс таймер если он активен
+  if (searchDebounceTimeout) {
+    clearTimeout(searchDebounceTimeout);
+    searchDebounceTimeout = null;
+  }
+
+  // Сбрасываем фильтры в store
+  store.resetFilters();
+
+  // Синхронизируем локальное состояние поиска
+  localSearchKeyword.value = store.filters.searchKeyword;
+}
+
 // Обработчик изменения размера экрана
 function handleResize(): void {
   if (window.innerWidth >= 768) {
@@ -306,6 +356,11 @@ onMounted(async () => {
 
   console.log('Filters store инициализирован:', store.filters);
 
+  // 2. Настраиваем синхронизацию поля поиска
+  syncLocalSearchWithStore();
+
+  // 3. Настраиваем наблюдение за изменениями store будет через events
+
   // Эмитим событие готовности компонента
   const event = new CustomEvent('vue-component-ready', {
     detail: {
@@ -323,6 +378,11 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
+  // Очищаем таймер дебаунса если компонент размонтируется
+  if (searchDebounceTimeout) {
+    clearTimeout(searchDebounceTimeout);
+  }
+
   window.removeEventListener('resize', handleResize);
 });
 </script>

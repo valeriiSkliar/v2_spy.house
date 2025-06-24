@@ -189,7 +189,7 @@ export const useFiltersStore = defineStore('filters', () => {
           
           isStoreUpdating = true;
           
-          // Дебаунсинг для предотвращения частых обновлений
+          // Дебаунсинг для предотвращения частых обновлений (увеличен для поиска)
           storeToUrlTimeout = setTimeout(() => {
             if (urlSync && isUrlSyncEnabled.value) {
               console.log('Syncing store to URL:', { ...filters });
@@ -201,7 +201,7 @@ export const useFiltersStore = defineStore('filters', () => {
             
             isStoreUpdating = false;
             storeToUrlTimeout = null;
-          }, 150);
+          }, 300); // Увеличен с 150ms до 500ms для лучшей работы с поиском
         }
       },
       { deep: true, flush: 'post' }
@@ -229,7 +229,7 @@ export const useFiltersStore = defineStore('filters', () => {
             
             isUrlUpdating = false;
             urlToStoreTimeout = null;
-          }, 150);
+          }, 300); // Уменьшен для быстрого отклика на URL изменения
         }
       },
       { deep: true, flush: 'post' }
@@ -288,7 +288,11 @@ export const useFiltersStore = defineStore('filters', () => {
   }
 
   function setSearchKeyword(keyword: string): void {
-    filters.searchKeyword = keyword;
+    // Избегаем ненужных обновлений если значение не изменилось
+    if (filters.searchKeyword !== keyword) {
+      console.log('Setting search keyword:', keyword);
+      filters.searchKeyword = keyword;
+    }
   }
 
   function setCountry(country: string): void {
