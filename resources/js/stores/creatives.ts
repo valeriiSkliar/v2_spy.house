@@ -3,6 +3,8 @@ import debounce from 'lodash.debounce';
 import { defineStore } from 'pinia';
 import { computed, reactive, ref, watch } from 'vue';
 import { useCreativesUrlSync } from '../composables/useCreativesUrlSync';
+import type { Creative, CreativesFilters, ProcessedCreativesData } from '../services/CreativesService';
+import { creativesService } from '../services/CreativesService';
 
 export const useFiltersStore = defineStore('filters', () => {
   // Состояние фильтров с дефолтными значениями
@@ -40,6 +42,15 @@ export const useFiltersStore = defineStore('filters', () => {
   
   // Состояние вкладок - единственный источник истины
   const tabs = reactive<TabsState>({ ...defaultTabs });
+
+  // === СОСТОЯНИЕ КРЕАТИВОВ ===
+  // Данные креативов
+  const creativesData = ref<ProcessedCreativesData | null>(null);
+  const creativesLoading = ref(false);
+  const creativesError = ref<string | null>(null);
+  
+  // Кэш последнего запроса для предотвращения дубликатов
+  const lastRequestKey = ref<string>('');
 
   // URL синхронизация
   let urlSync: ReturnType<typeof useCreativesUrlSync> | null = null;
@@ -102,6 +113,59 @@ export const useFiltersStore = defineStore('filters', () => {
 
   const currentTabOption = computed((): TabOption | undefined => {
     return tabOptions.value.find(tab => tab.value === tabs.activeTab);
+  });
+
+  // === COMPUTED СВОЙСТВА ДЛЯ КРЕАТИВОВ ===
+  
+  // Список креативов
+  const creatives = computed((): Creative[] => {
+    return creativesData.value?.items || [];
+  });
+
+  // Информация о пагинации
+  const pagination = computed(() => {
+    return creativesData.value?.pagination || {
+      total: 0,
+      perPage: 12,
+      currentPage: 1,
+      lastPage: 1,
+      from: 0,
+      to: 0
+    };
+  });
+
+  // Метаданные последнего запроса
+  const requestMeta = computed(() => {
+    return creativesData.value?.meta || {
+      hasSearch: false,
+      activeFiltersCount: 0,
+      cacheKey: ''
+    };
+  });
+
+  // Есть ли данные
+  const hasCreatives = computed((): boolean => {
+    return creatives.value.length > 0;
+  });
+
+  // Есть ли поиск
+  const hasSearch = computed((): boolean => {
+    return requestMeta.value.hasSearch;
+  });
+
+  // Количество активных фильтров (из CreativesService)
+  const activeFiltersCount = computed((): number => {
+    return requestMeta.value.activeFiltersCount;
+  });
+
+  // Состояние загрузки (комбинированное)
+  const isLoading = computed((): boolean => {
+    return creativesLoading.value || creativesService.isLoading();
+  });
+
+  // Есть ли ошибка
+  const hasError = computed((): boolean => {
+    return creativesError.value !== null;
   });
 
   // Методы для фильтров
@@ -513,6 +577,110 @@ export const useFiltersStore = defineStore('filters', () => {
     console.log('Tabs reset to defaults');
   }
 
+  // === МЕТОДЫ ДЛЯ КРЕАТИВОВ ===
+
+  /**
+   * Преобразует FilterState в CreativesFilters
+   */
+  function mapFiltersToCreativesFilters(): CreativesFilters {
+    return {
+      searchKeyword: filters.searchKeyword || undefined,
+      country: filters.country !== 'default' ? filters.country : undefined,
+      dateCreation: filters.dateCreation !== 'default' ? filters.dateCreation : undefined,
+      sortBy: filters.sortBy !== 'default' ? (filters.sortBy as 'creation' | 'activity') : 'creation',
+      periodDisplay: filters.periodDisplay !== 'default' ? filters.periodDisplay : undefined,
+      advertisingNetworks: filters.advertisingNetworks.length > 0 ? filters.advertisingNetworks : undefined,
+      languages: filters.languages.length > 0 ? filters.languages : undefined,
+      operatingSystems: filters.operatingSystems.length > 0 ? filters.operatingSystems : undefined,
+      browsers: filters.browsers.length > 0 ? filters.browsers : undefined,
+      devices: filters.devices.length > 0 ? filters.devices : undefined,
+      imageSizes: filters.imageSizes.length > 0 ? filters.imageSizes : undefined,
+      onlyAdult: filters.onlyAdult,
+      page: 1, // Всегда начинаем с первой страницы при изменении фильтров
+      perPage: 12 // Значение по умолчанию
+    };
+  }
+
+  /**
+   * Загружает креативы с текущими фильтрами
+   */
+  async function loadCreatives(page: number = 1): Promise<void> {
+    try {
+      creativesError.value = null;
+      creativesLoading.value = true;
+
+      // Преобразуем фильтры Store в формат CreativesService
+      const creativesFilters = mapFiltersToCreativesFilters();
+      creativesFilters.page = page;
+
+      // Генерируем ключ запроса для предотвращения дубликатов
+      const requestKey = JSON.stringify({ filters: creativesFilters, tab: tabs.activeTab });
+      
+      // Проверяем, не выполняется ли уже такой же запрос
+      if (requestKey === lastRequestKey.value && creativesService.isLoading(creativesFilters)) {
+        console.log('Пропускаем дублированный запрос');
+        return;
+      }
+
+      lastRequestKey.value = requestKey;
+
+      console.log('Загружаем креативы с фильтрами:', creativesFilters);
+      console.log('Активная вкладка:', tabs.activeTab);
+
+      // Загружаем данные через CreativesService
+      const data = await creativesService.loadCreatives(creativesFilters);
+      
+      creativesData.value = data;
+      console.log('Креативы загружены:', data);
+
+    } catch (error) {
+      console.error('Ошибка загрузки креативов:', error);
+      creativesError.value = error instanceof Error ? error.message : 'Неизвестная ошибка';
+      creativesData.value = null;
+    } finally {
+      creativesLoading.value = false;
+    }
+  }
+
+  /**
+   * Загружает следующую страницу креативов
+   */
+  async function loadNextPage(): Promise<void> {
+    if (!creativesData.value) return;
+    
+    const currentPage = creativesData.value.pagination.currentPage;
+    const lastPage = creativesData.value.pagination.lastPage;
+    
+    if (currentPage < lastPage) {
+      await loadCreatives(currentPage + 1);
+    }
+  }
+
+  /**
+   * Обновляет креативы при изменении фильтров
+   */
+  async function refreshCreatives(): Promise<void> {
+    await loadCreatives(1);
+  }
+
+  /**
+   * Очищает данные креативов
+   */
+  function clearCreatives(): void {
+    creativesData.value = null;
+    creativesError.value = null;
+    creativesLoading.value = false;
+    lastRequestKey.value = '';
+  }
+
+  /**
+   * Отменяет все активные запросы
+   */
+  function cancelRequests(): void {
+    creativesService.cancelAllRequests();
+    creativesLoading.value = false;
+  }
+
   // Computed свойства
   const hasActiveFilters = computed(() => {
     return filters.searchKeyword !== '' ||
@@ -539,6 +707,11 @@ export const useFiltersStore = defineStore('filters', () => {
     filters,
     tabs,
     
+    // === СОСТОЯНИЕ КРЕАТИВОВ ===
+    creativesData,
+    creativesLoading,
+    creativesError,
+    
     // Опции для фильтров
     countryOptions,
     sortOptions,
@@ -557,7 +730,17 @@ export const useFiltersStore = defineStore('filters', () => {
     tabOptions,
     currentTabOption,
     
-    // Computed состояния
+    // === COMPUTED СВОЙСТВА ДЛЯ КРЕАТИВОВ ===
+    creatives,
+    pagination,
+    requestMeta,
+    hasCreatives,
+    hasSearch,
+    activeFiltersCount,
+    isLoading,
+    hasError,
+    
+    // Computed состояния (существующие)
     hasActiveFilters,
     hasCustomTabCounts,
     
@@ -584,6 +767,14 @@ export const useFiltersStore = defineStore('filters', () => {
     setTabCounts,
     setAvailableTabs,
     resetTabs,
+
+    // === МЕТОДЫ ДЛЯ КРЕАТИВОВ ===
+    mapFiltersToCreativesFilters,
+    loadCreatives,
+    loadNextPage,
+    refreshCreatives,
+    clearCreatives,
+    cancelRequests,
 
     // URL синхронизация
     initUrlSync,
