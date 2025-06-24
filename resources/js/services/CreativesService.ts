@@ -93,33 +93,44 @@ class CreativesService {
    * Основной метод загрузки креативов с фильтрацией
    */
   async loadCreatives(filters: CreativesFilters = {}): Promise<ProcessedCreativesData> {
+    console.log('🔍 CreativesService.loadCreatives вызван с фильтрами:', filters);
+    
     // Генерируем уникальный ключ для запроса
     const requestKey = this.generateRequestKey(filters);
+    console.log('🔑 Ключ запроса в Service:', requestKey);
     
     // Проверяем, не выполняется ли уже такой запрос
     if (this.loadingStates.get(requestKey)) {
+      console.log('⚠️ Запрос уже выполняется, отклоняем');
       throw new Error('Запрос уже выполняется');
     }
 
     this.loadingStates.set(requestKey, true);
+    console.log('🚀 Начинаем выполнение запроса');
 
     try {
       // Предварительная обработка фильтров
       const processedFilters = this.preprocessFilters(filters);
+      console.log('🔧 Обработанные фильтры:', processedFilters);
       
       // Определяем конфигурацию кэширования
       const cacheConfig = this.getCacheConfig(processedFilters);
+      console.log('💾 Конфигурация кэша:', cacheConfig);
       
       // Выполняем API запрос (будет подключен на следующем этапе)
+      console.log('📡 Вызываем makeApiRequest...');
       const response = await this.makeApiRequest(processedFilters, cacheConfig);
+      console.log('📨 Ответ от makeApiRequest:', response);
       
       // Постобработка данных
       const processedData = this.postprocessData(response, processedFilters);
+      console.log('✨ Финальные обработанные данные:', processedData);
       
       return processedData;
       
     } finally {
       this.loadingStates.delete(requestKey);
+      console.log('🏁 Запрос завершен, состояние очищено');
     }
   }
 
@@ -227,12 +238,15 @@ class CreativesService {
    * Заглушка для API запроса (будет реализована на следующем этапе)
    */
   private async makeApiRequest(filters: CreativesFilters, cacheConfig: any): Promise<CreativesResponse> {
-    // TODO: Интеграция с creativesApiService на следующем этапе
-    console.log('API запрос с фильтрами:', filters);
-    console.log('Конфигурация кэша:', cacheConfig);
+    console.log('🎯 === makeApiRequest ВЫЗВАН! ===');
+    console.log('📋 API запрос с фильтрами:', filters);
+    console.log('💾 Конфигурация кэша:', cacheConfig);
     
-    // Временная заглушка
-    return {
+    // Симулируем небольшую задержку сети для реалистичности
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // Временная заглушка с более детальным логированием
+    const mockResponse = {
       data: [],
       total: 0,
       per_page: filters.perPage || 12,
@@ -241,6 +255,11 @@ class CreativesService {
       from: 0,
       to: 0
     };
+    
+    console.log('📤 makeApiRequest возвращает mock ответ:', mockResponse);
+    console.log('✅ === makeApiRequest ЗАВЕРШЕН! ===');
+    
+    return mockResponse;
   }
 
   /**
@@ -382,9 +401,9 @@ class CreativesService {
 
 // Экспортируем типы для использования в других модулях
 export type {
-    Creative,
-    CreativesFilters,
-    CreativesResponse, CreativesServiceConfig, ProcessedCreativesData
+  Creative,
+  CreativesFilters,
+  CreativesResponse, CreativesServiceConfig, ProcessedCreativesData
 };
 
 // Экспортируем синглтон сервиса

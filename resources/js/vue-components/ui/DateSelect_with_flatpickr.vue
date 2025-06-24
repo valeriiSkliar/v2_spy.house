@@ -514,8 +514,8 @@ onUnmounted(() => {
 }
 
 .date-select-field {
-  background: white;
   border: 1px solid #ddd;
+  background: #fafafa;
   padding: 8px 12px;
   cursor: pointer;
   display: flex;

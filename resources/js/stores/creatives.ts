@@ -322,6 +322,63 @@ export const useFiltersStore = defineStore('filters', () => {
     if (translationsData) {
       setTranslations(translationsData);
     }
+
+    // 7. Настраиваем watchers для автоматической перезагрузки
+    setupAutoReloadWatchers();
+
+    // 8. Автоматически загружаем креативы после инициализации
+    setTimeout(() => {
+      console.log('🚀 Автоматическая загрузка креативов после инициализации Store');
+      loadCreatives();
+    }, 100);
+  }
+
+  // Автоматическая перезагрузка креативов при изменении фильтров
+  function setupAutoReloadWatchers(): void {
+    console.log('📡 Настройка watchers для автоматической перезагрузки креативов');
+
+    // Создаем debounced функцию для перезагрузки
+    const debouncedReload = debounce(() => {
+      console.log('🔄 Перезагрузка креативов из-за изменения фильтров');
+      refreshCreatives();
+    }, 500);
+
+    // Следим за изменениями фильтров (исключая isDetailedVisible)
+    watch(
+      () => ({
+        searchKeyword: filters.searchKeyword,
+        country: filters.country,
+        dateCreation: filters.dateCreation,
+        sortBy: filters.sortBy,
+        periodDisplay: filters.periodDisplay,
+        advertisingNetworks: [...filters.advertisingNetworks],
+        languages: [...filters.languages],
+        operatingSystems: [...filters.operatingSystems],
+        browsers: [...filters.browsers],
+        devices: [...filters.devices],
+        imageSizes: [...filters.imageSizes],
+        onlyAdult: filters.onlyAdult
+      }),
+      (newFilters, oldFilters) => {
+        // Проверяем что это не первичная инициализация
+        if (oldFilters) {
+          console.log('📝 Изменились фильтры:', newFilters);
+          debouncedReload();
+        }
+      },
+      { deep: true }
+    );
+
+    // Следим за изменениями активной вкладки
+    watch(
+      () => tabs.activeTab,
+      (newTab, oldTab) => {
+        if (oldTab && newTab !== oldTab) {
+          console.log('🔀 Изменилась вкладка:', { from: oldTab, to: newTab });
+          refreshCreatives();
+        }
+      }
+    );
   }
 
   // URL синхронизация методы
@@ -581,6 +638,8 @@ export const useFiltersStore = defineStore('filters', () => {
    * Загружает креативы с текущими фильтрами
    */
   async function loadCreatives(page: number = 1): Promise<void> {
+    console.log('🔽 Начинаем загрузку креативов, page:', page);
+    
     try {
       creativesError.value = null;
       creativesLoading.value = true;
@@ -589,28 +648,35 @@ export const useFiltersStore = defineStore('filters', () => {
       const creativesFilters = mapFiltersToCreativesFilters();
       creativesFilters.page = page;
 
+      console.log('📋 Фильтры для загрузки:', creativesFilters);
+      console.log('🏷️ Активная вкладка:', tabs.activeTab);
+
       // Генерируем ключ запроса для предотвращения дубликатов
       const requestKey = JSON.stringify({ filters: creativesFilters, tab: tabs.activeTab });
       
       // Проверяем, не выполняется ли уже такой же запрос
       if (requestKey === lastRequestKey.value && creativesService.isLoading(creativesFilters)) {
+        console.log('⏭️ Запрос уже выполняется, пропускаем');
         return;
       }
 
       lastRequestKey.value = requestKey;
-
+      console.log('🔑 Ключ запроса:', requestKey.substring(0, 50) + '...');
 
       // Загружаем данные через CreativesService
+      console.log('🌐 Вызываем creativesService.loadCreatives...');
       const data = await creativesService.loadCreatives(creativesFilters);
       
+      console.log('✅ Данные загружены:', data);
       creativesData.value = data;
 
     } catch (error) {
-      console.error('Ошибка загрузки креативов:', error);
+      console.error('❌ Ошибка загрузки креативов:', error);
       creativesError.value = error instanceof Error ? error.message : 'Неизвестная ошибка';
       creativesData.value = null;
     } finally {
       creativesLoading.value = false;
+      console.log('🏁 Загрузка креативов завершена');
     }
   }
 
