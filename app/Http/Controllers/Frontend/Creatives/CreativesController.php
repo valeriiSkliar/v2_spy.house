@@ -11,10 +11,10 @@ class CreativesController extends FrontendController
     {
         // Дефолтные значения фильтров (состояние) - что выбрано по умолчанию
         $defaultFilters = [
-            'country' => 'All Countries',
-            'dateCreation' => 'Date of creation',
-            'sortBy' => 'By creation date',
-            'periodDisplay' => 'Date of creation',
+            'country' => 'default',
+            'dateCreation' => 'default',
+            'sortBy' => 'default',
+            'periodDisplay' => 'default',
             'searchKeyword' => '',
             'onlyAdult' => false,
             'isDetailedVisible' => false,
@@ -49,6 +49,7 @@ class CreativesController extends FrontendController
             'filterBy' => 'Фильтр по',
             'filterByCountry' => 'Фильтр по стране',
             'filterByDateCreation' => 'Фильтр по дате создания',
+            'savePresetButton' => 'Сохранить настройки',
         ];
 
 
@@ -75,10 +76,6 @@ class CreativesController extends FrontendController
                 ['value' => 'TIKTOK', 'label' => 'TikTok'],
             ],
             'countries' => [
-                [
-                    'value' => 'All Countries',
-                    'label' => 'All Countries',
-                ],
                 [
                     'value' => 'USA',
                     'label' => 'USA',
@@ -127,7 +124,6 @@ class CreativesController extends FrontendController
                 ['value' => 'By rating', 'label' => 'By rating'],
             ],
             'dateRanges' => [
-                ['value' => 'Date of creation', 'label' => 'Date of creation'],
                 ['value' => 'today', 'label' => 'Today'],
                 ['value' => 'yesterday', 'label' => 'Yesterday'],
                 ['value' => 'last7', 'label' => 'Last 7 days'],

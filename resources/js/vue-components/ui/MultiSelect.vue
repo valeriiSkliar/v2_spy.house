@@ -36,7 +36,12 @@
             :class="{ 'is-selected': values.includes(option.value) }"
             @click="toggleOption(option.value)"
           >
-            <input type="checkbox" :checked="values.includes(option.value)" @click.stop />
+            <input
+              v-if="option.value !== 'default'"
+              type="checkbox"
+              :checked="values.includes(option.value)"
+              @click.stop
+            />
             {{ option.label }}
           </li>
           <li v-if="filteredOptions.length === 0" class="multi-select__no-options">
@@ -73,13 +78,7 @@ interface Emits {
 const props = withDefaults(defineProps<Props>(), {
   placeholder: 'Select options',
   disabled: false,
-  options: () => [
-    { value: 'option1', label: 'Option 1' },
-    { value: 'option2', label: 'Option 2' },
-    { value: 'option3', label: 'Option 3' },
-    { value: 'option4', label: 'Option 4' },
-    { value: 'option5', label: 'Option 5' },
-  ],
+  options: () => [{ value: 'default', label: 'Select options' }],
 });
 
 const emit = defineEmits<Emits>();

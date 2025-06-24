@@ -7,7 +7,7 @@
         <span class="icon-filter"></span>
         <span class="icon-up font-24" :class="{ rotated: isMobileFiltersOpen }"></span>
       </span>
-      Filter
+      {{ getTranslation('filter', 'Filter') }}
     </div>
 
     <!-- Основной контент фильтров -->
@@ -35,7 +35,7 @@
                 <span class="icon-search"></span>
                 <input
                   type="search"
-                  placeholder="Search by Keyword"
+                  :placeholder="getTranslation('searchKeyword', 'Search by Keyword')"
                   :value="localSearchKeyword"
                   @input="handleSearchInput"
                 />
@@ -47,7 +47,7 @@
               <BaseSelect
                 :value="initStore().filters.country"
                 :options="initStore().countryOptions"
-                placeholder="Country"
+                :placeholder="getTranslation('country', 'Country')"
                 @update:value="initStore().setCountry($event)"
               />
             </div>
@@ -66,7 +66,7 @@
                 :enable-custom-date="true"
                 :mode="'range'"
                 :date-format="'d-m-Y'"
-                placeholder="Date of creation"
+                :placeholder="getTranslation('dateCreation', 'Date of creation')"
                 custom-date-label="Pick Custom Date"
                 @custom-date-selected="handleCustomDateSelected"
               />
@@ -77,7 +77,7 @@
               <BaseSelect
                 :value="initStore().filters.sortBy"
                 :options="initStore().sortOptions"
-                placeholder="Sort by"
+                :placeholder="getTranslation('sortBy', 'Sort by')"
                 @update:value="initStore().setSortBy($event)"
               />
             </div>
@@ -97,14 +97,16 @@
 
       <!-- Детальные фильтры -->
       <div class="filter__detailed" v-show="initStore().filters.isDetailedVisible">
-        <div class="filter__title">Detailed filtering</div>
+        <div class="filter__title">
+          {{ getTranslation('isDetailedVisible', 'Detailed filtering') }}
+        </div>
         <div class="row">
           <!-- Период отображения -->
           <div class="col-12 col-md-6 col-lg-3 mb-15">
             <DateSelect
               :value="initStore().filters.periodDisplay"
               :options="initStore().dateRanges"
-              placeholder="Period of display"
+              :placeholder="getTranslation('periodDisplay', 'Period of display')"
               @update:value="initStore().setPeriodDisplay($event)"
             />
           </div>
@@ -114,7 +116,7 @@
             <MultiSelect
               :values="initStore().filters.advertisingNetworks"
               :options="getMultiSelectOptions('advertisingNetworks')"
-              placeholder="Advertising networks"
+              :placeholder="getTranslation('advertisingNetworks', 'Advertising networks')"
               @add="initStore().addToMultiSelect('advertisingNetworks', $event)"
               @remove="initStore().removeFromMultiSelect('advertisingNetworks', $event)"
             />
@@ -125,7 +127,7 @@
             <MultiSelect
               :values="initStore().filters.languages"
               :options="getMultiSelectOptions('languages')"
-              placeholder="Languages"
+              :placeholder="getTranslation('languages', 'Languages')"
               @add="initStore().addToMultiSelect('languages', $event)"
               @remove="initStore().removeFromMultiSelect('languages', $event)"
             />
@@ -136,7 +138,7 @@
             <MultiSelect
               :values="initStore().filters.operatingSystems"
               :options="getMultiSelectOptions('operatingSystems')"
-              placeholder="Operation systems"
+              :placeholder="getTranslation('operatingSystems', 'Operation systems')"
               @add="initStore().addToMultiSelect('operatingSystems', $event)"
               @remove="initStore().removeFromMultiSelect('operatingSystems', $event)"
             />
@@ -147,7 +149,7 @@
             <MultiSelect
               :values="initStore().filters.browsers"
               :options="getMultiSelectOptions('browsers')"
-              placeholder="Browsers"
+              :placeholder="getTranslation('browsers', 'Browsers')"
               @add="initStore().addToMultiSelect('browsers', $event)"
               @remove="initStore().removeFromMultiSelect('browsers', $event)"
             />
@@ -158,7 +160,7 @@
             <MultiSelect
               :values="initStore().filters.devices"
               :options="getMultiSelectOptions('devices')"
-              placeholder="Devices"
+              :placeholder="getTranslation('devices', 'Devices')"
               @add="initStore().addToMultiSelect('devices', $event)"
               @remove="initStore().removeFromMultiSelect('devices', $event)"
             />
@@ -169,7 +171,7 @@
             <MultiSelect
               :values="initStore().filters.imageSizes"
               :options="getMultiSelectOptions('imageSizes')"
-              placeholder="Image sizes"
+              :placeholder="getTranslation('imageSizes', 'Image sizes')"
               @add="initStore().addToMultiSelect('imageSizes', $event)"
               @remove="initStore().removeFromMultiSelect('imageSizes', $event)"
             />
@@ -179,7 +181,7 @@
           <div class="col-12 col-md-6 col-lg-3 mb-15">
             <label class="checkbox-toggle _with-background">
               <span class="icon-18 font-20"></span>
-              <span class="mr-auto">Only adult</span>
+              <span class="mr-auto">{{ getTranslation('onlyAdult', 'Only adult') }}</span>
               <input
                 type="checkbox"
                 id="adult"
@@ -195,7 +197,7 @@
             <MultiSelect
               :values="initStore().filters.savedSettings"
               :options="[]"
-              placeholder="Saved settings"
+              :placeholder="getTranslation('savedSettings', 'Saved settings')"
               @add="initStore().addToMultiSelect('savedSettings', $event)"
               @remove="initStore().removeFromMultiSelect('savedSettings', $event)"
             />
@@ -205,7 +207,7 @@
           <div class="col-12 col-md-auto mb-10">
             <button class="btn _flex _dark _medium w-100" @click="initStore().saveSettings()">
               <span class="icon-save mr-2 font-16"></span>
-              Save settings
+              {{ getTranslation('savePresetButton', 'Save settings') }}
             </button>
           </div>
         </div>
@@ -214,7 +216,7 @@
         <div class="reset-btn d-md-none">
           <button class="btn-icon" @click="handleResetFilters()">
             <span class="icon-clear"></span>
-            <span class="ml-2">Reset</span>
+            <span class="ml-2">{{ getTranslation('resetButton', 'Reset') }}</span>
           </button>
         </div>
       </div>
@@ -264,12 +266,14 @@ function debounce<T extends (...args: any[]) => any>(
 interface Props {
   initialFilters?: Partial<FilterState>;
   selectOptions?: any;
+  translations?: Record<string, string>;
   enableUrlSync?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   initialFilters: () => ({}),
   selectOptions: () => ({}),
+  translations: () => ({}),
   enableUrlSync: true,
 });
 
@@ -314,6 +318,12 @@ const isOptionsLoaded = computed(() => {
 const isComponentReady = computed(() => {
   return isOptionsLoaded.value;
 });
+
+// Функция для получения переводов с fallback
+function getTranslation(key: string, fallback: string = key): string {
+  const store = initStore();
+  return store.getTranslation(key, fallback);
+}
 
 // Локальное состояние для мобильного интерфейса
 const isMobileFiltersOpen = ref(false);
@@ -401,7 +411,7 @@ onMounted(async () => {
   const store = initStore();
 
   console.log('Initializing filters with unified approach...');
-  store.initializeFilters(props.initialFilters, props.selectOptions);
+  store.initializeFilters(props.initialFilters, props.selectOptions, props.translations);
 
   console.log('Filters store инициализирован:', store.filters);
 

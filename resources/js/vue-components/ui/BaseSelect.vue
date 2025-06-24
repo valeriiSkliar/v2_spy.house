@@ -8,6 +8,7 @@
       <li
         v-for="option in safeOptions"
         :key="option.value"
+        :data-value="option.value"
         class="base-select__option"
         :class="{ 'is-selected': option.value === value }"
         @click="selectOption(option)"
@@ -57,7 +58,10 @@ const selectedLabel = computed(() => {
 });
 
 const safeOptions = computed(() => {
-  return Array.isArray(props.options) ? props.options : [];
+  console.log('safeOptions', props.options);
+  return Array.isArray(props.options)
+    ? props.options.filter(option => option.value !== 'default')
+    : [];
 });
 
 function toggleDropdown(): void {

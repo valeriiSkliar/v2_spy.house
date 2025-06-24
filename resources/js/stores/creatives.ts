@@ -9,10 +9,10 @@ export const useFiltersStore = defineStore('filters', () => {
   const defaultFilters: FilterState = {
     isDetailedVisible: false,
     searchKeyword: '',
-    country: 'All Countries',
-    dateCreation: 'Date of creation',
-    sortBy: 'By creation date',
-    periodDisplay: 'Date of creation',
+    country: 'default',
+    dateCreation: 'default',
+    sortBy: 'default',
+    periodDisplay: 'default',
     advertisingNetworks: [],
     languages: [],
     operatingSystems: [],
@@ -30,17 +30,20 @@ export const useFiltersStore = defineStore('filters', () => {
   let urlSync: ReturnType<typeof useCreativesUrlSync> | null = null;
   let isUrlSyncEnabled = ref(false);
 
+  // Переводы
+  const translations = ref<Record<string, string>>({});
+
   // Опции для селектов - теперь полностью от сервера с fallback
   const defaultCountryOptions: FilterOption[] = [
-    { value: 'All Countries', label: 'All Countries' }
+    { value: 'default', label: 'Fallback value' }
   ];
 
   const defaultSortOptions: FilterOption[] = [
-    { value: 'By creation date', label: 'By creation date' }
+    { value: 'default', label: 'By creation date' }
   ];
 
   const defaultDateRanges: FilterOption[] = [
-    { value: 'Date of creation', label: 'Date of creation' }
+    { value: 'default', label: 'Date of creation' }
   ];
 
   // Реактивные опции для селектов (заполняются от сервера)
@@ -167,10 +170,25 @@ export const useFiltersStore = defineStore('filters', () => {
   }
 
   /**
+   * Устанавливает переводы
+   */
+  function setTranslations(translationsData: Record<string, string>): void {
+    console.log('Setting translations:', translationsData);
+    translations.value = { ...translationsData };
+  }
+
+  /**
+   * Получает перевод с fallback
+   */
+  function getTranslation(key: string, fallback: string = key): string {
+    return translations.value[key] || fallback;
+  }
+
+  /**
    * Инициализирует store с четким приоритетом: URL → Props → Defaults
    * Store является единственным источником истины
    */
-  function initializeFilters(propsFilters?: Partial<FilterState>, selectOptions?: any): void {
+  function initializeFilters(propsFilters?: Partial<FilterState>, selectOptions?: any, translationsData?: Record<string, string>): void {
     console.log('Initializing filters store...');
     
     // 1. Базовое состояние уже установлено (defaultFilters)
@@ -189,6 +207,11 @@ export const useFiltersStore = defineStore('filters', () => {
 
     // 4. Инициализируем URL синхронизацию (URL имеет наивысший приоритет)
     initUrlSync();
+
+    // 5. Устанавливаем переводы
+    if (translationsData) {
+      setTranslations(translationsData);
+    }
   }
 
   // URL синхронизация методы
@@ -388,7 +411,10 @@ export const useFiltersStore = defineStore('filters', () => {
   // Computed свойства
   const hasActiveFilters = computed(() => {
     return filters.searchKeyword !== '' ||
-           filters.country !== 'All Countries' ||
+           filters.country !== 'default' ||
+           filters.dateCreation !== 'default' ||
+           filters.sortBy !== 'default' ||
+           filters.periodDisplay !== 'default' ||
            filters.advertisingNetworks.length > 0 ||
            filters.languages.length > 0 ||
            filters.operatingSystems.length > 0 ||
@@ -435,5 +461,9 @@ export const useFiltersStore = defineStore('filters', () => {
     initUrlSync,
     urlSync: () => urlSync,
     isUrlSyncEnabled,
+
+    // Переводы
+    setTranslations,
+    getTranslation,
   };
 });
