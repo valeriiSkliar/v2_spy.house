@@ -2,10 +2,19 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { nextTick } from 'vue';
 import { urlSyncUtils, useUrlSync } from '../../../resources/js/composables/useUrlSync';
 
-// Мокаем @vueuse/core правильно для Vitest
+// Мокаем @vueuse/core
 vi.mock('@vueuse/core', () => ({
   useUrlSearchParams: vi.fn(() => ({})),
-  useDebounceFn: vi.fn((fn) => fn),
+}));
+
+// Мокаем lodash.debounce
+vi.mock('lodash.debounce', () => ({
+  default: vi.fn((fn, delay) => {
+    // Возвращаем функцию с методом cancel
+    const debouncedFn = vi.fn(fn) as any;
+    debouncedFn.cancel = vi.fn();
+    return debouncedFn;
+  }),
 }));
 
 // Мокаем URL для тестов
@@ -182,15 +191,15 @@ describe('useUrlSync', () => {
     it('принимает кастомные опции debounce', async () => {
       useUrlSync({ test: 'value' }, { debounce: 500 });
       
-      const { useDebounceFn } = await import('@vueuse/core');
-      expect(useDebounceFn).toHaveBeenCalledWith(expect.any(Function), 500);
+      const debounce = await import('lodash.debounce');
+      expect(debounce.default).toHaveBeenCalledWith(expect.any(Function), 500);
     });
 
     it('использует значения по умолчанию', async () => {
       useUrlSync({ test: 'value' });
       
-      const { useDebounceFn } = await import('@vueuse/core');
-      expect(useDebounceFn).toHaveBeenCalledWith(expect.any(Function), 300);
+      const debounce = await import('lodash.debounce');
+      expect(debounce.default).toHaveBeenCalledWith(expect.any(Function), 300);
     });
   });
 });
