@@ -47,6 +47,7 @@ class CreativesController extends FrontendController
             'favorites' => 'Избранное',
             'filter' => 'Фильтр',
             'filterBy' => 'Фильтр по',
+            'customDateLabel' => 'Выбрать дату',
             'filterByCountry' => 'Фильтр по стране',
             'filterByDateCreation' => 'Фильтр по дате создания',
             'savePresetButton' => 'Сохранить настройки',

@@ -67,8 +67,8 @@
                 :mode="'range'"
                 :date-format="'d-m-Y'"
                 :placeholder="getTranslation('dateCreation', 'Date of creation')"
-                custom-date-label="Pick Custom Date"
-                @custom-date-selected="handleCustomDateSelected"
+                :custom-date-label="getTranslation('customDateLabel', 'Custom Date')"
+                @custom-date-selected="handleDateCreationSelected"
               />
             </div>
 
@@ -104,10 +104,15 @@
           <!-- Период отображения -->
           <div class="col-12 col-md-6 col-lg-3 mb-15">
             <DateSelect
-              :value="initStore().filters.periodDisplay"
+              v-model:value="initStore().filters.periodDisplay"
               :options="initStore().dateRanges"
+              :enable-custom-date="true"
+              :mode="'range'"
+              :date-format="'d-m-Y'"
+              :custom-date-label="getTranslation('customDateLabel', 'Custom Date')"
               :placeholder="getTranslation('periodDisplay', 'Period of display')"
               @update:value="initStore().setPeriodDisplay($event)"
+              @custom-date-selected="handlePeriodDisplaySelected"
             />
           </div>
 
@@ -332,10 +337,45 @@ function toggleMobileFilters(): void {
   isMobileFiltersOpen.value = !isMobileFiltersOpen.value;
 }
 
-function handleCustomDateSelected(dates: Date[]): void {
+// Обработчик для DateSelect "Date of creation"
+function handleDateCreationSelected(dates: Date[]): void {
   if (dates.length > 0) {
-    const dateString = dates[0].toISOString().split('T')[0];
-    initStore().setDateCreation(dateString);
+    // Обрабатываем как single дату, так и range
+    let customValue: string;
+    if (dates.length === 2) {
+      // Range mode: две даты
+      const startDate = dates[0].toISOString().split('T')[0];
+      const endDate = dates[1].toISOString().split('T')[0];
+      customValue = `custom_${startDate}_to_${endDate}`;
+    } else {
+      // Single mode: одна дата
+      const dateString = dates[0].toISOString().split('T')[0];
+      customValue = `custom_${dateString}`;
+    }
+
+    console.log('Setting dateCreation with custom value:', customValue);
+    initStore().setDateCreation(customValue);
+  }
+}
+
+// Обработчик для DateSelect "Period of display"
+function handlePeriodDisplaySelected(dates: Date[]): void {
+  if (dates.length > 0) {
+    // Обрабатываем как single дату, так и range
+    let customValue: string;
+    if (dates.length === 2) {
+      // Range mode: две даты
+      const startDate = dates[0].toISOString().split('T')[0];
+      const endDate = dates[1].toISOString().split('T')[0];
+      customValue = `custom_${startDate}_to_${endDate}`;
+    } else {
+      // Single mode: одна дата
+      const dateString = dates[0].toISOString().split('T')[0];
+      customValue = `custom_${dateString}`;
+    }
+
+    console.log('Setting periodDisplay with custom value:', customValue);
+    initStore().setPeriodDisplay(customValue);
   }
 }
 
