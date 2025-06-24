@@ -92,6 +92,10 @@ export const useFiltersStore = defineStore('filters', () => {
   function setSelectOptions(options: any): void {
     console.log('Setting select options:', options);
     
+    if (options.countries && Array.isArray(options.countries)) {
+      countryOptions.value = [...options.countries];
+    }
+    
     if (options.advertisingNetworks) {
       multiSelectOptions.advertisingNetworks = { ...options.advertisingNetworks };
     }

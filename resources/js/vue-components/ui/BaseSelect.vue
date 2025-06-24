@@ -7,7 +7,7 @@
     </div>
     <ul class="base-select__dropdown" v-show="isOpen">
       <li
-        v-for="option in options"
+        v-for="option in safeOptions"
         :key="option.value"
         class="base-select__option"
         :class="{ 'is-selected': option.value === value }"
@@ -15,12 +15,13 @@
       >
         {{ option.label }}
       </li>
+      <li v-if="safeOptions.length === 0" class="base-select__no-options">No options available</li>
     </ul>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 
 interface Option {
   value: string;
@@ -47,8 +48,17 @@ const isOpen = ref(false);
 const selectRef = ref<HTMLElement>();
 
 const selectedLabel = computed(() => {
+  if (!Array.isArray(props.options)) {
+    console.warn('BaseSelect: options prop must be an array, got:', typeof props.options);
+    return '';
+  }
+
   const selected = props.options.find(option => option.value === props.value);
   return selected?.label || '';
+});
+
+const safeOptions = computed(() => {
+  return Array.isArray(props.options) ? props.options : [];
 });
 
 function toggleDropdown(): void {

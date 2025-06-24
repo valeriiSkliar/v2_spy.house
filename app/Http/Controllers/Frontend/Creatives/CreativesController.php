@@ -28,8 +28,19 @@ class CreativesController extends FrontendController
             'savedSettings' => []
         ];
 
-        // Опции для селектов (что можно выбрать) - отдельно от состояния
-        $selectOptions = [
+
+        $selectOptions = $this->getSelectOptions();
+
+        return view('pages.creatives.index', [
+            'activeTab' => 'push',
+            'filters' => $defaultFilters,
+            'selectOptions' => $selectOptions,
+        ]);
+    }
+
+    public function getSelectOptions()
+    {
+        return [
             'advertisingNetworks' => [
                 'Google' => 'Google',
                 'Meta' => 'Meta',
@@ -38,6 +49,52 @@ class CreativesController extends FrontendController
                 'Apple' => 'Apple',
                 'Twitter' => 'Twitter',
                 'TikTok' => 'TikTok',
+            ],
+            'countries' => [
+                [
+                    'value' => 'All Categories',
+                    'label' => 'All Categories',
+                ],
+                [
+                    'value' => 'USA',
+                    'label' => 'USA',
+                ],
+                [
+                    'value' => 'Canada',
+                    'label' => 'Canada',
+                ],
+                [
+                    'value' => 'UK',
+                    'label' => 'UK',
+                ],
+                [
+                    'value' => 'Australia',
+                    'label' => 'Australia',
+                ],
+                [
+                    'value' => 'Germany',
+                    'label' => 'Germany',
+                ],
+                [
+                    'value' => 'France',
+                    'label' => 'France',
+                ],
+                [
+                    'value' => 'Italy',
+                    'label' => 'Italy',
+                ],
+                [
+                    'value' => 'Spain',
+                    'label' => 'Spain',
+                ],
+                [
+                    'value' => 'Portugal',
+                    'label' => 'Portugal',
+                ],
+                [
+                    'value' => 'Brazil',
+                    'label' => 'Brazil',
+                ],
             ],
             'languages' => [
                 'en' => 'English',
@@ -79,11 +136,5 @@ class CreativesController extends FrontendController
                 '2x3' => '2x3',
             ],
         ];
-
-        return view('pages.creatives.index', [
-            'activeTab' => 'push',
-            'filters' => $defaultFilters,
-            'selectOptions' => $selectOptions,
-        ]);
     }
 }
