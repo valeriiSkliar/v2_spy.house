@@ -339,6 +339,7 @@ export const urlSyncUtils = {
   numberTransform: (defaultValue = 0) => ({
     serialize: (value: number) => String(value),
     deserialize: (value: string) => {
+      if (!value || value.trim() === '') return defaultValue;
       const parsed = Number(value);
       return isNaN(parsed) ? defaultValue : parsed;
     },
