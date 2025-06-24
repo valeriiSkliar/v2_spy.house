@@ -32,7 +32,7 @@ export const useFiltersStore = defineStore('filters', () => {
 
   // Опции для селектов (базовые + от сервера)
   const baseCountryOptions: FilterOption[] = [
-    { value: 'all', label: 'All Categories' },
+    { value: 'all', label: 'Countrise' },
     { value: 'advertising', label: 'Advertising Networks' },
     { value: 'affiliate', label: 'Affiliate Programs' },
     { value: 'trackers', label: 'Trackers' },

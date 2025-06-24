@@ -11,7 +11,7 @@ class CreativesController extends FrontendController
     {
         // Дефолтные значения фильтров (состояние) - что выбрано по умолчанию
         $defaultFilters = [
-            'country' => 'All Categories',
+            'country' => 'All Countries',
             'dateCreation' => 'Date of creation',
             'sortBy' => 'By creation date',
             'periodDisplay' => 'Period of display',
@@ -52,8 +52,8 @@ class CreativesController extends FrontendController
             ],
             'countries' => [
                 [
-                    'value' => 'All Categories',
-                    'label' => 'All Categories',
+                    'value' => 'All Countries',
+                    'label' => 'All Countries',
                 ],
                 [
                     'value' => 'USA',
