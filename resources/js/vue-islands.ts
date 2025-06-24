@@ -13,13 +13,7 @@ interface VueIslandElement extends HTMLElement {
     getAttribute(name: 'data-vue-props'): string | null;
 }
 
-// Глобальные объекты
-declare global {
-    interface Window {
-        initVueIslands: () => void;
-        __globalPinia?: Pinia;
-    }
-}
+
 
 // Создаем глобальный Pinia store для всех островков
 let globalPinia: Pinia | null = null;

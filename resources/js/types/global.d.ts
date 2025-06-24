@@ -1,6 +1,7 @@
 // import type { BlogNavigationManagerAPI, BlogServerData } from './blog.d';
 import type { AxiosInstance } from 'axios';
 
+
 declare global {
   
   interface Window {
@@ -8,6 +9,7 @@ declare global {
     $: JQueryStatic;
     jQuery: JQueryStatic;
     initVueIslands: () => void;
+    __globalPinia?: any;
 
     // blogServerData?: BlogServerData;
     // blogNavigationManager?: BlogNavigationManagerAPI;
