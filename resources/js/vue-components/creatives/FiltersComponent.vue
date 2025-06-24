@@ -453,7 +453,12 @@ onMounted(async () => {
   const store = initStore();
 
   console.log('Initializing filters with unified approach...');
-  store.initializeFilters(props.initialFilters, props.selectOptions, props.translations);
+  store.initializeFilters(
+    props.initialFilters,
+    props.selectOptions,
+    props.translations,
+    props.tabOptions
+  );
 
   console.log('Filters store инициализирован:', store.filters);
 
