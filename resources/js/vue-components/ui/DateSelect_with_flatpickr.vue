@@ -142,6 +142,26 @@ const selectedLabel = computed(() => {
     }
   }
 
+  // Проверяем, является ли значение custom датой
+  if (props.value && props.value.startsWith('custom_') && isCustomDate.value) {
+    const customPart = props.value.replace('custom_', '');
+    if (customPart.includes('_to_')) {
+      // Range date
+      const [startStr, endStr] = customPart.split('_to_');
+      const startDate = new Date(startStr);
+      const endDate = new Date(endStr);
+      if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+        return `${formatDate(startDate)} - ${formatDate(endDate)}`;
+      }
+    } else {
+      // Single date
+      const date = new Date(customPart);
+      if (!isNaN(date.getTime())) {
+        return formatDate(date);
+      }
+    }
+  }
+
   const selected = props.options.find(option => option.value === props.value);
   return selected?.label || '';
 });
@@ -183,7 +203,10 @@ function openCustomDatePicker(): void {
 
       // Ждем инициализации и показываем календарь
       setTimeout(() => {
-        forceShowCalendar();
+        if (flatpickrInstance) {
+          flatpickrInstance.open();
+          forceShowCalendar();
+        }
       }, 200);
     } else {
       // Открываем календарь стандартным способом
@@ -249,9 +272,12 @@ function initializeFlatpickr(): void {
         emit('custom-date-selected', selectedDates);
 
         // Create custom value for the selected date(s)
-        const customValue = selectedDates
-          .map(date => date.toISOString().split('T')[0])
-          .join('_to_');
+        let customValue: string;
+        if (props.mode === 'range' && selectedDates.length === 2) {
+          customValue = selectedDates.map(date => date.toISOString().split('T')[0]).join('_to_');
+        } else {
+          customValue = selectedDates[0].toISOString().split('T')[0];
+        }
 
         emit('update:value', `custom_${customValue}`);
 
@@ -294,14 +320,23 @@ function initializeFlatpickr(): void {
     },
   };
 
-  flatpickrInstance = flatpickr(flatpickrInput.value, config);
+  try {
+    flatpickrInstance = flatpickr(flatpickrInput.value, config);
+  } catch (error) {
+    console.error('Failed to initialize flatpickr:', error);
+  }
 }
 
 function destroyFlatpickr(): void {
   if (flatpickrInstance) {
-    hideCalendar(); // Скрываем календарь перед уничтожением
-    flatpickrInstance.destroy();
-    flatpickrInstance = null;
+    try {
+      hideCalendar(); // Скрываем календарь перед уничтожением
+      flatpickrInstance.destroy();
+    } catch (error) {
+      console.error('Error destroying flatpickr:', error);
+    } finally {
+      flatpickrInstance = null;
+    }
   }
 
   // Дополнительная очистка контейнера
@@ -362,7 +397,11 @@ watch(
 
       // Очищаем календарь
       if (flatpickrInstance) {
-        flatpickrInstance.clear();
+        try {
+          flatpickrInstance.clear();
+        } catch (error) {
+          console.error('Error clearing flatpickr:', error);
+        }
         hideCalendar();
       }
     }
@@ -373,7 +412,11 @@ watch(
       isCustomDate.value = false;
 
       if (flatpickrInstance) {
-        flatpickrInstance.clear();
+        try {
+          flatpickrInstance.clear();
+        } catch (error) {
+          console.error('Error clearing flatpickr:', error);
+        }
         hideCalendar();
       }
     }
@@ -384,11 +427,13 @@ onMounted(() => {
   document.addEventListener('click', handleClickOutside);
 
   // Инициализируем flatpickr после монтирования с небольшой задержкой
-  nextTick(() => {
-    setTimeout(() => {
-      initializeFlatpickr();
-    }, 100);
-  });
+  if (props.enableCustomDate) {
+    nextTick(() => {
+      setTimeout(() => {
+        initializeFlatpickr();
+      }, 100);
+    });
+  }
 });
 
 onUnmounted(() => {

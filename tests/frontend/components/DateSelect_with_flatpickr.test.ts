@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi, afterEach } from 'vitest';
 import { mount, VueWrapper } from '@vue/test-utils';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { nextTick } from 'vue';
 import DateSelectWithFlatpickr from '../../../resources/js/vue-components/ui/DateSelect_with_flatpickr.vue';
 
@@ -9,7 +9,7 @@ const mockFlatpickrInstance = {
   close: vi.fn(),
   clear: vi.fn(),
   destroy: vi.fn(),
-  selectedDates: [],
+  selectedDates: [] as Date[],
   calendarContainer: document.createElement('div'),
 };
 
@@ -364,7 +364,9 @@ describe('DateSelect_with_flatpickr', () => {
       expect(wrapper.emitted('update:value')).toEqual([['custom_2024-01-15']]);
     });
 
-    it('handles range date selection', () => {
+    it('handles range date selection', async () => {
+      // Create new wrapper with range mode
+      wrapper.unmount();
       wrapper = mount(DateSelectWithFlatpickr, {
         props: {
           value: '',
@@ -374,7 +376,12 @@ describe('DateSelect_with_flatpickr', () => {
         },
       });
 
-      const configCall = mockFlatpickr.mock.calls[0];
+      // Wait for flatpickr to be initialized with range mode
+      await nextTick();
+      await new Promise(resolve => setTimeout(resolve, 150));
+
+      const configCall = mockFlatpickr.mock.calls.find(call => call[1].mode === 'range');
+      expect(configCall).toBeDefined();
       const config = configCall[1];
       
       const startDate = new Date('2024-01-15');
@@ -395,9 +402,14 @@ describe('DateSelect_with_flatpickr', () => {
         },
       });
 
+      // Wait for component initialization
+      await nextTick();
+      await new Promise(resolve => setTimeout(resolve, 150));
+
       // Set component state to custom date and mock flatpickr instance
       wrapper.vm.isCustomDate = true;
-      mockFlatpickrInstance.selectedDates = [new Date('2024-01-15')];
+      const mockDate = new Date('2024-01-15');
+      mockFlatpickrInstance.selectedDates = [mockDate];
       
       await nextTick();
       
@@ -415,9 +427,15 @@ describe('DateSelect_with_flatpickr', () => {
         },
       });
 
+      // Wait for component initialization
+      await nextTick();
+      await new Promise(resolve => setTimeout(resolve, 150));
+
       // Set component state to custom date and mock flatpickr instance
       wrapper.vm.isCustomDate = true;
-      mockFlatpickrInstance.selectedDates = [new Date('2024-01-15'), new Date('2024-01-20')];
+      const startDate = new Date('2024-01-15');
+      const endDate = new Date('2024-01-20');
+      mockFlatpickrInstance.selectedDates = [startDate, endDate];
       
       await nextTick();
       
@@ -435,9 +453,14 @@ describe('DateSelect_with_flatpickr', () => {
         },
       });
 
+      // Wait for component initialization
+      await nextTick();
+      await new Promise(resolve => setTimeout(resolve, 150));
+
       // Set component state to custom date and mock flatpickr instance with incomplete range
       wrapper.vm.isCustomDate = true;
-      mockFlatpickrInstance.selectedDates = [new Date('2024-01-15')];
+      const startDate = new Date('2024-01-15');
+      mockFlatpickrInstance.selectedDates = [startDate];
       
       await nextTick();
       await wrapper.find('.date-select-field').trigger('click');
@@ -495,7 +518,7 @@ describe('DateSelect_with_flatpickr', () => {
   });
 
   describe('Component Cleanup', () => {
-    it('destroys flatpickr instance on unmount', () => {
+    it('destroys flatpickr instance on unmount', async () => {
       wrapper = mount(DateSelectWithFlatpickr, {
         props: {
           value: '',
@@ -503,6 +526,10 @@ describe('DateSelect_with_flatpickr', () => {
           enableCustomDate: true,
         },
       });
+
+      // Wait for flatpickr to be initialized
+      await nextTick();
+      await new Promise(resolve => setTimeout(resolve, 150));
 
       wrapper.unmount();
       
@@ -585,6 +612,10 @@ describe('DateSelect_with_flatpickr', () => {
     });
 
     it('clears flatpickr when value is reset', async () => {
+      // Wait for flatpickr to be initialized
+      await nextTick();
+      await new Promise(resolve => setTimeout(resolve, 150));
+      
       await wrapper.setProps({ value: '' });
       await nextTick();
       
