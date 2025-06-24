@@ -1,4 +1,3 @@
-<!-- resources/js/vue-components/ui/BaseSelect.vue -->
 <template>
   <div class="base-select" ref="selectRef">
     <div class="base-select__trigger" @click="toggleDropdown">
