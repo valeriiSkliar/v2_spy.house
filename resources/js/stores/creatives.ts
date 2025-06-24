@@ -54,6 +54,7 @@ export const useFiltersStore = defineStore('filters', () => {
   ];
 
   const baseDateRanges: FilterOption[] = [
+    { value: 'Date of creation', label: 'Date of creation' }, // Дефолтная опция
     { value: 'today', label: 'Today' },
     { value: 'yesterday', label: 'Yesterday' },
     { value: 'last7', label: 'Last 7 days' },

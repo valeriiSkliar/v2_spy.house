@@ -77,7 +77,7 @@ Props:
 <script setup lang="ts">
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.css';
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 
 interface Option {
   value: string;
@@ -123,7 +123,13 @@ const flatpickrContainer = ref<HTMLElement>();
 let flatpickrInstance: flatpickr.Instance | null = null;
 
 const selectedLabel = computed(() => {
-  if (isCustomDate.value && flatpickrInstance?.selectedDates.length) {
+  // Если значение сброшено на дефолтное, показываем опцию из списка
+  const isDefaultValue =
+    !props.value ||
+    props.value === props.placeholder ||
+    props.options.some(option => option.value === props.value && option.label === props.value);
+
+  if (!isDefaultValue && isCustomDate.value && flatpickrInstance?.selectedDates.length) {
     const dates = flatpickrInstance.selectedDates;
     if (props.mode === 'range') {
       if (dates.length === 2) {
@@ -337,6 +343,42 @@ function hideCalendar(): void {
   }
   isCalendarOpen.value = false;
 }
+
+// Отслеживание изменений value для сброса состояния календаря
+watch(
+  () => props.value,
+  (newValue, oldValue) => {
+    // Если значение изменилось на дефолтное (сброс фильтров)
+    const isDefaultValue =
+      !newValue ||
+      newValue === props.placeholder ||
+      props.options.some(option => option.value === newValue && option.label === newValue);
+    const isFromCustom = oldValue && oldValue.startsWith('custom_');
+
+    if (isDefaultValue && isFromCustom) {
+      console.log('Resetting custom date state due to filter reset');
+      // Сбрасываем состояние кастомной даты
+      isCustomDate.value = false;
+
+      // Очищаем календарь
+      if (flatpickrInstance) {
+        flatpickrInstance.clear();
+        hideCalendar();
+      }
+    }
+
+    // Если значение изменилось на обычную опцию, также сбрасываем кастомное состояние
+    if (newValue && !newValue.startsWith('custom_') && isCustomDate.value) {
+      console.log('Resetting custom date state due to preset selection');
+      isCustomDate.value = false;
+
+      if (flatpickrInstance) {
+        flatpickrInstance.clear();
+        hideCalendar();
+      }
+    }
+  }
+);
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside);

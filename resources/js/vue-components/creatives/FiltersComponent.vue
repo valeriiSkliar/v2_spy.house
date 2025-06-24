@@ -66,7 +66,7 @@
                 :enable-custom-date="true"
                 :mode="'range'"
                 :date-format="'d-m-Y'"
-                placeholder="Select date range"
+                placeholder="Date of creation"
                 custom-date-label="Pick Custom Date"
                 @custom-date-selected="handleCustomDateSelected"
               />
