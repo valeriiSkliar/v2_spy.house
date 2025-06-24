@@ -48,10 +48,14 @@ Props:
           <div class="custom-date-section" v-if="enableCustomDate">
             <button
               class="range-option custom-date-trigger"
-              :class="{ active: isCustomDate }"
+              :class="{
+                active: isCustomDate,
+                'incomplete-range': hasIncompleteRange,
+              }"
               @click="openCustomDatePicker"
             >
               {{ customDateLabel }}
+              <span v-if="hasIncompleteRange" class="range-status"> (выберите конечную дату) </span>
             </button>
             <input
               ref="flatpickrInput"
@@ -121,8 +125,12 @@ let flatpickrInstance: flatpickr.Instance | null = null;
 const selectedLabel = computed(() => {
   if (isCustomDate.value && flatpickrInstance?.selectedDates.length) {
     const dates = flatpickrInstance.selectedDates;
-    if (props.mode === 'range' && dates.length === 2) {
-      return `${formatDate(dates[0])} - ${formatDate(dates[1])}`;
+    if (props.mode === 'range') {
+      if (dates.length === 2) {
+        return `${formatDate(dates[0])} - ${formatDate(dates[1])}`;
+      } else if (dates.length === 1) {
+        return `${formatDate(dates[0])} - ...`; // Показываем промежуточное состояние
+      }
     } else if (dates.length === 1) {
       return formatDate(dates[0]);
     }
@@ -130,6 +138,12 @@ const selectedLabel = computed(() => {
 
   const selected = props.options.find(option => option.value === props.value);
   return selected?.label || '';
+});
+
+const hasIncompleteRange = computed(() => {
+  return (
+    props.mode === 'range' && isCustomDate.value && flatpickrInstance?.selectedDates.length === 1
+  );
 });
 
 function formatDate(date: Date): string {
@@ -179,8 +193,10 @@ function openCustomDatePicker(): void {
 }
 
 function closeDropdown(): void {
-  // Не закрываем dropdown если открыт календарь
-  if (!isCalendarOpen.value) {
+  // Не закрываем dropdown если:
+  // - открыт календарь
+  // - выбрана только одна дата в range режиме
+  if (!isCalendarOpen.value && !hasIncompleteRange.value) {
     isOpen.value = false;
     hideCalendar(); // Скрываем календарь при закрытии dropdown
     destroyFlatpickr();
@@ -192,11 +208,14 @@ function handleClickOutside(event: Event): void {
     // Проверяем, что клик не по календарю flatpickr
     const flatpickrCalendar = document.querySelector('.flatpickr-calendar');
     if (!flatpickrCalendar || !flatpickrCalendar.contains(event.target as Node)) {
-      hideCalendar();
-      closeDropdown();
-      if (flatpickrInstance) {
-        flatpickrInstance.close();
-        destroyFlatpickr();
+      // Если есть незавершенный range, не закрываем dropdown
+      if (!hasIncompleteRange.value) {
+        hideCalendar();
+        closeDropdown();
+        if (flatpickrInstance) {
+          flatpickrInstance.close();
+          destroyFlatpickr();
+        }
       }
     }
   }
@@ -434,6 +453,18 @@ onUnmounted(() => {
 .custom-date-trigger.active {
   color: #333;
   font-style: normal;
+}
+
+.custom-date-trigger.incomplete-range {
+  background-color: #fff3cd;
+  border-color: #ffeaa7;
+  color: #856404;
+
+  .range-status {
+    font-size: 12px;
+    font-weight: normal;
+    color: #856404;
+  }
 }
 
 .flatpickr-input {
