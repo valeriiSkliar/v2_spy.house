@@ -7,6 +7,7 @@ use App\Helpers\IsoCodesHelper;
 use App\Models\AdvertismentNetwork;
 use App\Models\Browser;
 use App\Enums\Frontend\DeviceType;
+use App\Enums\Frontend\OperationSystem;
 use Illuminate\Http\Request;
 
 class CreativesController extends FrontendController
@@ -111,14 +112,7 @@ class CreativesController extends FrontendController
                 ['value' => 'lastYear', 'label' => 'За прошлый год'],
             ],
             'languages' => IsoCodesHelper::getAllLanguages(app()->getLocale()),
-            'operatingSystems' => [
-                ['value' => 'Windows', 'label' => 'Windows'],
-                ['value' => 'MacOS', 'label' => 'MacOS'],
-                ['value' => 'Linux', 'label' => 'Linux'],
-                ['value' => 'Android', 'label' => 'Android'],
-                ['value' => 'iOS', 'label' => 'iOS'],
-                ['value' => 'Chrome OS', 'label' => 'Chrome OS'],
-            ],
+            'operatingSystems' => OperationSystem::getForSelect(),
             'browsers' => Browser::getBrowsersForSelect(),
             'devices' => DeviceType::getForSelect(),
             'imageSizes' => [

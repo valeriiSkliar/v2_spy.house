@@ -62,4 +62,17 @@ return [
         'EMAIL_CLIENT' => 'Почтовый клиент',
         'UNKNOWN' => 'Неизвестно',
     ],
+    'OperationSystem' => [
+        'ANDROID' => 'Android',
+        'WINDOWS' => 'Windows',
+        'MACOS' => 'MacOS',
+        'IOS' => 'iOS',
+        'LINUX' => 'Linux',
+        'CHROMEOS' => 'Chrome OS',
+        'KINDLE' => 'Kindle',
+        'PLAYSTATION' => 'PlayStation',
+        'XBOX' => 'Xbox',
+        'WEBOS' => 'WebOS',
+        'OTHER' => 'Другая',
+    ],
 ];
