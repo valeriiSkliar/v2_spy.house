@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Frontend\Creatives;
 use App\Http\Controllers\FrontendController;
 use App\Helpers\IsoCodesHelper;
 use App\Models\AdvertismentNetwork;
+use App\Models\Browser;
+use App\Enums\Frontend\DeviceType;
 use Illuminate\Http\Request;
 
 class CreativesController extends FrontendController
@@ -117,25 +119,8 @@ class CreativesController extends FrontendController
                 ['value' => 'iOS', 'label' => 'iOS'],
                 ['value' => 'Chrome OS', 'label' => 'Chrome OS'],
             ],
-            'browsers' => [
-                ['value' => 'Chrome', 'label' => 'Chrome'],
-                ['value' => 'Firefox', 'label' => 'Firefox'],
-                ['value' => 'Safari', 'label' => 'Safari'],
-                ['value' => 'Edge', 'label' => 'Edge'],
-                ['value' => 'Opera', 'label' => 'Opera'],
-                ['value' => 'Samsung Internet', 'label' => 'Samsung Internet'],
-                ['value' => 'UC Browser', 'label' => 'UC Browser'],
-            ],
-            'devices' => [
-                ['value' => 'Desktop', 'label' => 'Desktop'],
-                ['value' => 'Mobile', 'label' => 'Mobile'],
-                ['value' => 'Tablet', 'label' => 'Tablet'],
-                ['value' => 'Smart TV', 'label' => 'Smart TV'],
-                ['value' => 'Smart Watch', 'label' => 'Smart Watch'],
-                ['value' => 'Smart Speaker', 'label' => 'Smart Speaker'],
-                ['value' => 'Smart Home', 'label' => 'Smart Home'],
-                ['value' => 'Gaming Console', 'label' => 'Gaming Console'],
-            ],
+            'browsers' => Browser::getBrowsersForSelect(),
+            'devices' => DeviceType::getForSelect(),
             'imageSizes' => [
                 ['value' => '1x1', 'label' => '1x1 (Square)'],
                 ['value' => '16x9', 'label' => '16x9 (Landscape)'],
@@ -194,6 +179,99 @@ class CreativesController extends FrontendController
         $languageCode = $request->get('lang', app()->getLocale());
         return response()->json([
             'countries' => IsoCodesHelper::getPopularCountries($languageCode)
+        ]);
+    }
+
+    /**
+     * API метод для получения всех браузеров (AJAX)
+     */
+    public function getAllBrowsers(Request $request)
+    {
+        return response()->json([
+            'browsers' => Browser::getBrowsersForSelect()
+        ]);
+    }
+
+    /**
+     * API метод для получения популярных браузеров (AJAX)
+     */
+    public function getPopularBrowsers(Request $request)
+    {
+        $limit = $request->get('limit', 10);
+        return response()->json([
+            'browsers' => Browser::getPopularBrowsersForSelect($limit)
+        ]);
+    }
+
+    /**
+     * API метод для получения мобильных браузеров (AJAX)
+     */
+    public function getMobileBrowsers(Request $request)
+    {
+        return response()->json([
+            'browsers' => Browser::getMobileBrowsersForSelect()
+        ]);
+    }
+
+    /**
+     * API метод для получения десктопных браузеров (AJAX)
+     */
+    public function getDesktopBrowsers(Request $request)
+    {
+        return response()->json([
+            'browsers' => Browser::getDesktopBrowsersForSelect()
+        ]);
+    }
+
+    /**
+     * API метод для получения браузеров с группировкой по устройствам (AJAX)
+     */
+    public function getBrowsersGrouped(Request $request)
+    {
+        return response()->json([
+            'browsers' => Browser::getBrowsersGroupedByDevice()
+        ]);
+    }
+
+    /**
+     * API метод для поиска браузеров (AJAX)
+     */
+    public function searchBrowsers(Request $request)
+    {
+        $query = $request->get('q', '');
+        $limit = $request->get('limit', 20);
+
+        if (strlen($query) < 2) {
+            return response()->json([
+                'browsers' => []
+            ]);
+        }
+
+        return response()->json([
+            'browsers' => Browser::searchBrowsers($query, $limit)
+        ]);
+    }
+
+    /**
+     * API метод для получения статистики браузеров (AJAX)
+     */
+    public function getBrowserStats(Request $request)
+    {
+        return response()->json([
+            'stats' => Browser::getBrowserUsageStats()
+        ]);
+    }
+
+    /**
+     * API метод для очистки кэша браузеров (только для админов)
+     */
+    public function clearBrowsersCache(Request $request)
+    {
+        // Добавить проверку прав доступа при необходимости
+        Browser::clearBrowsersCache();
+
+        return response()->json([
+            'message' => 'Browser cache cleared successfully'
         ]);
     }
 }
