@@ -4,6 +4,8 @@ namespace App\Helpers;
 
 use Sokil\IsoCodes\IsoCodesFactory;
 use Illuminate\Support\Facades\DB;
+use App\Models\Frontend\IsoEntity;
+use App\Models\Frontend\IsoTranslation;
 
 class IsoCodesHelper
 {
@@ -173,26 +175,21 @@ class IsoCodesHelper
      */
     public static function getCountryFromDatabase(string $iso2, string $languageCode = 'en'): ?array
     {
-        $entity = DB::table('iso_entities')
-            ->where('type', 'country')
-            ->where('iso_code_2', strtoupper($iso2))
+        $entity = IsoEntity::countries()
+            ->active()
+            ->byIso2($iso2)
             ->first();
 
         if (!$entity) {
             return null;
         }
 
-        $translation = DB::table('iso_translations')
-            ->where('entity_id', $entity->id)
-            ->where('language_code', $languageCode)
-            ->first();
-
         return [
             'id' => $entity->id,
             'iso2' => $entity->iso_code_2,
             'iso3' => $entity->iso_code_3,
             'numeric_code' => $entity->numeric_code,
-            'name' => $translation ? $translation->translated_name : $entity->name,
+            'name' => $entity->getLocalizedName($languageCode),
             'original_name' => $entity->name,
         ];
     }
@@ -206,25 +203,20 @@ class IsoCodesHelper
      */
     public static function getLanguageFromDatabase(string $iso2, string $languageCode = 'en'): ?array
     {
-        $entity = DB::table('iso_entities')
-            ->where('type', 'language')
-            ->where('iso_code_2', strtoupper($iso2))
+        $entity = IsoEntity::languages()
+            ->active()
+            ->byIso2($iso2)
             ->first();
 
         if (!$entity) {
             return null;
         }
 
-        $translation = DB::table('iso_translations')
-            ->where('entity_id', $entity->id)
-            ->where('language_code', $languageCode)
-            ->first();
-
         return [
             'id' => $entity->id,
             'iso2' => $entity->iso_code_2,
             'iso3' => $entity->iso_code_3,
-            'name' => $translation ? $translation->translated_name : $entity->name,
+            'name' => $entity->getLocalizedName($languageCode),
             'original_name' => $entity->name,
         ];
     }
@@ -237,23 +229,24 @@ class IsoCodesHelper
      */
     public static function getAllCountries(string $languageCode = 'en'): array
     {
-        return DB::table('iso_entities as e')
-            ->leftJoin('iso_translations as t', function ($join) use ($languageCode) {
-                $join->on('e.id', '=', 't.entity_id')
-                    ->where('t.language_code', '=', $languageCode);
-            })
-            ->where('e.type', 'country')
-            ->where('e.is_active', true)
-            ->select([
-                'e.id',
-                'e.iso_code_2 as iso2',
-                'e.iso_code_3 as iso3',
-                'e.numeric_code',
-                'e.name as original_name',
-                DB::raw('COALESCE(t.translated_name, e.name) as name')
-            ])
-            ->orderBy('name')
+        return IsoEntity::countries()
+            ->active()
+            ->with(['translations' => function ($query) use ($languageCode) {
+                $query->where('language_code', $languageCode);
+            }])
             ->get()
+            ->map(function ($entity) use ($languageCode) {
+                return [
+                    'id' => $entity->id,
+                    'iso2' => $entity->iso_code_2,
+                    'iso3' => $entity->iso_code_3,
+                    'numeric_code' => $entity->numeric_code,
+                    'name' => $entity->getLocalizedName($languageCode),
+                    'original_name' => $entity->name,
+                ];
+            })
+            ->sortBy('name')
+            ->values()
             ->toArray();
     }
 
@@ -265,22 +258,23 @@ class IsoCodesHelper
      */
     public static function getAllLanguages(string $languageCode = 'en'): array
     {
-        return DB::table('iso_entities as e')
-            ->leftJoin('iso_translations as t', function ($join) use ($languageCode) {
-                $join->on('e.id', '=', 't.entity_id')
-                    ->where('t.language_code', '=', $languageCode);
-            })
-            ->where('e.type', 'language')
-            ->where('e.is_active', true)
-            ->select([
-                'e.id',
-                'e.iso_code_2 as iso2',
-                'e.iso_code_3 as iso3',
-                'e.name as original_name',
-                DB::raw('COALESCE(t.translated_name, e.name) as name')
-            ])
-            ->orderBy('name')
+        return IsoEntity::languages()
+            ->active()
+            ->with(['translations' => function ($query) use ($languageCode) {
+                $query->where('language_code', $languageCode);
+            }])
             ->get()
+            ->map(function ($entity) use ($languageCode) {
+                return [
+                    'id' => $entity->id,
+                    'iso2' => $entity->iso_code_2,
+                    'iso3' => $entity->iso_code_3,
+                    'name' => $entity->getLocalizedName($languageCode),
+                    'original_name' => $entity->name,
+                ];
+            })
+            ->sortBy('name')
+            ->values()
             ->toArray();
     }
 }

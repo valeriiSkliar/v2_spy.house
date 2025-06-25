@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use App\Helpers\IsoCodesHelper;
+use App\Models\Frontend\IsoEntity;
+use App\Models\Frontend\IsoTranslation;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -29,8 +31,8 @@ class CountryAndLanguageSeeder extends Seeder
     private function clearTables(): void
     {
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        DB::table('iso_translations')->delete();
-        DB::table('iso_entities')->delete();
+        IsoTranslation::query()->delete();
+        IsoEntity::query()->delete();
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
 
@@ -39,8 +41,8 @@ class CountryAndLanguageSeeder extends Seeder
         $countries = $localesData['en']['countries'];
 
         foreach ($countries as $countryData) {
-            // Вставка основных данных страны
-            $entityId = DB::table('iso_entities')->insertGetId([
+            // Создание ISO сущности для страны
+            $entity = IsoEntity::create([
                 'type' => 'country',
                 'iso_code_2' => $countryData['iso2'],
                 'iso_code_3' => $countryData['iso3'],
@@ -49,7 +51,7 @@ class CountryAndLanguageSeeder extends Seeder
                 'is_active' => true,
             ]);
 
-            // Вставка переводов для каждой локали
+            // Создание переводов для каждой локали
             foreach ($localesData as $langCode => $localeData) {
                 $translatedName = $this->findCountryTranslation(
                     $countryData['iso2'],
@@ -57,8 +59,7 @@ class CountryAndLanguageSeeder extends Seeder
                 );
 
                 if ($translatedName) {
-                    DB::table('iso_translations')->insert([
-                        'entity_id' => $entityId,
+                    $entity->translations()->create([
                         'language_code' => $langCode,
                         'translated_name' => $translatedName,
                     ]);
@@ -72,8 +73,8 @@ class CountryAndLanguageSeeder extends Seeder
         $languages = $localesData['en']['languages'];
 
         foreach ($languages as $languageData) {
-            // Вставка основных данных языка
-            $entityId = DB::table('iso_entities')->insertGetId([
+            // Создание ISO сущности для языка
+            $entity = IsoEntity::create([
                 'type' => 'language',
                 'iso_code_2' => $languageData['iso2'],
                 'iso_code_3' => $languageData['iso3'],
@@ -82,7 +83,7 @@ class CountryAndLanguageSeeder extends Seeder
                 'is_active' => true,
             ]);
 
-            // Вставка переводов для каждой локали
+            // Создание переводов для каждой локали
             foreach ($localesData as $langCode => $localeData) {
                 $translatedName = $this->findLanguageTranslation(
                     $languageData['iso2'],
@@ -91,8 +92,7 @@ class CountryAndLanguageSeeder extends Seeder
                 );
 
                 if ($translatedName) {
-                    DB::table('iso_translations')->insert([
-                        'entity_id' => $entityId,
+                    $entity->translations()->create([
                         'language_code' => $langCode,
                         'translated_name' => $translatedName,
                     ]);
