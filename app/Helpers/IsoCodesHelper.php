@@ -222,59 +222,57 @@ class IsoCodesHelper
     }
 
     /**
-     * Получить все страны с переводами
+     * Получить все страны с переводами (с кешированием)
      * 
      * @param string $languageCode Код языка для перевода
      * @return array
      */
     public static function getAllCountries(string $languageCode = 'en'): array
     {
-        return IsoEntity::countries()
-            ->active()
-            ->with(['translations' => function ($query) use ($languageCode) {
-                $query->where('language_code', $languageCode);
-            }])
-            ->get()
-            ->map(function ($entity) use ($languageCode) {
-                return [
-                    'id' => $entity->id,
-                    'iso2' => $entity->iso_code_2,
-                    'iso3' => $entity->iso_code_3,
-                    'numeric_code' => $entity->numeric_code,
-                    'name' => $entity->getLocalizedName($languageCode),
-                    'original_name' => $entity->name,
-                ];
-            })
-            ->sortBy('name')
-            ->values()
-            ->toArray();
+        return IsoEntity::getCachedCountriesForFilters($languageCode);
     }
 
     /**
-     * Получить все языки с переводами
+     * Получить все языки с переводами (с кешированием)
      * 
      * @param string $languageCode Код языка для перевода
      * @return array
      */
     public static function getAllLanguages(string $languageCode = 'en'): array
     {
-        return IsoEntity::languages()
-            ->active()
-            ->with(['translations' => function ($query) use ($languageCode) {
-                $query->where('language_code', $languageCode);
-            }])
-            ->get()
-            ->map(function ($entity) use ($languageCode) {
-                return [
-                    'id' => $entity->id,
-                    'iso2' => $entity->iso_code_2,
-                    'iso3' => $entity->iso_code_3,
-                    'name' => $entity->getLocalizedName($languageCode),
-                    'original_name' => $entity->name,
-                ];
-            })
-            ->sortBy('name')
-            ->values()
-            ->toArray();
+        return IsoEntity::getCachedLanguagesForFilters($languageCode);
+    }
+
+    /**
+     * Получить популярные страны для фильтров (с кешированием)
+     * 
+     * @param string $languageCode Код языка для перевода
+     * @return array
+     */
+    public static function getPopularCountries(string $languageCode = 'en'): array
+    {
+        return IsoEntity::getCachedPopularCountries($languageCode);
+    }
+
+    /**
+     * Получить карту стран ISO2 -> название (с кешированием)
+     * 
+     * @param string $languageCode Код языка для перевода
+     * @return array
+     */
+    public static function getCountryMap(string $languageCode = 'en'): array
+    {
+        return IsoEntity::getCachedCountryMap($languageCode);
+    }
+
+    /**
+     * Получить карту языков ISO2 -> название (с кешированием)
+     * 
+     * @param string $languageCode Код языка для перевода
+     * @return array
+     */
+    public static function getLanguageMap(string $languageCode = 'en'): array
+    {
+        return IsoEntity::getCachedLanguageMap($languageCode);
     }
 }

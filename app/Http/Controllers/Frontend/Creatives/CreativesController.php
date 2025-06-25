@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Frontend\Creatives;
 
 use App\Http\Controllers\FrontendController;
+use App\Helpers\IsoCodesHelper;
 use Illuminate\Http\Request;
 
 class CreativesController extends FrontendController
@@ -97,48 +98,7 @@ class CreativesController extends FrontendController
                 ['value' => 'TWITTER', 'label' => 'Twitter'],
                 ['value' => 'TIKTOK', 'label' => 'TikTok'],
             ],
-            'countries' => [
-                [
-                    'value' => 'USA',
-                    'label' => 'USA',
-                ],
-                [
-                    'value' => 'Canada',
-                    'label' => 'Canada',
-                ],
-                [
-                    'value' => 'UK',
-                    'label' => 'UK',
-                ],
-                [
-                    'value' => 'Australia',
-                    'label' => 'Australia',
-                ],
-                [
-                    'value' => 'Germany',
-                    'label' => 'Germany',
-                ],
-                [
-                    'value' => 'France',
-                    'label' => 'France',
-                ],
-                [
-                    'value' => 'Italy',
-                    'label' => 'Italy',
-                ],
-                [
-                    'value' => 'Spain',
-                    'label' => 'Spain',
-                ],
-                [
-                    'value' => 'Portugal',
-                    'label' => 'Portugal',
-                ],
-                [
-                    'value' => 'Brazil',
-                    'label' => 'Brazil',
-                ],
-            ],
+            'countries' => IsoCodesHelper::getAllCountries(app()->getLocale()),
             'sortOptions' => [
                 ['value' => 'byCreationDate', 'label' => 'По дате создания'],
                 ['value' => 'byActivity', 'label' => 'По дням активности'],
@@ -155,18 +115,7 @@ class CreativesController extends FrontendController
                 ['value' => 'thisYear', 'label' => 'За текущий год'],
                 ['value' => 'lastYear', 'label' => 'За прошлый год'],
             ],
-            'languages' => [
-                ['value' => 'en', 'label' => 'English'],
-                ['value' => 'ru', 'label' => 'Russian'],
-                ['value' => 'de', 'label' => 'German'],
-                ['value' => 'fr', 'label' => 'French'],
-                ['value' => 'es', 'label' => 'Spanish'],
-                ['value' => 'it', 'label' => 'Italian'],
-                ['value' => 'pt', 'label' => 'Portuguese'],
-                ['value' => 'zh', 'label' => 'Chinese'],
-                ['value' => 'ja', 'label' => 'Japanese'],
-                ['value' => 'ko', 'label' => 'Korean'],
-            ],
+            'languages' => IsoCodesHelper::getAllLanguages(app()->getLocale()),
             'operatingSystems' => [
                 ['value' => 'Windows', 'label' => 'Windows'],
                 ['value' => 'MacOS', 'label' => 'MacOS'],
@@ -220,5 +169,38 @@ class CreativesController extends FrontendController
             ],
             'activeTab' => 'push'
         ];
+    }
+
+    /**
+     * API метод для получения всех стран (AJAX)
+     */
+    public function getAllCountries(Request $request)
+    {
+        $languageCode = $request->get('lang', app()->getLocale());
+        return response()->json([
+            'countries' => IsoCodesHelper::getAllCountries($languageCode)
+        ]);
+    }
+
+    /**
+     * API метод для получения всех языков (AJAX)
+     */
+    public function getAllLanguages(Request $request)
+    {
+        $languageCode = $request->get('lang', app()->getLocale());
+        return response()->json([
+            'languages' => IsoCodesHelper::getAllLanguages($languageCode)
+        ]);
+    }
+
+    /**
+     * API метод для получения популярных стран (AJAX)
+     */
+    public function getPopularCountries(Request $request)
+    {
+        $languageCode = $request->get('lang', app()->getLocale());
+        return response()->json([
+            'countries' => IsoCodesHelper::getPopularCountries($languageCode)
+        ]);
     }
 }
