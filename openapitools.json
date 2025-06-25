@@ -1,0 +1,26 @@
+{
+  "generator-cli": {
+    "version": "7.2.0",
+    "generators": {
+      "typescript-axios": {
+        "output": "./resources/js/api/generated",
+        "glob": "**/*",
+        "additionalProperties": {
+          "supportsES6": true,
+          "withInterfaces": true,
+          "typescriptThreePlus": true,
+          "apiPackage": "api",
+          "modelPackage": "models",
+          "npmName": "@spy-house/api-client",
+          "npmVersion": "1.0.0",
+          "stringEnums": true,
+          "enumNameSuffix": "Enum",
+          "useObjectParameters": true,
+          "withoutRuntimeChecks": true,
+          "legacyDiscriminatorBehavior": false,
+          "useSingleRequestParameter": false
+        }
+      }
+    }
+  }
+}

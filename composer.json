@@ -12,6 +12,7 @@
         "php": "^8.2",
         "anhskohbo/no-captcha": "*",
         "chillerlan/php-qrcode": "*",
+        "darkaonline/l5-swagger": "*",
         "firebase/php-jwt": "*",
         "kalnoy/nestedset": "^6.0",
         "laravel/framework": "^12.0",

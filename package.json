@@ -9,9 +9,13 @@
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest --watch",
     "type-check": "tsc --noEmit",
-    "type-check:watch": "tsc --noEmit --watch"
+    "type-check:watch": "tsc --noEmit --watch",
+    "generate:api": "npx @openapitools/openapi-generator-cli generate -i storage/api-docs/api-docs.json -g typescript-axios -o ./resources/js/api/generated --additional-properties=supportsES6=true,withInterfaces=true,typescriptThreePlus=true,apiPackage=api,modelPackage=models,npmName=@spy-house/api-client,npmVersion=1.0.0,stringEnums=true,enumNameSuffix=Enum,withoutRuntimeChecks=true,legacyDiscriminatorBehavior=false,useSingleRequestParameter=false",
+    "generate:api:remote": "openapi-generator-cli generate -i http://localhost:8000/api/documentation.json -g typescript-axios -o ./resources/js/api/generated --additional-properties=supportsES6=true,withInterfaces=true,typescriptThreePlus=true,stringEnums=true",
+    "docs:generate": "php artisan l5-swagger:generate && npm run generate:api"
   },
   "devDependencies": {
+    "@openapitools/openapi-generator-cli": "^2.21.0",
     "@types/lodash.debounce": "^4.0.9",
     "@types/node": "^24.0.3",
     "@vitest/coverage-v8": "^3.2.1",
