@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Models\Blog;
+namespace App\Models\Frontend\Blog;
 
-use App\Models\SEO\SeoMeta;
+use App\Models\Frontend\SEO\SeoMeta;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
