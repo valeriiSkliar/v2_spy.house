@@ -12,7 +12,7 @@
         </template>
         <template v-else>
           <span v-for="value in values" :key="value" class="multi-select__tag">
-            {{ value }}
+            {{ getLabelByValue(value) }}
             <button class="multi-select__remove" @click.stop="removeValue(value)">×</button>
           </span>
         </template>
@@ -42,7 +42,10 @@
               :checked="values.includes(option.value)"
               @click.stop
             />
-            {{ option.label }}
+            <div class="multi-select__option-logo" v-if="showLogo">
+              <img :src="option.logo" alt="Logo" />
+            </div>
+            <span class="multi-select__option-label">{{ option.label }}</span>
           </li>
           <li v-if="filteredOptions.length === 0" class="multi-select__no-options">
             No options found
@@ -61,6 +64,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue';
 interface Option {
   value: string;
   label: string;
+  logo?: string;
 }
 
 interface Props {
@@ -68,6 +72,7 @@ interface Props {
   placeholder?: string;
   disabled?: boolean;
   options?: Option[];
+  showLogo?: boolean;
 }
 
 interface Emits {
@@ -79,6 +84,7 @@ const props = withDefaults(defineProps<Props>(), {
   placeholder: 'Select options',
   disabled: false,
   options: () => [{ value: 'default', label: 'Select options' }],
+  showLogo: false,
 });
 
 const emit = defineEmits<Emits>();
@@ -96,6 +102,11 @@ const filteredOptions = computed(() => {
     option.label.toLowerCase().includes(searchQuery.value.toLowerCase())
   );
 });
+
+function getLabelByValue(value: string): string {
+  const option = props.options.find(option => option.value === value);
+  return option ? option.label : value;
+}
 
 function toggleDropdown(): void {
   if (!props.disabled) {

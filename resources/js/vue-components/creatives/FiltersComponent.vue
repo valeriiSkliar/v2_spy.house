@@ -119,6 +119,7 @@
           <!-- Рекламные сети -->
           <div class="col-12 col-md-6 col-lg-3 mb-15">
             <MultiSelect
+              :show-logo="true"
               :values="initStore().filters.advertisingNetworks"
               :options="getMultiSelectOptions('advertisingNetworks')"
               :placeholder="getTranslation('advertisingNetworks', 'Advertising networks')"

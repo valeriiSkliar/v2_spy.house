@@ -103,6 +103,14 @@
           display: none;
         }
 
+        .multi-select__option-logo {
+          width: 16px;
+          height: 16px;
+          img {
+            width: 100%;
+          }
+        }
+
         &:hover {
           background-color: #f5f5f5;
         }

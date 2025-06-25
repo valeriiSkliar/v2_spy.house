@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Frontend\Creatives;
 
 use App\Http\Controllers\FrontendController;
 use App\Helpers\IsoCodesHelper;
+use App\Models\AdvertismentNetwork;
 use Illuminate\Http\Request;
 
 class CreativesController extends FrontendController
@@ -89,15 +90,7 @@ class CreativesController extends FrontendController
     public function getSelectOptions()
     {
         return [
-            'advertisingNetworks' => [
-                ['value' => 'GOOGLE', 'label' => 'Google'],
-                ['value' => 'META', 'label' => 'Meta'],
-                ['value' => 'AMAZON', 'label' => 'Amazon'],
-                ['value' => 'MICROSOFT', 'label' => 'Microsoft'],
-                ['value' => 'APPLE', 'label' => 'Apple'],
-                ['value' => 'TWITTER', 'label' => 'Twitter'],
-                ['value' => 'TIKTOK', 'label' => 'TikTok'],
-            ],
+            'advertisingNetworks' => AdvertismentNetwork::forCreativeFilters(),
             'countries' => IsoCodesHelper::getAllCountries(app()->getLocale()),
             'sortOptions' => [
                 ['value' => 'byCreationDate', 'label' => 'По дате создания'],
