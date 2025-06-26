@@ -2,7 +2,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "vite build",
+    "build": "NODE_ENV=production vite build",
     "dev": "vite",
     "test": "vitest",
     "test:ui": "vitest --ui",
