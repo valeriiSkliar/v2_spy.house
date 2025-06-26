@@ -1,151 +1,238 @@
-import axios from "axios";
+// services/CreativesService.ts
+// Оптимизированный сервис для работы с креативами
 
-// Типы для системы креативов
-interface Creative {
-  id: number;
-  name: string;
-  category: string;
-  country: string;
-  file_url: string;
-  preview_url?: string;
-  created_at: string;
-  activity_date?: string;
-  advertising_networks?: string[];
-  languages?: string[];
-  operating_systems?: string[];
-  browsers?: string[];
-  devices?: string[];
-  image_sizes?: string[];
-  is_adult?: boolean;
-}
-
-interface CreativesFilters {
-  searchKeyword?: string;
-  country?: string;
-  dateCreation?: string;
-  sortBy?: 'creation' | 'activity';
-  periodDisplay?: string;
-  advertisingNetworks?: string[];
-  languages?: string[];
-  operatingSystems?: string[];
-  browsers?: string[];
-  devices?: string[];
-  imageSizes?: string[];
-  onlyAdult?: boolean;
-  page?: number;
-  perPage?: number;
-}
-
-interface CreativesResponse {
-  status: string;
-  data: {
-    items: Creative[];
-    pagination: {
-      total: number;
-      perPage: number;
-      currentPage: number;
-      lastPage: number;
-      from: number;
-      to: number;
-    };
-    meta: {
-      hasSearch: boolean;
-      activeFiltersCount: number;
-      cacheKey: string;
-      appliedFilters?: any;
-    };
-  };
-}
-
-interface ProcessedCreativesData {
-  items: Creative[];
-  pagination: {
-    total: number;
-    perPage: number;
-    currentPage: number;
-    lastPage: number;
-    from: number;
-    to: number;
-  };
-  meta: {
-    hasSearch: boolean;
-    activeFiltersCount: number;
-    cacheKey: string;
-  };
-}
-
-// Конфигурация сервиса
-interface CreativesServiceConfig {
-  defaultCacheTtl: number;
-  searchCacheTtl: number;
-  debounceDelay: number;
-  maxCacheKeyLength: number;
-}
+import type {
+  Creative,
+  CreativesFilters,
+  CreativesResponse,
+  CreativesServiceConfig,
+  ProcessedCreativesData,
+  ValidationResult
+} from '@/types/creatives.d';
+import { CREATIVES_CONSTANTS } from '@/types/creatives.d';
+import axios, { type AxiosResponse, type CancelTokenSource } from 'axios';
 
 /**
- * Сервис для управления креативами с расширенной логикой фильтрации и кэширования
+ * Конфигурация по умолчанию
+ */
+const DEFAULT_CONFIG: CreativesServiceConfig = {
+  defaultCacheTtl: CREATIVES_CONSTANTS.CACHE_TTL.DEFAULT,
+  searchCacheTtl: CREATIVES_CONSTANTS.CACHE_TTL.SEARCH,
+  debounceDelay: CREATIVES_CONSTANTS.DEBOUNCE_DELAY,
+  maxCacheKeyLength: 20,
+  retryAttempts: 3,
+  retryDelay: 1000,
+};
+
+/**
+ * Оптимизированный сервис для управления креативами
  */
 class CreativesService {
-  private config: CreativesServiceConfig = {
-    defaultCacheTtl: 5 * 60 * 1000, // 5 минут
-    searchCacheTtl: 30 * 1000,      // 30 секунд для поиска
-    debounceDelay: 300,             // 300ms debounce
-    maxCacheKeyLength: 20           // максимальная длина ключа кэша
-  };
+  private config: CreativesServiceConfig;
+  private requestCache = new Map<string, Promise<ProcessedCreativesData>>();
+  private loadingStates = new Map<string, CancelTokenSource>();
+  private validationCache = new Map<string, ValidationResult>();
 
-  private loadingStates = new Map<string, boolean>();
-  // private lastRequestTime = 0;
+  constructor(config: Partial<CreativesServiceConfig> = {}) {
+    this.config = { ...DEFAULT_CONFIG, ...config };
+  }
 
-  constructor(config?: Partial<CreativesServiceConfig>) {
-    if (config) {
-      this.config = { ...this.config, ...config };
+  /**
+   * Основной метод загрузки креативов
+   */
+  async loadCreatives(filters: CreativesFilters = {}): Promise<ProcessedCreativesData> {
+    const requestKey = this.generateRequestKey(filters);
+    
+    // Проверяем кэш запросов
+    if (this.requestCache.has(requestKey)) {
+      return this.requestCache.get(requestKey)!;
+    }
+    
+    // Отменяем предыдущий запрос если есть
+    this.cancelRequest(requestKey);
+    
+    // Создаем cancel token для нового запроса
+    const cancelSource = axios.CancelToken.source();
+    this.loadingStates.set(requestKey, cancelSource);
+    
+    // Создаем промис для запроса
+    const requestPromise = this.executeRequest(filters, cancelSource);
+    
+    // Кэшируем промис
+    this.requestCache.set(requestKey, requestPromise);
+    
+    try {
+      const result = await requestPromise;
+      
+      // Очищаем кэш через TTL
+      this.scheduleCleanup(requestKey, filters);
+      
+      return result;
+      
+    } catch (error) {
+      // Удаляем из кэша при ошибке
+      this.requestCache.delete(requestKey);
+      throw error;
+    } finally {
+      // Очищаем состояние загрузки
+      this.loadingStates.delete(requestKey);
     }
   }
 
   /**
-   * Основной метод загрузки креативов с фильтрацией
+   * Выполняет запрос с retry логикой
    */
-  async loadCreatives(filters: CreativesFilters = {}): Promise<ProcessedCreativesData> {
-    console.log('🔍 CreativesService.loadCreatives вызван с фильтрами:', filters);
+  private async executeRequest(
+    filters: CreativesFilters, 
+    cancelSource: CancelTokenSource
+  ): Promise<ProcessedCreativesData> {
+    const processedFilters = this.preprocessFilters(filters);
+    let lastError: Error;
     
-    // Генерируем уникальный ключ для запроса
-    const requestKey = this.generateRequestKey(filters);
-    console.log('🔑 Ключ запроса в Service:', requestKey);
-    
-    // Проверяем, не выполняется ли уже такой запрос
-    if (this.loadingStates.get(requestKey)) {
-      console.log('⚠️ Запрос уже выполняется, отклоняем');
-      throw new Error('Запрос уже выполняется');
+    for (let attempt = 1; attempt <= this.config.retryAttempts!; attempt++) {
+      try {
+        // Валидация (с кэшированием)
+        await this.validateFilters(processedFilters);
+        
+        // API запрос
+        const response = await this.makeApiRequest(processedFilters, cancelSource);
+        
+        // Постобработка
+        return this.postprocessData(response, processedFilters);
+        
+      } catch (error) {
+        lastError = error as Error;
+        
+        // Не повторяем для отмененных запросов
+        if (axios.isCancel(error)) {
+          throw error;
+        }
+        
+        // Не повторяем для ошибок валидации
+        if (error instanceof ValidationError) {
+          throw error;
+        }
+        
+        // Логируем только в dev режиме
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`Попытка ${attempt} не удалась:`, error);
+        }
+        
+        // Ждем перед повтором (кроме последней попытки)
+        if (attempt < this.config.retryAttempts!) {
+          await this.delay(this.config.retryDelay! * attempt);
+        }
+      }
     }
+    
+    throw lastError!;
+  }
 
-    this.loadingStates.set(requestKey, true);
-    console.log('🚀 Начинаем выполнение запроса');
-
+  /**
+   * Валидирует фильтры с кэшированием
+   */
+  private async validateFilters(filters: CreativesFilters): Promise<void> {
+    const validationKey = this.generateValidationKey(filters);
+    
+    // Проверяем кэш валидации
+    if (this.validationCache.has(validationKey)) {
+      const cached = this.validationCache.get(validationKey)!;
+      if (!cached.isValid) {
+        throw new ValidationError('Ошибка валидации фильтров', cached.errors);
+      }
+      return;
+    }
+    
     try {
-      // Предварительная обработка фильтров
-      const processedFilters = this.preprocessFilters(filters);
-      console.log('🔧 Обработанные фильтры:', processedFilters);
+      const response = await axios.get('/api/creatives/filters/validate', { 
+        params: filters,
+        timeout: 5000 
+      });
       
-      // Определяем конфигурацию кэширования
-      const cacheConfig = this.getCacheConfig(processedFilters);
-      console.log('💾 Конфигурация кэша:', cacheConfig);
-      
-      // Выполняем API запрос (будет подключен на следующем этапе)
-      console.log('📡 Вызываем makeApiRequest...');
-      const response = await this.makeApiRequest(processedFilters, cacheConfig);
-      console.log('📨 Ответ от makeApiRequest:', response);
-      
-      // Постобработка данных
-      const processedData = this.postprocessData(response, processedFilters);
-      console.log('✨ Финальные обработанные данные:', processedData);
-      
-      return processedData;
-      
-    } finally {
-      this.loadingStates.delete(requestKey);
-      console.log('🏁 Запрос завершен, состояние очищено');
+      if (response.data.status === 'success') {
+        const validationResult: ValidationResult = {
+          isValid: true,
+          errors: {},
+          rejectedValues: response.data.validation?.rejectedValues || [],
+          sanitizedCount: response.data.validation?.sanitizedCount || 0,
+          originalCount: response.data.validation?.originalCount || 0,
+          validatedCount: response.data.validation?.validatedCount || 0,
+        };
+        
+        // Кэшируем результат валидации на 1 минуту
+        this.validationCache.set(validationKey, validationResult);
+        setTimeout(() => this.validationCache.delete(validationKey), 60000);
+        
+        if (validationResult.rejectedValues.length > 0 && process.env.NODE_ENV === 'development') {
+          console.warn('Отклоненные значения фильтров:', validationResult.rejectedValues);
+        }
+      }
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Ошибка валидации фильтров:', error);
+      }
+      // Продолжаем с исходными фильтрами если валидация не удалась
     }
   }
+
+  /**
+   * Выполняет API запрос
+   */
+  private async makeApiRequest(
+    filters: CreativesFilters,
+    cancelSource: CancelTokenSource
+  ): Promise<CreativesResponse> {
+    const response: AxiosResponse = await axios.get('/api/creatives', {
+      params: filters,
+      cancelToken: cancelSource.token,
+      timeout: 10000,
+    });
+
+    if (response.status !== 200) {
+      throw new Error(`API вернул статус ${response.status}`);
+    }
+
+    const apiData = response.data;
+    
+    if (!apiData || apiData.status !== 'success' || !apiData.data) {
+      throw new Error('Неверная структура ответа от API');
+    }
+
+    const { items, pagination, meta } = apiData.data;
+    
+    if (!Array.isArray(items) || !pagination || !meta) {
+      throw new Error('Отсутствуют обязательные поля в ответе API');
+    }
+
+    return apiData;
+  }
+
+  /**
+   * Постобработка данных
+   */
+  private postprocessData(response: CreativesResponse, filters: CreativesFilters): ProcessedCreativesData {
+    const processedItems = response.data.items.map(this.enrichCreative);
+    
+    return {
+      items: processedItems,
+      pagination: response.data.pagination,
+      meta: {
+        hasSearch: response.data.meta.hasSearch,
+        activeFiltersCount: response.data.meta.activeFiltersCount,
+        cacheKey: response.data.meta.cacheKey || this.generateRequestKey(filters),
+      }
+    };
+  }
+
+  /**
+   * Обогащает креатив дополнительными свойствами
+   */
+  private enrichCreative = (creative: Creative): Creative => ({
+    ...creative,
+    displayName: this.generateDisplayName(creative),
+    isRecent: this.isRecentCreative(creative),
+    isFavorite: false, // TODO: реализовать логику избранного
+  });
 
   /**
    * Предварительная обработка фильтров
@@ -153,311 +240,202 @@ class CreativesService {
   private preprocessFilters(filters: CreativesFilters): CreativesFilters {
     const processed: CreativesFilters = {};
 
-    // Очистка пустых строк и null значений
+    // Обрабатываем каждое поле
     Object.entries(filters).forEach(([key, value]) => {
-      if (value !== '' && value !== null && value !== undefined) {
+      if (this.isValidFilterValue(value)) {
         if (Array.isArray(value)) {
-          // Для массивов убираем пустые значения
           const cleanArray = value.filter(item => item !== '' && item !== null);
           if (cleanArray.length > 0) {
-            processed[key as keyof CreativesFilters] = cleanArray as any;
+            (processed as any)[key] = cleanArray;
           }
         } else {
-          processed[key as keyof CreativesFilters] = value;
+          (processed as any)[key] = value;
         }
       }
     });
 
-    // Установка значений по умолчанию
+    // Дефолтные значения
     return {
       page: 1,
-      perPage: 12,
+      perPage: CREATIVES_CONSTANTS.DEFAULT_PAGE_SIZE,
       sortBy: 'creation',
-      // country: 'default',
-      // onlyAdult: false,
       ...processed
     };
   }
 
   /**
-   * Определение конфигурации кэширования
+   * Проверяет валидность значения фильтра
    */
-  private getCacheConfig(filters: CreativesFilters) {
-    const hasSearch = Boolean(filters.searchKeyword && filters.searchKeyword.length > 0);
-    const hasComplexFilters = this.hasComplexFilters(filters);
-    
-    // Генерируем уникальный ID для кэша
-    const cacheId = `creatives-${this.generateCacheKey(filters)}`;
-    
-    // Определяем TTL в зависимости от типа фильтров
-    let ttl = this.config.defaultCacheTtl;
-    if (hasSearch) {
-      ttl = this.config.searchCacheTtl;
-    } else if (hasComplexFilters) {
-      ttl = Math.floor(this.config.defaultCacheTtl / 2); // Уменьшаем TTL для сложных фильтров
-    }
-
-    return {
-      id: cacheId,
-      cache: {
-        ttl,
-        methods: ['get'] as const
-      }
-    };
+  private isValidFilterValue(value: any): boolean {
+    return value !== '' && value !== null && value !== undefined;
   }
 
   /**
-   * Проверка наличия сложных фильтров
-   */
-  private hasComplexFilters(filters: CreativesFilters): boolean {
-    const complexFilterKeys = [
-      'advertisingNetworks', 'languages', 'operatingSystems', 
-      'browsers', 'devices', 'imageSizes'
-    ];
-    
-    return complexFilterKeys.some(key => {
-      const value = filters[key as keyof CreativesFilters];
-      return Array.isArray(value) && value.length > 0;
-    });
-  }
-
-  /**
-   * Генерация ключа кэша на основе фильтров
-   */
-  private generateCacheKey(filters: CreativesFilters): string {
-    // Создаем детерминированную строку из фильтров
-    const filterString = JSON.stringify(filters, Object.keys(filters).sort());
-    
-    // Создаем короткий хэш
-    let hash = 0;
-    for (let i = 0; i < filterString.length; i++) {
-      const char = filterString.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Преобразуем в 32-битное число
-    }
-    
-    // Возвращаем положительный хэш в base36 формате
-    return Math.abs(hash).toString(36).substring(0, this.config.maxCacheKeyLength);
-  }
-
-  /**
-   * Генерация ключа для отслеживания запросов
+   * Генерирует ключ запроса для кэширования
    */
   private generateRequestKey(filters: CreativesFilters): string {
-    return `request-${this.generateCacheKey(filters)}`;
+    const normalized = this.normalizeFilters(filters);
+    const str = JSON.stringify(normalized, Object.keys(normalized).sort());
+    return this.createHash(str).substring(0, this.config.maxCacheKeyLength);
   }
 
   /**
-   * Заглушка для API запроса (будет реализована на следующем этапе)
+   * Генерирует ключ для кэша валидации
    */
-  private async makeApiRequest(filters: CreativesFilters, cacheConfig: any): Promise<CreativesResponse> {
-    console.log('🎯 === makeApiRequest ВЫЗВАН! ===');
-    console.log('📋 API запрос с фильтрами:', filters);
-    console.log('💾 Конфигурация кэша:', cacheConfig);
-
-    
-    // Валидация фильтров перед основным запросом
-    try {
-      console.log('🔍 Начинаем валидацию фильтров...');
-      const validationResponse = await axios.get('/api/creatives/filters/validate', { 
-        params: filters 
-      });
-      
-      if (validationResponse.data.status === 'success') {
-        const { filters: validatedFilters, validation } = validationResponse.data;
-        
-        console.log('✅ Фильтры валидированы:', {
-          originalCount: validation.originalCount,
-          validatedCount: validation.validatedCount,
-          sanitizedCount: validation.sanitizedCount,
-          rejectedValues: validation.rejectedValues
-        });
-        
-        // Если были отклоненные значения, логируем их
-        if (validation.rejectedValues.length > 0) {
-          console.warn('⚠️ Отклоненные значения фильтров:', validation.rejectedValues);
-        }
-        
-        // Используем валидированные фильтры для основного запроса
-        filters = validatedFilters;
-      }
-    } catch (validationError) {
-      console.warn('⚠️ Ошибка валидации фильтров:', validationError);
-      // Продолжаем с исходными фильтрами если валидация не удалась
-    }
-
-    
-    // Симулируем небольшую задержку сети для реалистичности
-    // await new Promise(resolve => setTimeout(resolve, 300));
-
-    const response = await axios.get('/api/creatives', { params: filters });
-    console.log('📤 makeApiRequest RESPONSE возвращает ответ:', response);
-
-    if (response.status !== 200 || !response.statusText.includes('OK')) {
-      throw new Error('Не удалось получить данные из API'); // TODO: Добавить локализацию
-    }
-
-    // Извлекаем данные из обертки axios response
-    const apiData = response.data;
-    console.log('📦 API данные из response.data:', apiData);
-
-    // Анализируем структуру ответа
-    if (apiData && apiData.status === 'success' && apiData.data) {
-      // Случай: { status, data: { items, pagination, meta } }
-      const dataContent = apiData.data;
-      console.log('🔍 Содержимое apiData.data:', dataContent);
-      
-      // Проверяем что внутри есть items, pagination, meta
-      if (dataContent.items && dataContent.pagination && dataContent.meta) {
-        console.log('✅ Найдена корректная структура ответа');
-        return apiData; // Возвращаем { status: "success", data: { items, pagination, meta } }
-      }
-    }
-
-    console.error('❌ Неверная структура ответа от API. Получено:', apiData);
-    console.error('📋 Ожидается: { status: "success", data: { items, pagination, meta } }');
-    throw new Error('Неверная структура ответа от API');
-
+  private generateValidationKey(filters: CreativesFilters): string {
+    return 'validation_' + this.generateRequestKey(filters);
   }
 
   /**
-   * Постобработка данных после получения от API
+   * Нормализует фильтры для консистентного хэширования
    */
-  private postprocessData(response: CreativesResponse, filters: CreativesFilters): ProcessedCreativesData {
-    // Обработка элементов креативов
-    const processedItems = response.data.items.map((item: Creative) => ({
-      ...item,
-      // Добавляем computed свойства
-      displayName: this.generateDisplayName(item),
-      isRecent: this.isRecentCreative(item),
-      // TODO: Добавить проверку избранного на следующих этапах
-      isFavorite: false
-    }));
-
-    // Используем метаданные из сервера, дополняем локальными если нужно
-    const serverMeta = response.data.meta;
-    const localCacheKey = this.generateCacheKey(filters);
-
-    return {
-      items: processedItems,
-      pagination: response.data.pagination,
-      meta: {
-        hasSearch: serverMeta.hasSearch,
-        activeFiltersCount: serverMeta.activeFiltersCount,
-        cacheKey: serverMeta.cacheKey || localCacheKey
+  private normalizeFilters(filters: CreativesFilters): CreativesFilters {
+    const normalized: CreativesFilters = {};
+    
+    Object.entries(filters).forEach(([key, value]) => {
+      if (Array.isArray(value)) {
+        // Сортируем массивы для консистентности
+        normalized[key as keyof CreativesFilters] = [...value].sort() as any;
+      } else {
+        normalized[key as keyof CreativesFilters] = value;
       }
-    };
+    });
+    
+    return normalized;
   }
 
   /**
-   * Генерация отображаемого имени креатива
+   * Создает хэш строки
+   */
+  private createHash(str: string): string {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // 32-битное число
+    }
+    return Math.abs(hash).toString(36);
+  }
+
+  /**
+   * Планирует очистку кэша
+   */
+  private scheduleCleanup(requestKey: string, filters: CreativesFilters): void {
+    const hasSearch = Boolean(filters.searchKeyword);
+    const ttl = hasSearch ? this.config.searchCacheTtl : this.config.defaultCacheTtl;
+    
+    setTimeout(() => {
+      this.requestCache.delete(requestKey);
+    }, ttl);
+  }
+
+  /**
+   * Отменяет запрос
+   */
+  private cancelRequest(requestKey: string): void {
+    const cancelSource = this.loadingStates.get(requestKey);
+    if (cancelSource) {
+      cancelSource.cancel('Новый запрос отменил предыдущий');
+      this.loadingStates.delete(requestKey);
+    }
+  }
+
+  /**
+   * Задержка
+   */
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Генерирует отображаемое имя креатива
    */
   private generateDisplayName(creative: Creative): string {
-    if (creative.name) {
-      return creative.name;
-    }
+    if (creative.name) return creative.name;
     
-    // Генерируем имя на основе других данных
-    const parts: string[] = [];
-    
-    if (creative.category) {
-      parts.push(creative.category);
-    }
-    
-    if (creative.country) {
-      parts.push(creative.country);
-    }
-    
+    const parts = [creative.category, creative.country].filter(Boolean);
     return parts.join(' - ') || `Creative #${creative.id}`;
   }
 
   /**
-   * Проверка является ли креатив недавним
+   * Проверяет является ли креатив недавним
    */
   private isRecentCreative(creative: Creative): boolean {
     const createdDate = new Date(creative.created_at);
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    
     return createdDate > weekAgo;
   }
 
-  /**
-   * Подсчет активных фильтров
-   */
-  private countActiveFilters(filters: CreativesFilters): number {
-    let count = 0;
-    
-    // Исключаем технические параметры из подсчета
-    const excludeKeys = ['page', 'perPage', 'sortBy'];
-    
-    Object.entries(filters).forEach(([key, value]) => {
-      if (excludeKeys.includes(key)) return;
-      
-      if (Array.isArray(value)) {
-        if (value.length > 0) count++;
-      } else if (value !== '' && value !== null && value !== undefined) {
-        // Исключаем значения по умолчанию
-        if (key === 'country' && value === 'default') return;
-        if (key === 'onlyAdult' && value === false) return;
-        
-        count++;
-      }
-    });
-    
-    return count;
-  }
+  // Публичные методы
 
   /**
-   * Проверка выполняется ли запрос
+   * Проверяет состояние загрузки
    */
   isLoading(filters?: CreativesFilters): boolean {
     if (!filters) {
-      // Проверяем есть ли хоть один активный запрос
       return this.loadingStates.size > 0;
     }
     
     const requestKey = this.generateRequestKey(filters);
-    return this.loadingStates.get(requestKey) || false;
+    return this.loadingStates.has(requestKey);
   }
 
   /**
-   * Отмена всех активных запросов
+   * Отменяет все активные запросы
    */
   cancelAllRequests(): void {
+    this.loadingStates.forEach(cancelSource => {
+      cancelSource.cancel('Все запросы отменены');
+    });
     this.loadingStates.clear();
+    this.requestCache.clear();
   }
 
   /**
-   * Получение конфигурации сервиса
+   * Очищает все кэши
+   */
+  clearCache(): void {
+    this.requestCache.clear();
+    this.validationCache.clear();
+  }
+
+  /**
+   * Получает конфигурацию
    */
   getConfig(): CreativesServiceConfig {
     return { ...this.config };
   }
 
   /**
-   * Обновление конфигурации сервиса
+   * Обновляет конфигурацию
    */
   updateConfig(config: Partial<CreativesServiceConfig>): void {
     this.config = { ...this.config, ...config };
   }
 
   /**
-   * Публичный метод для тестирования предобработки фильтров
+   * Получает статистику кэша
    */
-  public testPreprocessFilters(filters: CreativesFilters): CreativesFilters {
-    return this.preprocessFilters(filters);
+  getCacheStats() {
+    return {
+      requestCacheSize: this.requestCache.size,
+      validationCacheSize: this.validationCache.size,
+      activeRequests: this.loadingStates.size,
+    };
   }
 }
 
-// Экспортируем типы для использования в других модулях
-export type {
-  Creative,
-  CreativesFilters,
-  CreativesResponse, CreativesServiceConfig, ProcessedCreativesData
-};
+/**
+ * Ошибка валидации
+ */
+class ValidationError extends Error {
+  constructor(message: string, public errors: Record<string, string>) {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}
 
-// Экспортируем синглтон сервиса
+// Экспорт
+export { ValidationError };
 export const creativesService = new CreativesService();
-
-// Экспортируем класс для создания кастомных инстансов
-export default CreativesService; 
+export default CreativesService;

@@ -2,10 +2,10 @@
 <template>
   <div class="filter-push">
     <button
-      v-for="tab in initStore().tabOptions"
+      v-for="tab in store.tabOptions"
       :key="tab.value"
       class="filter-push__item"
-      :class="{ active: tab.value === initStore().tabs.activeTab }"
+      :class="{ active: tab.value === store.tabs.activeTab }"
       @click="handleTabClick(tab.value)"
     >
       {{ tab.label }}
@@ -17,7 +17,7 @@
 <script setup lang="ts">
 import type { TabsState } from '@/types/creatives';
 import { onMounted, onUnmounted } from 'vue';
-import { useFiltersStore } from '../../stores/creatives';
+import { useCreativesFiltersStore } from '../../stores/useFiltersStore';
 
 interface Props {
   initialTabs?: Partial<TabsState>;
@@ -33,27 +33,20 @@ const props = withDefaults(defineProps<Props>(), {
   enableUrlSync: true,
 });
 
-// Store instance
-let storeInstance: ReturnType<typeof useFiltersStore> | null = null;
+// ============================================================================
+// STORE ИНИЦИАЛИЗАЦИЯ
+// ============================================================================
 
-// Инициализация store
-function initStore() {
-  if (storeInstance) return storeInstance;
+// Используем новый useCreativesFiltersStore с композаблами
+const store = useCreativesFiltersStore();
 
-  storeInstance = useFiltersStore();
-  console.log('Tabs store создан');
-  return storeInstance;
-}
+// ============================================================================
+// УТИЛИТАРНЫЕ ФУНКЦИИ
+// ============================================================================
 
-console.log('TabsComponent props:', props.initialTabs, props.tabOptions);
-
-// Функция для получения переводов с fallback
-function getTranslation(key: string, fallback: string = key): string {
-  const store = initStore();
-  return store.getTranslation(key, fallback);
-}
-
-// Форматирование счетчиков (170k, 3.1k, etc.)
+/**
+ * Форматирование счетчиков (170k, 3.1k, etc.)
+ */
 function formatCount(count: string | number): string {
   if (typeof count === 'string') {
     return count;
@@ -71,15 +64,18 @@ function formatCount(count: string | number): string {
   return '';
 }
 
-// Обработчик клика по вкладке
+/**
+ * Обработчик клика по вкладке
+ */
 function handleTabClick(tabValue: string): void {
-  const store = initStore();
-
   if (store.tabs.activeTab !== tabValue) {
     console.log('Tab clicked:', tabValue);
+
+    // Устанавливаем новую активную вкладку через store
+    // Это автоматически триггерит URL синхронизацию и загрузку креативов
     store.setActiveTab(tabValue);
 
-    // Эмитим событие для компонентов, которые не используют Pinia
+    // Эмитим событие для компонентов, которые не используют новую систему (обратная совместимость)
     const event = new CustomEvent('tabs:changed', {
       detail: {
         activeTab: tabValue,
@@ -88,73 +84,95 @@ function handleTabClick(tabValue: string): void {
       },
     });
     document.dispatchEvent(event);
+
+    // Также эмитим новое событие для полной совместимости
+    const creativesEvent = new CustomEvent('creatives:tab-changed', {
+      detail: {
+        currentTab: tabValue,
+        previousTab: store.tabs.activeTab,
+        source: 'user',
+      },
+    });
+    document.dispatchEvent(creativesEvent);
   }
 }
 
-// Обработчик внешних событий смены вкладки
+/**
+ * Обработчик внешних событий смены вкладки (обратная совместимость)
+ */
 function handleExternalTabChange(event: Event): void {
   const customEvent = event as CustomEvent;
   const { currentTab } = customEvent.detail;
 
-  if (currentTab) {
-    const store = initStore();
-    if (store.tabs.activeTab !== currentTab) {
-      console.log('External tab change detected:', currentTab);
-      // Просто обновляем состояние, не генерируем новые события
-      store.tabs.activeTab = currentTab;
-    }
+  if (currentTab && store.tabs.activeTab !== currentTab) {
+    console.log('External tab change detected:', currentTab);
+    // Обновляем состояние через store (без генерации новых событий)
+    store.tabs.activeTab = currentTab;
   }
 }
 
+// ============================================================================
+// LIFECYCLE HOOKS
+// ============================================================================
+
 onMounted(async () => {
-  console.log('TabsComponent props:', props);
+  console.log('TabsComponent mounting with props:', props);
 
-  // 1. Инициализируем store (если еще не инициализирован)
-  const store = initStore();
+  try {
+    // 1. Инициализируем store с переданными параметрами
+    await store.initializeFilters(
+      props.initialTabs, // начальное состояние вкладок
+      undefined, // selectOptions не нужны для вкладок
+      props.translations, // переводы
+      props.tabOptions // опции вкладок (activeTab, counts, etc.)
+    );
 
-  // 2. Применяем конфигурацию вкладок если переданы props
-  if (Object.keys(props.initialTabs).length > 0 || Object.keys(props.tabOptions).length > 0) {
-    console.log('Initializing tabs with options...');
-
-    // Сначала применяем опции вкладок (включая activeTab из сервера)
-    if (props.tabOptions && Object.keys(props.tabOptions).length > 0) {
-      store.setTabOptions(props.tabOptions);
-    }
-
-    // Затем применяем начальное состояние (только если нет activeTab в tabOptions)
-    if (props.initialTabs && Object.keys(props.initialTabs).length > 0) {
-      // Не перезаписываем activeTab если он уже установлен из tabOptions
-      const { activeTab, ...restInitialTabs } = props.initialTabs;
-      Object.assign(store.tabs, restInitialTabs);
-
-      // Устанавливаем activeTab только если он не был установлен из tabOptions
-      if (activeTab && !props.tabOptions?.activeTab) {
-        store.tabs.activeTab = activeTab;
-      }
-    }
-  }
-
-  console.log('Tabs store инициализирован:', store.tabs);
-
-  // 3. Слушаем внешние события смены вкладок
-  document.addEventListener('creatives:tab-changed', handleExternalTabChange);
-
-  // Эмитим событие готовности компонента
-  const event = new CustomEvent('vue-component-ready', {
-    detail: {
-      component: 'CreativesTabsComponent',
-      props: props,
+    console.log('Store initialized:', {
       tabs: store.tabs,
-      urlSyncEnabled: props.enableUrlSync,
-      timestamp: new Date().toISOString(),
-    },
-  });
-  document.dispatchEvent(event);
+      tabOptions: store.tabOptions,
+      isInitialized: store.isInitialized,
+    });
+
+    // 2. Слушаем внешние события для обратной совместимости
+    document.addEventListener('creatives:tab-changed', handleExternalTabChange);
+
+    // 3. Эмитим событие готовности компонента
+    const readyEvent = new CustomEvent('vue-component-ready', {
+      detail: {
+        component: 'CreativesTabsComponent',
+        props: props,
+        store: {
+          tabs: store.tabs,
+          activeTab: store.tabs.activeTab,
+          tabOptions: store.tabOptions,
+        },
+        urlSyncEnabled: props.enableUrlSync,
+        timestamp: new Date().toISOString(),
+      },
+    });
+    document.dispatchEvent(readyEvent);
+
+    console.log('TabsComponent successfully mounted and initialized');
+  } catch (error) {
+    console.error('Error initializing TabsComponent:', error);
+
+    // Эмитим событие ошибки
+    const errorEvent = new CustomEvent('vue-component-error', {
+      detail: {
+        component: 'CreativesTabsComponent',
+        error: error,
+        timestamp: new Date().toISOString(),
+      },
+    });
+    document.dispatchEvent(errorEvent);
+  }
 });
 
 onUnmounted(() => {
   // Очищаем обработчики событий
   document.removeEventListener('creatives:tab-changed', handleExternalTabChange);
+
+  console.log('TabsComponent unmounted');
 });
 </script>
 

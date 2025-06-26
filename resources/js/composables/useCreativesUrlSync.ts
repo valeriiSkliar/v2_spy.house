@@ -1,217 +1,303 @@
-import type { FilterState } from '@/types/creatives';
-import { useUrlSync } from './useUrlSync';
+// composables/useCreativesUrlSync.ts  
+// Оптимизированная URL синхронизация без циклов
+
+import type { FilterState, TabValue, UrlSyncParams } from '@/types/creatives.d';
+import { CREATIVES_CONSTANTS, isValidTabValue } from '@/types/creatives.d';
+import { useUrlSearchParams } from '@vueuse/core';
+import { computed, nextTick, ref, type Ref } from 'vue';
 
 /**
- * Интерфейс состояния URL для креативов
- * Соответствует FilterState но с опциональными полями для URL
+ * Результат композабла для синхронизации креативов с URL
  */
-export interface CreativesUrlState {
-    // Фильтры
-    searchKeyword?: string;
-    country?: string;
-    dateCreation?: string;
-    sortBy?: string;
-    periodDisplay?: string;
-    advertisingNetworks?: string[];
-    languages?: string[];
-    operatingSystems?: string[];
-    browsers?: string[];
-    devices?: string[];
-    imageSizes?: string[];
-    onlyAdult?: boolean;
-    savedSettings?: string[];
-    isDetailedVisible?: boolean;
-    
-    // Вкладки
-    activeTab?: string;
-}
-
-/**
- * Преобразует FilterState в CreativesUrlState для URL синхронизации
- */
-function filterStateToUrlState(filterState: FilterState, activeTab?: string): CreativesUrlState {
-    return {
-        searchKeyword: filterState.searchKeyword || undefined,
-        country: filterState.country !== 'default' ? filterState.country : undefined,
-        dateCreation: filterState.dateCreation !== 'default' ? filterState.dateCreation : undefined,
-        sortBy: filterState.sortBy !== 'default' ? filterState.sortBy : undefined,
-        periodDisplay: filterState.periodDisplay !== 'default' ? filterState.periodDisplay : undefined,
-        advertisingNetworks: filterState.advertisingNetworks?.length > 0 ? [...filterState.advertisingNetworks] : undefined,
-        languages: filterState.languages?.length > 0 ? [...filterState.languages] : undefined,
-        operatingSystems: filterState.operatingSystems?.length > 0 ? [...filterState.operatingSystems] : undefined,
-        browsers: filterState.browsers?.length > 0 ? [...filterState.browsers] : undefined,
-        devices: filterState.devices?.length > 0 ? [...filterState.devices] : undefined,
-        imageSizes: filterState.imageSizes?.length > 0 ? [...filterState.imageSizes] : undefined,
-        onlyAdult: filterState.onlyAdult || undefined,
-        savedSettings: filterState.savedSettings?.length > 0 ? [...filterState.savedSettings] : undefined,
-        isDetailedVisible: filterState.isDetailedVisible || undefined,
-        
-        // Добавляем вкладку если отличается от дефолтной
-        activeTab: activeTab && activeTab !== 'push' ? activeTab : undefined,
-    };
-}
-
-/**
- * Преобразует CreativesUrlState в частичный FilterState
- */
-function urlStateToFilterState(urlState: CreativesUrlState): Partial<FilterState> {
-    return {
-        searchKeyword: urlState.searchKeyword !== undefined ? urlState.searchKeyword : '',
-        country: urlState.country !== undefined ? urlState.country : 'default',
-        dateCreation: urlState.dateCreation !== undefined ? urlState.dateCreation : 'default',
-        sortBy: urlState.sortBy !== undefined ? urlState.sortBy : 'default',
-        periodDisplay: urlState.periodDisplay !== undefined ? urlState.periodDisplay : 'default',
-        advertisingNetworks: Array.isArray(urlState.advertisingNetworks) ? [...urlState.advertisingNetworks] : [],
-        languages: Array.isArray(urlState.languages) ? [...urlState.languages] : [],
-        operatingSystems: Array.isArray(urlState.operatingSystems) ? [...urlState.operatingSystems] : [],
-        browsers: Array.isArray(urlState.browsers) ? [...urlState.browsers] : [],
-        devices: Array.isArray(urlState.devices) ? [...urlState.devices] : [],
-        imageSizes: Array.isArray(urlState.imageSizes) ? [...urlState.imageSizes] : [],
-        onlyAdult: urlState.onlyAdult !== undefined ? urlState.onlyAdult : false,
-        savedSettings: Array.isArray(urlState.savedSettings) ? [...urlState.savedSettings] : [],
-        isDetailedVisible: urlState.isDetailedVisible !== undefined ? urlState.isDetailedVisible : false,
-    };
+export interface UseCreativesUrlSyncReturn {
+  // Состояние
+  urlParams: ReturnType<typeof useUrlSearchParams>;
+  state: Readonly<Ref<UrlSyncParams>>;
+  isEnabled: Ref<boolean>;
+  
+  // Методы синхронизации
+  syncFiltersToUrl: (filters: FilterState, activeTab: TabValue) => void;
+  syncUrlToFilters: () => { filters: Partial<FilterState>; activeTab: TabValue };
+  
+  // Утилиты
+  hasUrlParams: () => boolean;
+  clearUrlParams: () => void;
+  getFilterUpdates: () => Partial<FilterState>;
+  getActiveTabFromUrl: () => TabValue;
 }
 
 /**
  * Композабл для синхронизации фильтров креативов с URL
- * 
- * @param initialState - Начальное состояние фильтров (опционально)
+ * Использует единый watchEffect вместо множественных watchers
  */
-export function useCreativesUrlSync(initialState?: Partial<CreativesUrlState>) {
-    // Создаем начальное состояние с дефолтными значениями (URL как source of truth)
-    const safeInitialState: CreativesUrlState = {
-        searchKeyword: '',
-        country: 'default',
-        dateCreation: 'default',
-        sortBy: 'default',
-        periodDisplay: 'default',
-        advertisingNetworks: [],
-        languages: [],
-        operatingSystems: [],
-        browsers: [],
-        devices: [],
-        imageSizes: [],
-        onlyAdult: false,
-        savedSettings: [],
-        isDetailedVisible: false,
-        activeTab: 'push', // Дефолтная вкладка
-        // Применяем переданные значения если есть
-        ...initialState
-    };
+export function useCreativesUrlSync(): UseCreativesUrlSyncReturn {
+  // Инициализация URL параметров
+  const urlParams = useUrlSearchParams('history', {
+    removeFalsyValues: true,
+    removeNullishValues: true,
+  });
 
-    const urlSync = useUrlSync(safeInitialState, {
-        prefix: 'cr',
-        debounce: 200,
-        transform: {
-            serialize: (value: any) => {
-                // Обрабатываем Vue реактивные массивы (Proxy)
-                if (Array.isArray(value) || (value && typeof value === 'object' && 
-                    (value.constructor === Array || value[Symbol.toStringTag] === 'Array' || 
-                     (typeof value[Symbol.iterator] === 'function' && value.length !== undefined)))) {
-                    
-                    // Безопасное преобразование в обычный массив
-                    let arrayValue;
-                    try {
-                        arrayValue = [...value]; // Spread оператор работает с итерируемыми объектами
-                    } catch (e) {
-                        arrayValue = Array.from(value); // Fallback
-                    }
-                    
-                    // Фильтруем пустые значения и приводим к строкам
-                    const cleanArray = arrayValue
-                        .filter(item => item !== null && item !== undefined && item !== '')
-                        .map(item => String(item));
-                    
-                    return cleanArray.length > 0 ? cleanArray.join(',') : '';
-                }
-                if (typeof value === 'boolean') {
-                    return value ? '1' : '';
-                }
-                // Не сериализуем пустые значения и дефолтные значения
-                if (value === '' || value === 'default' || value === 'push') {
-                    return '';
-                }
-                return value ? String(value) : '';
-            }
-        }
+  // Флаг активности синхронизации
+  const isEnabled = ref(false);
+  
+  // Состояние URL параметров (readonly для внешнего использования)
+  const state = computed(() => urlParams as UrlSyncParams);
+
+  /**
+   * Маппинг между ключами фильтров и URL параметрами
+   */
+  const FILTER_URL_MAPPING = {
+    searchKeyword: 'cr_searchKeyword',
+    country: 'cr_country', 
+    dateCreation: 'cr_dateCreation',
+    sortBy: 'cr_sortBy',
+    periodDisplay: 'cr_periodDisplay',
+    onlyAdult: 'cr_onlyAdult',
+    advertisingNetworks: 'cr_advertisingNetworks',
+    languages: 'cr_languages',
+    operatingSystems: 'cr_operatingSystems',
+    browsers: 'cr_browsers',
+    devices: 'cr_devices',
+    imageSizes: 'cr_imageSizes',
+  } as const;
+
+  const TAB_URL_KEY = 'cr_activeTab';
+
+  /**
+   * Сериализует значение для URL
+   */
+  const serializeValue = (value: any): string | undefined => {
+    if (value === null || value === undefined || value === '') {
+      return undefined;
+    }
+
+    if (Array.isArray(value)) {
+      return value.length > 0 ? value.join(',') : undefined;
+    }
+
+    if (typeof value === 'boolean') {
+      return value ? '1' : undefined; // Записываем только true значения
+    }
+
+    const stringValue = String(value);
+    return stringValue !== 'default' ? stringValue : undefined;
+  };
+
+  /**
+   * Десериализует значение из URL
+   */
+  const deserializeValue = (urlValue: string, targetType: 'string' | 'boolean' | 'array'): any => {
+    if (!urlValue) return undefined;
+
+    switch (targetType) {
+      case 'boolean':
+        return urlValue === '1' || urlValue === 'true';
+      
+      case 'array':
+        return urlValue.split(',').filter(Boolean);
+      
+      case 'string':
+      default:
+        return urlValue;
+    }
+  };
+
+  /**
+   * Определяет тип поля для десериализации
+   */
+  const getFieldType = (key: keyof FilterState): 'string' | 'boolean' | 'array' => {
+    const arrayFields: (keyof FilterState)[] = [
+      'advertisingNetworks', 'languages', 'operatingSystems', 
+      'browsers', 'devices', 'imageSizes'
+    ];
+    
+    if (arrayFields.includes(key)) return 'array';
+    if (key === 'onlyAdult') return 'boolean';
+    return 'string';
+  };
+
+  /**
+   * Синхронизирует фильтры в URL (Store -> URL)
+   */
+  const syncFiltersToUrl = (filters: FilterState, activeTab: TabValue): void => {
+    if (!isEnabled.value) return;
+
+    // Обновляем фильтры
+    Object.entries(FILTER_URL_MAPPING).forEach(([filterKey, urlKey]) => {
+      const value = filters[filterKey as keyof FilterState];
+      const serialized = serializeValue(value);
+      
+      if (serialized !== undefined) {
+        urlParams[urlKey] = serialized;
+      } else {
+        delete urlParams[urlKey];
+      }
     });
 
-    // Методы для обновления конкретных фильтров
-    const updateSearch = (search: string) => {
-        urlSync.updateState({ searchKeyword: search });
-    };
+    // Обновляем активную вкладку
+    if (activeTab !== 'push') { // push - дефолтная вкладка
+      urlParams[TAB_URL_KEY] = activeTab;
+    } else {
+      delete urlParams[TAB_URL_KEY];
+    }
+  };
 
-    const updateCountry = (country: string) => {
-        urlSync.updateState({ country: country !== 'default' ? country : '' });
-    };
+  /**
+   * Синхронизирует URL в фильтры (URL -> Store)
+   */
+  const syncUrlToFilters = (): { filters: Partial<FilterState>; activeTab: TabValue } => {
+    const filterUpdates: Partial<FilterState> = {};
 
-    const updateSort = (sort: string) => {
-        urlSync.updateState({ sortBy: sort !== 'default' ? sort : '' });
-    };
-
-    const updateDateCreation = (date: string) => {
-        urlSync.updateState({ dateCreation: date !== 'default' ? date : '' });
-    };
-
-    const updatePeriodDisplay = (period: string) => {
-        urlSync.updateState({ periodDisplay: period !== 'default' ? period : '' });
-    };
-
-    const updateOnlyAdult = (onlyAdult: boolean) => {
-        urlSync.updateState({ onlyAdult });
-    };
-
-    const updateDetailedVisible = (isVisible: boolean) => {
-        urlSync.updateState({ isDetailedVisible: isVisible });
-    };
-
-    const updateMultiSelectField = (field: keyof CreativesUrlState, values: string[]) => {
-        urlSync.updateState({ [field]: [...values] });
-    };
-
-    // Методы для работы с вкладками
-    const updateActiveTab = (tab: string) => {
-        urlSync.updateState({ activeTab: tab !== 'push' ? tab : undefined });
-    };
-
-    // Синхронизация с FilterState
-    const syncWithFilterState = (filterState: FilterState, activeTab?: string) => {
-        const urlState = filterStateToUrlState(filterState, activeTab);
-        urlSync.updateState(urlState);
-    };
-
-    const getFilterStateUpdates = (): Partial<FilterState> => {
-        return urlStateToFilterState(urlSync.state.value);
-    };
-
-    // Получение активной вкладки из URL
-    const getActiveTabFromUrl = (): string => {
-        return urlSync.state.value.activeTab || 'push';
-    };
-
-    return {
-        state: urlSync.state,
-        urlParams: urlSync.urlParams,
-        updateState: urlSync.updateState,
-        resetState: urlSync.resetState,
+    // Обрабатываем фильтры
+    Object.entries(FILTER_URL_MAPPING).forEach(([filterKey, urlKey]) => {
+      const urlValue = urlParams[urlKey];
+      if (urlValue) {
+        const fieldType = getFieldType(filterKey as keyof FilterState);
+        const deserializedValue = deserializeValue(String(urlValue), fieldType);
         
-        // Специализированные методы для фильтров
-        updateSearch,
-        updateCountry,
-        updateSort,
-        updateDateCreation,
-        updatePeriodDisplay,
-        updateOnlyAdult,
-        updateDetailedVisible,
-        updateMultiSelectField,
-        
-        // Специализированные методы для вкладок
-        updateActiveTab,
-        getActiveTabFromUrl,
-        
-        // Интеграция с FilterState
-        syncWithFilterState,
-        getFilterStateUpdates,
-    };
+        if (deserializedValue !== undefined) {
+          (filterUpdates as any)[filterKey] = deserializedValue;
+        }
+      }
+    });
+
+    // Обрабатываем активную вкладку
+    const activeTab = getActiveTabFromUrl();
+
+    return { filters: filterUpdates, activeTab };
+  };
+
+  /**
+   * Получает обновления только для фильтров
+   */
+  const getFilterUpdates = (): Partial<FilterState> => {
+    const { filters } = syncUrlToFilters();
+    return filters;
+  };
+
+  /**
+   * Получает активную вкладку из URL
+   */
+  const getActiveTabFromUrl = (): TabValue => {
+    const urlTab = urlParams[TAB_URL_KEY];
+    return (urlTab && isValidTabValue(String(urlTab))) ? String(urlTab) as TabValue : 'push';
+  };
+
+  /**
+   * Проверяет наличие URL параметров креативов
+   */
+  const hasUrlParams = (): boolean => {
+    return Object.keys(urlParams).some(key => key.startsWith(CREATIVES_CONSTANTS.URL_PREFIX + '_'));
+  };
+
+  /**
+   * Очищает все URL параметры креативов
+   */
+  const clearUrlParams = (): void => {
+    Object.keys(urlParams).forEach(key => {
+      if (key.startsWith(CREATIVES_CONSTANTS.URL_PREFIX + '_')) {
+        delete urlParams[key];
+      }
+    });
+  };
+
+  /**
+   * Включает синхронизацию с небольшой задержкой
+   */
+  const enableSync = async (): Promise<void> => {
+    await nextTick();
+    isEnabled.value = true;
+  };
+
+  /**
+   * Отключает синхронизацию
+   */
+  const disableSync = (): void => {
+    isEnabled.value = false;
+  };
+
+  // Автоматическое включение синхронизации через небольшую задержку
+  // Это позволяет компонентам инициализироваться до начала синхронизации
+  setTimeout(() => {
+    enableSync();
+  }, 100);
+
+  return {
+    // Состояние
+    urlParams,
+    state,
+    isEnabled,
+    
+    // Методы синхронизации
+    syncFiltersToUrl,
+    syncUrlToFilters,
+    
+    // Утилиты
+    hasUrlParams,
+    clearUrlParams,
+    getFilterUpdates,
+    getActiveTabFromUrl,
+  };
 }
+
+/**
+ * Утилитарные функции для URL синхронизации
+ */
+export const urlSyncUtils = {
+  /**
+   * Создает debounced функцию синхронизации
+   */
+  createDebouncedSync: (syncFn: Function, delay = CREATIVES_CONSTANTS.DEBOUNCE_DELAY) => {
+    let timeoutId: NodeJS.Timeout;
+    
+    return (...args: any[]) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => syncFn(...args), delay);
+    };
+  },
+
+  /**
+   * Проверяет отличаются ли состояния фильтров
+   */
+  hasFiltersChanged: (current: Partial<FilterState>, previous: Partial<FilterState>): boolean => {
+    const currentKeys = Object.keys(current);
+    const previousKeys = Object.keys(previous);
+    
+    if (currentKeys.length !== previousKeys.length) return true;
+    
+    return currentKeys.some(key => {
+      const currentValue = (current as any)[key];
+      const previousValue = (previous as any)[key];
+      
+      if (Array.isArray(currentValue) && Array.isArray(previousValue)) {
+        return JSON.stringify(currentValue.sort()) !== JSON.stringify(previousValue.sort());
+      }
+      
+      return currentValue !== previousValue;
+    });
+  },
+
+  /**
+   * Фильтрует валидные URL параметры креативов
+   */
+  filterValidParams: (params: Record<string, any>): UrlSyncParams => {
+    const validParams: UrlSyncParams = {};
+    
+    Object.entries(params).forEach(([key, value]) => {
+      if (key.startsWith(CREATIVES_CONSTANTS.URL_PREFIX + '_') && value !== undefined) {
+        (validParams as any)[key] = value;
+      }
+    });
+    
+    return validParams;
+  },
+
+  /**
+   * Логирование изменений для отладки (только в dev режиме)
+   */
+  logSyncChanges: (source: 'url' | 'filters', changes: any): void => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🔄 URL Sync [${source}]:`, changes);
+    }
+  }
+};
