@@ -1,3 +1,5 @@
+import axios from "axios";
+
 // Типы для системы креативов
 interface Creative {
   id: number;
@@ -243,23 +245,18 @@ class CreativesService {
     console.log('💾 Конфигурация кэша:', cacheConfig);
     
     // Симулируем небольшую задержку сети для реалистичности
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    // Временная заглушка с более детальным логированием
-    const mockResponse = {
-      data: [],
-      total: 0,
-      per_page: filters.perPage || 12,
-      current_page: filters.page || 1,
-      last_page: 1,
-      from: 0,
-      to: 0
-    };
-    
-    console.log('📤 makeApiRequest возвращает mock ответ:', mockResponse);
-    console.log('✅ === makeApiRequest ЗАВЕРШЕН! ===');
-    
-    return mockResponse;
+    // await new Promise(resolve => setTimeout(resolve, 300));
+
+    const response = await axios.get('/api/creatives', { params: filters });
+    console.log('📤 makeApiRequest RESPONSE возвращает ответ:', response);
+
+    if (response.status !== 200 || !response.statusText.includes('OK')) {
+      throw new Error('Не удалось получить данные из API'); // TODO: Добавить локализацию
+    }
+
+
+    return response.data;
+
   }
 
   /**

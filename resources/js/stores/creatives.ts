@@ -264,6 +264,7 @@ export const useFiltersStore = defineStore('filters', () => {
    * Устанавливает опции и счетчики для вкладок
    */
   function setTabOptions(options: any): void {
+    console.log('🏷️ setTabOptions вызван с опциями:', options);
     
     if (options.availableTabs && Array.isArray(options.availableTabs)) {
       tabs.availableTabs = [...options.availableTabs];
@@ -273,7 +274,9 @@ export const useFiltersStore = defineStore('filters', () => {
       tabs.tabCounts = { ...options.tabCounts };
     }
     
+    // Устанавливаем activeTab если он указан и входит в доступные вкладки
     if (options.activeTab && tabs.availableTabs.includes(options.activeTab)) {
+      console.log(`🔀 Устанавливаем activeTab из options: ${options.activeTab}`);
       tabs.activeTab = options.activeTab;
     }
   }
@@ -305,7 +308,7 @@ export const useFiltersStore = defineStore('filters', () => {
       setSelectOptions(selectOptions);
     }
     
-    // 3. Устанавливаем опции для вкладок
+    // 3. Устанавливаем опции для вкладок (включая activeTab из props)
     if (tabsOptions) {
       setTabOptions(tabsOptions);
     }
@@ -315,22 +318,45 @@ export const useFiltersStore = defineStore('filters', () => {
       Object.assign(filters, propsFilters);
     }
 
-    // 5. Инициализируем URL синхронизацию (URL имеет наивысший приоритет)
-    initUrlSync();
-
-    // 6. Устанавливаем переводы
+    // 5. Устанавливаем переводы
     if (translationsData) {
       setTranslations(translationsData);
     }
 
+    // 6. Инициализируем URL синхронизацию (URL имеет наивысший приоритет)
+    // Но НЕ загружаем из URL сразу - дадим время компонентам инициализироваться
+    initUrlSync();
+
     // 7. Настраиваем watchers для автоматической перезагрузки
     setupAutoReloadWatchers();
 
-    // 8. Автоматически загружаем креативы после инициализации
+    // 8. Отложенная загрузка из URL и креативов
     setTimeout(() => {
+      console.log('🔗 Проверяем URL параметры и загружаем соответствующее состояние');
+      
+      // Сначала загружаем состояние из URL (если есть)
+      const hasUrlParams = Object.keys(urlSync?.urlParams || {}).some(key => 
+        key.startsWith('cr_') && urlSync?.urlParams[key]
+      );
+      
+      if (hasUrlParams) {
+        console.log('📄 Найдены URL параметры, загружаем состояние из URL');
+        loadFromUrl();
+      } else {
+        console.log('🔗 URL параметры не найдены, синхронизируем текущее состояние с URL');
+        // Синхронизируем текущее состояние store с URL
+        if (urlSync) {
+          urlSync.syncWithFilterState(
+            JSON.parse(JSON.stringify(filters)), 
+            tabs.activeTab
+          );
+        }
+      }
+      
+      // Затем загружаем креативы с финальным состоянием
       console.log('🚀 Автоматическая загрузка креативов после инициализации Store');
       loadCreatives();
-    }, 100);
+    }, 150);
   }
 
   // Автоматическая перезагрузка креативов при изменении фильтров
@@ -373,7 +399,8 @@ export const useFiltersStore = defineStore('filters', () => {
     watch(
       () => tabs.activeTab,
       (newTab, oldTab) => {
-        if (oldTab && newTab !== oldTab) {
+        // Проверяем что это не первичная инициализация и синхронизация включена
+        if (oldTab && newTab !== oldTab && isUrlSyncEnabled.value) {
           console.log('🔀 Изменилась вкладка:', { from: oldTab, to: newTab });
           refreshCreatives();
         }
@@ -388,24 +415,11 @@ export const useFiltersStore = defineStore('filters', () => {
     urlSync = useCreativesUrlSync();
     setupUrlSyncWatchers();
     
-    // Проверяем есть ли URL параметры
+    // Включаем синхронизацию но НЕ загружаем сразу
+    // Загрузку будет контролировать initializeFilters
     setTimeout(() => {
       isUrlSyncEnabled.value = true;
-      
-      const hasUrlParams = Object.keys(urlSync!.urlParams).some(key => 
-        key.startsWith('cr_') && urlSync!.urlParams[key]
-      );
-      
-      if (hasUrlParams) {
-        loadFromUrl();
-      } else {
-        // Синхронизируем текущее состояние store с URL
-        urlSync!.syncWithFilterState(
-          JSON.parse(JSON.stringify(filters)), 
-          tabs.activeTab
-        );
-      }
-    }, 100);
+    }, 50);
   }
 
 
@@ -440,8 +454,10 @@ export const useFiltersStore = defineStore('filters', () => {
     // Store -> URL синхронизация с debouncing (фильтры и вкладки)
     watch(
       [filters, tabs],
-      () => {
-        if (urlSync && isUrlSyncEnabled.value && !isUrlUpdating) {
+      (_newValue, oldValue) => {
+        // Проверяем что это не первичная инициализация и синхронизация включена
+        if (urlSync && isUrlSyncEnabled.value && !isUrlUpdating && oldValue) {
+          console.log('📡 Store -> URL: изменения в Store, обновляем URL');
           isStoreUpdating = true;
           debouncedStoreToUrl();
         }
@@ -465,19 +481,48 @@ export const useFiltersStore = defineStore('filters', () => {
   function loadFromUrl(): void {
     if (!urlSync) return;
 
+    console.log('📄 loadFromUrl: загружаем состояние из URL');
+    
+    // Временно отключаем watchers для предотвращения лишних срабатываний
+    isUrlSyncEnabled.value = false;
+
     // Загружаем состояние фильтров
     const filterUpdates = urlSync.getFilterStateUpdates();
-    updateFromUrl(filterUpdates);
+    console.log('🔧 Обновления фильтров из URL:', filterUpdates);
+    
+    // Обновляем фильтры без triggering watchers
+    Object.entries(filterUpdates).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        const filterKey = key as keyof FilterState;
+        
+        if (Array.isArray(value)) {
+          (filters[filterKey] as any) = [...value];
+        } else {
+          (filters[filterKey] as any) = value;
+        }
+      }
+    });
     
     // Загружаем активную вкладку
     const activeTabFromUrl = urlSync.getActiveTabFromUrl();
+    console.log('🏷️ Активная вкладка из URL:', activeTabFromUrl, 'текущая:', tabs.activeTab);
+    
     if (activeTabFromUrl !== tabs.activeTab) {
+      console.log(`🔀 Устанавливаем вкладку из URL: ${activeTabFromUrl}`);
       tabs.activeTab = activeTabFromUrl;
     }
+
+    // Включаем обратно синхронизацию
+    setTimeout(() => {
+      isUrlSyncEnabled.value = true;
+      console.log('✅ loadFromUrl завершен, URL синхронизация включена');
+    }, 50);
   }
 
   function updateFromUrl(updates: Partial<FilterState>): void {
-    // Временно отключаем URL синхронизацию чтобы избежать циклов
+    console.log('📥 updateFromUrl вызван с обновлениями:', updates);
+    
+    // Временно отключаем URL синхронизацию и watchers чтобы избежать циклов
     isUrlSyncEnabled.value = false;
 
     Object.entries(updates).forEach(([key, value]) => {
@@ -496,6 +541,7 @@ export const useFiltersStore = defineStore('filters', () => {
         }
         
         if (hasChanged) {
+          console.log(`🔄 Обновляем ${key}:`, { from: currentValue, to: value });
           
           if (Array.isArray(value)) {
             // Создаем новый массив для реактивности
@@ -511,6 +557,7 @@ export const useFiltersStore = defineStore('filters', () => {
     // Включаем обратно URL синхронизацию
     setTimeout(() => {
       isUrlSyncEnabled.value = true;
+      console.log('✅ URL синхронизация включена обратно');
     }, 100);
   }
 

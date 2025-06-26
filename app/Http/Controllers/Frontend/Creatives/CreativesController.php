@@ -33,9 +33,13 @@ class CreativesController extends FrontendController
             'savedSettings' => []
         ];
 
-        // Дефолтные значения для вкладок
+        // dd($request->all());
+
+        // Получаем activeTab из URL параметров или дефолтное значение
+        $activeTabFromUrl = $request->get('cr_activeTab', 'push');
+
+        // Дефолтные значения для вкладок (без activeTab - он передается через tabOptions)
         $defaultTabs = [
-            'activeTab' => $request->get('tab', 'push'),
             'availableTabs' => ['push', 'inpage', 'facebook', 'tiktok'],
             'tabCounts' => [
                 'push' => 1700000,
@@ -78,15 +82,50 @@ class CreativesController extends FrontendController
         ];
 
         $selectOptions = $this->getSelectOptions();
-        $tabOptions = $this->getTabOptions();
+        $tabOptions = $this->getTabOptions($activeTabFromUrl);
 
         return view('pages.creatives.index', [
-            'activeTab' => $defaultTabs['activeTab'],
+            'activeTab' => $activeTabFromUrl,
             'filters' => $defaultFilters,
             'tabs' => $defaultTabs,
             'selectOptions' => $selectOptions,
             'tabOptions' => $tabOptions,
             'translations' => $translations,
+        ]);
+    }
+
+    public function apiIndex(Request $request)
+    {
+        // Заглушка данных для тестирования
+        $mockCreatives = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $mockCreatives[] = [
+                'id' => $i,
+                'name' => "Creative {$i}",
+                'category' => 'Test Category',
+                'country' => 'US',
+                'file_url' => "https://example.com/creative{$i}.jpg",
+                'preview_url' => "https://example.com/preview{$i}.jpg",
+                'created_at' => now()->subDays(rand(1, 30))->toISOString(),
+                'activity_date' => now()->subDays(rand(1, 7))->toISOString(),
+                'advertising_networks' => ['facebook', 'google'],
+                'languages' => ['en', 'ru'],
+                'operating_systems' => ['windows', 'android'],
+                'browsers' => ['chrome', 'firefox'],
+                'devices' => ['desktop', 'mobile'],
+                'image_sizes' => ['16x9', '1x1'],
+                'is_adult' => false,
+            ];
+        }
+
+        return response()->json([
+            'data' => $mockCreatives,
+            'total' => 120,
+            'per_page' => 12,
+            'current_page' => $request->get('page', 1),
+            'last_page' => 10,
+            'from' => 1,
+            'to' => 12
         ]);
     }
 
@@ -128,7 +167,7 @@ class CreativesController extends FrontendController
         ];
     }
 
-    public function getTabOptions()
+    public function getTabOptions($activeTab = 'push')
     {
         return [
             'availableTabs' => ['push', 'inpage', 'facebook', 'tiktok'],
@@ -139,7 +178,7 @@ class CreativesController extends FrontendController
                 'tiktok' => 9852000,
                 'total' => 10000000
             ],
-            'activeTab' => 'push'
+            'activeTab' => $activeTab
         ];
     }
 

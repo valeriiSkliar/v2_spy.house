@@ -116,14 +116,21 @@ onMounted(async () => {
   if (Object.keys(props.initialTabs).length > 0 || Object.keys(props.tabOptions).length > 0) {
     console.log('Initializing tabs with options...');
 
-    // Применяем начальное состояние
-    if (props.initialTabs && Object.keys(props.initialTabs).length > 0) {
-      Object.assign(store.tabs, props.initialTabs);
-    }
-
-    // Применяем опции вкладок
+    // Сначала применяем опции вкладок (включая activeTab из сервера)
     if (props.tabOptions && Object.keys(props.tabOptions).length > 0) {
       store.setTabOptions(props.tabOptions);
+    }
+
+    // Затем применяем начальное состояние (только если нет activeTab в tabOptions)
+    if (props.initialTabs && Object.keys(props.initialTabs).length > 0) {
+      // Не перезаписываем activeTab если он уже установлен из tabOptions
+      const { activeTab, ...restInitialTabs } = props.initialTabs;
+      Object.assign(store.tabs, restInitialTabs);
+
+      // Устанавливаем activeTab только если он не был установлен из tabOptions
+      if (activeTab && !props.tabOptions?.activeTab) {
+        store.tabs.activeTab = activeTab;
+      }
     }
   }
 

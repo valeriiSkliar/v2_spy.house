@@ -7,19 +7,23 @@
     <div class="tabs-placeholder" data-vue-placeholder>
         <div class="filter-push">
             <!-- Placeholder для вкладок -->
-            <div class="filter-push__item active placeholder-shimmer">
+            <div
+                class="filter-push__item placeholder-shimmer {{ $tabOptions['activeTab'] === 'push' ? 'active' : '' }}">
                 Push
                 <span class="filter-push__count placeholder-shimmer">170k</span>
             </div>
-            <div class="filter-push__item placeholder-shimmer">
+            <div
+                class="filter-push__item placeholder-shimmer {{ $tabOptions['activeTab'] === 'inpage' ? 'active' : '' }}">
                 In Page
                 <span class="filter-push__count placeholder-shimmer">3.1k</span>
             </div>
-            <div class="filter-push__item placeholder-shimmer">
+            <div
+                class="filter-push__item placeholder-shimmer {{ $tabOptions['activeTab'] === 'facebook' ? 'active' : '' }}">
                 Facebook
                 <span class="filter-push__count placeholder-shimmer">65.1k</span>
             </div>
-            <div class="filter-push__item placeholder-shimmer">
+            <div
+                class="filter-push__item placeholder-shimmer {{ $tabOptions['activeTab'] === 'tiktok' ? 'active' : '' }}">
                 TikTok
                 <span class="filter-push__count placeholder-shimmer">45.2m</span>
             </div>
