@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Frontend\Creatives;
 
 use App\Http\Controllers\FrontendController;
+use App\Http\Requests\Frontend\CreativesRequest;
 use App\Helpers\IsoCodesHelper;
 use App\Models\AdvertismentNetwork;
 use App\Models\Browser;
@@ -12,7 +13,7 @@ use Illuminate\Http\Request;
 
 class CreativesController extends FrontendController
 {
-    public function index(Request $request)
+    public function index(CreativesRequest $request)
     {
         // Дефолтные значения фильтров (состояние) - что выбрано по умолчанию
         $defaultFilters = [
@@ -33,10 +34,11 @@ class CreativesController extends FrontendController
             'savedSettings' => []
         ];
 
-        // dd($request->all());
+        // Получаем валидированные фильтры из Request
+        $validatedFilters = $request->getCreativesFilters();
 
-        // Получаем activeTab из URL параметров или дефолтное значение
-        $activeTabFromUrl = $request->get('cr_activeTab', 'push');
+        // Получаем activeTab из валидированных данных или дефолтное значение  
+        $activeTabFromUrl = $validatedFilters['activeTab'] ?? 'push';
 
         // Дефолтные значения для вкладок (без activeTab - он передается через tabOptions)
         $defaultTabs = [
@@ -94,8 +96,11 @@ class CreativesController extends FrontendController
         ]);
     }
 
-    public function apiIndex(Request $request)
+    public function apiIndex(CreativesRequest $request)
     {
+        // Получаем валидированные и санитизированные фильтры
+        $filters = $request->getCreativesFilters();
+
         // Заглушка данных для тестирования
         $mockCreatives = [];
         for ($i = 1; $i <= 12; $i++) {
@@ -119,13 +124,142 @@ class CreativesController extends FrontendController
         }
 
         return response()->json([
-            'data' => $mockCreatives,
-            'total' => 120,
-            'per_page' => 12,
-            'current_page' => $request->get('page', 1),
-            'last_page' => 10,
-            'from' => 1,
-            'to' => 12
+            'status' => 'success',
+            'data' => [
+                'items' => $mockCreatives,
+                'pagination' => [
+                    'total' => 120,
+                    'perPage' => $filters['perPage'],
+                    'currentPage' => $filters['page'],
+                    'lastPage' => 10,
+                    'from' => (($filters['page'] - 1) * $filters['perPage']) + 1,
+                    'to' => min($filters['page'] * $filters['perPage'], 120)
+                ],
+                'meta' => [
+                    'hasSearch' => !empty($filters['searchKeyword']),
+                    'activeFiltersCount' => count(array_filter($filters, function ($value, $key) {
+                        return !in_array($key, ['page', 'perPage', 'activeTab']) && !empty($value);
+                    }, ARRAY_FILTER_USE_BOTH)),
+                    'cacheKey' => md5(json_encode($filters)),
+                    'appliedFilters' => $filters
+                ]
+            ]
+        ]);
+    }
+
+    /**
+     * Получить валидированные фильтры
+     * 
+     * @OA\Get(
+     *     path="/api/creatives/filters/validate",
+     *     operationId="validateCreativesFilters",
+     *     tags={"Креативы - Фильтры"},
+     *     summary="Валидировать и санитизировать фильтры креативов",
+     *     description="Возвращает валидированные и санитизированные фильтры, отсекая недопустимые значения",
+     *     @OA\Parameter(
+     *         name="searchKeyword",
+     *         in="query",
+     *         description="Поисковое слово",
+     *         required=false,
+     *         @OA\Schema(type="string", maxLength=255)
+     *     ),
+     *     @OA\Parameter(
+     *         name="country",
+     *         in="query", 
+     *         description="Код страны",
+     *         required=false,
+     *         @OA\Schema(type="string", maxLength=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="sortBy",
+     *         in="query",
+     *         description="Тип сортировки",
+     *         required=false,
+     *         @OA\Schema(type="string", enum={"creation", "activity", "popularity", "byCreationDate", "byActivity", "byPopularity"})
+     *     ),
+     *     @OA\Parameter(
+     *         name="onlyAdult",
+     *         in="query",
+     *         description="Только контент для взрослых",
+     *         required=false,
+     *         @OA\Schema(type="boolean")
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Номер страницы",
+     *         required=false,
+     *         @OA\Schema(type="integer", minimum=1, maximum=10000)
+     *     ),
+     *     @OA\Parameter(
+     *         name="perPage",
+     *         in="query",
+     *         description="Количество элементов на странице",
+     *         required=false,
+     *         @OA\Schema(type="integer", minimum=6, maximum=100)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Валидированные фильтры успешно получены",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="success"),
+     *             @OA\Property(property="filters", type="object",
+     *                 @OA\Property(property="searchKeyword", type="string", example="test"),
+     *                 @OA\Property(property="country", type="string", example="US"),
+     *                 @OA\Property(property="sortBy", type="string", example="creation"),
+     *                 @OA\Property(property="onlyAdult", type="boolean", example=false),
+     *                 @OA\Property(property="page", type="integer", example=1),
+     *                 @OA\Property(property="perPage", type="integer", example=12),
+     *                 @OA\Property(property="advertisingNetworks", type="array", @OA\Items(type="string")),
+     *                 @OA\Property(property="languages", type="array", @OA\Items(type="string")),
+     *                 @OA\Property(property="activeTab", type="string", example="push")
+     *             ),
+     *             @OA\Property(property="validation", type="object",
+     *                 @OA\Property(property="rejectedValues", type="array", @OA\Items(type="string")),
+     *                 @OA\Property(property="sanitizedCount", type="integer", example=3)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Ошибка валидации",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="error"),
+     *             @OA\Property(property="message", type="string", example="Ошибка валидации"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     )
+     * )
+     */
+    public function validateFilters(CreativesRequest $request)
+    {
+        // Получаем исходные данные для анализа
+        $originalInput = $request->all();
+
+        // Получаем валидированные фильтры
+        $validatedFilters = $request->getCreativesFilters();
+
+        // Анализируем что было отклонено/санитизировано
+        $rejectedValues = [];
+        $sanitizedCount = 0;
+
+        // Сравниваем исходные и валидированные значения
+        foreach ($originalInput as $key => $value) {
+            if (!isset($validatedFilters[$key]) || $validatedFilters[$key] !== $value) {
+                $rejectedValues[] = "{$key}: {$value}";
+                $sanitizedCount++;
+            }
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'filters' => $validatedFilters,
+            'validation' => [
+                'rejectedValues' => $rejectedValues,
+                'sanitizedCount' => $sanitizedCount,
+                'originalCount' => count($originalInput),
+                'validatedCount' => count($validatedFilters)
+            ]
         ]);
     }
 
@@ -180,454 +314,5 @@ class CreativesController extends FrontendController
             ],
             'activeTab' => $activeTab
         ];
-    }
-
-    /**
-     * Получить все страны
-     * 
-     * @OA\Get(
-     *     path="/api/creatives/countries/all",
-     *     operationId="getAllCountries",
-     *     tags={"Креативы - Страны"},
-     *     summary="Получить список всех стран",
-     *     description="Возвращает полный список стран с переводами",
-     *     @OA\Parameter(
-     *         name="lang",
-     *         in="query",
-     *         description="Код языка для локализации",
-     *         required=false,
-     *         @OA\Schema(type="string", example="ru")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Список стран успешно получен",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="countries", type="array", 
-     *                 @OA\Items(
-     *                     @OA\Property(property="code", type="string", example="US"),
-     *                     @OA\Property(property="name", type="string", example="Соединенные Штаты"),
-     *                     @OA\Property(property="flag", type="string", example="🇺🇸")
-     *                 )
-     *             )
-     *         )
-     *     )
-     * )
-     */
-    public function getAllCountries(Request $request)
-    {
-        $languageCode = $request->get('lang', app()->getLocale());
-        return response()->json([
-            'countries' => IsoCodesHelper::getAllCountries($languageCode)
-        ]);
-    }
-
-    /**
-     * Получить все языки
-     * 
-     * @OA\Get(
-     *     path="/api/creatives/languages/all",
-     *     operationId="getAllLanguages",
-     *     tags={"Креативы - Языки"},
-     *     summary="Получить список всех языков",
-     *     description="Возвращает полный список языков с переводами",
-     *     @OA\Parameter(
-     *         name="lang",
-     *         in="query",
-     *         description="Код языка для локализации",
-     *         required=false,
-     *         @OA\Schema(type="string", example="ru")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Список языков успешно получен",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="languages", type="array", 
-     *                 @OA\Items(
-     *                     @OA\Property(property="code", type="string", example="en"),
-     *                     @OA\Property(property="name", type="string", example="English"),
-     *                     @OA\Property(property="nativeName", type="string", example="English")
-     *                 )
-     *             )
-     *         )
-     *     )
-     * )
-     */
-    public function getAllLanguages(Request $request)
-    {
-        $languageCode = $request->get('lang', app()->getLocale());
-        return response()->json([
-            'languages' => IsoCodesHelper::getAllLanguages($languageCode)
-        ]);
-    }
-
-    /**
-     * Получить популярные страны
-     * 
-     * @OA\Get(
-     *     path="/api/creatives/countries/popular",
-     *     operationId="getPopularCountries",
-     *     tags={"Креативы - Страны"},
-     *     summary="Получить список популярных стран",
-     *     description="Возвращает список наиболее популярных стран для рекламы",
-     *     @OA\Parameter(
-     *         name="lang",
-     *         in="query",
-     *         description="Код языка для локализации",
-     *         required=false,
-     *         @OA\Schema(type="string", example="ru")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Список популярных стран успешно получен",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="countries", type="array", 
-     *                 @OA\Items(
-     *                     @OA\Property(property="code", type="string", example="US"),
-     *                     @OA\Property(property="name", type="string", example="Соединенные Штаты"),
-     *                     @OA\Property(property="flag", type="string", example="🇺🇸"),
-     *                     @OA\Property(property="popularity", type="integer", example=95)
-     *                 )
-     *             )
-     *         )
-     *     )
-     * )
-     */
-    public function getPopularCountries(Request $request)
-    {
-        $languageCode = $request->get('lang', app()->getLocale());
-        return response()->json([
-            'countries' => IsoCodesHelper::getPopularCountries($languageCode)
-        ]);
-    }
-
-    /**
-     * Получить все браузеры
-     * 
-     * @OA\Get(
-     *     path="/api/creatives/browsers/all",
-     *     operationId="getAllBrowsers",
-     *     tags={"Креативы - Браузеры"},
-     *     summary="Получить список всех браузеров",
-     *     description="Возвращает полный список браузеров для фильтрации креативов",
-     *     @OA\Response(
-     *         response=200,
-     *         description="Список браузеров успешно получен",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="browsers", type="array", 
-     *                 @OA\Items(
-     *                     @OA\Property(property="id", type="integer", example=1),
-     *                     @OA\Property(property="name", type="string", example="Chrome"),
-     *                     @OA\Property(property="version", type="string", example="120.0"),
-     *                     @OA\Property(property="device_type", type="string", example="desktop")
-     *                 )
-     *             )
-     *         )
-     *     )
-     * )
-     */
-    public function getAllBrowsers(Request $request)
-    {
-        return response()->json([
-            'browsers' => Browser::getBrowsersForSelect()
-        ]);
-    }
-
-    /**
-     * Получить популярные браузеры
-     * 
-     * @OA\Get(
-     *     path="/api/creatives/browsers/popular",
-     *     operationId="getPopularBrowsers",
-     *     tags={"Креативы - Браузеры"},
-     *     summary="Получить список популярных браузеров",
-     *     description="Возвращает список наиболее популярных браузеров с возможностью ограничения количества",
-     *     @OA\Parameter(
-     *         name="limit",
-     *         in="query",
-     *         description="Максимальное количество браузеров в ответе",
-     *         required=false,
-     *         @OA\Schema(type="integer", example=10, minimum=1, maximum=50)
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Список популярных браузеров успешно получен",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="browsers", type="array", 
-     *                 @OA\Items(
-     *                     @OA\Property(property="id", type="integer", example=1),
-     *                     @OA\Property(property="name", type="string", example="Chrome"),
-     *                     @OA\Property(property="usage_percentage", type="number", format="float", example=65.2),
-     *                     @OA\Property(property="device_type", type="string", example="desktop")
-     *                 )
-     *             )
-     *         )
-     *     )
-     * )
-     */
-    public function getPopularBrowsers(Request $request)
-    {
-        $limit = $request->get('limit', 10);
-        return response()->json([
-            'browsers' => Browser::getPopularBrowsersForSelect($limit)
-        ]);
-    }
-
-    /**
-     * Получить мобильные браузеры
-     * 
-     * @OA\Get(
-     *     path="/api/creatives/browsers/mobile",
-     *     operationId="getMobileBrowsers",
-     *     tags={"Креативы - Браузеры"},
-     *     summary="Получить список мобильных браузеров",
-     *     description="Возвращает список браузеров для мобильных устройств",
-     *     @OA\Response(
-     *         response=200,
-     *         description="Список мобильных браузеров успешно получен",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="browsers", type="array", 
-     *                 @OA\Items(
-     *                     @OA\Property(property="id", type="integer", example=1),
-     *                     @OA\Property(property="name", type="string", example="Chrome Mobile"),
-     *                     @OA\Property(property="version", type="string", example="120.0"),
-     *                     @OA\Property(property="device_type", type="string", example="mobile")
-     *                 )
-     *             )
-     *         )
-     *     )
-     * )
-     */
-    public function getMobileBrowsers(Request $request)
-    {
-        return response()->json([
-            'browsers' => Browser::getMobileBrowsersForSelect()
-        ]);
-    }
-
-    /**
-     * Получить десктопные браузеры
-     * 
-     * @OA\Get(
-     *     path="/api/creatives/browsers/desktop",
-     *     operationId="getDesktopBrowsers",
-     *     tags={"Креативы - Браузеры"},
-     *     summary="Получить список десктопных браузеров",
-     *     description="Возвращает список браузеров для настольных компьютеров",
-     *     @OA\Response(
-     *         response=200,
-     *         description="Список десктопных браузеров успешно получен",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="browsers", type="array", 
-     *                 @OA\Items(
-     *                     @OA\Property(property="id", type="integer", example=1),
-     *                     @OA\Property(property="name", type="string", example="Chrome"),
-     *                     @OA\Property(property="version", type="string", example="120.0"),
-     *                     @OA\Property(property="device_type", type="string", example="desktop")
-     *                 )
-     *             )
-     *         )
-     *     )
-     * )
-     */
-    public function getDesktopBrowsers(Request $request)
-    {
-        return response()->json([
-            'browsers' => Browser::getDesktopBrowsersForSelect()
-        ]);
-    }
-
-    /**
-     * Получить браузеры с группировкой по устройствам
-     * 
-     * @OA\Get(
-     *     path="/api/creatives/browsers/grouped",
-     *     operationId="getBrowsersGrouped",
-     *     tags={"Креативы - Браузеры"},
-     *     summary="Получить браузеры сгруппированные по типам устройств",
-     *     description="Возвращает браузеры разделенные на группы: desktop, mobile, tablet",
-     *     @OA\Response(
-     *         response=200,
-     *         description="Сгруппированные браузеры успешно получены",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="browsers", type="object",
-     *                 @OA\Property(property="desktop", type="array",
-     *                     @OA\Items(
-     *                         @OA\Property(property="id", type="integer", example=1),
-     *                         @OA\Property(property="name", type="string", example="Chrome"),
-     *                         @OA\Property(property="version", type="string", example="120.0")
-     *                     )
-     *                 ),
-     *                 @OA\Property(property="mobile", type="array",
-     *                     @OA\Items(
-     *                         @OA\Property(property="id", type="integer", example=2),
-     *                         @OA\Property(property="name", type="string", example="Chrome Mobile"),
-     *                         @OA\Property(property="version", type="string", example="120.0")
-     *                     )
-     *                 ),
-     *                 @OA\Property(property="tablet", type="array",
-     *                     @OA\Items(
-     *                         @OA\Property(property="id", type="integer", example=3),
-     *                         @OA\Property(property="name", type="string", example="Safari"),
-     *                         @OA\Property(property="version", type="string", example="17.0")
-     *                     )
-     *                 )
-     *             )
-     *         )
-     *     )
-     * )
-     */
-    public function getBrowsersGrouped(Request $request)
-    {
-        return response()->json([
-            'browsers' => Browser::getBrowsersGroupedByDevice()
-        ]);
-    }
-
-    /**
-     * Поиск браузеров
-     * 
-     * @OA\Get(
-     *     path="/api/creatives/browsers/search",
-     *     operationId="searchBrowsers",
-     *     tags={"Креативы - Браузеры"},
-     *     summary="Поиск браузеров по названию",
-     *     description="Выполняет поиск браузеров по частичному совпадению названия",
-     *     @OA\Parameter(
-     *         name="q",
-     *         in="query",
-     *         description="Поисковый запрос (минимум 2 символа)",
-     *         required=true,
-     *         @OA\Schema(type="string", example="chro", minLength=2)
-     *     ),
-     *     @OA\Parameter(
-     *         name="limit",
-     *         in="query",
-     *         description="Максимальное количество результатов",
-     *         required=false,
-     *         @OA\Schema(type="integer", example=20, minimum=1, maximum=100)
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Результаты поиска браузеров",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="browsers", type="array", 
-     *                 @OA\Items(
-     *                     @OA\Property(property="id", type="integer", example=1),
-     *                     @OA\Property(property="name", type="string", example="Chrome"),
-     *                     @OA\Property(property="version", type="string", example="120.0"),
-     *                     @OA\Property(property="device_type", type="string", example="desktop"),
-     *                     @OA\Property(property="relevance", type="number", format="float", example=0.95)
-     *                 )
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=400,
-     *         description="Некорректный поисковый запрос",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="browsers", type="array", @OA\Items())
-     *         )
-     *     )
-     * )
-     */
-    public function searchBrowsers(Request $request)
-    {
-        $query = $request->get('q', '');
-        $limit = $request->get('limit', 20);
-
-        if (strlen($query) < 2) {
-            return response()->json([
-                'browsers' => []
-            ]);
-        }
-
-        return response()->json([
-            'browsers' => Browser::searchBrowsers($query, $limit)
-        ]);
-    }
-
-    /**
-     * Получить статистику браузеров
-     * 
-     * @OA\Get(
-     *     path="/api/creatives/browsers/stats",
-     *     operationId="getBrowserStats",
-     *     tags={"Креативы - Браузеры"},
-     *     summary="Получить статистику использования браузеров",
-     *     description="Возвращает статистику популярности и использования браузеров",
-     *     @OA\Response(
-     *         response=200,
-     *         description="Статистика браузеров успешно получена",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="stats", type="object",
-     *                 @OA\Property(property="total_browsers", type="integer", example=156),
-     *                 @OA\Property(property="desktop_count", type="integer", example=89),
-     *                 @OA\Property(property="mobile_count", type="integer", example=52),
-     *                 @OA\Property(property="tablet_count", type="integer", example=15),
-     *                 @OA\Property(property="top_browsers", type="array",
-     *                     @OA\Items(
-     *                         @OA\Property(property="name", type="string", example="Chrome"),
-     *                         @OA\Property(property="usage_percentage", type="number", format="float", example=65.2),
-     *                         @OA\Property(property="device_type", type="string", example="desktop")
-     *                     )
-     *                 ),
-     *                 @OA\Property(property="usage_by_device", type="object",
-     *                     @OA\Property(property="desktop", type="number", format="float", example=45.3),
-     *                     @OA\Property(property="mobile", type="number", format="float", example=38.7),
-     *                     @OA\Property(property="tablet", type="number", format="float", example=16.0)
-     *                 )
-     *             )
-     *         )
-     *     )
-     * )
-     */
-    public function getBrowserStats(Request $request)
-    {
-        return response()->json([
-            'stats' => Browser::getBrowserUsageStats()
-        ]);
-    }
-
-    /**
-     * Очистить кэш браузеров
-     * 
-     * @OA\Delete(
-     *     path="/api/creatives/browsers/cache",
-     *     operationId="clearBrowsersCache",
-     *     tags={"Креативы - Браузеры"},
-     *     summary="Очистить кэш браузеров",
-     *     description="Очищает кэш данных о браузерах (требует права администратора)",
-     *     security={{"bearerAuth": {}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Кэш браузеров успешно очищен",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Browser cache cleared successfully")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=401,
-     *         description="Неавторизованный доступ",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="error", type="string", example="Unauthorized")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=403,
-     *         description="Недостаточно прав доступа",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="error", type="string", example="Forbidden")
-     *         )
-     *     )
-     * )
-     */
-    public function clearBrowsersCache(Request $request)
-    {
-        // Добавить проверку прав доступа при необходимости
-        Browser::clearBrowsersCache();
-
-        return response()->json([
-            'message' => 'Browser cache cleared successfully'
-        ]);
     }
 }

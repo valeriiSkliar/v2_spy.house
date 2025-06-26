@@ -122,6 +122,60 @@ class IsoEntity extends Model
     }
 
     /**
+     * Валидация кода страны по ISO2 или ISO3
+     */
+    public static function isValidCountryCode(string $code): bool
+    {
+        if (empty(trim($code))) {
+            return false;
+        }
+
+        $code = strtoupper(trim($code));
+
+        // Специальные значения, которые всегда разрешены
+        $specialValues = ['DEFAULT', 'ALL COUNTRIES', 'ALL'];
+        if (in_array($code, $specialValues)) {
+            return true;
+        }
+
+        // Проверяем наличие страны в базе данных по ISO2 или ISO3
+        return static::countries()
+            ->active()
+            ->where(function ($query) use ($code) {
+                $query->where('iso_code_2', $code)
+                    ->orWhere('iso_code_3', $code);
+            })
+            ->exists();
+    }
+
+    /**
+     * Валидация кода языка по ISO2 или ISO3
+     */
+    public static function isValidLanguageCode(string $code): bool
+    {
+        if (empty(trim($code))) {
+            return false;
+        }
+
+        $code = strtolower(trim($code));
+
+        // Специальные значения, которые всегда разрешены
+        $specialValues = ['default', 'all languages', 'all'];
+        if (in_array($code, $specialValues)) {
+            return true;
+        }
+
+        // Проверяем наличие языка в базе данных по ISO2 или ISO3
+        return static::languages()
+            ->active()
+            ->where(function ($query) use ($code) {
+                $query->where('iso_code_2', $code)
+                    ->orWhere('iso_code_3', $code);
+            })
+            ->exists();
+    }
+
+    /**
      * Получить все доступные переводы для сущности
      */
     public function getAvailableTranslations(): array

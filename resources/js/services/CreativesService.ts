@@ -162,8 +162,8 @@ class CreativesService {
       page: 1,
       perPage: 12,
       sortBy: 'creation',
-      country: 'All Categories',
-      onlyAdult: false,
+      // country: 'default',
+      // onlyAdult: false,
       ...processed
     };
   }
@@ -243,6 +243,38 @@ class CreativesService {
     console.log('🎯 === makeApiRequest ВЫЗВАН! ===');
     console.log('📋 API запрос с фильтрами:', filters);
     console.log('💾 Конфигурация кэша:', cacheConfig);
+
+    
+    // Валидация фильтров перед основным запросом
+    try {
+      console.log('🔍 Начинаем валидацию фильтров...');
+      const validationResponse = await axios.get('/api/creatives/filters/validate', { 
+        params: filters 
+      });
+      
+      if (validationResponse.data.status === 'success') {
+        const { filters: validatedFilters, validation } = validationResponse.data;
+        
+        console.log('✅ Фильтры валидированы:', {
+          originalCount: validation.originalCount,
+          validatedCount: validation.validatedCount,
+          sanitizedCount: validation.sanitizedCount,
+          rejectedValues: validation.rejectedValues
+        });
+        
+        // Если были отклоненные значения, логируем их
+        if (validation.rejectedValues.length > 0) {
+          console.warn('⚠️ Отклоненные значения фильтров:', validation.rejectedValues);
+        }
+        
+        // Используем валидированные фильтры для основного запроса
+        filters = validatedFilters;
+      }
+    } catch (validationError) {
+      console.warn('⚠️ Ошибка валидации фильтров:', validationError);
+      // Продолжаем с исходными фильтрами если валидация не удалась
+    }
+
     
     // Симулируем небольшую задержку сети для реалистичности
     // await new Promise(resolve => setTimeout(resolve, 300));
@@ -344,7 +376,7 @@ class CreativesService {
         if (value.length > 0) count++;
       } else if (value !== '' && value !== null && value !== undefined) {
         // Исключаем значения по умолчанию
-        if (key === 'country' && value === 'All Categories') return;
+        if (key === 'country' && value === 'default') return;
         if (key === 'onlyAdult' && value === false) return;
         
         count++;
