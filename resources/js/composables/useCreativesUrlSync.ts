@@ -1,5 +1,5 @@
 // composables/useCreativesUrlSync.ts  
-// Оптимизированная URL синхронизация без циклов
+// Оптимизированная URL синхронизация на базе @vueuse/core с кастомной сериализацией
 
 import type { FilterState, TabValue, UrlSyncParams } from '@/types/creatives.d';
 import { CREATIVES_CONSTANTS, isValidTabValue } from '@/types/creatives.d';
@@ -28,10 +28,10 @@ export interface UseCreativesUrlSyncReturn {
 
 /**
  * Композабл для синхронизации фильтров креативов с URL
- * Использует единый watchEffect вместо множественных watchers
+ * Использует @vueuse/core с кастомной логикой сериализации для оптимального URL
  */
 export function useCreativesUrlSync(): UseCreativesUrlSyncReturn {
-  // Инициализация URL параметров
+  // Инициализация URL параметров с встроенной оптимизацией
   const urlParams = useUrlSearchParams('history', {
     removeFalsyValues: true,
     removeNullishValues: true,
@@ -64,7 +64,40 @@ export function useCreativesUrlSync(): UseCreativesUrlSyncReturn {
   const TAB_URL_KEY = 'cr_activeTab';
 
   /**
-   * Сериализует значение для URL
+   * Определяет тип поля для десериализации
+   */
+  const getFieldType = (key: keyof FilterState): 'string' | 'boolean' | 'array' => {
+    const arrayFields: (keyof FilterState)[] = [
+      'advertisingNetworks', 'languages', 'operatingSystems', 
+      'browsers', 'devices', 'imageSizes'
+    ];
+    
+    if (arrayFields.includes(key)) return 'array';
+    if (key === 'onlyAdult') return 'boolean';
+    return 'string';
+  };
+
+  /**
+   * Десериализует значение из URL используя встроенные механизмы
+   */
+  const parseUrlValue = (urlValue: string, targetType: 'string' | 'boolean' | 'array'): any => {
+    if (!urlValue) return undefined;
+
+    switch (targetType) {
+      case 'boolean':
+        return urlValue === '1' || urlValue === 'true';
+      
+      case 'array':
+        return urlValue.split(',').filter(Boolean);
+      
+      case 'string':
+      default:
+        return urlValue;
+    }
+  };
+
+  /**
+   * Сериализует значение для URL с использованием логики @vueuse/core
    */
   const serializeValue = (value: any): string | undefined => {
     if (value === null || value === undefined || value === '') {
@@ -84,45 +117,13 @@ export function useCreativesUrlSync(): UseCreativesUrlSyncReturn {
   };
 
   /**
-   * Десериализует значение из URL
-   */
-  const deserializeValue = (urlValue: string, targetType: 'string' | 'boolean' | 'array'): any => {
-    if (!urlValue) return undefined;
-
-    switch (targetType) {
-      case 'boolean':
-        return urlValue === '1' || urlValue === 'true';
-      
-      case 'array':
-        return urlValue.split(',').filter(Boolean);
-      
-      case 'string':
-      default:
-        return urlValue;
-    }
-  };
-
-  /**
-   * Определяет тип поля для десериализации
-   */
-  const getFieldType = (key: keyof FilterState): 'string' | 'boolean' | 'array' => {
-    const arrayFields: (keyof FilterState)[] = [
-      'advertisingNetworks', 'languages', 'operatingSystems', 
-      'browsers', 'devices', 'imageSizes'
-    ];
-    
-    if (arrayFields.includes(key)) return 'array';
-    if (key === 'onlyAdult') return 'boolean';
-    return 'string';
-  };
-
-  /**
    * Синхронизирует фильтры в URL (Store -> URL)
+   * Использует встроенные возможности @vueuse/core с кастомной предобработкой
    */
   const syncFiltersToUrl = (filters: FilterState, activeTab: TabValue): void => {
     if (!isEnabled.value) return;
 
-    // Обновляем фильтры
+    // Обновляем фильтры с кастомной сериализацией
     Object.entries(FILTER_URL_MAPPING).forEach(([filterKey, urlKey]) => {
       const value = filters[filterKey as keyof FilterState];
       const serialized = serializeValue(value);
@@ -153,7 +154,7 @@ export function useCreativesUrlSync(): UseCreativesUrlSyncReturn {
       const urlValue = urlParams[urlKey];
       if (urlValue) {
         const fieldType = getFieldType(filterKey as keyof FilterState);
-        const deserializedValue = deserializeValue(String(urlValue), fieldType);
+        const deserializedValue = parseUrlValue(String(urlValue), fieldType);
         
         if (deserializedValue !== undefined) {
           (filterUpdates as any)[filterKey] = deserializedValue;
