@@ -4,6 +4,29 @@ return [
     'title' => 'Креативы',
     'favorites' => 'Избранное',
     'advertisements' => ' <span>:count</span> объявление| <span>:count</span> объявления| <span>:count</span> объявлений',
+
+    // Переводы для Vue компонентов
+    'loading' => 'Загрузка...',
+    'error' => 'Ошибка загрузки',
+    'retry' => 'Повторить',
+    'no-data' => 'Нет данных для отображения',
+    'previous-page' => 'Назад',
+    'next-page' => 'Вперед',
+    'page' => 'Страница',
+    'of' => 'из',
+    'filter' => 'Фильтр',
+    'reset' => 'Сбросить',
+    'country' => 'Страна',
+    'search' => 'Поиск',
+
+    // Переводы для вкладок
+    'tabs' => [
+        'push' => 'Push',
+        'inpage' => 'In Page',
+        'facebook' => 'Facebook',
+        'tiktok' => 'TikTok',
+    ],
+
     'details' => [
         'tracking-link' => 'Ссылка лендинга',
         'active' => 'Активно',
@@ -77,12 +100,6 @@ return [
             'by-views' => 'По просмотрам',
         ],
         'on-page' => 'На странице — ',
-        'tabs' => [
-            'push' => 'Push',
-            'inpage' => 'In Page',
-            'facebook' => 'Facebook',
-            'tiktok' => 'TikTok',
-        ],
         'country' => [
             'all' => 'Все страны',
             'placeholder' => 'Страна',

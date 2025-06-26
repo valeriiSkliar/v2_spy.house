@@ -83,6 +83,34 @@ class CreativesController extends FrontendController
             'tabs.tiktok' => 'TikTok',
         ];
 
+        // Минимальные переводы только для Vue компонентов (оптимизация памяти)
+        $vueTranslations = [
+            'loading' => __('creatives.loading'),
+            'error' => __('creatives.error'),
+            'retry' => __('creatives.retry'),
+            'noData' => __('creatives.no-data'),
+            'previousPage' => __('creatives.previous-page'),
+            'nextPage' => __('creatives.next-page'),
+            'page' => __('creatives.page'),
+            'of' => __('creatives.of'),
+        ];
+
+        // Минимальные переводы для фильтров (только необходимые)
+        $filtersTranslations = [
+            'filter' => __('creatives.filter'),
+            'reset' => __('creatives.reset'),
+            'country' => __('creatives.country'),
+            'search' => __('creatives.search'),
+        ];
+
+        // Минимальные переводы для вкладок
+        $tabsTranslations = [
+            'push' => __('creatives.tabs.push'),
+            'inpage' => __('creatives.tabs.inpage'),
+            'facebook' => __('creatives.tabs.facebook'),
+            'tiktok' => __('creatives.tabs.tiktok'),
+        ];
+
         $selectOptions = $this->getSelectOptions();
         $tabOptions = $this->getTabOptions($activeTabFromUrl);
 
@@ -93,6 +121,9 @@ class CreativesController extends FrontendController
             'selectOptions' => $selectOptions,
             'tabOptions' => $tabOptions,
             'translations' => $translations,
+            'vueTranslations' => $vueTranslations,  // Отдельный массив для Vue
+            'filtersTranslations' => $filtersTranslations,  // Переводы для фильтров
+            'tabsTranslations' => $tabsTranslations,  // Переводы для вкладок
         ]);
     }
 
