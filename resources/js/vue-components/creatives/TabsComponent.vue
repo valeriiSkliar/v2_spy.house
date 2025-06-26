@@ -119,13 +119,40 @@ onMounted(async () => {
   console.log('TabsComponent mounting with props:', props);
 
   try {
-    // 1. Инициализируем store с переданными параметрами
-    await store.initializeFilters(
-      props.initialTabs, // начальное состояние вкладок
-      undefined, // selectOptions не нужны для вкладок
-      props.translations, // переводы
-      props.tabOptions // опции вкладок (activeTab, counts, etc.)
-    );
+    // TabsComponent не должен инициализировать весь store - только устанавливать свои опции
+    console.log('🔧 Setting tab-specific options...');
+
+    // Устанавливаем опции вкладок
+    if (props.tabOptions) {
+      store.setTabOptions(props.tabOptions);
+    }
+
+    // Устанавливаем переводы
+    if (props.translations) {
+      store.setTranslations(props.translations);
+    }
+
+    // Обновляем состояние вкладок через store.tabs напрямую, если переданы
+    if (props.initialTabs) {
+      if (props.initialTabs.availableTabs) {
+        store.tabs.availableTabs = [...props.initialTabs.availableTabs];
+      }
+      if (props.initialTabs.tabCounts) {
+        store.tabs.tabCounts = { ...props.initialTabs.tabCounts };
+      }
+      if (
+        props.initialTabs.activeTab &&
+        store.tabs.availableTabs.includes(props.initialTabs.activeTab)
+      ) {
+        store.tabs.activeTab = props.initialTabs.activeTab;
+      }
+    }
+
+    // Если store ещё не инициализирован - пусть это сделает FiltersComponent с полными selectOptions
+    console.log('📝 TabsComponent options applied. Store initialization:', {
+      isInitialized: store.isInitialized,
+      note: 'Full store initialization will be handled by FiltersComponent',
+    });
 
     console.log('Store initialized:', {
       tabs: store.tabs,
