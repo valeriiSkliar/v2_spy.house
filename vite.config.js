@@ -17,7 +17,6 @@ export default defineConfig({
         'resources/js/pages/verify-email.js',
         'resources/js/pages/reset-password.js',
         'resources/js/pages/forgot-password.js',
-        // 'resources/js/creatives/app.js',
         'resources/img/telegram.svg',
         'resources/img/viber.svg',
         'resources/img/whatsapp.svg',
