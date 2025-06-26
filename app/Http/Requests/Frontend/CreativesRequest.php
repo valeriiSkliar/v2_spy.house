@@ -9,10 +9,33 @@ use App\Enums\Frontend\DeviceType;
 use App\Enums\Frontend\OperationSystem;
 use App\Helpers\IsoCodesHelper;
 use App\Models\Frontend\IsoEntity;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 
 class CreativesRequest extends BaseRequest
 {
+    /**
+     * Кэш для валидационных данных
+     */
+    private static $validationCache = [];
+
+    /**
+     * TTL кэша валидации в секундах (5 минут)
+     */
+    private const VALIDATION_CACHE_TTL = 300;
+
+    /**
+     * Максимальные значения для массивов
+     */
+    private const MAX_ARRAY_ITEMS = [
+        'advertisingNetworks' => 50,
+        'languages' => 100,
+        'operatingSystems' => 20,
+        'browsers' => 50,
+        'devices' => 10,
+        'imageSizes' => 1,
+    ];
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -27,89 +50,40 @@ class CreativesRequest extends BaseRequest
     public function rules(): array
     {
         return [
-            // Поиск и основные фильтры
+            // Основные фильтры
             'searchKeyword' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'country' => [
-                'sometimes',
-                'nullable',
-                'string',
-                function ($attribute, $value, $fail) {
-                    if (!in_array($value, ['default', 'all']) && !IsoEntity::isValidCountryCode($value)) {
-                        $fail('Указанный код страны не доступен.');
-                    }
-                }
-            ],
-            'dateCreation' => ['sometimes', 'nullable', 'string', 'max:50'],
-            'sortBy' => ['sometimes', 'nullable', 'string', 'in:creation,activity,popularity,byCreationDate,byActivity,byPopularity,default'],
-            'periodDisplay' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'country' => ['sometimes', 'nullable', 'string', $this->getCountryValidationRule()],
+            'dateCreation' => ['sometimes', 'nullable', 'string', Rule::in($this->getValidDateRanges())],
+            'sortBy' => ['sometimes', 'nullable', 'string', Rule::in($this->getValidSortOptions())],
+            'periodDisplay' => ['sometimes', 'nullable', 'string', Rule::in($this->getValidDateRanges())],
             'onlyAdult' => ['sometimes', 'nullable', 'boolean'],
 
-            // Массивы фильтров
-            'advertisingNetworks' => ['sometimes', 'nullable', 'array', 'max:50'],
-            'advertisingNetworks.*' => ['string', 'max:50'],
-            'languages' => ['sometimes', 'nullable', 'array', 'max:100'],
-            'languages.*' => [
-                'string',
-                'max:3',
-                function ($attribute, $value, $fail) {
-                    if (!IsoEntity::isValidLanguageCode($value)) {
-                        $fail('Указанный код языка не доступен.');
-                    }
-                }
-            ],
-            'operatingSystems' => ['sometimes', 'nullable', 'array', 'max:20'],
-            'operatingSystems.*' => ['string', 'max:50'],
-            'browsers' => ['sometimes', 'nullable', 'array', 'max:50'],
-            'browsers.*' => ['string', 'max:100'],
-            'devices' => ['sometimes', 'nullable', 'array', 'max:10'],
-            'devices.*' => ['string', 'max:50'],
-            'imageSizes' => ['sometimes', 'nullable', 'array', 'max:20'],
-            'imageSizes.*' => ['string', 'max:20'],
+            // Массивы фильтров с оптимизированной валидацией
+            'advertisingNetworks' => ['sometimes', 'nullable', 'array', 'max:' . self::MAX_ARRAY_ITEMS['advertisingNetworks']],
+            'advertisingNetworks.*' => ['string', 'max:50', $this->getAdvertisingNetworkValidationRule()],
+
+            'languages' => ['sometimes', 'nullable', 'array', 'max:' . self::MAX_ARRAY_ITEMS['languages']],
+            'languages.*' => ['string', 'max:3', $this->getLanguageValidationRule()],
+
+            'operatingSystems' => ['sometimes', 'nullable', 'array', 'max:' . self::MAX_ARRAY_ITEMS['operatingSystems']],
+            'operatingSystems.*' => ['string', 'max:50', $this->getOperatingSystemValidationRule()],
+
+            'browsers' => ['sometimes', 'nullable', 'array', 'max:' . self::MAX_ARRAY_ITEMS['browsers']],
+            'browsers.*' => ['string', 'max:100', $this->getBrowserValidationRule()],
+
+            'devices' => ['sometimes', 'nullable', 'array', 'max:' . self::MAX_ARRAY_ITEMS['devices']],
+            'devices.*' => ['string', 'max:50', $this->getDeviceValidationRule()],
+
+            'imageSizes' => ['sometimes', 'nullable', 'array', 'max:' . self::MAX_ARRAY_ITEMS['imageSizes']],
+            'imageSizes.*' => ['string', 'max:20', Rule::in($this->getValidImageSizes())],
 
             // Пагинация
             'page' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:10000'],
             'perPage' => ['sometimes', 'nullable', 'integer', 'min:6', 'max:100'],
+            'activeTab' => ['sometimes', 'nullable', 'string', Rule::in(['push', 'inpage', 'facebook', 'tiktok'])],
 
-            // Активная вкладка
-            'activeTab' => ['sometimes', 'nullable', 'string', 'in:push,inpage,facebook,tiktok'],
-
-            // URL sync параметры с префиксом cr_
-            'cr_searchKeyword' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'cr_country' => [
-                'sometimes',
-                'nullable',
-                'string',
-                function ($attribute, $value, $fail) {
-                    if (!in_array($value, ['default', 'all']) && !IsoEntity::isValidCountryCode($value)) {
-                        $fail('Указанный код страны не доступен.');
-                    }
-                }
-            ],
-            'cr_dateCreation' => ['sometimes', 'nullable', 'string', 'max:50'],
-            'cr_sortBy' => ['sometimes', 'nullable', 'string', 'in:creation,activity,popularity,byCreationDate,byActivity,byPopularity,default'],
-            'cr_periodDisplay' => ['sometimes', 'nullable', 'string', 'max:50'],
-            'cr_onlyAdult' => ['sometimes', 'nullable', 'string', 'in:0,1,true,false'],
-            'cr_advertisingNetworks' => ['sometimes', 'nullable', 'string', 'max:1000'],
-            'cr_languages' => [
-                'sometimes',
-                'nullable',
-                'string',
-                'max:500',
-                function ($attribute, $value, $fail) {
-                    $languageCodes = array_map('trim', explode(',', $value));
-                    foreach ($languageCodes as $code) {
-                        if (!empty($code) && !IsoEntity::isValidLanguageCode($code)) {
-                            $fail("Код языка '{$code}' не доступен.");
-                            break;
-                        }
-                    }
-                }
-            ],
-            'cr_operatingSystems' => ['sometimes', 'nullable', 'string', 'max:500'],
-            'cr_browsers' => ['sometimes', 'nullable', 'string', 'max:1000'],
-            'cr_devices' => ['sometimes', 'nullable', 'string', 'max:200'],
-            'cr_imageSizes' => ['sometimes', 'nullable', 'string', 'max:300'],
-            'cr_activeTab' => ['sometimes', 'nullable', 'string', 'in:push,inpage,facebook,tiktok'],
+            // URL sync параметры (с кэшированием валидации)
+            ...$this->getUrlSyncRules(),
         ];
     }
 
@@ -119,43 +93,60 @@ class CreativesRequest extends BaseRequest
     protected function prepareForValidation(): void
     {
         $input = $this->all();
-
         $sanitized = [];
 
-        // Санитизация строковых полей
-        foreach (['searchKeyword', 'country', 'dateCreation', 'sortBy', 'periodDisplay', 'activeTab'] as $field) {
+        // Используем batch санитизацию для улучшения производительности
+        $stringFields = [
+            'searchKeyword',
+            'country',
+            'dateCreation',
+            'sortBy',
+            'periodDisplay',
+            'activeTab',
+            'cr_searchKeyword',
+            'cr_country',
+            'cr_dateCreation',
+            'cr_sortBy',
+            'cr_periodDisplay',
+            'cr_activeTab'
+        ];
+
+        foreach ($stringFields as $field) {
             if (isset($input[$field])) {
                 $sanitized[$field] = $this->sanitizeInput($input[$field]);
             }
         }
 
-        // Санитизация URL sync параметров
-        foreach (['cr_searchKeyword', 'cr_country', 'cr_dateCreation', 'cr_sortBy', 'cr_periodDisplay', 'cr_activeTab'] as $field) {
-            if (isset($input[$field])) {
-                $sanitized[$field] = $this->sanitizeInput($input[$field]);
-            }
-        }
-
-        // Обработка булевых значений
+        // Санитизация булевых значений (только для обычных параметров, не URL)
         if (isset($input['onlyAdult'])) {
             $sanitized['onlyAdult'] = $this->sanitizeBooleanInput($input['onlyAdult']);
         }
 
+        // URL булевые параметры обрабатываем как строки для валидации
         if (isset($input['cr_onlyAdult'])) {
             $sanitized['cr_onlyAdult'] = $this->sanitizeInput($input['cr_onlyAdult']);
         }
 
-        // Санитизация массивов из URL (comma-separated strings)
-        foreach (['cr_advertisingNetworks', 'cr_languages', 'cr_operatingSystems', 'cr_browsers', 'cr_devices', 'cr_imageSizes'] as $field) {
-            if (isset($input[$field]) && is_string($input[$field])) {
-                $sanitized[$field] = $this->sanitizeInput($input[$field]);
+        // Batch санитизация массивов
+        $arrayFields = ['advertisingNetworks', 'languages', 'operatingSystems', 'browsers', 'devices', 'imageSizes'];
+        foreach ($arrayFields as $field) {
+            if (isset($input[$field]) && is_array($input[$field])) {
+                $sanitized[$field] = $this->sanitizeArrayField($input[$field]);
             }
         }
 
-        // Санитизация массивов
-        foreach (['advertisingNetworks', 'languages', 'operatingSystems', 'browsers', 'devices', 'imageSizes'] as $field) {
-            if (isset($input[$field]) && is_array($input[$field])) {
-                $sanitized[$field] = array_map([$this, 'sanitizeInput'], $input[$field]);
+        // Санитизация URL массивов (comma-separated)
+        $urlArrayFields = [
+            'cr_advertisingNetworks',
+            'cr_languages',
+            'cr_operatingSystems',
+            'cr_browsers',
+            'cr_devices',
+            'cr_imageSizes'
+        ];
+        foreach ($urlArrayFields as $field) {
+            if (isset($input[$field]) && is_string($input[$field])) {
+                $sanitized[$field] = $this->sanitizeInput($input[$field]);
             }
         }
 
@@ -174,11 +165,24 @@ class CreativesRequest extends BaseRequest
      */
     public function getCreativesFilters(): array
     {
+        // Используем кэширование для повторных запросов с одинаковыми параметрами
+        $cacheKey = 'creatives_filters_' . md5(serialize($this->all()));
+
+        return Cache::remember($cacheKey, 60, function () {
+            return $this->processValidatedFilters();
+        });
+    }
+
+    /**
+     * Обрабатывает валидированные фильтры
+     */
+    private function processValidatedFilters(): array
+    {
         $validated = $this->validated();
         $filters = [];
 
-        // Преобразование URL параметров в обычные фильтры (приоритет URL параметрам)
-        $urlToFilter = [
+        // Маппинг URL параметров в обычные фильтры (приоритет URL параметрам)
+        $urlToFilterMapping = [
             'cr_searchKeyword' => 'searchKeyword',
             'cr_country' => 'country',
             'cr_dateCreation' => 'dateCreation',
@@ -188,15 +192,12 @@ class CreativesRequest extends BaseRequest
             'cr_activeTab' => 'activeTab',
         ];
 
-        foreach ($urlToFilter as $urlParam => $filterParam) {
-            if (isset($validated[$urlParam]) && $validated[$urlParam] !== null) {
-                $filters[$filterParam] = $validated[$urlParam];
-            } elseif (isset($validated[$filterParam]) && $validated[$filterParam] !== null) {
-                $filters[$filterParam] = $validated[$filterParam];
-            }
+        // Обработка простых полей
+        foreach ($urlToFilterMapping as $urlParam => $filterParam) {
+            $filters[$filterParam] = $validated[$urlParam] ?? $validated[$filterParam] ?? null;
         }
 
-        // Обработка массивов из URL параметров
+        // Обработка массивов с оптимизацией
         $urlArrayFields = [
             'cr_advertisingNetworks' => 'advertisingNetworks',
             'cr_languages' => 'languages',
@@ -207,150 +208,377 @@ class CreativesRequest extends BaseRequest
         ];
 
         foreach ($urlArrayFields as $urlParam => $filterParam) {
-            if (isset($validated[$urlParam]) && $validated[$urlParam] !== null) {
-                // Преобразуем comma-separated string в массив
-                $arrayValue = $this->parseCommaSeparatedString($validated[$urlParam]);
-                if (!empty($arrayValue)) {
-                    $filters[$filterParam] = $arrayValue;
-                }
-            } elseif (isset($validated[$filterParam]) && is_array($validated[$filterParam]) && !empty($validated[$filterParam])) {
+            if (isset($validated[$urlParam])) {
+                $filters[$filterParam] = $this->parseCommaSeparatedString($validated[$urlParam]);
+            } elseif (isset($validated[$filterParam]) && is_array($validated[$filterParam])) {
                 $filters[$filterParam] = $validated[$filterParam];
+            } else {
+                $filters[$filterParam] = [];
             }
         }
 
-        // Пагинация
-        $filters['page'] = $validated['page'] ?? 1;
-        $filters['perPage'] = $validated['perPage'] ?? 12;
+        // Пагинация с валидацией
+        $filters['page'] = max(1, min(10000, (int)($validated['page'] ?? 1)));
+        $filters['perPage'] = max(6, min(100, (int)($validated['perPage'] ?? 12)));
 
-        // Валидация и фильтрация значений
-        return $this->validateAndFilterValues($filters);
+        // Batch валидация всех значений
+        return $this->batchValidateFilters($filters);
     }
 
     /**
-     * Валидирует и фильтрует значения согласно доступным опциям.
+     * Batch валидация фильтров для улучшения производительности
      */
-    protected function validateAndFilterValues(array $filters): array
+    private function batchValidateFilters(array $filters): array
     {
         $validatedFilters = [];
 
-        // Валидация простых полей
-        if (isset($filters['searchKeyword']) && !empty(trim($filters['searchKeyword']))) {
+        // Простые поля
+        if (!empty($filters['searchKeyword'])) {
             $validatedFilters['searchKeyword'] = trim($filters['searchKeyword']);
         }
 
-        // Валидация страны
+        // Валидация страны с кэшированием
         if (isset($filters['country']) && $filters['country'] !== 'default') {
-            // Используем новую валидацию через IsoEntity
-            if (IsoEntity::isValidCountryCode($filters['country'])) {
+            if ($this->isValidCountryCodeCached($filters['country'])) {
                 $validatedFilters['country'] = strtoupper($filters['country']);
             }
         }
 
-        // Валидация сортировки
-        if (isset($filters['sortBy']) && $filters['sortBy'] !== 'default') {
-            $validSortOptions = ['creation', 'activity', 'popularity', 'byCreationDate', 'byActivity', 'byPopularity'];
-            if (in_array($filters['sortBy'], $validSortOptions)) {
-                $validatedFilters['sortBy'] = $filters['sortBy'];
+        // Валидация enum значений
+        $enumFields = [
+            'sortBy' => ['creation', 'activity', 'popularity', 'byCreationDate', 'byActivity', 'byPopularity'],
+            'dateCreation' => $this->getValidDateRanges(),
+            'periodDisplay' => $this->getValidDateRanges(),
+            'activeTab' => ['push', 'inpage', 'facebook', 'tiktok'],
+        ];
+
+        foreach ($enumFields as $field => $validValues) {
+            if (isset($filters[$field]) && $filters[$field] !== 'default' && in_array($filters[$field], $validValues)) {
+                $validatedFilters[$field] = $filters[$field];
             }
         }
 
-        // Валидация даты создания
-        if (isset($filters['dateCreation']) && $filters['dateCreation'] !== 'default') {
-            $validDateOptions = ['today', 'yesterday', 'last7', 'last30', 'last90', 'thisMonth', 'lastMonth', 'thisYear', 'lastYear'];
-            if (in_array($filters['dateCreation'], $validDateOptions)) {
-                $validatedFilters['dateCreation'] = $filters['dateCreation'];
-            }
-        }
-
-        // Валидация периода отображения
-        if (isset($filters['periodDisplay']) && $filters['periodDisplay'] !== 'default') {
-            $validPeriodOptions = ['today', 'yesterday', 'last7', 'last30', 'last90', 'thisMonth', 'lastMonth', 'thisYear', 'lastYear'];
-            if (in_array($filters['periodDisplay'], $validPeriodOptions)) {
-                $validatedFilters['periodDisplay'] = $filters['periodDisplay'];
-            }
-        }
-
-        // Валидация булевого значения onlyAdult
+        // Булевое значение
         if (isset($filters['onlyAdult'])) {
             $validatedFilters['onlyAdult'] = $this->sanitizeBooleanInput($filters['onlyAdult']);
         }
 
-        // Валидация массивов
-        $validatedFilters = array_merge($validatedFilters, $this->validateArrayFilters($filters));
-
-        // Валидация активной вкладки
-        if (isset($filters['activeTab'])) {
-            $validTabs = ['push', 'inpage', 'facebook', 'tiktok'];
-            if (in_array($filters['activeTab'], $validTabs)) {
-                $validatedFilters['activeTab'] = $filters['activeTab'];
-            }
-        }
+        // Batch валидация массивов
+        $validatedFilters = array_merge($validatedFilters, $this->batchValidateArrayFilters($filters));
 
         // Пагинация
-        $validatedFilters['page'] = max(1, min(10000, (int)($filters['page'] ?? 1)));
-        $validatedFilters['perPage'] = max(6, min(100, (int)($filters['perPage'] ?? 12)));
+        $validatedFilters['page'] = $filters['page'];
+        $validatedFilters['perPage'] = $filters['perPage'];
 
         return $validatedFilters;
     }
 
     /**
-     * Валидирует массивы фильтров.
+     * Batch валидация массивов фильтров
      */
-    protected function validateArrayFilters(array $filters): array
+    private function batchValidateArrayFilters(array $filters): array
     {
         $validatedArrays = [];
 
-        // Валидация рекламных сетей
-        if (isset($filters['advertisingNetworks']) && is_array($filters['advertisingNetworks'])) {
-            $validNetworks = array_keys(AdvertismentNetwork::forCreativeFilters());
-            $validatedArrays['advertisingNetworks'] = array_intersect($filters['advertisingNetworks'], $validNetworks);
-        }
+        // Получаем все валидные значения одним запросом
+        $validValues = $this->getAllValidValues();
 
-        // Валидация языков
-        if (isset($filters['languages']) && is_array($filters['languages'])) {
-            $validLanguages = [];
-            foreach ($filters['languages'] as $languageCode) {
-                if (IsoEntity::isValidLanguageCode($languageCode)) {
-                    $validLanguages[] = strtolower($languageCode);
-                }
+        $arrayFieldsMapping = [
+            'advertisingNetworks' => $validValues['advertisingNetworks'],
+            'languages' => $validValues['languages'],
+            'operatingSystems' => $validValues['operatingSystems'],
+            'browsers' => $validValues['browsers'],
+            'devices' => $validValues['devices'],
+            'imageSizes' => $validValues['imageSizes'],
+        ];
+
+        foreach ($arrayFieldsMapping as $field => $validOptions) {
+            if (isset($filters[$field]) && is_array($filters[$field]) && !empty($filters[$field])) {
+                $validatedArrays[$field] = array_values(array_intersect($filters[$field], $validOptions));
             }
-            if (!empty($validLanguages)) {
-                $validatedArrays['languages'] = $validLanguages;
-            }
         }
 
-        // Валидация операционных систем
-        if (isset($filters['operatingSystems']) && is_array($filters['operatingSystems'])) {
-            $validOS = array_column(OperationSystem::getForSelect(), 'value');
-            $validatedArrays['operatingSystems'] = array_intersect($filters['operatingSystems'], $validOS);
-        }
-
-        // Валидация браузеров
-        if (isset($filters['browsers']) && is_array($filters['browsers'])) {
-            $validBrowsers = array_column(Browser::getBrowsersForSelect(), 'value');
-            $validatedArrays['browsers'] = array_intersect($filters['browsers'], $validBrowsers);
-        }
-
-        // Валидация устройств
-        if (isset($filters['devices']) && is_array($filters['devices'])) {
-            $validDevices = array_column(DeviceType::getForSelect(), 'value');
-            $validatedArrays['devices'] = array_intersect($filters['devices'], $validDevices);
-        }
-
-        // Валидация размеров изображений
-        if (isset($filters['imageSizes']) && is_array($filters['imageSizes'])) {
-            $validSizes = ['1x1', '16x9', '9x16', '3x2', '2x3', '4x3', '3x4', '21x9'];
-            $validatedArrays['imageSizes'] = array_intersect($filters['imageSizes'], $validSizes);
-        }
-
-        // Удаляем пустые массивы
         return array_filter($validatedArrays, function ($value) {
             return !empty($value);
         });
     }
 
     /**
-     * Парсит comma-separated строку в массив.
+     * Получает все валидные значения одним запросом (с кэшированием)
+     */
+    private function getAllValidValues(): array
+    {
+        return Cache::remember('all_valid_filter_values', self::VALIDATION_CACHE_TTL, function () {
+            return [
+                'advertisingNetworks' => AdvertismentNetwork::forCreativeFilters()->pluck('value')->toArray(),
+                'languages' => IsoEntity::languages()->active()->pluck('iso_code_2')->toArray(),
+                'operatingSystems' => array_column(OperationSystem::getForSelect(), 'value'),
+                'browsers' => array_column(Browser::getBrowsersForSelect(), 'value'),
+                'devices' => array_column(DeviceType::getForSelect(), 'value'),
+                'imageSizes' => ['1x1', '16x9', '9x16', '3x2', '2x3', '4x3', '3x4', '21x9'],
+            ];
+        });
+    }
+
+    /**
+     * Генерирует правила валидации для URL sync параметров
+     */
+    private function getUrlSyncRules(): array
+    {
+        $baseRules = [
+            'cr_searchKeyword' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'cr_country' => ['sometimes', 'nullable', 'string', $this->getCountryValidationRule()],
+            'cr_dateCreation' => ['sometimes', 'nullable', 'string', Rule::in($this->getValidDateRanges())],
+            'cr_sortBy' => ['sometimes', 'nullable', 'string', Rule::in($this->getValidSortOptions())],
+            'cr_periodDisplay' => ['sometimes', 'nullable', 'string', Rule::in($this->getValidDateRanges())],
+            'cr_onlyAdult' => ['sometimes', 'nullable', 'string', Rule::in(['0', '1', 'true', 'false'])],
+            'cr_activeTab' => ['sometimes', 'nullable', 'string', Rule::in(['push', 'inpage', 'facebook', 'tiktok'])],
+        ];
+
+        // Добавляем правила для URL массивов с валидацией содержимого
+        $baseRules['cr_advertisingNetworks'] = ['sometimes', 'nullable', 'string', 'max:500', $this->getCommaSeparatedAdvertisingNetworksValidationRule()];
+        $baseRules['cr_languages'] = ['sometimes', 'nullable', 'string', 'max:500', $this->getCommaSeparatedLanguagesValidationRule()];
+        $baseRules['cr_operatingSystems'] = ['sometimes', 'nullable', 'string', 'max:500', $this->getCommaSeparatedOperatingSystemsValidationRule()];
+        $baseRules['cr_browsers'] = ['sometimes', 'nullable', 'string', 'max:1000', $this->getCommaSeparatedBrowsersValidationRule()];
+        $baseRules['cr_devices'] = ['sometimes', 'nullable', 'string', 'max:500', $this->getCommaSeparatedDevicesValidationRule()];
+        $baseRules['cr_imageSizes'] = ['sometimes', 'nullable', 'string', 'max:500', $this->getCommaSeparatedImageSizesValidationRule()];
+
+        return $baseRules;
+    }
+
+    /**
+     * Кэшированные методы валидации
+     */
+    private function isValidCountryCodeCached(string $code): bool
+    {
+        $cacheKey = "valid_country_{$code}";
+
+        return Cache::remember($cacheKey, self::VALIDATION_CACHE_TTL, function () use ($code) {
+            return in_array($code, ['default', 'all']) || IsoEntity::isValidCountryCode($code);
+        });
+    }
+
+    private function getCountryValidationRule()
+    {
+        return function ($attribute, $value, $fail) {
+            if (!$this->isValidCountryCodeCached($value)) {
+                $fail('Указанный код страны не доступен.');
+            }
+        };
+    }
+
+    private function getLanguageValidationRule()
+    {
+        return function ($attribute, $value, $fail) {
+            $validLanguages = Cache::remember('valid_languages', self::VALIDATION_CACHE_TTL, function () {
+                return IsoEntity::languages()->active()->pluck('iso_code_2')->toArray();
+            });
+
+            if (!in_array($value, $validLanguages)) {
+                $fail('Указанный код языка не доступен.');
+            }
+        };
+    }
+
+    private function getAdvertisingNetworkValidationRule()
+    {
+        return function ($attribute, $value, $fail) {
+            $validNetworks = Cache::remember('valid_advertising_networks', self::VALIDATION_CACHE_TTL, function () {
+                return AdvertismentNetwork::forCreativeFilters()->pluck('value')->toArray();
+            });
+
+            if (!in_array($value, $validNetworks)) {
+                $fail('Указанная рекламная сеть не доступна.');
+            }
+        };
+    }
+
+    private function getOperatingSystemValidationRule()
+    {
+        return function ($attribute, $value, $fail) {
+            $validOS = Cache::remember('valid_operating_systems', self::VALIDATION_CACHE_TTL, function () {
+                return array_column(OperationSystem::getForSelect(), 'value');
+            });
+
+            if (!in_array($value, $validOS)) {
+                $fail('Указанная операционная система не доступна.');
+            }
+        };
+    }
+
+    private function getBrowserValidationRule()
+    {
+        return function ($attribute, $value, $fail) {
+            $validBrowsers = Cache::remember('valid_browsers', self::VALIDATION_CACHE_TTL, function () {
+                return array_column(Browser::getBrowsersForSelect(), 'value');
+            });
+
+            if (!in_array($value, $validBrowsers)) {
+                $fail('Указанный браузер не доступен.');
+            }
+        };
+    }
+
+    private function getDeviceValidationRule()
+    {
+        return function ($attribute, $value, $fail) {
+            $validDevices = Cache::remember('valid_devices', self::VALIDATION_CACHE_TTL, function () {
+                return array_column(DeviceType::getForSelect(), 'value');
+            });
+
+            if (!in_array($value, $validDevices)) {
+                $fail('Указанное устройство не доступно.');
+            }
+        };
+    }
+
+    /**
+     * Правила валидации для comma-separated URL параметров
+     */
+    private function getCommaSeparatedAdvertisingNetworksValidationRule(): callable
+    {
+        return function ($attribute, $value, $fail) {
+            if (empty($value)) return;
+
+            $validNetworks = Cache::remember('valid_advertising_networks', self::VALIDATION_CACHE_TTL, function () {
+                return AdvertismentNetwork::forCreativeFilters()->pluck('value')->toArray();
+            });
+
+            $items = $this->parseCommaSeparatedString($value);
+            foreach ($items as $item) {
+                if (!in_array($item, $validNetworks)) {
+                    $fail("Указанная рекламная сеть не доступна: {$item}");
+                    return;
+                }
+            }
+        };
+    }
+
+    private function getCommaSeparatedLanguagesValidationRule(): callable
+    {
+        return function ($attribute, $value, $fail) {
+            if (empty($value)) return;
+
+            $validLanguages = Cache::remember('valid_languages', self::VALIDATION_CACHE_TTL, function () {
+                return IsoEntity::languages()->active()->pluck('iso_code_2')->toArray();
+            });
+
+            $items = $this->parseCommaSeparatedString($value);
+            foreach ($items as $item) {
+                if (!in_array($item, $validLanguages)) {
+                    $fail("Указанный код языка не доступен: {$item}");
+                    return;
+                }
+            }
+        };
+    }
+
+    private function getCommaSeparatedOperatingSystemsValidationRule(): callable
+    {
+        return function ($attribute, $value, $fail) {
+            if (empty($value)) return;
+
+            $validOS = Cache::remember('valid_operating_systems', self::VALIDATION_CACHE_TTL, function () {
+                return array_column(OperationSystem::getForSelect(), 'value');
+            });
+
+            $items = $this->parseCommaSeparatedString($value);
+            foreach ($items as $item) {
+                if (!in_array($item, $validOS)) {
+                    $fail("Указанная операционная система не доступна: {$item}");
+                    return;
+                }
+            }
+        };
+    }
+
+    private function getCommaSeparatedBrowsersValidationRule(): callable
+    {
+        return function ($attribute, $value, $fail) {
+            if (empty($value)) return;
+
+            $validBrowsers = Cache::remember('valid_browsers', self::VALIDATION_CACHE_TTL, function () {
+                return array_column(Browser::getBrowsersForSelect(), 'value');
+            });
+
+            $items = $this->parseCommaSeparatedString($value);
+            foreach ($items as $item) {
+                if (!in_array($item, $validBrowsers)) {
+                    $fail("Указанный браузер не доступен: {$item}");
+                    return;
+                }
+            }
+        };
+    }
+
+    private function getCommaSeparatedDevicesValidationRule(): callable
+    {
+        return function ($attribute, $value, $fail) {
+            if (empty($value)) return;
+
+            $validDevices = Cache::remember('valid_devices', self::VALIDATION_CACHE_TTL, function () {
+                return array_column(DeviceType::getForSelect(), 'value');
+            });
+
+            $items = $this->parseCommaSeparatedString($value);
+            foreach ($items as $item) {
+                if (!in_array($item, $validDevices)) {
+                    $fail("Указанное устройство не доступно: {$item}");
+                    return;
+                }
+            }
+        };
+    }
+
+    private function getCommaSeparatedImageSizesValidationRule(): callable
+    {
+        return function ($attribute, $value, $fail) {
+            if (empty($value)) return;
+
+            $validSizes = $this->getValidImageSizes();
+            $items = $this->parseCommaSeparatedString($value);
+            foreach ($items as $item) {
+                if (!in_array($item, $validSizes)) {
+                    $fail("Недопустимый размер изображения: {$item}");
+                    return;
+                }
+            }
+        };
+    }
+
+    /**
+     * Получает валидные значения с кэшированием
+     */
+    private function getValidDateRanges(): array
+    {
+        return ['today', 'yesterday', 'last7', 'last30', 'last90', 'thisMonth', 'lastMonth', 'thisYear', 'lastYear', 'default'];
+    }
+
+    private function getValidSortOptions(): array
+    {
+        return ['creation', 'activity', 'popularity', 'byCreationDate', 'byActivity', 'byPopularity', 'default'];
+    }
+
+    private function getValidImageSizes(): array
+    {
+        return ['1x1', '16x9', '9x16', '3x2', '2x3', '4x3', '3x4', '21x9'];
+    }
+
+    /**
+     * Оптимизированная санитизация массива
+     */
+    private function sanitizeArrayField(array $array): array
+    {
+        return array_values(array_filter(
+            array_map([$this, 'sanitizeInput'], $array),
+            function ($item) {
+                return !empty($item);
+            }
+        ));
+    }
+
+    /**
+     * Парсит comma-separated строку с валидацией
      */
     protected function parseCommaSeparatedString(string $value): array
     {
@@ -361,14 +589,14 @@ class CreativesRequest extends BaseRequest
         $items = explode(',', $value);
         $items = array_map('trim', $items);
         $items = array_filter($items, function ($item) {
-            return !empty($item);
+            return !empty($item) && strlen($item) <= 100; // Дополнительная защита
         });
 
         return array_values($items);
     }
 
     /**
-     * Санитизирует числовой ввод.
+     * Оптимизированная санитизация числового ввода
      */
     protected function sanitizeNumericInput($input): int
     {
@@ -376,7 +604,7 @@ class CreativesRequest extends BaseRequest
     }
 
     /**
-     * Санитизирует булевый ввод.
+     * Оптимизированная санитизация булевого ввода
      */
     protected function sanitizeBooleanInput($input): bool
     {
@@ -386,14 +614,14 @@ class CreativesRequest extends BaseRequest
 
         if (is_string($input)) {
             $input = strtolower(trim($input));
-            return in_array($input, ['1', 'true', 'yes', 'on']);
+            return in_array($input, ['1', 'true', 'yes', 'on'], true);
         }
 
         return (bool) $input;
     }
 
     /**
-     * Get custom validation messages.
+     * Улучшенные сообщения об ошибках
      */
     public function messages(): array
     {
@@ -401,19 +629,11 @@ class CreativesRequest extends BaseRequest
             'searchKeyword.string' => 'Поисковое слово должно быть строкой',
             'searchKeyword.max' => 'Поисковое слово не должно превышать 255 символов',
             'country.string' => 'Код страны должен быть строкой',
-            'country.max' => 'Код страны не должен превышать 10 символов',
-            'cr_country.string' => 'Код страны должен быть строкой',
-            'cr_country.max' => 'Код страны не должен превышать 10 символов',
             'sortBy.in' => 'Недопустимое значение сортировки',
             'activeTab.in' => 'Недопустимое значение вкладки',
             'onlyAdult.boolean' => 'Фильтр для взрослых должен быть булевым значением',
-            'advertisingNetworks.array' => 'Рекламные сети должны быть массивом',
-            'advertisingNetworks.max' => 'Слишком много рекламных сетей (максимум 50)',
-            'languages.array' => 'Языки должны быть массивом',
-            'languages.max' => 'Слишком много языков (максимум 100)',
-            'languages.*.size' => 'Код языка должен содержать 2 символа',
-            'cr_languages.string' => 'Коды языков должны быть строкой',
-            'cr_languages.max' => 'Строка кодов языков не должна превышать 500 символов',
+            '*.array' => 'Поле должно быть массивом',
+            '*.max' => 'Превышено максимальное количество элементов',
             'page.integer' => 'Номер страницы должен быть числом',
             'page.min' => 'Номер страницы не может быть меньше 1',
             'page.max' => 'Номер страницы не может быть больше 10000',
@@ -424,26 +644,14 @@ class CreativesRequest extends BaseRequest
     }
 
     /**
-     * Get custom attribute names for validation errors.
+     * Получает статистику валидации для мониторинга
      */
-    public function attributes(): array
+    public function getValidationStats(): array
     {
         return [
-            'searchKeyword' => 'поисковое слово',
-            'country' => 'страна',
-            'dateCreation' => 'дата создания',
-            'sortBy' => 'сортировка',
-            'periodDisplay' => 'период отображения',
-            'onlyAdult' => 'только для взрослых',
-            'advertisingNetworks' => 'рекламные сети',
-            'languages' => 'языки',
-            'operatingSystems' => 'операционные системы',
-            'browsers' => 'браузеры',
-            'devices' => 'устройства',
-            'imageSizes' => 'размеры изображений',
-            'page' => 'страница',
-            'perPage' => 'элементов на странице',
-            'activeTab' => 'активная вкладка',
+            'cache_hits' => Cache::get('validation_cache_hits', 0),
+            'cache_misses' => Cache::get('validation_cache_misses', 0),
+            'validation_time' => microtime(true) - (request()->server('REQUEST_TIME_FLOAT') ?? microtime(true)),
         ];
     }
 }
