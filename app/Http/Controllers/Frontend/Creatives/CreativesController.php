@@ -246,7 +246,8 @@ class CreativesController extends FrontendController
         // Сравниваем исходные и валидированные значения
         foreach ($originalInput as $key => $value) {
             if (!isset($validatedFilters[$key]) || $validatedFilters[$key] !== $value) {
-                $rejectedValues[] = "{$key}: {$value}";
+                $valueString = is_array($value) ? json_encode($value) : (string)$value;
+                $rejectedValues[] = "{$key}: {$valueString}";
                 $sanitizedCount++;
             }
         }
