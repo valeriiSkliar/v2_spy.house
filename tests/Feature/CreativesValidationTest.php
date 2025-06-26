@@ -8,12 +8,24 @@ use App\Models\Frontend\IsoEntity;
 
 class CreativesValidationTest extends TestCase
 {
+    use RefreshDatabase;
     /**
      * Тест валидации корректных фильтров.
      */
     public function test_validates_correct_filters()
     {
-        $response = $this->get('/api/creatives/filters/validate?' . http_build_query([
+        // Создаем тестовую страну
+        IsoEntity::create([
+            'type' => 'country',
+            'iso_code_2' => 'US',
+            'iso_code_3' => 'USA',
+            'name' => 'United States',
+            'is_active' => true,
+        ]);
+
+        $response = $this->withHeaders([
+            'Accept' => 'application/json',
+        ])->get('/api/creatives/filters/validate?' . http_build_query([
             'searchKeyword' => 'test search',
             'country' => 'US',
             'sortBy' => 'creation',
@@ -49,7 +61,10 @@ class CreativesValidationTest extends TestCase
      */
     public function test_rejects_invalid_filter_values()
     {
-        $response = $this->get('/api/creatives/filters/validate?' . http_build_query([
+        // Тест с невалидными данными должен возвращать 422
+        $response = $this->withHeaders([
+            'Accept' => 'application/json',
+        ])->get('/api/creatives/filters/validate?' . http_build_query([
             'searchKeyword' => str_repeat('a', 300), // Слишком длинное
             'country' => 'INVALID_COUNTRY',
             'sortBy' => 'invalid_sort',
@@ -60,22 +75,16 @@ class CreativesValidationTest extends TestCase
             'maliciousScript' => '<script>alert("xss")</script>'
         ]));
 
-        $response->assertStatus(200)
-            ->assertJson([
-                'status' => 'success'
+        $response->assertStatus(422)
+            ->assertJsonStructure([
+                'status',
+                'message',
+                'errors'
             ]);
 
         $data = $response->json();
-
-        // Проверяем что некорректные значения были отклонены
-        $this->assertGreaterThan(0, $data['validation']['sanitizedCount']);
-
-        // Проверяем что валидированные значения корректны
-        $filters = $data['filters'];
-        $this->assertLessThanOrEqual(255, strlen($filters['searchKeyword'] ?? ''));
-        $this->assertGreaterThanOrEqual(1, $filters['page']);
-        $this->assertLessThanOrEqual(100, $filters['perPage']);
-        $this->assertGreaterThanOrEqual(6, $filters['perPage']);
+        $this->assertEquals('error', $data['status']);
+        $this->assertArrayHasKey('errors', $data);
     }
 
     /**
@@ -83,7 +92,18 @@ class CreativesValidationTest extends TestCase
      */
     public function test_sanitizes_string_inputs()
     {
-        $response = $this->get('/api/creatives/filters/validate?' . http_build_query([
+        // Создаем тестовую страну
+        IsoEntity::create([
+            'type' => 'country',
+            'iso_code_2' => 'US',
+            'iso_code_3' => 'USA',
+            'name' => 'United States',
+            'is_active' => true,
+        ]);
+
+        $response = $this->withHeaders([
+            'Accept' => 'application/json',
+        ])->get('/api/creatives/filters/validate?' . http_build_query([
             'searchKeyword' => '  <script>alert("xss")</script>  ',
             'country' => '  US  '
         ]));
@@ -106,24 +126,41 @@ class CreativesValidationTest extends TestCase
      */
     public function test_validates_comma_separated_arrays()
     {
-        $response = $this->get('/api/creatives/filters/validate?' . http_build_query([
+        // Создаем тестовые языки
+        IsoEntity::create([
+            'type' => 'language',
+            'iso_code_2' => 'en',
+            'iso_code_3' => 'eng',
+            'name' => 'English',
+            'is_active' => true,
+        ]);
+
+        IsoEntity::create([
+            'type' => 'language',
+            'iso_code_2' => 'ru',
+            'iso_code_3' => 'rus',
+            'name' => 'Russian',
+            'is_active' => true,
+        ]);
+
+        IsoEntity::create([
+            'type' => 'language',
+            'iso_code_2' => 'fr',
+            'iso_code_3' => 'fra',
+            'name' => 'French',
+            'is_active' => true,
+        ]);
+
+        // Тест с невалидными языками должен возвращать ошибку валидации
+        $response = $this->withHeaders([
+            'Accept' => 'application/json',
+        ])->get('/api/creatives/filters/validate?' . http_build_query([
             'cr_languages' => 'en,ru,fr,invalid_lang',
             'cr_devices' => 'desktop,mobile,invalid_device'
         ]));
 
-        $response->assertStatus(200);
-        $data = $response->json();
-
-        // Проверяем что массивы были корректно распарсены и валидированы
-        if (isset($data['filters']['languages'])) {
-            $this->assertIsArray($data['filters']['languages']);
-            $this->assertNotContains('invalid_lang', $data['filters']['languages']);
-        }
-
-        if (isset($data['filters']['devices'])) {
-            $this->assertIsArray($data['filters']['devices']);
-            $this->assertNotContains('invalid_device', $data['filters']['devices']);
-        }
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['cr_languages']);
     }
 
     /**
@@ -131,7 +168,26 @@ class CreativesValidationTest extends TestCase
      */
     public function test_url_params_priority_over_regular_params()
     {
-        $response = $this->get('/api/creatives/filters/validate?' . http_build_query([
+        // Создаем тестовые страны
+        IsoEntity::create([
+            'type' => 'country',
+            'iso_code_2' => 'US',
+            'iso_code_3' => 'USA',
+            'name' => 'United States',
+            'is_active' => true,
+        ]);
+
+        IsoEntity::create([
+            'type' => 'country',
+            'iso_code_2' => 'CA',
+            'iso_code_3' => 'CAN',
+            'name' => 'Canada',
+            'is_active' => true,
+        ]);
+
+        $response = $this->withHeaders([
+            'Accept' => 'application/json',
+        ])->get('/api/creatives/filters/validate?' . http_build_query([
             'searchKeyword' => 'regular search',
             'cr_searchKeyword' => 'url search',
             'country' => 'US',
@@ -167,7 +223,9 @@ class CreativesValidationTest extends TestCase
         ];
 
         foreach ($testCases as $testCase) {
-            $response = $this->get('/api/creatives/filters/validate?' . http_build_query($testCase));
+            $response = $this->withHeaders([
+                'Accept' => 'application/json',
+            ])->get('/api/creatives/filters/validate?' . http_build_query($testCase));
             $response->assertStatus(200);
 
             $data = $response->json();
@@ -198,29 +256,37 @@ class CreativesValidationTest extends TestCase
         ]);
 
         // Тест с валидным ISO2 кодом
-        $response = $this->postJson('/api/creatives/filters/validate', [
+        $response = $this->withHeaders([
+            'Accept' => 'application/json',
+        ])->get('/api/creatives/filters/validate?' . http_build_query([
             'country' => 'US'
-        ]);
+        ]));
 
         $response->assertStatus(200);
 
         // Тест с валидным ISO3 кодом
-        $response = $this->postJson('/api/creatives/filters/validate', [
+        $response = $this->withHeaders([
+            'Accept' => 'application/json',
+        ])->get('/api/creatives/filters/validate?' . http_build_query([
             'country' => 'CAN'
-        ]);
+        ]));
 
         $response->assertStatus(200);
 
         // Тест со специальными значениями
-        $response = $this->postJson('/api/creatives/filters/validate', [
+        $response = $this->withHeaders([
+            'Accept' => 'application/json',
+        ])->get('/api/creatives/filters/validate?' . http_build_query([
             'country' => 'default'
-        ]);
+        ]));
 
         $response->assertStatus(200);
 
-        $response = $this->postJson('/api/creatives/filters/validate', [
-            'country' => 'All countries'
-        ]);
+        $response = $this->withHeaders([
+            'Accept' => 'application/json',
+        ])->get('/api/creatives/filters/validate?' . http_build_query([
+            'country' => 'all'
+        ]));
 
         $response->assertStatus(200);
     }
@@ -229,17 +295,21 @@ class CreativesValidationTest extends TestCase
     public function test_country_validation_with_invalid_iso_codes()
     {
         // Тест с несуществующим кодом страны
-        $response = $this->postJson('/api/creatives/filters/validate', [
+        $response = $this->withHeaders([
+            'Accept' => 'application/json',
+        ])->get('/api/creatives/filters/validate?' . http_build_query([
             'country' => 'XX'
-        ]);
+        ]));
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['country']);
 
         // Тест с невалидным форматом
-        $response = $this->postJson('/api/creatives/filters/validate', [
+        $response = $this->withHeaders([
+            'Accept' => 'application/json',
+        ])->get('/api/creatives/filters/validate?' . http_build_query([
             'country' => 'INVALID'
-        ]);
+        ]));
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['country']);
@@ -258,16 +328,20 @@ class CreativesValidationTest extends TestCase
         ]);
 
         // Тест с валидным URL параметром
-        $response = $this->postJson('/api/creatives/filters/validate', [
+        $response = $this->withHeaders([
+            'Accept' => 'application/json',
+        ])->get('/api/creatives/filters/validate?' . http_build_query([
             'cr_country' => 'GB'
-        ]);
+        ]));
 
         $response->assertStatus(200);
 
         // Тест с невалидным URL параметром
-        $response = $this->postJson('/api/creatives/filters/validate', [
+        $response = $this->withHeaders([
+            'Accept' => 'application/json',
+        ])->get('/api/creatives/filters/validate?' . http_build_query([
             'cr_country' => 'INVALID'
-        ]);
+        ]));
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['cr_country']);
@@ -285,9 +359,11 @@ class CreativesValidationTest extends TestCase
             'is_active' => false,
         ]);
 
-        $response = $this->postJson('/api/creatives/filters/validate', [
+        $response = $this->withHeaders([
+            'Accept' => 'application/json',
+        ])->get('/api/creatives/filters/validate?' . http_build_query([
             'country' => 'XX'
-        ]);
+        ]));
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['country']);
@@ -314,16 +390,20 @@ class CreativesValidationTest extends TestCase
         ]);
 
         // Тест с валидными ISO2 кодами языков
-        $response = $this->postJson('/api/creatives/filters/validate', [
+        $response = $this->withHeaders([
+            'Accept' => 'application/json',
+        ])->get('/api/creatives/filters/validate?' . http_build_query([
             'languages' => ['en', 'ru']
-        ]);
+        ]));
 
         $response->assertStatus(200);
 
         // Тест с одним валидным языком
-        $response = $this->postJson('/api/creatives/filters/validate', [
+        $response = $this->withHeaders([
+            'Accept' => 'application/json',
+        ])->get('/api/creatives/filters/validate?' . http_build_query([
             'languages' => ['en']
-        ]);
+        ]));
 
         $response->assertStatus(200);
     }
@@ -332,9 +412,11 @@ class CreativesValidationTest extends TestCase
     public function test_language_validation_with_invalid_iso_codes()
     {
         // Тест с несуществующим кодом языка
-        $response = $this->postJson('/api/creatives/filters/validate', [
+        $response = $this->withHeaders([
+            'Accept' => 'application/json',
+        ])->get('/api/creatives/filters/validate?' . http_build_query([
             'languages' => ['xx']
-        ]);
+        ]));
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['languages.0']);
@@ -348,9 +430,11 @@ class CreativesValidationTest extends TestCase
             'is_active' => true,
         ]);
 
-        $response = $this->postJson('/api/creatives/filters/validate', [
+        $response = $this->withHeaders([
+            'Accept' => 'application/json',
+        ])->get('/api/creatives/filters/validate?' . http_build_query([
             'languages' => ['en', 'invalid']
-        ]);
+        ]));
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['languages.1']);
@@ -377,23 +461,29 @@ class CreativesValidationTest extends TestCase
         ]);
 
         // Тест с валидными URL параметрами (comma-separated)
-        $response = $this->postJson('/api/creatives/filters/validate', [
+        $response = $this->withHeaders([
+            'Accept' => 'application/json',
+        ])->get('/api/creatives/filters/validate?' . http_build_query([
             'cr_languages' => 'fr,de'
-        ]);
+        ]));
 
         $response->assertStatus(200);
 
         // Тест с одним валидным языком в URL
-        $response = $this->postJson('/api/creatives/filters/validate', [
+        $response = $this->withHeaders([
+            'Accept' => 'application/json',
+        ])->get('/api/creatives/filters/validate?' . http_build_query([
             'cr_languages' => 'fr'
-        ]);
+        ]));
 
         $response->assertStatus(200);
 
         // Тест с невалидным URL параметром
-        $response = $this->postJson('/api/creatives/filters/validate', [
+        $response = $this->withHeaders([
+            'Accept' => 'application/json',
+        ])->get('/api/creatives/filters/validate?' . http_build_query([
             'cr_languages' => 'fr,invalid'
-        ]);
+        ]));
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['cr_languages']);
@@ -411,9 +501,11 @@ class CreativesValidationTest extends TestCase
             'is_active' => false,
         ]);
 
-        $response = $this->postJson('/api/creatives/filters/validate', [
+        $response = $this->withHeaders([
+            'Accept' => 'application/json',
+        ])->get('/api/creatives/filters/validate?' . http_build_query([
             'languages' => ['xx']
-        ]);
+        ]));
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['languages.0']);

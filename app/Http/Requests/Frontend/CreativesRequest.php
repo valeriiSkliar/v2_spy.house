@@ -28,90 +28,88 @@ class CreativesRequest extends BaseRequest
     {
         return [
             // Поиск и основные фильтры
-            'searchKeyword' => ['nullable', 'string', 'max:255'],
+            'searchKeyword' => ['sometimes', 'nullable', 'string', 'max:255'],
             'country' => [
+                'sometimes',
                 'nullable',
                 'string',
-                'max:10',
                 function ($attribute, $value, $fail) {
-                    if (!empty($value) && !IsoEntity::isValidCountryCode($value)) {
+                    if (!in_array($value, ['default', 'all']) && !IsoEntity::isValidCountryCode($value)) {
                         $fail('Указанный код страны не доступен.');
                     }
                 }
             ],
-            'dateCreation' => ['nullable', 'string', 'max:50'],
-            'sortBy' => ['nullable', 'string', 'in:creation,activity,popularity,byCreationDate,byActivity,byPopularity,default'],
-            'periodDisplay' => ['nullable', 'string', 'max:50'],
-            'onlyAdult' => ['nullable', 'boolean'],
+            'dateCreation' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'sortBy' => ['sometimes', 'nullable', 'string', 'in:creation,activity,popularity,byCreationDate,byActivity,byPopularity,default'],
+            'periodDisplay' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'onlyAdult' => ['sometimes', 'nullable', 'boolean'],
 
             // Массивы фильтров
-            'advertisingNetworks' => ['nullable', 'array', 'max:50'],
+            'advertisingNetworks' => ['sometimes', 'nullable', 'array', 'max:50'],
             'advertisingNetworks.*' => ['string', 'max:50'],
-            'languages' => ['nullable', 'array', 'max:100'],
+            'languages' => ['sometimes', 'nullable', 'array', 'max:100'],
             'languages.*' => [
                 'string',
-                'size:2',
+                'max:3',
                 function ($attribute, $value, $fail) {
-                    if (!empty($value) && !IsoEntity::isValidLanguageCode($value)) {
+                    if (!IsoEntity::isValidLanguageCode($value)) {
                         $fail('Указанный код языка не доступен.');
                     }
                 }
             ],
-            'operatingSystems' => ['nullable', 'array', 'max:20'],
+            'operatingSystems' => ['sometimes', 'nullable', 'array', 'max:20'],
             'operatingSystems.*' => ['string', 'max:50'],
-            'browsers' => ['nullable', 'array', 'max:50'],
+            'browsers' => ['sometimes', 'nullable', 'array', 'max:50'],
             'browsers.*' => ['string', 'max:100'],
-            'devices' => ['nullable', 'array', 'max:10'],
+            'devices' => ['sometimes', 'nullable', 'array', 'max:10'],
             'devices.*' => ['string', 'max:50'],
-            'imageSizes' => ['nullable', 'array', 'max:20'],
+            'imageSizes' => ['sometimes', 'nullable', 'array', 'max:20'],
             'imageSizes.*' => ['string', 'max:20'],
 
             // Пагинация
-            'page' => ['nullable', 'integer', 'min:1', 'max:10000'],
-            'perPage' => ['nullable', 'integer', 'min:6', 'max:100'],
+            'page' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:10000'],
+            'perPage' => ['sometimes', 'nullable', 'integer', 'min:6', 'max:100'],
 
             // Активная вкладка
-            'activeTab' => ['nullable', 'string', 'in:push,inpage,facebook,tiktok'],
+            'activeTab' => ['sometimes', 'nullable', 'string', 'in:push,inpage,facebook,tiktok'],
 
             // URL sync параметры с префиксом cr_
-            'cr_searchKeyword' => ['nullable', 'string', 'max:255'],
+            'cr_searchKeyword' => ['sometimes', 'nullable', 'string', 'max:255'],
             'cr_country' => [
+                'sometimes',
                 'nullable',
                 'string',
-                'max:10',
                 function ($attribute, $value, $fail) {
-                    if (!empty($value) && !IsoEntity::isValidCountryCode($value)) {
+                    if (!in_array($value, ['default', 'all']) && !IsoEntity::isValidCountryCode($value)) {
                         $fail('Указанный код страны не доступен.');
                     }
                 }
             ],
-            'cr_dateCreation' => ['nullable', 'string', 'max:50'],
-            'cr_sortBy' => ['nullable', 'string', 'in:creation,activity,popularity,byCreationDate,byActivity,byPopularity,default'],
-            'cr_periodDisplay' => ['nullable', 'string', 'max:50'],
-            'cr_onlyAdult' => ['nullable', 'string', 'in:0,1,true,false'],
-            'cr_advertisingNetworks' => ['nullable', 'string', 'max:1000'],
+            'cr_dateCreation' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'cr_sortBy' => ['sometimes', 'nullable', 'string', 'in:creation,activity,popularity,byCreationDate,byActivity,byPopularity,default'],
+            'cr_periodDisplay' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'cr_onlyAdult' => ['sometimes', 'nullable', 'string', 'in:0,1,true,false'],
+            'cr_advertisingNetworks' => ['sometimes', 'nullable', 'string', 'max:1000'],
             'cr_languages' => [
+                'sometimes',
                 'nullable',
                 'string',
                 'max:500',
                 function ($attribute, $value, $fail) {
-                    if (!empty($value)) {
-                        // Парсим comma-separated string и валидируем каждый код языка
-                        $languageCodes = array_map('trim', explode(',', $value));
-                        foreach ($languageCodes as $code) {
-                            if (!empty($code) && !IsoEntity::isValidLanguageCode($code)) {
-                                $fail("Код языка '{$code}' не доступен.");
-                                break;
-                            }
+                    $languageCodes = array_map('trim', explode(',', $value));
+                    foreach ($languageCodes as $code) {
+                        if (!empty($code) && !IsoEntity::isValidLanguageCode($code)) {
+                            $fail("Код языка '{$code}' не доступен.");
+                            break;
                         }
                     }
                 }
             ],
-            'cr_operatingSystems' => ['nullable', 'string', 'max:500'],
-            'cr_browsers' => ['nullable', 'string', 'max:1000'],
-            'cr_devices' => ['nullable', 'string', 'max:200'],
-            'cr_imageSizes' => ['nullable', 'string', 'max:300'],
-            'cr_activeTab' => ['nullable', 'string', 'in:push,inpage,facebook,tiktok'],
+            'cr_operatingSystems' => ['sometimes', 'nullable', 'string', 'max:500'],
+            'cr_browsers' => ['sometimes', 'nullable', 'string', 'max:1000'],
+            'cr_devices' => ['sometimes', 'nullable', 'string', 'max:200'],
+            'cr_imageSizes' => ['sometimes', 'nullable', 'string', 'max:300'],
+            'cr_activeTab' => ['sometimes', 'nullable', 'string', 'in:push,inpage,facebook,tiktok'],
         ];
     }
 
