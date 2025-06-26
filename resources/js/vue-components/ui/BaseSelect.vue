@@ -58,8 +58,20 @@ const selectedLabel = computed(() => {
 });
 
 const safeOptions = computed(() => {
-  console.log('safeOptions', props.options);
-  return Array.isArray(props.options)
+  const isValidArray = Array.isArray(props.options);
+  const hasOptions = isValidArray && props.options.length > 0;
+  
+  // Only log when we have actual options to avoid race condition logging
+  if (hasOptions) {
+    console.log('🔍 BaseSelect safeOptions:', {
+      options: props.options,
+      length: props.options.length,
+      firstOption: props.options[0],
+      placeholder: props.placeholder,
+    });
+  }
+  
+  return isValidArray
     ? props.options.filter(option => option.value !== 'default')
     : [];
 });

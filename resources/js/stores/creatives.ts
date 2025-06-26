@@ -1,3 +1,4 @@
+// DEPRECATED: 
 import { FilterOption, FilterState, TabOption, TabsState } from '@/types/creatives';
 import debounce from 'lodash.debounce';
 import { defineStore } from 'pinia';

@@ -7,7 +7,8 @@
 
     <div class="row align-items-center">
         <div class="col-12 col-md-auto mb-20 flex-grow-1">
-            <x-creatives.vue.tabs :initialTabs="$tabs" :tabOptions="$tabOptions" :translations="$translations" />
+            <x-creatives.vue.tabs :initialTabs="$tabs" :tabOptions="$tabOptions"
+                :tabsTranslations="$tabsTranslations" />
         </div>
         <div class="col-12 col-md-auto mb-2">
             <div class="row">
@@ -34,9 +35,18 @@
             </div>
         </div>
     </div>
+    {{-- @dd($selectOptions) --}}
 
-    <x-creatives.vue.filters :filters="$filters" :selectOptions="$selectOptions" :translations="$translations"
-        :tabOptions="$tabOptions" />
+    <x-creatives.vue.filters :filters="$filters" :selectOptions="$selectOptions"
+        :filtersTranslations="$filtersTranslations" :tabOptions="$tabOptions" />
+
+    {{-- Компонент списка креативов с новой системой композаблов --}}
+
+    <x-creatives.vue.list :listTranslations="$listTranslations" :perPage="$selectOptions['perPage']" />
+
+    {{--
+    <x-creatives.vue.pagination :translations="$translations" /> --}}
+
 
     {{-- Подключение скрипта Vue островков --}}
     @vite(['resources/js/vue-islands.ts'])

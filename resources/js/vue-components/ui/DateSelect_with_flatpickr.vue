@@ -11,12 +11,17 @@ Usage Example:
   v-model:value="selectedValue"
   :options="dateOptions"
   :enable-custom-date="true"
-  :mode="'single'"
+  :mode="'range'"
   :date-format="'Y-m-d'"
+  :emit-on-partial-range="false"
   placeholder="Select date range"
   custom-date-label="Pick Custom Date"
   @custom-date-selected="handleCustomDate"
 />
+
+Range Mode Behavior:
+- emitOnPartialRange=false (default): События только при выборе обеих дат
+- emitOnPartialRange=true: События при выборе каждой даты (включая первую)
 
 Props:
 - value: string - selected value
@@ -26,6 +31,7 @@ Props:
 - dateFormat: string - date format for flatpickr
 - minDate/maxDate: string | Date - date constraints
 - locale: string - flatpickr locale
+- emitOnPartialRange: boolean - emit events on partial range selection (default: false)
 -->
 <template>
   <div class="filter-date-select" ref="dateSelectRef">
@@ -55,7 +61,11 @@ Props:
               @click="openCustomDatePicker"
             >
               {{ customDateLabel }}
-              <span v-if="hasIncompleteRange" class="range-status"> (выберите конечную дату) </span>
+              <span v-if="hasIncompleteRange" class="range-status">
+                (выберите конечную дату{{
+                  props.emitOnPartialRange ? '' : ' для применения фильтра'
+                }})
+              </span>
             </button>
             <input
               ref="flatpickrInput"
@@ -96,6 +106,11 @@ interface Props {
   minDate?: string | Date;
   maxDate?: string | Date;
   locale?: string;
+  /**
+   * Генерировать события при частичном выборе диапазона (только первая дата)
+   * По умолчанию false - события только при завершении диапазона
+   */
+  emitOnPartialRange?: boolean;
 }
 
 interface Emits {
@@ -110,6 +125,7 @@ const props = withDefaults(defineProps<Props>(), {
   customDatePlaceholder: 'Pick a date',
   dateFormat: 'Y-m-d',
   mode: 'single',
+  emitOnPartialRange: false,
 });
 
 const emit = defineEmits<Emits>();
@@ -268,17 +284,38 @@ function initializeFlatpickr(): void {
     onChange: (selectedDates: Date[]) => {
       if (selectedDates.length > 0) {
         isCustomDate.value = true;
-        emit('custom-date-selected', selectedDates);
 
-        // Create custom value for the selected date(s)
-        let customValue: string;
-        if (props.mode === 'range' && selectedDates.length === 2) {
-          customValue = selectedDates.map(date => date.toISOString().split('T')[0]).join('_to_');
-        } else {
-          customValue = selectedDates[0].toISOString().split('T')[0];
+        // Определяем, нужно ли генерировать события
+        const shouldEmitEvents =
+          props.mode === 'single' || // В single режиме всегда генерируем
+          (props.mode === 'range' && selectedDates.length === 2) || // Range завершен
+          (props.mode === 'range' && selectedDates.length === 1 && props.emitOnPartialRange); // Частичный range с разрешением
+
+        console.log('DateSelect onChange:', {
+          mode: props.mode,
+          selectedCount: selectedDates.length,
+          emitOnPartialRange: props.emitOnPartialRange,
+          shouldEmitEvents,
+          dates: selectedDates.map(d => d.toISOString().split('T')[0]),
+        });
+
+        if (shouldEmitEvents) {
+          emit('custom-date-selected', selectedDates);
+
+          // Create custom value for the selected date(s)
+          let customValue: string;
+          if (props.mode === 'range' && selectedDates.length === 2) {
+            customValue = selectedDates.map(date => date.toISOString().split('T')[0]).join('_to_');
+          } else if (props.mode === 'range' && selectedDates.length === 1) {
+            // Для частичного range (только если emitOnPartialRange=true)
+            customValue = selectedDates[0].toISOString().split('T')[0];
+          } else {
+            // Single mode
+            customValue = selectedDates[0].toISOString().split('T')[0];
+          }
+
+          emit('update:value', `custom_${customValue}`);
         }
-
-        emit('update:value', `custom_${customValue}`);
 
         // Закрываем календарь только если:
         // - режим single и выбрана одна дата

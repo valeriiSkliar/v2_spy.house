@@ -53,13 +53,17 @@ class CreativesRequest extends BaseRequest
             // Основные фильтры
             'searchKeyword' => ['sometimes', 'nullable', 'string', 'max:255'],
             'country' => ['sometimes', 'nullable', 'string', $this->getCountryValidationRule()],
-            'dateCreation' => ['sometimes', 'nullable', 'string', Rule::in($this->getValidDateRanges())],
+            'dateCreation' => ['sometimes', 'nullable', 'string', function ($attribute, $value, $fail) {
+                $this->validateDateRange($attribute, $value, $fail);
+            }],
             'sortBy' => ['sometimes', 'nullable', 'string', Rule::in($this->getValidSortOptions())],
-            'periodDisplay' => ['sometimes', 'nullable', 'string', Rule::in($this->getValidDateRanges())],
+            'periodDisplay' => ['sometimes', 'nullable', 'string', function ($attribute, $value, $fail) {
+                $this->validateDateRange($attribute, $value, $fail);
+            }],
             'onlyAdult' => ['sometimes', 'nullable', 'boolean'],
 
             // Массивы фильтров с оптимизированной валидацией
-            'advertisingNetworks' => ['sometimes', 'nullable', 'array', 'max:' . self::MAX_ARRAY_ITEMS['advertisingNetworks']],
+            'advertisingNetworks' => ['sometimes', 'nullable', 'array', 'max:' . self::MAX_ARRAY_ITEMS['advertisingNetworks'], Rule::in(AdvertismentNetwork::forCreativeFilters()->pluck('value')->toArray())],
             'advertisingNetworks.*' => ['string', 'max:50', $this->getAdvertisingNetworkValidationRule()],
 
             'languages' => ['sometimes', 'nullable', 'array', 'max:' . self::MAX_ARRAY_ITEMS['languages']],
@@ -74,8 +78,8 @@ class CreativesRequest extends BaseRequest
             'devices' => ['sometimes', 'nullable', 'array', 'max:' . self::MAX_ARRAY_ITEMS['devices']],
             'devices.*' => ['string', 'max:50', $this->getDeviceValidationRule()],
 
-            'imageSizes' => ['sometimes', 'nullable', 'array', 'max:' . self::MAX_ARRAY_ITEMS['imageSizes']],
-            'imageSizes.*' => ['string', 'max:20', Rule::in($this->getValidImageSizes())],
+            // 'imageSizes' => ['sometimes', 'nullable', 'array', 'max:' . self::MAX_ARRAY_ITEMS['imageSizes']],
+            // 'imageSizes.*' => ['string', 'max:20', Rule::in($this->getValidImageSizes())],
 
             // Пагинация
             'page' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:10000'],
@@ -244,17 +248,32 @@ class CreativesRequest extends BaseRequest
             }
         }
 
-        // Валидация enum значений
+        // Валидация enum значений (кроме дат, которые обрабатываются отдельно)
         $enumFields = [
             'sortBy' => ['creation', 'activity', 'popularity', 'byCreationDate', 'byActivity', 'byPopularity'],
-            'dateCreation' => $this->getValidDateRanges(),
-            'periodDisplay' => $this->getValidDateRanges(),
             'activeTab' => ['push', 'inpage', 'facebook', 'tiktok'],
         ];
 
         foreach ($enumFields as $field => $validValues) {
             if (isset($filters[$field]) && $filters[$field] !== 'default' && in_array($filters[$field], $validValues)) {
                 $validatedFilters[$field] = $filters[$field];
+            }
+        }
+
+        // Отдельная валидация дат с поддержкой только диапазонов
+        foreach (['dateCreation', 'periodDisplay'] as $dateField) {
+            if (isset($filters[$dateField]) && $filters[$dateField] !== 'default') {
+                $dateValue = $filters[$dateField];
+
+                // Проверяем предустановленные значения
+                if (in_array($dateValue, $this->getValidDateRanges())) {
+                    $validatedFilters[$dateField] = $dateValue;
+                }
+                // Проверяем только custom диапазоны (не одиночные даты)
+                elseif (preg_match('/^custom_\d{4}-\d{2}-\d{2}_to_\d{4}-\d{2}-\d{2}$/', $dateValue)) {
+                    // Дополнительная валидация уже выполнена в validateDateRange
+                    $validatedFilters[$dateField] = $dateValue;
+                }
             }
         }
 
@@ -328,9 +347,13 @@ class CreativesRequest extends BaseRequest
         $baseRules = [
             'cr_searchKeyword' => ['sometimes', 'nullable', 'string', 'max:255'],
             'cr_country' => ['sometimes', 'nullable', 'string', $this->getCountryValidationRule()],
-            'cr_dateCreation' => ['sometimes', 'nullable', 'string', Rule::in($this->getValidDateRanges())],
+            'cr_dateCreation' => ['sometimes', 'nullable', 'string', function ($attribute, $value, $fail) {
+                $this->validateDateRange($attribute, $value, $fail);
+            }],
             'cr_sortBy' => ['sometimes', 'nullable', 'string', Rule::in($this->getValidSortOptions())],
-            'cr_periodDisplay' => ['sometimes', 'nullable', 'string', Rule::in($this->getValidDateRanges())],
+            'cr_periodDisplay' => ['sometimes', 'nullable', 'string', function ($attribute, $value, $fail) {
+                $this->validateDateRange($attribute, $value, $fail);
+            }],
             'cr_onlyAdult' => ['sometimes', 'nullable', 'string', Rule::in(['0', '1', 'true', 'false'])],
             'cr_activeTab' => ['sometimes', 'nullable', 'string', Rule::in(['push', 'inpage', 'facebook', 'tiktok'])],
         ];
@@ -554,6 +577,63 @@ class CreativesRequest extends BaseRequest
         return ['today', 'yesterday', 'last7', 'last30', 'last90', 'thisMonth', 'lastMonth', 'thisYear', 'lastYear', 'default'];
     }
 
+    /**
+     * Валидирует диапазон дат (только диапазоны, одиночные даты не поддерживаются)
+     */
+    private function validateDateRange($attribute, $value, $fail): void
+    {
+        // Проверяем предустановленные диапазоны
+        if (in_array($value, $this->getValidDateRanges())) {
+            return;
+        }
+
+        // Проверяем custom диапазоны в формате: custom_YYYY-MM-DD_to_YYYY-MM-DD
+        if (preg_match('/^custom_(\d{4}-\d{2}-\d{2})_to_(\d{4}-\d{2}-\d{2})$/', $value, $matches)) {
+            $startDate = $matches[1];
+            $endDate = $matches[2];
+
+            // Валидируем формат дат
+            if (!$this->isValidDate($startDate) || !$this->isValidDate($endDate)) {
+                $fail('Неверный формат даты в диапазоне.');
+                return;
+            }
+
+            // Проверяем что начальная дата не больше конечной
+            if (strtotime($startDate) > strtotime($endDate)) {
+                $fail('Начальная дата не может быть больше конечной.');
+                return;
+            }
+
+            // Проверяем разумные ограничения (не более 2 лет назад)
+            $twoYearsAgo = date('Y-m-d', strtotime('-2 years'));
+            if ($startDate < $twoYearsAgo) {
+                $fail('Дата не может быть более чем 2 года назад.');
+                return;
+            }
+
+            // Проверяем максимальный диапазон (например, не более 1 года)
+            $maxDays = 365;
+            $daysDiff = (strtotime($endDate) - strtotime($startDate)) / (60 * 60 * 24);
+            if ($daysDiff > $maxDays) {
+                $fail('Диапазон дат не может превышать 1 год.');
+                return;
+            }
+
+            return;
+        }
+
+        $fail('Недопустимый формат диапазона дат. Поддерживаются только предустановленные диапазоны или custom диапазоны в формате custom_YYYY-MM-DD_to_YYYY-MM-DD');
+    }
+
+    /**
+     * Проверяет валидность даты
+     */
+    private function isValidDate(string $date): bool
+    {
+        $d = \DateTime::createFromFormat('Y-m-d', $date);
+        return $d && $d->format('Y-m-d') === $date;
+    }
+
     private function getValidSortOptions(): array
     {
         return ['creation', 'activity', 'popularity', 'byCreationDate', 'byActivity', 'byPopularity', 'default'];
@@ -632,6 +712,10 @@ class CreativesRequest extends BaseRequest
             'sortBy.in' => 'Недопустимое значение сортировки',
             'activeTab.in' => 'Недопустимое значение вкладки',
             'onlyAdult.boolean' => 'Фильтр для взрослых должен быть булевым значением',
+            'dateCreation.string' => 'Дата создания должна быть строкой',
+            'periodDisplay.string' => 'Период отображения должен быть строкой',
+            'cr_dateCreation.string' => 'Дата создания должна быть строкой',
+            'cr_periodDisplay.string' => 'Период отображения должен быть строкой',
             '*.array' => 'Поле должно быть массивом',
             '*.max' => 'Превышено максимальное количество элементов',
             'page.integer' => 'Номер страницы должен быть числом',

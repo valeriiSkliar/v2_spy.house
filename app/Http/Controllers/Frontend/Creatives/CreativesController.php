@@ -83,8 +83,40 @@ class CreativesController extends FrontendController
             'tabs.tiktok' => 'TikTok',
         ];
 
+        // Минимальные переводы только для Vue компонентов (оптимизация памяти)
+        $listTranslations = [
+            'loading' => __('creatives.loading'),
+            'error' => __('creatives.error'),
+            'retry' => __('creatives.retry'),
+            'noData' => __('creatives.no-data'),
+            'previousPage' => __('creatives.previous-page'),
+            'nextPage' => __('creatives.next-page'),
+            'page' => __('creatives.page'),
+            'of' => __('creatives.of'),
+        ];
+        // $vueTranslations = [];
+
+        // Минимальные переводы для фильтров (только необходимые)
+        $filtersTranslations = [
+            'filter' => __('creatives.filter'),
+            'reset' => __('creatives.reset'),
+            'country' => __('creatives.country'),
+            'search' => __('creatives.search'),
+        ];
+
+        // Минимальные переводы для вкладок
+        $tabsTranslations = [
+            'push' => __('creatives.tabs.push'),
+            'inpage' => __('creatives.tabs.inpage'),
+            'facebook' => __('creatives.tabs.facebook'),
+            'tiktok' => __('creatives.tabs.tiktok'),
+        ];
+
         $selectOptions = $this->getSelectOptions();
         $tabOptions = $this->getTabOptions($activeTabFromUrl);
+
+        // Добавляем perPage для placeholder'ов
+        $selectOptions['perPage'] = 12;
 
         return view('pages.creatives.index', [
             'activeTab' => $activeTabFromUrl,
@@ -93,6 +125,9 @@ class CreativesController extends FrontendController
             'selectOptions' => $selectOptions,
             'tabOptions' => $tabOptions,
             'translations' => $translations,
+            'listTranslations' => $listTranslations,  // Отдельный массив для Vue
+            'filtersTranslations' => $filtersTranslations,  // Переводы для фильтров
+            'tabsTranslations' => $tabsTranslations,  // Переводы для вкладок
         ]);
     }
 
@@ -246,7 +281,8 @@ class CreativesController extends FrontendController
         // Сравниваем исходные и валидированные значения
         foreach ($originalInput as $key => $value) {
             if (!isset($validatedFilters[$key]) || $validatedFilters[$key] !== $value) {
-                $rejectedValues[] = "{$key}: {$value}";
+                $valueString = is_array($value) ? json_encode($value) : (string)$value;
+                $rejectedValues[] = "{$key}: {$valueString}";
                 $sanitizedCount++;
             }
         }
