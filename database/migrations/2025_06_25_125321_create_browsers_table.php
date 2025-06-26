@@ -65,7 +65,13 @@ return new class extends Migration
         });
 
         // Добавляем индекс для user_agent с ограничением длины после создания таблицы
-        DB::statement('ALTER TABLE browsers ADD INDEX idx_user_agent_prefix (user_agent(255))');
+        // Используем условную логику для разных СУБД
+        if (DB::connection()->getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE browsers ADD INDEX idx_user_agent_prefix (user_agent(255))');
+        } else {
+            // Для SQLite создаем обычный индекс без ограничения длины
+            DB::statement('CREATE INDEX idx_user_agent_prefix ON browsers (user_agent)');
+        }
     }
 
     /**
