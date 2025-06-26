@@ -1,5 +1,5 @@
 // stores/useFiltersStore.ts
-// Оптимизированный store с разделением ответственности
+// Store для креативов на базе новых композаблов
 
 import { useCreatives } from '@/composables/useCreatives';
 import { useCreativesUrlSync } from '@/composables/useCreativesUrlSync';
@@ -7,39 +7,60 @@ import { useFiltersSynchronization } from '@/composables/useFiltersSynchronizati
 import type {
   FilterOption,
   FilterState,
-  MultiSelectFilterKey,
-  SelectOptions,
-  TabOptions,
-  TabsState
-} from '@/types/creatives.d';
-import { DEFAULT_FILTERS, DEFAULT_TABS } from '@/types/creatives.d';
+  TabOption,
+  TabsState,
+  TabValue
+} from '@/types/creatives';
 import { defineStore } from 'pinia';
-import { computed, reactive, ref, shallowRef } from 'vue';
+import { computed, reactive, ref } from 'vue';
 
 export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   // ============================================================================
   // СОСТОЯНИЕ
   // ============================================================================
   
-  // Основное состояние фильтров (single source of truth)
-  const filters = reactive<FilterState>({ ...DEFAULT_FILTERS });
-  
-  // Состояние вкладок (single source of truth)  
-  const tabs = reactive<TabsState>({ ...DEFAULT_TABS });
-  
-  // Опции для селектов с дефолтными значениями
-  const countryOptions = shallowRef<FilterOption[]>([
-    { value: 'default', label: 'Loading countries...' }
-  ]);
-  const sortOptions = shallowRef<FilterOption[]>([
-    { value: 'creation', label: 'Date of creation' },
-    { value: 'popularity', label: 'Popularity' }
-  ]);
-  const dateRanges = shallowRef<FilterOption[]>([
-    { value: 'default', label: 'Loading date ranges...' }
-  ]);
-  
-  // Опции для мультиселектов с дефолтными значениями
+  // Дефолтные значения фильтров
+  const defaultFilters: FilterState = {
+    isDetailedVisible: false,
+    searchKeyword: '',
+    country: 'default',
+    dateCreation: 'default',
+    sortBy: 'default',
+    periodDisplay: 'default',
+    advertisingNetworks: [],
+    languages: [],
+    operatingSystems: [],
+    browsers: [],
+    devices: [],
+    imageSizes: [],
+    onlyAdult: false,
+    savedSettings: []
+  };
+
+  // Дефолтные значения вкладок
+  const defaultTabs: TabsState = {
+    activeTab: 'push',
+    availableTabs: ['push', 'inpage', 'facebook', 'tiktok'],
+    tabCounts: {
+      push: '170k',
+      inpage: '3.1k',
+      facebook: '65.1k',
+      tiktok: '45.2m'
+    }
+  };
+
+  // Реактивное состояние
+  const filters = reactive<FilterState>({ ...defaultFilters });
+  const tabs = reactive<TabsState>({ ...defaultTabs });
+  const isInitialized = ref(false);
+  const translations = ref<Record<string, string>>({});
+
+  // Опции для селектов
+  const countryOptions = ref<FilterOption[]>([{ value: 'default', label: 'Все страны' }]);
+  const sortOptions = ref<FilterOption[]>([{ value: 'default', label: 'По дате создания' }]);
+  const dateRanges = ref<FilterOption[]>([{ value: 'default', label: 'Вся история' }]);
+
+  // Опции для мультиселектов
   const multiSelectOptions = reactive<{
     advertisingNetworks: FilterOption[];
     languages: FilterOption[];
@@ -48,181 +69,142 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     devices: FilterOption[];
     imageSizes: FilterOption[];
   }>({
-    advertisingNetworks: [{ value: 'loading', label: 'Loading networks...' }],
-    languages: [{ value: 'loading', label: 'Loading languages...' }],
-    operatingSystems: [{ value: 'loading', label: 'Loading OS...' }],
-    browsers: [{ value: 'loading', label: 'Loading browsers...' }],
-    devices: [{ value: 'loading', label: 'Loading devices...' }],
-    imageSizes: [{ value: 'loading', label: 'Loading sizes...' }],
+    advertisingNetworks: [],
+    languages: [],
+    operatingSystems: [],
+    browsers: [],
+    devices: [],
+    imageSizes: [],
   });
-  
-  // Переводы
-  const translations = ref<Record<string, string>>({});
-  
-  // Флаги состояния
-  const isInitialized = ref(false);
-  const isInitializing = ref(false);
 
   // ============================================================================
   // КОМПОЗАБЛЫ
   // ============================================================================
   
-  // Управление креативами
+  // Инициализируем композаблы
   const creativesComposable = useCreatives();
-  
-  // URL синхронизация
   const urlSync = useCreativesUrlSync();
-  
-  // Синхронизация фильтров
-  const filterSync = useFiltersSynchronization(filters, tabs, urlSync, creativesComposable);
+  const filtersSync = useFiltersSynchronization(
+    filters,
+    tabs,
+    urlSync,
+    creativesComposable
+  );
 
   // ============================================================================
   // COMPUTED СВОЙСТВА
   // ============================================================================
   
-  // Опции для мультиселектов (computed для реактивности)
+  // Опции для мультиселектов (computed)
   const advertisingNetworksOptions = computed(() => multiSelectOptions.advertisingNetworks);
   const languagesOptions = computed(() => multiSelectOptions.languages);
   const operatingSystemsOptions = computed(() => multiSelectOptions.operatingSystems);
   const browsersOptions = computed(() => multiSelectOptions.browsers);
   const devicesOptions = computed(() => multiSelectOptions.devices);
   const imageSizesOptions = computed(() => multiSelectOptions.imageSizes);
-  
+
   // Опции для вкладок
-  const tabOptions = computed(() => {
+  const tabOptions = computed((): TabOption[] => {
     return tabs.availableTabs.map(tabValue => ({
       value: tabValue,
       label: getTranslation(`tabs.${tabValue}`, tabValue),
       count: tabs.tabCounts[tabValue] || 0
     }));
   });
-  
-  const currentTabOption = computed(() => {
+
+  const currentTabOption = computed((): TabOption | undefined => {
     return tabOptions.value.find(tab => tab.value === tabs.activeTab);
   });
-  
-  // Активные фильтры
+
+  // Есть ли активные фильтры
   const hasActiveFilters = computed(() => {
-    return Object.entries(filters).some(([key, value]) => {
-      // Исключаем технические поля
-      if (['isDetailedVisible', 'savedSettings'].includes(key)) return false;
-      
-      if (Array.isArray(value)) return value.length > 0;
-      if (typeof value === 'boolean') return value;
-      if (typeof value === 'string') return value !== '' && value !== 'default';
-      
-      return false;
-    });
-  });
-  
-  // Количество активных фильтров
-  const activeFiltersCount = computed(() => {
-    return creativesComposable.meta.value.activeFiltersCount;
+    return filters.searchKeyword !== '' ||
+           filters.country !== 'default' ||
+           filters.dateCreation !== 'default' ||
+           filters.sortBy !== 'default' ||
+           filters.periodDisplay !== 'default' ||
+           filters.advertisingNetworks.length > 0 ||
+           filters.languages.length > 0 ||
+           filters.operatingSystems.length > 0 ||
+           filters.browsers.length > 0 ||
+           filters.devices.length > 0 ||
+           filters.imageSizes.length > 0 ||
+           filters.onlyAdult ||
+           filters.savedSettings.length > 0;
   });
 
+  // Проксируем computed свойства из композабла креативов
+  const creatives = computed(() => creativesComposable.creatives.value);
+  const pagination = computed(() => creativesComposable.pagination.value);
+  const isLoading = computed(() => creativesComposable.isLoading.value);
+  const error = computed(() => creativesComposable.error.value);
+  const hasCreatives = computed(() => creatives.value.length > 0);
+  const meta = computed(() => creativesComposable.meta.value);
+
   // ============================================================================
-  // МЕТОДЫ УПРАВЛЕНИЯ ОПЦИЯМИ
+  // МЕТОДЫ ИНИЦИАЛИЗАЦИИ
   // ============================================================================
   
   /**
    * Устанавливает опции для селектов
    */
-  function setSelectOptions(options: Partial<SelectOptions>): void {
-    console.log('🔧 setSelectOptions called with:', {
-      hasCountries: !!(options.countries && options.countries.length),
-      hasSortOptions: !!(options.sortOptions && options.sortOptions.length),
-      hasDateRanges: !!(options.dateRanges && options.dateRanges.length),
-      hasAdvertisingNetworks: !!(options.advertisingNetworks && options.advertisingNetworks.length),
-      hasLanguages: !!(options.languages && options.languages.length),
-      countriesCount: options.countries ? options.countries.length : 0,
-      sortOptionsCount: options.sortOptions ? options.sortOptions.length : 0,
-      advertisingNetworksCount: options.advertisingNetworks ? (Array.isArray(options.advertisingNetworks) ? options.advertisingNetworks.length : Object.keys(options.advertisingNetworks).length) : 0,
-    });
-
-    if (options.countries) {
-      countryOptions.value = options.countries;
-      console.log('✅ Countries set:', countryOptions.value.length);
-    }
-    if (options.sortOptions) {
-      sortOptions.value = options.sortOptions;
-      console.log('✅ Sort options set:', sortOptions.value.length);
-    }
-    if (options.dateRanges) {
-      dateRanges.value = options.dateRanges;
-      console.log('✅ Date ranges set:', dateRanges.value.length);
+  function setSelectOptions(options: any): void {
+    if (options.countries && Array.isArray(options.countries)) {
+      countryOptions.value = [...options.countries];
     }
     
-    // Мультиселекты
-    if (options.advertisingNetworks) {
-      multiSelectOptions.advertisingNetworks = normalizeOptions(options.advertisingNetworks);
-      console.log('✅ Advertising networks set:', multiSelectOptions.advertisingNetworks.length);
+    if (options.sortOptions && Array.isArray(options.sortOptions)) {
+      sortOptions.value = [...options.sortOptions];
     }
-    if (options.languages) {
-      multiSelectOptions.languages = normalizeOptions(options.languages);
-      console.log('✅ Languages set:', multiSelectOptions.languages.length);
+    
+    if (options.dateRanges && Array.isArray(options.dateRanges)) {
+      dateRanges.value = [...options.dateRanges];
     }
-    if (options.operatingSystems) {
-      multiSelectOptions.operatingSystems = normalizeOptions(options.operatingSystems);
-      console.log('✅ Operating systems set:', multiSelectOptions.operatingSystems.length);
-    }
-    if (options.browsers) {
-      multiSelectOptions.browsers = normalizeOptions(options.browsers);
-      console.log('✅ Browsers set:', multiSelectOptions.browsers.length);
-    }
-    if (options.devices) {
-      multiSelectOptions.devices = normalizeOptions(options.devices);
-      console.log('✅ Devices set:', multiSelectOptions.devices.length);
-    }
-    if (options.imageSizes) {
-      multiSelectOptions.imageSizes = normalizeOptions(options.imageSizes);
-      console.log('✅ Image sizes set:', multiSelectOptions.imageSizes.length);
-    }
+    
+    // Обрабатываем мультиселекты
+    const multiSelectFields = [
+      'advertisingNetworks', 'languages', 'operatingSystems', 
+      'browsers', 'devices', 'imageSizes'
+    ];
+    
+    multiSelectFields.forEach(field => {
+      if (options[field]) {
+        if (Array.isArray(options[field])) {
+          (multiSelectOptions as any)[field] = [...options[field]];
+        } else {
+          (multiSelectOptions as any)[field] = Object.entries(options[field]).map(([key, value]) => ({
+            value: key,
+            label: value as string
+          }));
+        }
+      }
+    });
   }
-  
+
   /**
    * Устанавливает опции для вкладок
    */
-  function setTabOptions(options: Partial<TabOptions>): void {
-    if (options.availableTabs) {
-      tabs.availableTabs = [...options.availableTabs];
+  function setTabOptions(options: any): void {
+    if (options.availableTabs && Array.isArray(options.availableTabs)) {
+      tabs.availableTabs = [...options.availableTabs] as TabValue[];
     }
-    if (options.tabCounts) {
+    
+    if (options.tabCounts && typeof options.tabCounts === 'object') {
       tabs.tabCounts = { ...options.tabCounts };
     }
-    if (options.activeTab && tabs.availableTabs.includes(options.activeTab)) {
-      tabs.activeTab = options.activeTab;
-    }
-  }
-  
-  /**
-   * Нормализует опции в единый формат
-   */
-  function normalizeOptions(options: any): FilterOption[] {
-    if (Array.isArray(options)) {
-      return options;
-    }
     
-    if (typeof options === 'object') {
-      return Object.entries(options).map(([value, label]) => ({
-        value,
-        label: String(label),
-      }));
+    if (options.activeTab && tabs.availableTabs.includes(options.activeTab as TabValue)) {
+      tabs.activeTab = options.activeTab as TabValue;
     }
-    
-    return [];
   }
 
-  // ============================================================================
-  // МЕТОДЫ УПРАВЛЕНИЯ ПЕРЕВОДАМИ  
-  // ============================================================================
-  
   /**
    * Устанавливает переводы
    */
   function setTranslations(translationsData: Record<string, string>): void {
     translations.value = { ...translationsData };
   }
-  
+
   /**
    * Получает перевод с fallback
    */
@@ -230,68 +212,105 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     return translations.value[key] || fallback;
   }
 
+  /**
+   * Основная инициализация store
+   */
+  async function initializeFilters(
+    propsFilters?: Partial<FilterState>,
+    selectOptions?: any,
+    translationsData?: Record<string, string>,
+    tabsOptions?: any
+  ): Promise<void> {
+    console.log('🚀 Инициализация CreativesFiltersStore с новыми композаблами');
+    
+    // 1. Устанавливаем опции
+    if (selectOptions) {
+      setSelectOptions(selectOptions);
+    }
+    
+    if (tabsOptions) {
+      setTabOptions(tabsOptions);
+    }
+    
+    if (translationsData) {
+      setTranslations(translationsData);
+    }
+    
+    // 2. Применяем props
+    if (propsFilters && Object.keys(propsFilters).length > 0) {
+      Object.assign(filters, propsFilters);
+    }
+    
+    // 3. Инициализируем синхронизацию фильтров
+    await filtersSync.initialize();
+    
+    isInitialized.value = true;
+    console.log('✅ CreativesFiltersStore инициализирован');
+  }
+
   // ============================================================================
   // МЕТОДЫ УПРАВЛЕНИЯ ФИЛЬТРАМИ
   // ============================================================================
   
   /**
-   * Обновляет отдельный фильтр
+   * Универсальное обновление фильтра
    */
   function updateFilter<K extends keyof FilterState>(key: K, value: FilterState[K]): void {
     if (filters[key] !== value) {
       filters[key] = value;
     }
   }
-  
+
   /**
-   * Обновляет несколько фильтров одновременно
-   */
-  function updateFilters(updates: Partial<FilterState>): void {
-    Object.entries(updates).forEach(([key, value]) => {
-      const filterKey = key as keyof FilterState;
-      if (filters[filterKey] !== value) {
-        filters[filterKey] = value as never; // TODO: fix this
-      }
-    });
-  }
-  
-  /**
-   * Переключает видимость детальных фильтров
+   * Переключение детальных фильтров
    */
   function toggleDetailedFilters(): void {
     filters.isDetailedVisible = !filters.isDetailedVisible;
   }
-  
+
   /**
-   * Переключает adult фильтр
+   * Переключение adult фильтра
    */
   function toggleAdultFilter(): void {
     filters.onlyAdult = !filters.onlyAdult;
   }
-  
+
   /**
-   * Добавляет значение в мультиселект
+   * Добавление в мультиселект
    */
-  function addToMultiSelect(field: MultiSelectFilterKey, value: string): void {
-    const currentValues = filters[field];
+  function addToMultiSelect(field: keyof FilterState, value: string): void {
+    const currentValues = filters[field] as string[];
     if (!currentValues.includes(value)) {
-      filters[field] = [...currentValues, value];
+      const newValues = [...currentValues, value];
+      (filters[field] as any) = newValues;
     }
   }
-  
+
   /**
-   * Удаляет значение из мультиселекта
+   * Удаление из мультиселекта
    */
-  function removeFromMultiSelect(field: MultiSelectFilterKey, value: string): void {
-    const currentValues = filters[field];
-    filters[field] = currentValues.filter(item => item !== value);
+  function removeFromMultiSelect(field: keyof FilterState, value: string): void {
+    const currentValues = filters[field] as string[];
+    const index = currentValues.indexOf(value);
+    if (index > -1) {
+      const newValues = currentValues.filter(item => item !== value);
+      (filters[field] as any) = newValues;
+    }
   }
-  
+
   /**
-   * Сбрасывает фильтры к дефолтным значениям
+   * Сброс фильтров
    */
   function resetFilters(): void {
-    Object.assign(filters, DEFAULT_FILTERS);
+    Object.assign(filters, defaultFilters);
+  }
+
+  /**
+   * Сохранение настроек
+   */
+  function saveSettings(): void {
+    // TODO: Реализовать сохранение на сервер
+    console.log('Сохранение настроек фильтров');
   }
 
   // ============================================================================
@@ -299,14 +318,14 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   // ============================================================================
   
   /**
-   * Устанавливает активную вкладку
+   * Установка активной вкладки
    */
-  function setActiveTab(tabValue: string): void {
-    if (tabs.availableTabs.includes(tabValue as any) && tabs.activeTab !== tabValue) {
+  function setActiveTab(tabValue: TabValue): void {
+    if (tabs.availableTabs.includes(tabValue) && tabs.activeTab !== tabValue) {
       const previousTab = tabs.activeTab;
-      tabs.activeTab = tabValue as any;
+      tabs.activeTab = tabValue;
       
-      // Эмитим событие для других компонентов
+      // Эмитим событие
       const event = new CustomEvent('creatives:tab-changed', {
         detail: {
           previousTab,
@@ -317,166 +336,15 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
       document.dispatchEvent(event);
     }
   }
-  
-  /**
-   * Обновляет счетчики вкладок
-   */
-  function setTabCounts(counts: Record<string, string | number>): void {
-    tabs.tabCounts = { ...tabs.tabCounts, ...counts };
-  }
-  
-  /**
-   * Сбрасывает вкладки к дефолтным значениям
-   */
-  function resetTabs(): void {
-    Object.assign(tabs, DEFAULT_TABS);
-  }
 
   // ============================================================================
-  // МЕТОДЫ ИНИЦИАЛИЗАЦИИ
+  // МЕТОДЫ КРЕАТИВОВ (ПРОКСИРОВАНИЕ)
   // ============================================================================
   
   /**
-   * Инициализирует store
+   * Загрузка креативов
    */
-  async function initializeFilters(
-    propsFilters?: Partial<FilterState>,
-    selectOptions?: Partial<SelectOptions>,
-    translationsData?: Record<string, string>,
-    tabsOptions?: Partial<TabOptions>
-  ): Promise<void> {
-    console.log('🚀 initializeFilters called with:', {
-      hasPropsFilters: !!propsFilters,
-      hasSelectOptions: !!selectOptions,
-      hasTranslations: !!translationsData,
-      hasTabOptions: !!tabsOptions,
-      isInitialized: isInitialized.value,
-      isInitializing: isInitializing.value,
-      selectOptionsKeys: selectOptions ? Object.keys(selectOptions) : [],
-    });
-
-    if (isInitialized.value) {
-      console.log('⚠️ Store already initialized, but checking for additional options...');
-      
-      // Если store уже инициализирован, но у нас есть новые selectOptions - обновляем их
-      if (selectOptions && Object.keys(selectOptions).length > 0) {
-        console.log('🔄 Updating selectOptions for already initialized store...');
-        setSelectOptions(selectOptions);
-      }
-      
-      // Аналогично для переводов
-      if (translationsData && Object.keys(translationsData).length > 0) {
-        console.log('🔄 Updating translations for already initialized store...');
-        setTranslations(translationsData);
-      }
-      
-      // Если пришли новые tabOptions - тоже обновляем
-      if (tabsOptions && Object.keys(tabsOptions).length > 0) {
-        console.log('🔄 Updating tabOptions for already initialized store...');
-        setTabOptions(tabsOptions);
-      }
-      
-      // Если пришли новые propsFilters - обновляем их тоже
-      if (propsFilters && Object.keys(propsFilters).length > 0) {
-        console.log('🔄 Updating filters for already initialized store...');
-        updateFilters(propsFilters);
-      }
-      
-      return;
-    }
-    
-    if (isInitializing.value) {
-      console.log('⏳ Store is initializing, waiting...');
-      // Wait for initialization to complete
-      await new Promise<void>((resolve) => {
-        const unwatch = () => {
-          if (isInitialized.value || !isInitializing.value) {
-            resolve();
-            return true;
-          }
-          return false;
-        };
-        
-        if (unwatch()) return;
-        
-        const interval = setInterval(() => {
-          if (unwatch()) {
-            clearInterval(interval);
-          }
-        }, 10);
-      });
-      return;
-    }
-    
-    isInitializing.value = true;
-    
-    try {
-      // 1. Устанавливаем опции и переводы
-      console.log('📝 Step 1: Setting options and translations');
-      if (selectOptions) {
-        console.log('🔧 Calling setSelectOptions...');
-        setSelectOptions(selectOptions);
-      } else {
-        console.log('⚠️ No selectOptions provided');
-      }
-      
-      if (tabsOptions) {
-        console.log('📋 Setting tab options...');
-        setTabOptions(tabsOptions);
-      }
-      
-      if (translationsData) {
-        console.log('🌐 Setting translations...');
-        setTranslations(translationsData);
-      }
-      
-      // 2. Применяем props фильтры
-      console.log('📝 Step 2: Applying props filters');
-      if (propsFilters) {
-        console.log('🔄 Updating filters with props...');
-        updateFilters(propsFilters);
-      }
-      
-      // 3. Инициализируем синхронизацию
-      console.log('📝 Step 3: Initializing synchronization');
-      await filterSync.initialize();
-      
-      // 4. Загружаем креативы если есть параметры в URL или активные фильтры
-      console.log('📝 Step 4: Checking if we need to load creatives');
-      if (urlSync.hasUrlParams() || hasActiveFilters.value) {
-        console.log('🚀 Loading creatives...');
-        await loadCreativesFromStore();
-      } else {
-        console.log('⏭️ No URL params or active filters, skipping creatives load');
-      }
-      
-      isInitialized.value = true;
-      console.log('✅ Store initialization completed successfully');
-      
-    } catch (error) {
-      console.error('❌ Error during store initialization:', error);
-      throw error;
-    } finally {
-      isInitializing.value = false;
-    }
-  }
-  
-  /**
-   * Сохраняет настройки (заглушка для будущей реализации)
-   */
-  function saveSettings(): void {
-    // TODO: Реализовать сохранение настроек на сервер
-    console.log('Сохранение настроек:', filters);
-  }
-
-  // ============================================================================
-  // ПЕРЕОПРЕДЕЛЕНИЯ МЕТОДОВ КОМПОЗАБЛОВ
-  // ============================================================================
-  
-  /**
-   * Переопределяем loadCreatives для автоматического использования текущих фильтров store
-   */
-  async function loadCreativesFromStore(page: number = 1): Promise<void> {
+  async function loadCreatives(page: number = 1): Promise<void> {
     const creativesFilters = creativesComposable.mapFiltersToCreativesFilters(
       filters,
       tabs.activeTab,
@@ -486,8 +354,22 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     await creativesComposable.loadCreativesWithFilters(creativesFilters);
   }
 
+  /**
+   * Загрузка следующей страницы
+   */
+  async function loadNextPage(): Promise<void> {
+    await creativesComposable.loadNextPage();
+  }
+
+  /**
+   * Обновление креативов
+   */
+  async function refreshCreatives(): Promise<void> {
+    await creativesComposable.refreshCreatives();
+  }
+
   // ============================================================================
-  // ВОЗВРАЩАЕМЫЙ ОБЪЕКТ
+  // ВОЗВРАТ ОБЪЕКТА STORE
   // ============================================================================
   
   return {
@@ -495,13 +377,11 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     filters,
     tabs,
     isInitialized,
-    isInitializing,
     
     // Опции
     countryOptions,
-    sortOptions, 
+    sortOptions,
     dateRanges,
-    multiSelectOptions,
     advertisingNetworksOptions,
     languagesOptions,
     operatingSystemsOptions,
@@ -511,53 +391,42 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     tabOptions,
     currentTabOption,
     
-    // Computed свойства
+    // Computed из креативов
+    creatives,
+    pagination,
+    isLoading,
+    error,
+    hasCreatives,
+    meta,
     hasActiveFilters,
-    activeFiltersCount,
     
-    // Методы управления опциями
+    // Методы инициализации
+    initializeFilters,
     setSelectOptions,
     setTabOptions,
     setTranslations,
     getTranslation,
     
-    // Методы управления фильтрами
+    // Методы фильтров
     updateFilter,
-    updateFilters,
     toggleDetailedFilters,
     toggleAdultFilter,
     addToMultiSelect,
     removeFromMultiSelect,
     resetFilters,
-    
-    // Методы управления вкладками
-    setActiveTab,
-    setTabCounts,
-    resetTabs,
-    
-    // Методы инициализации
-    initializeFilters,
     saveSettings,
     
-    // Переопределенные методы
-    loadCreatives: loadCreativesFromStore,
+    // Методы вкладок
+    setActiveTab,
     
-    // Композаблы (проксируем остальные методы и состояние)
-    loadCreativesWithFilters: creativesComposable.loadCreativesWithFilters,
-    refreshCreatives: creativesComposable.refreshCreatives,
-    loadNextPage: creativesComposable.loadNextPage,
-    clearCreatives: creativesComposable.clearCreatives,
-    mapFiltersToCreativesFilters: creativesComposable.mapFiltersToCreativesFilters,
+    // Методы креативов
+    loadCreatives,
+    loadNextPage,
+    refreshCreatives,
     
-    // Состояние креативов
-    creatives: creativesComposable.creatives,
-    pagination: creativesComposable.pagination,
-    meta: creativesComposable.meta,
-    isLoading: creativesComposable.isLoading,
-    error: creativesComposable.error,
-    
-    // Композаблы для расширенного использования
-    urlSync: () => urlSync,
-    filterSync: () => filterSync,
+    // Композаблы (для прямого доступа если нужно)
+    creativesComposable,
+    urlSync,
+    filtersSync,
   };
 });

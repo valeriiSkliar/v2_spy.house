@@ -84,7 +84,7 @@ class CreativesController extends FrontendController
         ];
 
         // Минимальные переводы только для Vue компонентов (оптимизация памяти)
-        $vueTranslations = [
+        $listTranslations = [
             'loading' => __('creatives.loading'),
             'error' => __('creatives.error'),
             'retry' => __('creatives.retry'),
@@ -94,6 +94,7 @@ class CreativesController extends FrontendController
             'page' => __('creatives.page'),
             'of' => __('creatives.of'),
         ];
+        // $vueTranslations = [];
 
         // Минимальные переводы для фильтров (только необходимые)
         $filtersTranslations = [
@@ -114,6 +115,9 @@ class CreativesController extends FrontendController
         $selectOptions = $this->getSelectOptions();
         $tabOptions = $this->getTabOptions($activeTabFromUrl);
 
+        // Добавляем perPage для placeholder'ов
+        $selectOptions['perPage'] = 12;
+
         return view('pages.creatives.index', [
             'activeTab' => $activeTabFromUrl,
             'filters' => $defaultFilters,
@@ -121,7 +125,7 @@ class CreativesController extends FrontendController
             'selectOptions' => $selectOptions,
             'tabOptions' => $tabOptions,
             'translations' => $translations,
-            'vueTranslations' => $vueTranslations,  // Отдельный массив для Vue
+            'listTranslations' => $listTranslations,  // Отдельный массив для Vue
             'filtersTranslations' => $filtersTranslations,  // Переводы для фильтров
             'tabsTranslations' => $tabsTranslations,  // Переводы для вкладок
         ]);

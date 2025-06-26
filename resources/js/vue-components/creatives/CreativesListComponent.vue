@@ -1,22 +1,27 @@
 <template>
   <div class="creatives-list">
-    <!-- Статус загрузки -->
-    <div v-if="isLoading" class="creatives-list__loading">
-      <p>{{ translations.loading || 'Загрузка...' }}</p>
+    <!-- Состояние загрузки -->
+    <div v-if="isLoading && !hasCreatives" class="creatives-list__loading">
+      <div class="loading-spinner"></div>
+      <p>{{ translations.loading || 'Загрузка креативов...' }}</p>
     </div>
 
-    <!-- Ошибка загрузки -->
-    <div v-else-if="error" class="creatives-list__error">
-      <p>{{ translations.error || 'Ошибка загрузки' }}: {{ error }}</p>
-      <button @click="() => loadCreatives()" class="btn btn-primary">
+    <!-- Состояние ошибки -->
+    <div v-else-if="error && !hasCreatives" class="creatives-list__error">
+      <p>{{ translations.error || 'Ошибка загрузки креативов' }}</p>
+      <button @click="handleRetry" class="btn btn-secondary">
         {{ translations.retry || 'Повторить' }}
       </button>
     </div>
 
+    <!-- Пустое состояние -->
+    <div v-else-if="!hasCreatives && !isLoading" class="creatives-list__empty">
+      <p>{{ translations.noData || 'Креативы не найдены' }}</p>
+    </div>
+
     <!-- Список креативов -->
-    <div v-else-if="creatives.length > 0" class="creatives-list__items">
+    <div v-else class="creatives-list__items">
       <div v-for="creative in creatives" :key="creative.id" class="creative-item">
-        <!-- Простое отображение для тестирования -->
         <div class="creative-item__header">
           <h3 class="creative-item__title">
             {{ creative.name || `Креатив #${creative.id}` }}
@@ -35,156 +40,133 @@
           </p>
           <div class="creative-item__meta">
             <span class="meta-item" v-if="creative.advertising_networks">
-              <strong>Сеть:</strong> {{ creative.advertising_networks }}
+              <strong>Сеть:</strong> {{ formatArrayField(creative.advertising_networks) }}
             </span>
             <span class="meta-item" v-if="creative.country">
               <strong>Страна:</strong> {{ creative.country }}
             </span>
             <span class="meta-item" v-if="creative.languages">
-              <strong>Язык:</strong> {{ creative.languages }}
+              <strong>Язык:</strong> {{ formatArrayField(creative.languages) }}
             </span>
             <span class="meta-item" v-if="creative.created_at">
-              <strong>Дата создания:</strong> {{ creative.created_at }}
+              <strong>Дата создания:</strong> {{ formatDate(creative.created_at) }}
             </span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Пустое состояние -->
-    <div v-else class="creatives-list__empty">
-      <p>{{ translations.noData || 'Нет данных для отображения' }}</p>
+    <!-- Пагинация -->
+    <div v-if="hasCreatives" class="creatives-list__pagination">
+      <div class="pagination-info">
+        {{ translations.page || 'Страница' }} {{ pagination.currentPage }}
+        {{ translations.of || 'из' }} {{ pagination.lastPage }} ({{ pagination.from }}-{{
+          pagination.to
+        }}
+        {{ translations.of || 'из' }} {{ pagination.total }})
+      </div>
+
+      <div class="pagination-controls">
+        <button
+          @click="loadPreviousPage"
+          :disabled="pagination.currentPage <= 1 || isLoading"
+          class="btn btn-secondary"
+        >
+          {{ translations.previousPage || 'Предыдущая' }}
+        </button>
+
+        <button
+          @click="loadNextPage"
+          :disabled="pagination.currentPage >= pagination.lastPage || isLoading"
+          class="btn btn-primary"
+        >
+          {{ translations.nextPage || 'Следующая' }}
+        </button>
+      </div>
     </div>
-  </div>
-  <!-- Пагинация (если есть) -->
-  <div v-if="pagination && pagination.last_page > 1" class="creatives-list__pagination">
-    <button
-      @click="() => loadPage((pagination?.current_page || 1) - 1)"
-      :disabled="(pagination?.current_page || 1) <= 1"
-      class="btn btn-secondary"
-    >
-      {{ translations.previousPage || 'Назад' }}
-    </button>
-
-    <span class="pagination-info">
-      {{ translations.page || 'Страница' }} {{ pagination?.current_page || 1 }}
-      {{ translations.of || 'из' }} {{ pagination?.last_page || 1 }}
-    </span>
-
-    <button
-      @click="() => loadPage((pagination?.current_page || 1) + 1)"
-      :disabled="(pagination?.current_page || 1) >= (pagination?.last_page || 1)"
-      class="btn btn-secondary"
-    >
-      {{ translations.nextPage || 'Вперед' }}
-    </button>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { useCreativesFiltersStore } from '@/stores/useFiltersStore';
+import { computed, onMounted } from 'vue';
 import type { Creative } from '../../types/creatives';
 
-interface ApiResponse {
-  status: string;
-  data: {
-    items: Creative[];
-    pagination: {
-      total: number;
-      perPage: number;
-      currentPage: number;
-      lastPage: number;
-      from: number;
-      to: number;
-    };
-    meta: {
-      hasSearch: boolean;
-      activeFiltersCount: number;
-      cacheKey: string;
-      appliedFilters: any;
-    };
-  };
-}
-
 interface Props {
-  viewMode?: 'grid' | 'list';
-  enableInfiniteScroll?: boolean;
-  enableSelection?: boolean;
   translations?: Record<string, string>;
-  activeTab?: string;
-  apiEndpoint?: string;
+  perPage?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  viewMode: 'list',
-  enableInfiniteScroll: false,
-  enableSelection: true,
   translations: () => ({}),
-  activeTab: 'inpage',
-  apiEndpoint: '/api/creatives',
+  perPage: 12,
 });
 
-// Реактивные данные
-const creatives = ref<Creative[]>([]);
-const pagination = ref<{
-  current_page: number;
-  last_page: number;
-  per_page: number;
-  total: number;
-  from: number;
-  to: number;
-} | null>(null);
-const isLoading = ref(false);
-const error = ref<string | null>(null);
+// Подключение к store
+const store = useCreativesFiltersStore();
 
-// Методы
-const loadCreatives = async (page: number = 1) => {
-  isLoading.value = true;
-  error.value = null;
+// Computed свойства из store
+const creatives = computed((): Creative[] => store.creatives);
+const pagination = computed(() => store.pagination);
+const isLoading = computed((): boolean => store.isLoading);
+const error = computed((): string | null => store.error);
+const hasCreatives = computed((): boolean => store.hasCreatives);
 
+// Методы для форматирования данных
+function formatArrayField(field: string[] | string | undefined): string {
+  if (!field) return '';
+  if (Array.isArray(field)) {
+    return field.join(', ');
+  }
+  return String(field);
+}
+
+function formatDate(dateString: string): string {
   try {
-    const params = new URLSearchParams({
-      tab: props.activeTab,
-      page: page.toString(),
-      per_page: '12',
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ru-RU', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
     });
-
-    const response = await fetch(`${props.apiEndpoint}?${params}`);
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data: ApiResponse = await response.json();
-
-    creatives.value = data.data.items;
-    pagination.value = {
-      current_page: data.data.pagination.currentPage,
-      last_page: data.data.pagination.lastPage,
-      per_page: data.data.pagination.perPage,
-      total: data.data.pagination.total,
-      from: data.data.pagination.from,
-      to: data.data.pagination.to,
-    };
-
-    console.log('Креативы загружены:', data);
-  } catch (err) {
-    console.error('Ошибка загрузки креативов:', err);
-    error.value = err instanceof Error ? err.message : 'Неизвестная ошибка';
-  } finally {
-    isLoading.value = false;
+  } catch {
+    return dateString;
   }
-};
+}
 
-const loadPage = (page: number) => {
-  if (page >= 1 && pagination.value && page <= pagination.value.last_page) {
-    loadCreatives(page);
+// Методы пагинации
+function loadNextPage(): void {
+  store.loadNextPage();
+}
+
+function loadPreviousPage(): void {
+  const prevPage = pagination.value.currentPage - 1;
+  if (prevPage >= 1) {
+    store.loadCreatives(prevPage);
   }
-};
+}
+
+function handleRetry(): void {
+  store.refreshCreatives();
+}
 
 // Инициализация при монтировании
 onMounted(() => {
-  loadCreatives();
+  console.log('🎯 CreativesListComponent смонтирован, данные из store:', {
+    hasCreatives: hasCreatives.value,
+    creativesCount: creatives.value.length,
+    isLoading: isLoading.value,
+    error: error.value,
+  });
+
+  // Эмитируем событие готовности компонента
+  const readyEvent = new CustomEvent('vue-component-ready', {
+    detail: {
+      component: 'CreativesListComponent',
+      hasData: hasCreatives.value,
+    },
+  });
+  document.dispatchEvent(readyEvent);
 });
 </script>
 
@@ -203,6 +185,72 @@ onMounted(() => {
 
 .creatives-list__error {
   color: #dc3545;
+}
+
+/* Loading spinner */
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Placeholder стили */
+.creative-item.placeholder {
+  background: #f8f9fa;
+  border-color: #e9ecef;
+  pointer-events: none;
+}
+
+.placeholder-line {
+  background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+  height: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.placeholder-badge {
+  background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+  height: 1.5rem;
+  width: 60px;
+}
+
+.creative-item.placeholder .creative-item__title {
+  width: 70%;
+}
+
+.creative-item.placeholder .creative-item__description {
+  width: 100%;
+}
+
+.creative-item.placeholder .meta-item {
+  width: 80px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 .creatives-list__items {
