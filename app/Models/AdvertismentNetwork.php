@@ -62,7 +62,7 @@ class AdvertismentNetwork extends Model
                 ->get()
                 ->map(function ($network) {
                     return [
-                        'value' => $network->id,
+                        'value' => $network->network_name,
                         'label' => $network->network_display_name,
                         'logo' => $network->network_logo,
                     ];
@@ -83,7 +83,7 @@ class AdvertismentNetwork extends Model
                 ->get()
                 ->map(function ($network) {
                     return [
-                        'value' => $network->id,
+                        'value' => $network->network_name,
                         'label' => $network->network_display_name . ($network->is_active ? '' : ' (inactive)'),
                         'logo' => $network->network_logo,
                         'disabled' => !$network->is_active,
@@ -109,7 +109,7 @@ class AdvertismentNetwork extends Model
                         'label' => ucfirst(str_replace('_', ' ', $trafficType)),
                         'options' => $networks->map(function ($network) {
                             return [
-                                'value' => $network->id,
+                                'value' => $network->network_name,
                                 'label' => $network->network_display_name,
                                 'logo' => $network->network_logo,
                             ];

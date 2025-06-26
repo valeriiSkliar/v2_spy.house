@@ -9,6 +9,11 @@ export type CountryCode = string;
 export type LanguageCode = string;
 export type TabValue = 'push' | 'inpage' | 'facebook' | 'tiktok';
 export type SortValue = 'creation' | 'activity' | 'popularity' | 'byCreationDate' | 'byActivity' | 'byPopularity' | 'default';
+/**
+ * Тип для значений диапазона дат
+ * Поддерживает предустановленные диапазоны и custom диапазоны в формате custom_YYYY-MM-DD_to_YYYY-MM-DD
+ * Одиночные даты НЕ поддерживаются
+ */
 export type DateRangeValue = 'today' | 'yesterday' | 'last7' | 'last30' | 'last90' | 'thisMonth' | 'lastMonth' | 'thisYear' | 'lastYear' | 'default' | string;
 
 /**
@@ -237,7 +242,18 @@ export const isValidSortValue = (value: string): value is SortValue => {
 };
 
 export const isValidDateRangeValue = (value: string): value is DateRangeValue => {
-  return ['today', 'yesterday', 'last7', 'last30', 'last90', 'thisMonth', 'lastMonth', 'thisYear', 'lastYear', 'default'].includes(value);
+  // Проверяем предустановленные значения
+  if (['today', 'yesterday', 'last7', 'last30', 'last90', 'thisMonth', 'lastMonth', 'thisYear', 'lastYear', 'default'].includes(value)) {
+    return true;
+  }
+  
+  // Проверяем только custom диапазоны в формате: custom_YYYY-MM-DD_to_YYYY-MM-DD
+  // Одиночные даты больше не поддерживаются
+  if (/^custom_\d{4}-\d{2}-\d{2}_to_\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return true;
+  }
+  
+  return false;
 };
 
 /**

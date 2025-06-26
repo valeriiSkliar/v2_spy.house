@@ -59,7 +59,7 @@ class CreativesRequest extends BaseRequest
             'onlyAdult' => ['sometimes', 'nullable', 'boolean'],
 
             // Массивы фильтров с оптимизированной валидацией
-            'advertisingNetworks' => ['sometimes', 'nullable', 'array', 'max:' . self::MAX_ARRAY_ITEMS['advertisingNetworks']],
+            'advertisingNetworks' => ['sometimes', 'nullable', 'array', 'max:' . self::MAX_ARRAY_ITEMS['advertisingNetworks'], Rule::in(AdvertismentNetwork::forCreativeFilters()->pluck('value')->toArray())],
             'advertisingNetworks.*' => ['string', 'max:50', $this->getAdvertisingNetworkValidationRule()],
 
             'languages' => ['sometimes', 'nullable', 'array', 'max:' . self::MAX_ARRAY_ITEMS['languages']],
