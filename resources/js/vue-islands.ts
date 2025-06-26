@@ -42,8 +42,7 @@ if (token) {
  */
 const componentMap: Record<string, () => Promise<{ default: Component }>> = {
     // Основные компоненты
-    'ExampleCounter': () => import('./vue-components/ExampleCounter.vue'),
-    
+        
     // Креативы
     'CreativesFiltersComponent': () => import('./vue-components/creatives/FiltersComponent.vue'),
     'CreativesTabsComponent': () => import('./vue-components/creatives/TabsComponent.vue'),
