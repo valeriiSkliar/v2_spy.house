@@ -7,6 +7,8 @@
          stopOnFailure="false"
          failOnWarning="false"
          failOnRisky="false"
+         executionOrder="random"
+         resolveDependencies="true"
 >
     <testsuites>
         <testsuite name="Unit">
@@ -40,6 +42,11 @@
         <env name="DB_CONNECTION" value="sqlite"/>
         <env name="DB_DATABASE" value=":memory:"/>
         <env name="DB_FOREIGN_KEYS" value="true"/>
+        <!-- SQLite оптимизация для тестов -->
+        <env name="DB_PRAGMA_SYNCHRONOUS" value="OFF"/>
+        <env name="DB_PRAGMA_JOURNAL_MODE" value="MEMORY"/>
+        <env name="DB_PRAGMA_TEMP_STORE" value="MEMORY"/>
+        <env name="DB_PRAGMA_CACHE_SIZE" value="10000"/>
         
         <!-- Cache and Session -->
         <env name="CACHE_STORE" value="array"/>
@@ -59,5 +66,9 @@
         <!-- Logging -->
         <env name="LOG_CHANNEL" value="single"/>
         <env name="LOG_LEVEL" value="critical"/>
+        
+        <!-- Testing optimizations -->
+        <env name="TESTING_MODE" value="true"/>
+        <env name="DISABLE_MODEL_CACHING" value="true"/>
     </php>
 </phpunit>
