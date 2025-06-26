@@ -89,6 +89,11 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   const tabs = reactive<TabsState>({ ...defaultTabs });
   const isInitialized = ref(false);
   const translations = ref<Record<string, string>>({});
+  
+  // Состояние избранного
+  const favoritesCount = ref<number | undefined>(undefined);
+  const favoritesItems = ref<number[]>([]);
+  const isFavoritesLoading = ref(false);
 
   // Опции для селектов
   const countryOptions = ref<FilterOption[]>([{ value: 'default', label: 'Все страны' }]);
@@ -422,6 +427,154 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   }
 
   // ============================================================================
+  // МЕТОДЫ УПРАВЛЕНИЯ ИЗБРАННЫМ
+  // ============================================================================
+  
+  /**
+   * Установка количества избранного
+   */
+  function setFavoritesCount(count: number): void {
+    favoritesCount.value = count;
+  }
+
+  /**
+   * Обновление счетчика избранного с сервера
+   */
+  async function refreshFavoritesCount(): Promise<void> {
+    if (isFavoritesLoading.value) return;
+
+    try {
+      isFavoritesLoading.value = true;
+      
+      // Реальный API вызов
+      const response = await window.axios.get('/api/creatives/favorites/count');
+      favoritesCount.value = response.data.data.count;
+      
+      // Эмитим событие обновления
+      const event = new CustomEvent('creatives:favorites-updated', {
+        detail: {
+          count: favoritesCount.value,
+          action: 'refresh',
+          timestamp: new Date().toISOString()
+        }
+      });
+      document.dispatchEvent(event);
+      
+    } catch (error) {
+      console.error('Ошибка при обновлении счетчика избранного:', error);
+      throw error;
+    } finally {
+      isFavoritesLoading.value = false;
+    }
+  }
+
+  /**
+   * Добавление креатива в избранное
+   */
+  async function addToFavorites(creativeId: number): Promise<void> {
+    if (isFavoritesLoading.value) return;
+
+    try {
+      isFavoritesLoading.value = true;
+      
+      // Оптимистичное обновление
+      if (!favoritesItems.value.includes(creativeId)) {
+        favoritesItems.value.push(creativeId);
+        if (favoritesCount.value !== undefined) {
+          favoritesCount.value += 1;
+        }
+      }
+      
+      // API вызов для добавления в избранное
+      const response = await window.axios.post(`/api/creatives/${creativeId}/favorite`);
+      
+      // Обновляем count из ответа API (если отличается от оптимистичного)
+      if (response.data.data.totalFavorites !== favoritesCount.value) {
+        favoritesCount.value = response.data.data.totalFavorites;
+      }
+      
+      // Эмитим событие
+      const event = new CustomEvent('creatives:favorites-updated', {
+        detail: {
+          count: favoritesCount.value || 0,
+          action: 'add',
+          creativeId,
+          timestamp: new Date().toISOString()
+        }
+      });
+      document.dispatchEvent(event);
+      
+    } catch (error) {
+      // Откатываем оптимистичное обновление при ошибке
+      const index = favoritesItems.value.indexOf(creativeId);
+      if (index > -1) {
+        favoritesItems.value.splice(index, 1);
+        if (favoritesCount.value !== undefined) {
+          favoritesCount.value -= 1;
+        }
+      }
+      
+      console.error('Ошибка при добавлении в избранное:', error);
+      throw error;
+    } finally {
+      isFavoritesLoading.value = false;
+    }
+  }
+
+  /**
+   * Удаление креатива из избранного
+   */
+  async function removeFromFavorites(creativeId: number): Promise<void> {
+    if (isFavoritesLoading.value) return;
+
+    try {
+      isFavoritesLoading.value = true;
+      
+      // Оптимистичное обновление
+      const index = favoritesItems.value.indexOf(creativeId);
+      if (index > -1) {
+        favoritesItems.value.splice(index, 1);
+        if (favoritesCount.value !== undefined) {
+          favoritesCount.value -= 1;
+        }
+      }
+      
+      // API вызов для удаления из избранного
+      const response = await window.axios.delete(`/api/creatives/${creativeId}/favorite`);
+      
+      // Обновляем count из ответа API (если отличается от оптимистичного)
+      if (response.data.data.totalFavorites !== favoritesCount.value) {
+        favoritesCount.value = response.data.data.totalFavorites;
+      }
+      
+      // Эмитим событие
+      const event = new CustomEvent('creatives:favorites-updated', {
+        detail: {
+          count: favoritesCount.value || 0,
+          action: 'remove',
+          creativeId,
+          timestamp: new Date().toISOString()
+        }
+      });
+      document.dispatchEvent(event);
+      
+    } catch (error) {
+      // Откатываем оптимистичное обновление при ошибке
+      if (!favoritesItems.value.includes(creativeId)) {
+        favoritesItems.value.push(creativeId);
+        if (favoritesCount.value !== undefined) {
+          favoritesCount.value += 1;
+        }
+      }
+      
+      console.error('Ошибка при удалении из избранного:', error);
+      throw error;
+    } finally {
+      isFavoritesLoading.value = false;
+    }
+  }
+
+  // ============================================================================
   // ВОЗВРАТ ОБЪЕКТА STORE - ЕДИНЫЙ API ДЛЯ VUE КОМПОНЕНТОВ
   // ============================================================================
   
@@ -490,6 +643,17 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     loadCreatives,              // Загрузка креативов (с page)
     loadNextPage,               // Загрузка следующей страницы
     refreshCreatives,           // Перезагрузка креативов
+    
+    // ========================================
+    // СОСТОЯНИЕ И МЕТОДЫ ИЗБРАННОГО
+    // ========================================
+    favoritesCount,             // Количество избранного
+    favoritesItems,             // Список ID избранных креативов
+    isFavoritesLoading,         // Состояние загрузки избранного
+    setFavoritesCount,          // Установка количества избранного
+    refreshFavoritesCount,      // Обновление счетчика с сервера
+    addToFavorites,             // Добавление в избранное
+    removeFromFavorites,        // Удаление из избранного
     
     // ========================================
     // ПРЯМОЙ ДОСТУП К КОМПОЗАБЛАМ (для отладки)

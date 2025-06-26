@@ -1,0 +1,57 @@
+/* ============================================================================
+   ИНТЕГРАЦИЯ VUE КОМПОНЕНТА СЧЕТЧИКА ИЗБРАННОГО
+   ============================================================================ */
+
+/* Контейнер Vue компонента */
+.vue-favorites-counter-container {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Placeholder пока компонент не загрузился */
+.favorites-counter-placeholder {
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+/* Скрываем placeholder когда Vue компонент готов */
+.vue-component-ready .favorites-counter-placeholder {
+  display: none;
+}
+
+/* Интеграция с существующими стилями кнопок */
+.btn .vue-favorites-counter-container {
+  margin-left: auto;
+}
+
+/* Анимация появления Vue компонента */
+.vue-component-content {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+  .vue-favorites-counter-container {
+    font-size: 12px;
+  }
+}
+
+/* Accessibility улучшения */
+@media (prefers-reduced-motion: reduce) {
+  .vue-component-content,
+  .favorites-counter-placeholder {
+    animation: none;
+    transition: none;
+  }
+}

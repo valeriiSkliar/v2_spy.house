@@ -351,4 +351,180 @@ class CreativesController extends FrontendController
             'activeTab' => $activeTab
         ];
     }
+
+    /**
+     * Получить количество избранных креативов для текущего пользователя
+     * 
+     * @OA\Get(
+     *     path="/api/creatives/favorites/count",
+     *     operationId="getFavoritesCount",
+     *     tags={"Креативы - Избранное"},
+     *     summary="Получить количество избранных креативов",
+     *     description="Возвращает текущее количество креативов в избранном для аутентифицированного пользователя",
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Количество избранного успешно получено",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="success"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="count", type="integer", example=42),
+     *                 @OA\Property(property="lastUpdated", type="string", format="date-time", example="2024-01-15T10:30:00Z")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Пользователь не аутентифицирован",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="error"),
+     *             @OA\Property(property="message", type="string", example="Unauthorized")
+     *         )
+     *     )
+     * )
+     */
+    public function getFavoritesCount(Request $request)
+    {
+        // TODO: Реализовать получение реального количества избранного
+        // $user = $request->user();
+        // $count = $user->favoriteCreatives()->count();
+
+        // Мок данные для тестирования
+        $mockCount = rand(20, 100);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'count' => $mockCount,
+                'lastUpdated' => now()->toISOString()
+            ]
+        ]);
+    }
+
+    /**
+     * Добавить креатив в избранное
+     * 
+     * @OA\Post(
+     *     path="/api/creatives/{id}/favorite",
+     *     operationId="addToFavorites",
+     *     tags={"Креативы - Избранное"},
+     *     summary="Добавить креатив в избранное",
+     *     description="Добавляет указанный креатив в список избранного пользователя",
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID креатива",
+     *         required=true,
+     *         @OA\Schema(type="integer", minimum=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Креатив успешно добавлен в избранное",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="success"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="creativeId", type="integer", example=123),
+     *                 @OA\Property(property="isFavorite", type="boolean", example=true),
+     *                 @OA\Property(property="totalFavorites", type="integer", example=43)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Креатив не найден",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="error"),
+     *             @OA\Property(property="message", type="string", example="Creative not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=409,
+     *         description="Креатив уже в избранном",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="error"),
+     *             @OA\Property(property="message", type="string", example="Creative already in favorites")
+     *         )
+     *     )
+     * )
+     */
+    public function addToFavorites(Request $request, $id)
+    {
+        // TODO: Реализовать добавление в избранное
+        // $user = $request->user();
+        // $creative = Creative::findOrFail($id);
+        // $user->favoriteCreatives()->attach($creative->id);
+
+        // Мок данные для тестирования
+        $mockTotalCount = rand(40, 100);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'creativeId' => (int)$id,
+                'isFavorite' => true,
+                'totalFavorites' => $mockTotalCount,
+                'addedAt' => now()->toISOString()
+            ]
+        ]);
+    }
+
+    /**
+     * Удалить креатив из избранного
+     * 
+     * @OA\Delete(
+     *     path="/api/creatives/{id}/favorite",
+     *     operationId="removeFromFavorites",
+     *     tags={"Креативы - Избранное"},
+     *     summary="Удалить креатив из избранного",
+     *     description="Удаляет указанный креатив из списка избранного пользователя",
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID креатива",
+     *         required=true,
+     *         @OA\Schema(type="integer", minimum=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Креатив успешно удален из избранного",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="success"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="creativeId", type="integer", example=123),
+     *                 @OA\Property(property="isFavorite", type="boolean", example=false),
+     *                 @OA\Property(property="totalFavorites", type="integer", example=41)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Креатив не найден в избранном",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="error"),
+     *             @OA\Property(property="message", type="string", example="Creative not found in favorites")
+     *         )
+     *     )
+     * )
+     */
+    public function removeFromFavorites(Request $request, $id)
+    {
+        // TODO: Реализовать удаление из избранного
+        // $user = $request->user();
+        // $user->favoriteCreatives()->detach($id);
+
+        // Мок данные для тестирования
+        $mockTotalCount = rand(20, 80);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'creativeId' => (int)$id,
+                'isFavorite' => false,
+                'totalFavorites' => $mockTotalCount,
+                'removedAt' => now()->toISOString()
+            ]
+        ]);
+    }
 }

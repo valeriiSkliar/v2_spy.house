@@ -83,6 +83,16 @@ export interface FilterState {
 }
 
 /**
+ * Состояние избранного
+ */
+export interface FavoritesState {
+  count: number;
+  items: CreativeId[];
+  isLoading: boolean;
+  lastUpdated?: string;
+}
+
+/**
  * Состояние вкладок
  */
 export interface TabsState {
@@ -322,6 +332,11 @@ export interface CreativesEvents {
   'creatives:loading-state-changed': {
     isLoading: boolean;
     source: 'service' | 'store';
+  };
+  'creatives:favorites-updated': {
+    count: number;
+    action: 'add' | 'remove' | 'refresh';
+    creativeId?: CreativeId;
   };
 }
 

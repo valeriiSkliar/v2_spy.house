@@ -13,9 +13,13 @@
         <div class="col-12 col-md-auto mb-2">
             <div class="row">
                 <div class="col-12 col-md-auto mb-15">
-                    <a href="#" class="btn justify-content-start _flex w-100 _medium _gray"><span
-                            class="icon-favorite-empty font-16 mr-2"></span>Favorites <span
-                            class="btn__count">31</span></a>
+                    <a href="#" class="btn justify-content-start _flex w-100 _medium _gray">
+                        <span class="icon-favorite-empty font-16 mr-2"></span>
+                        Favorites
+                        <x-creatives.vue.favorites-counter :initialCount="43" :translations="[
+                                'favoritesCountTooltip' => 'Количество избранных креативов. Нажмите для обновления.'
+                            ]" />
+                    </a>
                 </div>
                 <div class="col-12 col-md-auto mb-15">
                     <div class="base-select-icon">
