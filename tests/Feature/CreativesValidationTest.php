@@ -3,26 +3,26 @@
 namespace Tests\Feature;
 
 use Tests\TestCase;
+use Tests\Traits\DatabaseSeeding;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Models\Frontend\IsoEntity;
 
 class CreativesValidationTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, DatabaseSeeding;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Создаем базовые тестовые данные один раз для всех тестов
+        $this->seedIsoEntities();
+    }
+
     /**
      * Тест валидации корректных фильтров.
      */
     public function test_validates_correct_filters()
     {
-        // Создаем тестовую страну
-        IsoEntity::create([
-            'type' => 'country',
-            'iso_code_2' => 'US',
-            'iso_code_3' => 'USA',
-            'name' => 'United States',
-            'is_active' => true,
-        ]);
-
         $response = $this->withHeaders([
             'Accept' => 'application/json',
         ])->get('/api/creatives/filters/validate?' . http_build_query([
@@ -92,15 +92,6 @@ class CreativesValidationTest extends TestCase
      */
     public function test_sanitizes_string_inputs()
     {
-        // Создаем тестовую страну
-        IsoEntity::create([
-            'type' => 'country',
-            'iso_code_2' => 'US',
-            'iso_code_3' => 'USA',
-            'name' => 'United States',
-            'is_active' => true,
-        ]);
-
         $response = $this->withHeaders([
             'Accept' => 'application/json',
         ])->get('/api/creatives/filters/validate?' . http_build_query([
@@ -126,31 +117,6 @@ class CreativesValidationTest extends TestCase
      */
     public function test_validates_comma_separated_arrays()
     {
-        // Создаем тестовые языки
-        IsoEntity::create([
-            'type' => 'language',
-            'iso_code_2' => 'en',
-            'iso_code_3' => 'eng',
-            'name' => 'English',
-            'is_active' => true,
-        ]);
-
-        IsoEntity::create([
-            'type' => 'language',
-            'iso_code_2' => 'ru',
-            'iso_code_3' => 'rus',
-            'name' => 'Russian',
-            'is_active' => true,
-        ]);
-
-        IsoEntity::create([
-            'type' => 'language',
-            'iso_code_2' => 'fr',
-            'iso_code_3' => 'fra',
-            'name' => 'French',
-            'is_active' => true,
-        ]);
-
         // Тест с невалидными языками должен возвращать ошибку валидации
         $response = $this->withHeaders([
             'Accept' => 'application/json',
@@ -168,23 +134,6 @@ class CreativesValidationTest extends TestCase
      */
     public function test_url_params_priority_over_regular_params()
     {
-        // Создаем тестовые страны
-        IsoEntity::create([
-            'type' => 'country',
-            'iso_code_2' => 'US',
-            'iso_code_3' => 'USA',
-            'name' => 'United States',
-            'is_active' => true,
-        ]);
-
-        IsoEntity::create([
-            'type' => 'country',
-            'iso_code_2' => 'CA',
-            'iso_code_3' => 'CAN',
-            'name' => 'Canada',
-            'is_active' => true,
-        ]);
-
         $response = $this->withHeaders([
             'Accept' => 'application/json',
         ])->get('/api/creatives/filters/validate?' . http_build_query([
@@ -238,23 +187,6 @@ class CreativesValidationTest extends TestCase
     /** @test */
     public function test_country_validation_with_valid_iso_codes()
     {
-        // Создаем тестовые страны в базе данных
-        $country1 = IsoEntity::create([
-            'type' => 'country',
-            'iso_code_2' => 'US',
-            'iso_code_3' => 'USA',
-            'name' => 'United States',
-            'is_active' => true,
-        ]);
-
-        $country2 = IsoEntity::create([
-            'type' => 'country',
-            'iso_code_2' => 'CA',
-            'iso_code_3' => 'CAN',
-            'name' => 'Canada',
-            'is_active' => true,
-        ]);
-
         // Тест с валидным ISO2 кодом
         $response = $this->withHeaders([
             'Accept' => 'application/json',
@@ -298,7 +230,7 @@ class CreativesValidationTest extends TestCase
         $response = $this->withHeaders([
             'Accept' => 'application/json',
         ])->get('/api/creatives/filters/validate?' . http_build_query([
-            'country' => 'XX'
+            'country' => 'ZZ'
         ]));
 
         $response->assertStatus(422)
@@ -318,15 +250,6 @@ class CreativesValidationTest extends TestCase
     /** @test */
     public function test_cr_country_url_parameter_validation()
     {
-        // Создаем тестовую страну
-        $country = IsoEntity::create([
-            'type' => 'country',
-            'iso_code_2' => 'GB',
-            'iso_code_3' => 'GBR',
-            'name' => 'United Kingdom',
-            'is_active' => true,
-        ]);
-
         // Тест с валидным URL параметром
         $response = $this->withHeaders([
             'Accept' => 'application/json',
@@ -350,15 +273,6 @@ class CreativesValidationTest extends TestCase
     /** @test */
     public function test_inactive_countries_are_not_valid()
     {
-        // Создаем неактивную страну
-        $inactiveCountry = IsoEntity::create([
-            'type' => 'country',
-            'iso_code_2' => 'XX',
-            'iso_code_3' => 'XXX',
-            'name' => 'Inactive Country',
-            'is_active' => false,
-        ]);
-
         $response = $this->withHeaders([
             'Accept' => 'application/json',
         ])->get('/api/creatives/filters/validate?' . http_build_query([
@@ -372,23 +286,6 @@ class CreativesValidationTest extends TestCase
     /** @test */
     public function test_language_validation_with_valid_iso_codes()
     {
-        // Создаем тестовые языки в базе данных
-        $language1 = IsoEntity::create([
-            'type' => 'language',
-            'iso_code_2' => 'en',
-            'iso_code_3' => 'eng',
-            'name' => 'English',
-            'is_active' => true,
-        ]);
-
-        $language2 = IsoEntity::create([
-            'type' => 'language',
-            'iso_code_2' => 'ru',
-            'iso_code_3' => 'rus',
-            'name' => 'Russian',
-            'is_active' => true,
-        ]);
-
         // Тест с валидными ISO2 кодами языков
         $response = $this->withHeaders([
             'Accept' => 'application/json',
@@ -415,21 +312,13 @@ class CreativesValidationTest extends TestCase
         $response = $this->withHeaders([
             'Accept' => 'application/json',
         ])->get('/api/creatives/filters/validate?' . http_build_query([
-            'languages' => ['xx']
+            'languages' => ['zz']
         ]));
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['languages.0']);
 
         // Тест со смешанными валидными и невалидными кодами
-        $language = IsoEntity::create([
-            'type' => 'language',
-            'iso_code_2' => 'en',
-            'iso_code_3' => 'eng',
-            'name' => 'English',
-            'is_active' => true,
-        ]);
-
         $response = $this->withHeaders([
             'Accept' => 'application/json',
         ])->get('/api/creatives/filters/validate?' . http_build_query([
@@ -443,23 +332,6 @@ class CreativesValidationTest extends TestCase
     /** @test */
     public function test_cr_languages_url_parameter_validation()
     {
-        // Создаем тестовые языки
-        $language1 = IsoEntity::create([
-            'type' => 'language',
-            'iso_code_2' => 'fr',
-            'iso_code_3' => 'fra',
-            'name' => 'French',
-            'is_active' => true,
-        ]);
-
-        $language2 = IsoEntity::create([
-            'type' => 'language',
-            'iso_code_2' => 'de',
-            'iso_code_3' => 'deu',
-            'name' => 'German',
-            'is_active' => true,
-        ]);
-
         // Тест с валидными URL параметрами (comma-separated)
         $response = $this->withHeaders([
             'Accept' => 'application/json',
@@ -492,15 +364,6 @@ class CreativesValidationTest extends TestCase
     /** @test */
     public function test_inactive_languages_are_not_valid()
     {
-        // Создаем неактивный язык
-        $inactiveLanguage = IsoEntity::create([
-            'type' => 'language',
-            'iso_code_2' => 'xx',
-            'iso_code_3' => 'xxx',
-            'name' => 'Inactive Language',
-            'is_active' => false,
-        ]);
-
         $response = $this->withHeaders([
             'Accept' => 'application/json',
         ])->get('/api/creatives/filters/validate?' . http_build_query([
