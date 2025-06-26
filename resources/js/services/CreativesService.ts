@@ -81,7 +81,7 @@ class CreativesService {
   };
 
   private loadingStates = new Map<string, boolean>();
-  private lastRequestTime = 0;
+  // private lastRequestTime = 0;
 
   constructor(config?: Partial<CreativesServiceConfig>) {
     if (config) {

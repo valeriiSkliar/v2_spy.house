@@ -428,6 +428,7 @@ export const useFiltersStore = defineStore('filters', () => {
     }, 300);
 
     const debouncedUrlToStore = debounce((newUrlState: any) => {
+      console.log('🔄 debouncedUrlToStore вызван с новым состоянием:', newUrlState);
       if (urlSync && isUrlSyncEnabled.value) {
         const updates = urlSync.getFilterStateUpdates();
         updateFromUrl(updates);
