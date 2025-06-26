@@ -37,13 +37,24 @@ interface CreativesFilters {
 }
 
 interface CreativesResponse {
-  data: Creative[];
-  total: number;
-  per_page: number;
-  current_page: number;
-  last_page: number;
-  from: number;
-  to: number;
+  status: string;
+  data: {
+    items: Creative[];
+    pagination: {
+      total: number;
+      perPage: number;
+      currentPage: number;
+      lastPage: number;
+      from: number;
+      to: number;
+    };
+    meta: {
+      hasSearch: boolean;
+      activeFiltersCount: number;
+      cacheKey: string;
+      appliedFilters?: any;
+    };
+  };
 }
 
 interface ProcessedCreativesData {
@@ -286,8 +297,26 @@ class CreativesService {
       throw new Error('Не удалось получить данные из API'); // TODO: Добавить локализацию
     }
 
+    // Извлекаем данные из обертки axios response
+    const apiData = response.data;
+    console.log('📦 API данные из response.data:', apiData);
 
-    return response.data;
+    // Анализируем структуру ответа
+    if (apiData && apiData.status === 'success' && apiData.data) {
+      // Случай: { status, data: { items, pagination, meta } }
+      const dataContent = apiData.data;
+      console.log('🔍 Содержимое apiData.data:', dataContent);
+      
+      // Проверяем что внутри есть items, pagination, meta
+      if (dataContent.items && dataContent.pagination && dataContent.meta) {
+        console.log('✅ Найдена корректная структура ответа');
+        return apiData; // Возвращаем { status: "success", data: { items, pagination, meta } }
+      }
+    }
+
+    console.error('❌ Неверная структура ответа от API. Получено:', apiData);
+    console.error('📋 Ожидается: { status: "success", data: { items, pagination, meta } }');
+    throw new Error('Неверная структура ответа от API');
 
   }
 
@@ -296,7 +325,7 @@ class CreativesService {
    */
   private postprocessData(response: CreativesResponse, filters: CreativesFilters): ProcessedCreativesData {
     // Обработка элементов креативов
-    const processedItems = response.data.map(item => ({
+    const processedItems = response.data.items.map((item: Creative) => ({
       ...item,
       // Добавляем computed свойства
       displayName: this.generateDisplayName(item),
@@ -305,25 +334,17 @@ class CreativesService {
       isFavorite: false
     }));
 
-    // Подготовка метаданных
-    const hasSearch = Boolean(filters.searchKeyword && filters.searchKeyword.length > 0);
-    const activeFiltersCount = this.countActiveFilters(filters);
-    const cacheKey = this.generateCacheKey(filters);
+    // Используем метаданные из сервера, дополняем локальными если нужно
+    const serverMeta = response.data.meta;
+    const localCacheKey = this.generateCacheKey(filters);
 
     return {
       items: processedItems,
-      pagination: {
-        total: response.total,
-        perPage: response.per_page,
-        currentPage: response.current_page,
-        lastPage: response.last_page,
-        from: response.from,
-        to: response.to
-      },
+      pagination: response.data.pagination,
       meta: {
-        hasSearch,
-        activeFiltersCount,
-        cacheKey
+        hasSearch: serverMeta.hasSearch,
+        activeFiltersCount: serverMeta.activeFiltersCount,
+        cacheKey: serverMeta.cacheKey || localCacheKey
       }
     };
   }
