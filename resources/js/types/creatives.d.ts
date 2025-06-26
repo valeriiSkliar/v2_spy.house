@@ -228,6 +228,7 @@ export interface UrlSyncParams {
   cr_devices?: string;
   cr_imageSizes?: string;
   cr_activeTab?: string;
+  cr_page?: string;
 }
 
 /**

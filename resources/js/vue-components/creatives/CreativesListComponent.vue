@@ -55,35 +55,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Пагинация -->
-    <div v-if="hasCreatives" class="creatives-list__pagination">
-      <div class="pagination-info">
-        {{ translations.page || 'Страница' }} {{ pagination.currentPage }}
-        {{ translations.of || 'из' }} {{ pagination.lastPage }} ({{ pagination.from }}-{{
-          pagination.to
-        }}
-        {{ translations.of || 'из' }} {{ pagination.total }})
-      </div>
-
-      <div class="pagination-controls">
-        <button
-          @click="loadPreviousPage"
-          :disabled="pagination.currentPage <= 1 || isLoading"
-          class="btn btn-secondary"
-        >
-          {{ translations.previousPage || 'Предыдущая' }}
-        </button>
-
-        <button
-          @click="loadNextPage"
-          :disabled="pagination.currentPage >= pagination.lastPage || isLoading"
-          class="btn btn-primary"
-        >
-          {{ translations.nextPage || 'Следующая' }}
-        </button>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -107,7 +78,6 @@ const store = useCreativesFiltersStore();
 
 // Computed свойства из store
 const creatives = computed((): Creative[] => store.creatives);
-const pagination = computed(() => store.pagination);
 const isLoading = computed((): boolean => store.isLoading);
 const error = computed((): string | null => store.error);
 const hasCreatives = computed((): boolean => store.hasCreatives);
@@ -131,18 +101,6 @@ function formatDate(dateString: string): string {
     });
   } catch {
     return dateString;
-  }
-}
-
-// Методы пагинации
-function loadNextPage(): void {
-  store.loadNextPage();
-}
-
-function loadPreviousPage(): void {
-  const prevPage = pagination.value.currentPage - 1;
-  if (prevPage >= 1) {
-    store.loadCreatives(prevPage);
   }
 }
 
@@ -327,63 +285,6 @@ onMounted(() => {
   color: #333;
 }
 
-.creatives-list__pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 2rem;
-  padding: 1rem;
-}
-
-.pagination-info {
-  font-size: 0.9rem;
-  color: #666;
-}
-
-.btn {
-  padding: 0.5rem 1rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: #fff;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-decoration: none;
-  display: inline-block;
-}
-
-.btn:hover:not(:disabled) {
-  background: #f8f9fa;
-  border-color: #adb5bd;
-}
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-primary {
-  background: #007bff;
-  color: white;
-  border-color: #007bff;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: #0056b3;
-  border-color: #0056b3;
-}
-
-.btn-secondary {
-  background: #6c757d;
-  color: white;
-  border-color: #6c757d;
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: #545b62;
-  border-color: #545b62;
-}
-
 /* Responsive design */
 @media (max-width: 768px) {
   .creative-item__header {
@@ -398,11 +299,6 @@ onMounted(() => {
   .creative-item__meta {
     flex-direction: column;
     gap: 0.25rem;
-  }
-
-  .creatives-list__pagination {
-    flex-direction: column;
-    gap: 0.5rem;
   }
 }
 </style>

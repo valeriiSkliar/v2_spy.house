@@ -44,8 +44,9 @@
 
     <x-creatives.vue.list :listTranslations="$listTranslations" :perPage="$selectOptions['perPage']" />
 
-    {{--
-    <x-creatives.vue.pagination :translations="$translations" /> --}}
+    {{-- Компонент пагинации --}}
+    <x-creatives.vue.pagination :translations="$listTranslations" :showInfo="true" :maxVisiblePages="5"
+        :alwaysShowFirstLast="true" />
 
 
     {{-- Подключение скрипта Vue островков --}}

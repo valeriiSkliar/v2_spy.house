@@ -152,9 +152,9 @@ export function useFiltersSynchronization(
     isSyncing.value = true;
     
     try {
-      const { filters: urlFilters, activeTab } = urlSync.syncUrlToFilters();
+      const { filters: urlFilters, activeTab, page } = urlSync.syncUrlToFilters();
       
-      logSync('URL -> Store', { urlFilters, activeTab });
+      logSync('URL -> Store', { urlFilters, activeTab, page });
       
       // Обновляем фильтры без triggering watchers
       Object.entries(urlFilters).forEach(([key, value]) => {
@@ -183,6 +183,17 @@ export function useFiltersSynchronization(
       // Обновляем активную вкладку
       if (activeTab !== tabs.activeTab) {
         tabs.activeTab = activeTab;
+      }
+      
+      // Если есть страница в URL, загружаем конкретную страницу
+      if (page && page > 1) {
+        const creativesFilters = creativesComposable.mapFiltersToCreativesFilters(
+          filters, 
+          tabs.activeTab, 
+          page
+        );
+        
+        creativesComposable.loadCreativesWithFilters(creativesFilters);
       }
       
     } finally {

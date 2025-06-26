@@ -47,7 +47,9 @@ const componentMap: Record<string, () => Promise<{ default: Component }>> = {
     'CreativesFiltersComponent': () => import('./vue-components/creatives/FiltersComponent.vue'),
     'CreativesTabsComponent': () => import('./vue-components/creatives/TabsComponent.vue'),
     'CreativesListComponent': () => import('./vue-components/creatives/CreativesListComponent.vue'),
-    // 'PaginationComponent': () => import('./vue-components/ui/PaginationComponent.vue'),
+    
+    // UI компоненты
+    'PaginationComponent': () => import('./vue-components/ui/PaginationComponent.vue'),
     
     // Добавьте здесь новые компоненты по мере создания
 };

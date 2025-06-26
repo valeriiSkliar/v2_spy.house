@@ -16,14 +16,15 @@ export interface UseCreativesUrlSyncReturn {
   isEnabled: Ref<boolean>;
   
   // Методы синхронизации
-  syncFiltersToUrl: (filters: FilterState, activeTab: TabValue) => void;
-  syncUrlToFilters: () => { filters: Partial<FilterState>; activeTab: TabValue };
+  syncFiltersToUrl: (filters: FilterState, activeTab: TabValue, page?: number) => void;
+  syncUrlToFilters: () => { filters: Partial<FilterState>; activeTab: TabValue; page?: number };
   
   // Утилиты
   hasUrlParams: () => boolean;
   clearUrlParams: () => void;
   getFilterUpdates: () => Partial<FilterState>;
   getActiveTabFromUrl: () => TabValue;
+  getPageFromUrl: () => number;
 }
 
 /**
@@ -62,6 +63,7 @@ export function useCreativesUrlSync(): UseCreativesUrlSyncReturn {
   } as const;
 
   const TAB_URL_KEY = 'cr_activeTab';
+  const PAGE_URL_KEY = 'cr_page';
 
   /**
    * Определяет тип поля для десериализации
@@ -120,7 +122,7 @@ export function useCreativesUrlSync(): UseCreativesUrlSyncReturn {
    * Синхронизирует фильтры в URL (Store -> URL)
    * Использует встроенные возможности @vueuse/core с кастомной предобработкой
    */
-  const syncFiltersToUrl = (filters: FilterState, activeTab: TabValue): void => {
+  const syncFiltersToUrl = (filters: FilterState, activeTab: TabValue, page?: number): void => {
     if (!isEnabled.value) return;
 
     // Обновляем фильтры с кастомной сериализацией
@@ -141,12 +143,19 @@ export function useCreativesUrlSync(): UseCreativesUrlSyncReturn {
     } else {
       delete urlParams[TAB_URL_KEY];
     }
+
+    // Обновляем страницу пагинации
+    if (page && page > 1) {
+      urlParams[PAGE_URL_KEY] = String(page);
+    } else {
+      delete urlParams[PAGE_URL_KEY];
+    }
   };
 
   /**
    * Синхронизирует URL в фильтры (URL -> Store)
    */
-  const syncUrlToFilters = (): { filters: Partial<FilterState>; activeTab: TabValue } => {
+  const syncUrlToFilters = (): { filters: Partial<FilterState>; activeTab: TabValue; page?: number } => {
     const filterUpdates: Partial<FilterState> = {};
 
     // Обрабатываем фильтры
@@ -165,7 +174,10 @@ export function useCreativesUrlSync(): UseCreativesUrlSyncReturn {
     // Обрабатываем активную вкладку
     const activeTab = getActiveTabFromUrl();
 
-    return { filters: filterUpdates, activeTab };
+    // Обрабатываем страницу
+    const page = getPageFromUrl();
+
+    return { filters: filterUpdates, activeTab, page };
   };
 
   /**
@@ -182,6 +194,18 @@ export function useCreativesUrlSync(): UseCreativesUrlSyncReturn {
   const getActiveTabFromUrl = (): TabValue => {
     const urlTab = urlParams[TAB_URL_KEY];
     return (urlTab && isValidTabValue(String(urlTab))) ? String(urlTab) as TabValue : 'push';
+  };
+
+  /**
+   * Получает номер страницы из URL
+   */
+  const getPageFromUrl = (): number => {
+    const urlPage = urlParams[PAGE_URL_KEY];
+    if (urlPage) {
+      const pageNumber = parseInt(String(urlPage), 10);
+      return (pageNumber > 0) ? pageNumber : 1;
+    }
+    return 1;
   };
 
   /**
@@ -238,6 +262,7 @@ export function useCreativesUrlSync(): UseCreativesUrlSyncReturn {
     clearUrlParams,
     getFilterUpdates,
     getActiveTabFromUrl,
+    getPageFromUrl,
   };
 }
 

@@ -112,7 +112,8 @@ class CreativesRequest extends BaseRequest
             'cr_dateCreation',
             'cr_sortBy',
             'cr_periodDisplay',
-            'cr_activeTab'
+            'cr_activeTab',
+            'cr_page'
         ];
 
         foreach ($stringFields as $field) {

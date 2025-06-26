@@ -351,6 +351,9 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
       page
     );
     
+    // Синхронизируем page с URL при загрузке страницы
+    urlSync.syncFiltersToUrl(filters, tabs.activeTab, page);
+    
     await creativesComposable.loadCreativesWithFilters(creativesFilters);
   }
 
