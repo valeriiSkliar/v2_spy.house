@@ -255,12 +255,14 @@ class CreativesService {
     });
 
     // Дефолтные значения
-    return {
+    const defaults: Partial<CreativesFilters> = {
       page: 1,
       perPage: CREATIVES_CONSTANTS.DEFAULT_PAGE_SIZE,
-      sortBy: 'creation',
-      ...processed
+      sortBy: 'creation' as const
     };
+    
+    // Объединяем с приоритетом для processed значений
+    return { ...defaults, ...processed } as CreativesFilters;
   }
 
   /**

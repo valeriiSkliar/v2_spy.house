@@ -364,6 +364,7 @@ export function useFiltersSynchronization(
         devices: [...filters.devices],
         imageSizes: [...filters.imageSizes],
         onlyAdult: filters.onlyAdult,
+        perPage: filters.perPage,
         activeTab: tabs.activeTab
       };
       

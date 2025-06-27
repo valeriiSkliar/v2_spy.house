@@ -108,10 +108,9 @@ function selectOption(option: PerPageOption): void {
   // Обновляем локальное значение
   localPerPage.value = option.value;
 
-  // Если store инициализирован, обновляем его и перезагружаем данные
+  // Если store инициализирован, обновляем его (данные перезагрузятся автоматически через watcher)
   if (store.isInitialized) {
     store.updateFilter('perPage', option.value);
-    store.loadCreatives(1);
   }
 
   // Закрываем dropdown

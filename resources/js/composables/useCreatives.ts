@@ -105,7 +105,7 @@ export function useCreatives(): UseCreativesReturn {
       onlyAdult: filters.onlyAdult,
       activeTab,
       page,
-      perPage: CREATIVES_CONSTANTS.DEFAULT_PAGE_SIZE
+      perPage: filters.perPage || CREATIVES_CONSTANTS.DEFAULT_PAGE_SIZE
     };
   }
   
