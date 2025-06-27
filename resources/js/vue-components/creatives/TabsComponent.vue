@@ -8,14 +8,14 @@
       :class="{ active: tab.value === store.tabs.activeTab }"
       @click="handleTabClick(tab.value)"
     >
-      {{ tab.label }}
+      {{ tab.label.charAt(0).toUpperCase() + tab.label.slice(1) }}
       <span v-if="tab.count" class="filter-push__count">{{ formatCount(tab.count) }}</span>
     </button>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { TabsState } from '@/types/creatives';
+import { isValidTabValue, TabsState } from '@/types/creatives.d';
 import { onMounted, onUnmounted } from 'vue';
 import { useCreativesFiltersStore } from '../../stores/useFiltersStore';
 
@@ -68,6 +68,12 @@ function formatCount(count: string | number): string {
  * Обработчик клика по вкладке
  */
 function handleTabClick(tabValue: string): void {
+  // Проверяем валидность значения и приводим тип
+  if (!isValidTabValue(tabValue)) {
+    console.warn('Invalid tab value:', tabValue);
+    return;
+  }
+
   if (store.tabs.activeTab !== tabValue) {
     console.log('Tab clicked:', tabValue);
 
