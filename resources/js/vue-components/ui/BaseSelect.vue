@@ -1,5 +1,32 @@
 <template>
-  <div class="base-select" ref="selectRef">
+  <!-- Условный рендеринг: с иконкой или без -->
+  <div v-if="icon" data-vue-test class="base-select-icon">
+    <div class="base-select" ref="selectRef">
+      <div class="base-select__trigger" @click="toggleDropdown">
+        <span class="base-select__value">{{ displayValue }}</span>
+        <span class="base-select__arrow" :class="{ 'is-open': isOpen }"></span>
+      </div>
+      <ul class="base-select__dropdown" v-show="isOpen">
+        <li
+          v-for="option in safeOptions"
+          :key="option.value"
+          :data-value="option.value"
+          class="base-select__option"
+          :class="{ 'is-selected': String(option.value) === String(value) }"
+          @click="selectOption(option)"
+        >
+          {{ option.label }}
+        </li>
+        <li v-if="safeOptions.length === 0" class="base-select__no-options">
+          No options available
+        </li>
+      </ul>
+    </div>
+    <span :class="`icon-${icon}`" data-vue-test></span>
+  </div>
+
+  <!-- Обычный вариант без иконки -->
+  <div v-else class="base-select" ref="selectRef">
     <div class="base-select__trigger" @click="toggleDropdown">
       <span class="base-select__value">{{ selectedLabel || placeholder }}</span>
       <span class="base-select__arrow" :class="{ 'is-open': isOpen }"></span>
@@ -10,7 +37,7 @@
         :key="option.value"
         :data-value="option.value"
         class="base-select__option"
-        :class="{ 'is-selected': option.value === value }"
+        :class="{ 'is-selected': String(option.value) === String(value) }"
         @click="selectOption(option)"
       >
         {{ option.label }}
@@ -28,10 +55,18 @@ interface Option {
   label: string;
 }
 
+interface OnPageTranslations {
+  onPage: string;
+  perPage: string;
+}
+
 interface Props {
-  value: string;
+  value: string | number;
   options: Option[];
   placeholder?: string;
+  icon?: string;
+  initialValue?: string | number;
+  onPageTranslations?: OnPageTranslations;
 }
 
 interface Emits {
@@ -40,6 +75,12 @@ interface Emits {
 
 const props = withDefaults(defineProps<Props>(), {
   placeholder: 'Select option',
+  icon: undefined,
+  initialValue: '12',
+  onPageTranslations: () => ({
+    onPage: 'On page',
+    perPage: 'Per page',
+  }),
 });
 
 const emit = defineEmits<Emits>();
@@ -53,14 +94,23 @@ const selectedLabel = computed(() => {
     return '';
   }
 
-  const selected = props.options.find(option => option.value === props.value);
+  const selected = props.options.find(option => String(option.value) === String(props.value));
   return selected?.label || '';
+});
+
+// Для варианта с иконкой используем специальный формат отображения как в Blade
+const displayValue = computed(() => {
+  if (props.icon && props.onPageTranslations) {
+    const currentValue = props.value || props.initialValue;
+    return `${props.onPageTranslations.onPage} — ${currentValue}`;
+  }
+  return selectedLabel.value || props.placeholder;
 });
 
 const safeOptions = computed(() => {
   const isValidArray = Array.isArray(props.options);
   const hasOptions = isValidArray && props.options.length > 0;
-  
+
   // Only log when we have actual options to avoid race condition logging
   if (hasOptions) {
     console.log('🔍 BaseSelect safeOptions:', {
@@ -70,10 +120,8 @@ const safeOptions = computed(() => {
       placeholder: props.placeholder,
     });
   }
-  
-  return isValidArray
-    ? props.options.filter(option => option.value !== 'default')
-    : [];
+
+  return isValidArray ? props.options.filter(option => option.value !== 'default') : [];
 });
 
 function toggleDropdown(): void {

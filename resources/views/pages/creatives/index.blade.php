@@ -22,19 +22,9 @@
                     </a>
                 </div>
                 <div class="col-12 col-md-auto mb-15">
-                    <div class="base-select-icon">
-                        <div class="base-select">
-                            <div class="base-select__trigger"><span class="base-select__value">On page — 12</span><span
-                                    class="base-select__arrow"></span></div>
-                            <ul class="base-select__dropdown" style="display: none;">
-                                <li class="base-select__option is-selected">12</li>
-                                <li class="base-select__option">24</li>
-                                <li class="base-select__option">48</li>
-                                <li class="base-select__option">96</li>
-                            </ul>
-                        </div>
-                        <span class="icon-list"></span>
-                    </div>
+                    <x-creatives.vue.base-select-icon :icon="'list'" :initialValue="12"
+                        :options="$selectOptions['perPage']" :value="'12'"
+                        :placeholder="$listTranslations['perPage']" />
                 </div>
             </div>
         </div>
@@ -46,7 +36,7 @@
 
     {{-- Компонент списка креативов с новой системой композаблов --}}
 
-    <x-creatives.vue.list :listTranslations="$listTranslations" :perPage="$selectOptions['perPage']" />
+    <x-creatives.vue.list :listTranslations="$listTranslations" :perPage="12" />
 
     {{-- Компонент пагинации --}}
     <x-creatives.vue.pagination :translations="$listTranslations" :showInfo="true" :maxVisiblePages="5"

@@ -51,6 +51,7 @@ const componentMap: Record<string, () => Promise<{ default: Component }>> = {
     // UI компоненты
     'PaginationComponent': () => import('./vue-components/ui/PaginationComponent.vue'),
     'FavoritesCounter': () => import('./vue-components/ui/FavoritesCounter.vue'),
+    'BaseSelect': () => import('./vue-components/ui/BaseSelect.vue'),
     
     // Добавьте здесь новые компоненты по мере создания
 };

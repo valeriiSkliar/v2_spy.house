@@ -93,6 +93,7 @@ class CreativesController extends FrontendController
             'nextPage' => __('creatives.next-page'),
             'page' => __('creatives.page'),
             'of' => __('creatives.of'),
+            'perPage' => __('creatives.perPage'),
         ];
         // $vueTranslations = [];
 
@@ -114,9 +115,6 @@ class CreativesController extends FrontendController
 
         $selectOptions = $this->getSelectOptions();
         $tabOptions = $this->getTabOptions($activeTabFromUrl);
-
-        // Добавляем perPage для placeholder'ов
-        $selectOptions['perPage'] = 12;
 
         return view('pages.creatives.index', [
             'activeTab' => $activeTabFromUrl,
@@ -302,6 +300,12 @@ class CreativesController extends FrontendController
     public function getSelectOptions()
     {
         return [
+            'perPage' => [
+                ['value' => 12, 'label' => '12'],
+                ['value' => 24, 'label' => '24'],
+                ['value' => 48, 'label' => '48'],
+                ['value' => 96, 'label' => '96'],
+            ],
             'advertisingNetworks' => AdvertismentNetwork::forCreativeFilters(),
             'countries' => IsoCodesHelper::getAllCountries(app()->getLocale()),
             'sortOptions' => [
