@@ -295,3 +295,16 @@ defineExpose({
   isLoading: isLoading.value,
 });
 </script>
+<style lang="scss" scoped>
+.pagination-list {
+  li {
+    display: flex;
+    align-items: center;
+    .pagination-dots {
+      display: flex;
+      justify-content: center;
+      align-items: end;
+    }
+  }
+}
+</style>
