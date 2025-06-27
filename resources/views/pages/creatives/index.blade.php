@@ -22,9 +22,12 @@
                     </a>
                 </div>
                 <div class="col-12 col-md-auto mb-15">
-                    <x-creatives.vue.base-select-icon :icon="'list'" :initialValue="12"
-                        :options="$selectOptions['perPage']" :value="'12'"
-                        :placeholder="$listTranslations['perPage']" />
+                    {{-- Компонент выбора количества креативов на странице --}}
+                    <x-creatives.vue.per-page-select :options="$perPage['perPageOptions']"
+                        :activePerPage="$perPage['activePerPage']" :translations="[
+                            'onPage' => $listTranslations['onPage'] ?? 'На странице',
+                            'perPage' => $listTranslations['perPage'] ?? 'Элементов на странице'
+                        ]" />
                 </div>
             </div>
         </div>

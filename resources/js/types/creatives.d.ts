@@ -80,6 +80,7 @@ export interface FilterState {
   imageSizes: string[];
   onlyAdult: boolean;
   savedSettings: string[];
+  perPage: number;
 }
 
 /**
@@ -239,6 +240,7 @@ export interface UrlSyncParams {
   cr_imageSizes?: string;
   cr_activeTab?: string;
   cr_page?: string;
+  cr_perPage?: string;
 }
 
 /**
@@ -301,6 +303,7 @@ export const DEFAULT_FILTERS: FilterState = {
   imageSizes: [],
   onlyAdult: false,
   savedSettings: [],
+  perPage: 12,
 };
 
 export const DEFAULT_TABS: TabsState = {

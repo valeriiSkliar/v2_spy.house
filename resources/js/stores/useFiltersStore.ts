@@ -69,7 +69,8 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     devices: [],
     imageSizes: [],
     onlyAdult: false,
-    savedSettings: []
+    savedSettings: [],
+    perPage: 12,
   };
 
   // Дефолтные значения вкладок

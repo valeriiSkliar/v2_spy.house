@@ -156,7 +156,7 @@ class CreativesRequest extends BaseRequest
         }
 
         // Санитизация числовых полей
-        foreach (['page', 'perPage'] as $field) {
+        foreach (['page', 'perPage', 'cr_page', 'cr_perPage'] as $field) {
             if (isset($input[$field])) {
                 $sanitized[$field] = $this->sanitizeNumericInput($input[$field]);
             }
@@ -195,6 +195,8 @@ class CreativesRequest extends BaseRequest
             'cr_periodDisplay' => 'periodDisplay',
             'cr_onlyAdult' => 'onlyAdult',
             'cr_activeTab' => 'activeTab',
+            'cr_page' => 'page',
+            'cr_perPage' => 'perPage',
         ];
 
         // Обработка простых полей
@@ -222,9 +224,11 @@ class CreativesRequest extends BaseRequest
             }
         }
 
-        // Пагинация с валидацией
-        $filters['page'] = max(1, min(10000, (int)($validated['page'] ?? 1)));
-        $filters['perPage'] = max(6, min(100, (int)($validated['perPage'] ?? 12)));
+        // Пагинация с валидацией (используем уже смапленные значения из $filters)
+        $filters['page'] = max(1, min(10000, (int)($filters['page'] ?? 1)));
+        $filters['perPage'] = max(6, min(100, (int)($filters['perPage'] ?? 12)));
+
+
 
         // Batch валидация всех значений
         return $this->batchValidateFilters($filters);
@@ -357,6 +361,8 @@ class CreativesRequest extends BaseRequest
             }],
             'cr_onlyAdult' => ['sometimes', 'nullable', 'string', Rule::in(['0', '1', 'true', 'false'])],
             'cr_activeTab' => ['sometimes', 'nullable', 'string', Rule::in(['push', 'inpage', 'facebook', 'tiktok'])],
+            'cr_page' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:10000'],
+            'cr_perPage' => ['sometimes', 'nullable', 'integer', 'min:6', 'max:100'],
         ];
 
         // Добавляем правила для URL массивов с валидацией содержимого

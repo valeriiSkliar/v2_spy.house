@@ -60,6 +60,7 @@ export function useCreativesUrlSync(): UseCreativesUrlSyncReturn {
     browsers: 'cr_browsers',
     devices: 'cr_devices',
     imageSizes: 'cr_imageSizes',
+    perPage: 'cr_perPage',
   } as const;
 
   const TAB_URL_KEY = 'cr_activeTab';
@@ -68,7 +69,7 @@ export function useCreativesUrlSync(): UseCreativesUrlSyncReturn {
   /**
    * Определяет тип поля для десериализации
    */
-  const getFieldType = (key: keyof FilterState): 'string' | 'boolean' | 'array' => {
+  const getFieldType = (key: keyof FilterState): 'string' | 'boolean' | 'array' | 'number' => {
     const arrayFields: (keyof FilterState)[] = [
       'advertisingNetworks', 'languages', 'operatingSystems', 
       'browsers', 'devices', 'imageSizes'
@@ -76,13 +77,14 @@ export function useCreativesUrlSync(): UseCreativesUrlSyncReturn {
     
     if (arrayFields.includes(key)) return 'array';
     if (key === 'onlyAdult') return 'boolean';
+    if (key === 'perPage') return 'number';
     return 'string';
   };
 
   /**
    * Десериализует значение из URL используя встроенные механизмы
    */
-  const parseUrlValue = (urlValue: string, targetType: 'string' | 'boolean' | 'array'): any => {
+  const parseUrlValue = (urlValue: string, targetType: 'string' | 'boolean' | 'array' | 'number'): any => {
     if (!urlValue) return undefined;
 
     switch (targetType) {
@@ -91,6 +93,10 @@ export function useCreativesUrlSync(): UseCreativesUrlSyncReturn {
       
       case 'array':
         return urlValue.split(',').filter(Boolean);
+      
+      case 'number':
+        const numValue = parseInt(urlValue, 10);
+        return !isNaN(numValue) ? numValue : CREATIVES_CONSTANTS.DEFAULT_PAGE_SIZE;
       
       case 'string':
       default:
@@ -112,6 +118,10 @@ export function useCreativesUrlSync(): UseCreativesUrlSyncReturn {
 
     if (typeof value === 'boolean') {
       return value ? '1' : undefined; // Записываем только true значения
+    }
+
+    if (typeof value === 'number') {
+      return value !== CREATIVES_CONSTANTS.DEFAULT_PAGE_SIZE ? String(value) : undefined;
     }
 
     const stringValue = String(value);

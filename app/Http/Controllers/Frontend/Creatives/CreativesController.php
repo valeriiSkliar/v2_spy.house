@@ -24,6 +24,7 @@ class CreativesController extends FrontendController
             'searchKeyword' => '',
             'onlyAdult' => false,
             'isDetailedVisible' => false,
+            'perPage' => 12,
             // Выбранные значения - пустые массивы
             'advertisingNetworks' => [],
             'languages' => [],
@@ -39,7 +40,22 @@ class CreativesController extends FrontendController
 
         // Получаем activeTab из валидированных данных или дефолтное значение  
         $activeTabFromUrl = $validatedFilters['activeTab'] ?? 'push';
+        $perPageFromUrl = $validatedFilters['perPage'] ?? 12;
 
+        // Обновляем defaultFilters значениями из URL/Request
+        $defaultFilters['perPage'] = $perPageFromUrl;
+        $defaultFilters['searchKeyword'] = $validatedFilters['searchKeyword'] ?? '';
+        $defaultFilters['country'] = $validatedFilters['country'] ?? 'default';
+        $defaultFilters['dateCreation'] = $validatedFilters['dateCreation'] ?? 'default';
+        $defaultFilters['sortBy'] = $validatedFilters['sortBy'] ?? 'default';
+        $defaultFilters['periodDisplay'] = $validatedFilters['periodDisplay'] ?? 'default';
+        $defaultFilters['onlyAdult'] = $validatedFilters['onlyAdult'] ?? false;
+        $defaultFilters['advertisingNetworks'] = $validatedFilters['advertisingNetworks'] ?? [];
+        $defaultFilters['languages'] = $validatedFilters['languages'] ?? [];
+        $defaultFilters['operatingSystems'] = $validatedFilters['operatingSystems'] ?? [];
+        $defaultFilters['browsers'] = $validatedFilters['browsers'] ?? [];
+        $defaultFilters['devices'] = $validatedFilters['devices'] ?? [];
+        $defaultFilters['imageSizes'] = $validatedFilters['imageSizes'] ?? [];
         // Дефолтные значения для вкладок (без activeTab - он передается через tabOptions)
         $defaultTabs = [
             'availableTabs' => ['push', 'inpage', 'facebook', 'tiktok'],
@@ -94,6 +110,7 @@ class CreativesController extends FrontendController
             'page' => __('creatives.page'),
             'of' => __('creatives.of'),
             'perPage' => __('creatives.perPage'),
+            'onPage' => $translations['onPage'],
         ];
         // $vueTranslations = [];
 
@@ -115,9 +132,13 @@ class CreativesController extends FrontendController
 
         $selectOptions = $this->getSelectOptions();
         $tabOptions = $this->getTabOptions($activeTabFromUrl);
+        $perPageOptions = $this->getPerPageOptions($perPageFromUrl);
+
+
 
         return view('pages.creatives.index', [
             'activeTab' => $activeTabFromUrl,
+            'perPage' => $perPageOptions,
             'filters' => $defaultFilters,
             'tabs' => $defaultTabs,
             'selectOptions' => $selectOptions,
@@ -136,7 +157,7 @@ class CreativesController extends FrontendController
 
         // Заглушка данных для тестирования
         $mockCreatives = [];
-        for ($i = 1; $i <= 12; $i++) {
+        for ($i = 1; $i <= $filters['perPage']; $i++) {
             $mockCreatives[] = [
                 'id' => $i,
                 'name' => "Creative {$i}",
@@ -338,6 +359,19 @@ class CreativesController extends FrontendController
                 ['value' => '3x4', 'label' => '3x4 (Portrait)'],
                 ['value' => '21x9', 'label' => '21x9 (Ultra-wide)'],
             ],
+        ];
+    }
+
+    public function getPerPageOptions($perPage = 12)
+    {
+        return [
+            'perPageOptions' => [
+                ['value' => 12, 'label' => '12'],
+                ['value' => 24, 'label' => '24'],
+                ['value' => 48, 'label' => '48'],
+                ['value' => 96, 'label' => '96'],
+            ],
+            'activePerPage' => $perPage,
         ];
     }
 
