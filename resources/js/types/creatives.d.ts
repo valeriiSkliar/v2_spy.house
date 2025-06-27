@@ -35,6 +35,10 @@ export interface Creative {
   devices?: string[];
   image_sizes?: string[];
   is_adult?: boolean;
+  // Поля для социальных сетей
+  social_likes?: number | string;
+  social_comments?: number | string;
+  social_shares?: number | string;
   // Computed свойства (добавляются на frontend)
   displayName?: string;
   isRecent?: boolean;

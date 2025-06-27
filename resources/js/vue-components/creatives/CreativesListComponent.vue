@@ -21,56 +21,43 @@
 
     <!-- Список креативов -->
     <div v-else class="creatives-list__items">
-      <div v-for="creative in creatives" :key="creative.id" class="creative-item">
-        <div class="creative-item__header">
-          <h3 class="creative-item__title">
-            {{ creative.name || `Креатив #${creative.id}` }}
-          </h3>
-          <span
-            class="creative-item__status"
-            :class="`status--${creative.is_adult ? 'adult' : 'not-adult'}`"
-          >
-            {{ creative.is_adult ? 'Adult' : 'Not Adult' }}
-          </span>
-        </div>
+      <template v-for="creative in creatives" :key="creative.id">
+        <!-- Push компонент (InpageCreativeCard используется для push) -->
+        <InpageCreativeCard v-if="currentTab === 'inpage'" :creative="creative" />
 
-        <div class="creative-item__info">
-          <p class="creative-item__description">
-            {{ creative.category || 'Нет описания' }}
-          </p>
-          <div class="creative-item__meta">
-            <span class="meta-item" v-if="creative.advertising_networks">
-              <strong>Сеть:</strong> {{ formatArrayField(creative.advertising_networks) }}
-            </span>
-            <span class="meta-item" v-if="creative.country">
-              <strong>Страна:</strong> {{ creative.country }}
-            </span>
-            <span class="meta-item" v-if="creative.languages">
-              <strong>Язык:</strong> {{ formatArrayField(creative.languages) }}
-            </span>
-            <span class="meta-item" v-if="creative.created_at">
-              <strong>Дата создания:</strong> {{ formatDate(creative.created_at) }}
-            </span>
-          </div>
-        </div>
-      </div>
+        <!-- InPage компонент -->
+        <!-- <InpageCreativeCard v-else-if="currentTab === 'inpage'" :creative="creative" /> -->
+
+        <!-- Facebook/TikTok компонент (пока используется универсальная разметка) -->
+        <!-- <SocialCreativeCard
+          v-else-if="currentTab === 'facebook' || currentTab === 'tiktok'"
+          :creative="creative"
+          :social-type="currentTab"
+        /> -->
+
+        <!-- Универсальная карточка для остальных типов -->
+        <!-- <UniversalCreativeCard v-else :creative="creative" :card-type="currentTab" /> -->
+      </template>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useCreativesFiltersStore } from '@/stores/useFiltersStore';
-import { computed, onMounted } from 'vue';
+import { computed, defineComponent, onMounted, type PropType } from 'vue';
 import type { Creative } from '../../types/creatives';
+import InpageCreativeCard from './cards/InpageCreativeCard.vue';
 
 interface Props {
   translations?: Record<string, string>;
   perPage?: number;
+  activeTab?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   translations: () => ({}),
   perPage: 12,
+  activeTab: 'push',
 });
 
 // Подключение к store
@@ -81,6 +68,102 @@ const creatives = computed((): Creative[] => store.creatives);
 const isLoading = computed((): boolean => store.isLoading);
 const error = computed((): string | null => store.error);
 const hasCreatives = computed((): boolean => store.hasCreatives);
+
+// Отслеживание активной вкладки
+const currentTab = computed((): string => {
+  // Приоритет: активная вкладка из store > prop activeTab > 'push'
+  return store.tabs?.activeTab || props.activeTab || 'push';
+});
+
+// Computed для определения типа списка (для CSS классов)
+const listTypeClass = computed((): string => {
+  switch (currentTab.value) {
+    case 'facebook':
+    case 'tiktok':
+      return '_social';
+    case 'inpage':
+      return '_inpage';
+    case 'push':
+    default:
+      return '_push';
+  }
+});
+
+/**
+ * Компонент для социальных сетей (временная заглушка)
+ * TODO: Заменить на полноценный SocialCreativeCard
+ */
+const SocialCreativeCard = defineComponent({
+  props: {
+    creative: { type: Object as PropType<Creative>, required: true },
+    socialType: { type: String, required: true },
+  },
+  template: `
+    <div class="creative-item" :class="'_' + socialType">
+      <div class="creative-item__header">
+        <h3 class="creative-item__title">
+          {{ creative.name || \`Креатив #\${creative.id}\` }}
+        </h3>
+        <div class="creative-item__platform">
+          <img :src="'/img/' + socialType + '.svg'" :alt="socialType" />
+        </div>
+      </div>
+      <div class="creative-item__info">
+        <p class="creative-item__description">
+          {{ creative.category || 'Нет описания' }}
+        </p>
+        <div class="creative-item__social" v-if="socialType === 'facebook' || socialType === 'tiktok'">
+          <div class="creative-item__social-item">
+            <strong>{{ creative.social_likes || '285' }}</strong>
+            <span>Likes</span>
+          </div>
+          <div class="creative-item__social-item">
+            <strong>{{ creative.social_comments || '2' }}</strong>
+            <span>Comments</span>
+          </div>
+          <div class="creative-item__social-item">
+            <strong>{{ creative.social_shares || '7' }}</strong>
+            <span>Shares</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+});
+
+/**
+ * Универсальный компонент карточки (временная заглушка)
+ * TODO: Заменить на специализированные компоненты
+ */
+const UniversalCreativeCard = defineComponent({
+  props: {
+    creative: { type: Object as PropType<Creative>, required: true },
+    cardType: { type: String, required: true },
+  },
+  template: `
+    <div class="creative-item">
+      <div class="creative-item__header">
+        <h3 class="creative-item__title">
+          {{ creative.name || \`Креатив #\${creative.id}\` }}
+        </h3>
+        <span class="creative-item__type">{{ cardType.toUpperCase() }}</span>
+      </div>
+      <div class="creative-item__info">
+        <p class="creative-item__description">
+          {{ creative.category || 'Нет описания' }}
+        </p>
+        <div class="creative-item__meta">
+          <span class="meta-item" v-if="creative.advertising_networks">
+            <strong>Сеть:</strong> {{ formatArrayField(creative.advertising_networks) }}
+          </span>
+          <span class="meta-item" v-if="creative.country">
+            <strong>Страна:</strong> {{ creative.country }}
+          </span>
+        </div>
+      </div>
+    </div>
+  `,
+});
 
 // Методы для форматирования данных
 function formatArrayField(field: string[] | string | undefined): string {
@@ -115,6 +198,7 @@ onMounted(() => {
     creativesCount: creatives.value.length,
     isLoading: isLoading.value,
     error: error.value,
+    currentTab: currentTab.value,
   });
 
   // Эмитируем событие готовности компонента
@@ -122,13 +206,14 @@ onMounted(() => {
     detail: {
       component: 'CreativesListComponent',
       hasData: hasCreatives.value,
+      activeTab: currentTab.value,
     },
   });
   document.dispatchEvent(readyEvent);
 });
 </script>
 
-<style scoped>
+<!-- <style scoped>
 .creatives-list {
   width: 100%;
 }
@@ -217,6 +302,7 @@ onMounted(() => {
   gap: 1rem;
 }
 
+/* Основные стили для карточек */
 .creative-item {
   border: 1px solid #ddd;
   border-radius: 8px;
@@ -245,23 +331,19 @@ onMounted(() => {
   margin-right: 1rem;
 }
 
-.creative-item__status {
+.creative-item__type {
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 500;
   text-transform: uppercase;
+  background: #e9ecef;
+  color: #6c757d;
 }
 
-.status--active {
-  background: #d4edda;
-  color: #155724;
-}
-
-.status--was-active,
-.status--was {
-  background: #f8d7da;
-  color: #721c24;
+.creative-item__platform img {
+  width: 22px;
+  height: 22px;
 }
 
 .creative-item__description {
@@ -285,6 +367,36 @@ onMounted(() => {
   color: #333;
 }
 
+/* Стили для социальных сетей */
+.creative-item._facebook,
+.creative-item._tiktok {
+  padding: 0 18px 18px;
+}
+
+.creative-item__social {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.creative-item__social-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 16px;
+  gap: 3px;
+}
+
+.creative-item__social-item strong {
+  font-weight: 600;
+}
+
+.creative-item__social-item span {
+  color: #85939a;
+  font-size: 12px;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .creative-item__header {
@@ -300,5 +412,10 @@ onMounted(() => {
     flex-direction: column;
     gap: 0.25rem;
   }
+
+  .creative-item__social {
+    flex-direction: row;
+    justify-content: space-around;
+  }
 }
-</style>
+</style> -->

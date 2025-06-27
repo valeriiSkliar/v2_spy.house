@@ -6,7 +6,7 @@
         <span class="icon-filter"></span>
         <span class="icon-up font-24" :class="{ rotated: isMobileFiltersOpen }"></span>
       </span>
-      {{ store.getTranslation('filter', 'Filter') }}
+      {{ store.getTranslation('title', 'Filter') }}
     </div>
 
     <!-- Основной контент фильтров -->
@@ -395,7 +395,6 @@ function emitFiltersChanged(): void {
     detail: {
       filters: store.filters,
       hasActiveFilters: store.hasActiveFilters,
-      activeFiltersCount: store.activeFiltersCount,
       source: 'user',
       timestamp: new Date().toISOString(),
     },

@@ -1,10 +1,12 @@
 @props([
 'listTranslations' => [],
 'perPage' => 12,
+'activeTab' => 'push',
 ])
 <div class="vue-component-wrapper" data-vue-component="CreativesListComponent" data-vue-props='{
         "translations": {{ json_encode($listTranslations) }},
-        "perPage": {{ $perPage }}
+        "perPage": {{ $perPage }},
+        "activeTab": {{ json_encode($activeTab) }}
     }'>
 
     <!-- Placeholder карточек креативов (количество = perPage) -->

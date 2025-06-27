@@ -257,10 +257,31 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   }
 
   /**
-   * Получает перевод с fallback
+   * Получает перевод с fallback с поддержкой dot-notation
    */
   function getTranslation(key: string, fallback: string = key): string {
-    return translations.value[key] || fallback;
+    // Поддержка dot-notation для вложенных объектов (например: 'filter.title')
+    const keys = key.split('.');
+    let result: any = translations.value;
+    
+    for (const k of keys) {
+      if (result && typeof result === 'object' && k in result) {
+        result = result[k];
+      } else {
+        return fallback;
+      }
+    }
+    
+    // Если результат - объект, попробуем найти 'title' ключ по умолчанию
+    if (typeof result === 'object' && result !== null) {
+      if ('title' in result) {
+        return result.title;
+      }
+      // Или возвращаем fallback если не смогли извлечь строку
+      return fallback;
+    }
+    
+    return typeof result === 'string' ? result : fallback;
   }
 
   /**
