@@ -31,6 +31,7 @@
 
     /* Types */
     "types": ["vite/client", "node", "jquery"],
+    "typeRoots": ["./node_modules/@types", "./resources/js/types"],
 
     /* Vue 3 support */
     "jsx": "preserve",
@@ -40,6 +41,8 @@
     "resources/js/**/*.ts",
     "resources/js/**/*.js",
     "resources/js/**/*.vue",
+    "resources/js/**/*.d.ts",
+    "resources/js/types/**/*.d.ts",
     "vite.config.js"
   ],
   "exclude": ["node_modules", "public", "storage", "vendor"]

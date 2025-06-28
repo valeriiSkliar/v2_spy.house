@@ -33,7 +33,7 @@ class RatingFactory extends Factory
             'service_id' => null,
             'rating' => $this->faker->numberBetween(1, 5),
             'review' => $this->faker->optional()->sentence(10), // Optional review
-            'created_at' => $this->faker->dateTimeBetween('-1 year', 'now'),
+            'created_at' => now()->subDays(rand(1, 365))->subHours(rand(0, 23))->subMinutes(rand(0, 59)),
             'updated_at' => now(),
         ];
     }

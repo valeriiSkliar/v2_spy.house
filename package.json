@@ -2,22 +2,29 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "vite build",
+    "build": "NODE_ENV=production vite build",
     "dev": "vite",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest --watch",
     "type-check": "tsc --noEmit",
-    "type-check:watch": "tsc --noEmit --watch"
+    "type-check:watch": "tsc --noEmit --watch",
+    "generate:api": "npx @openapitools/openapi-generator-cli generate -i storage/api-docs/api-docs.json -g typescript-axios -o ./resources/js/api/generated --additional-properties=supportsES6=true,withInterfaces=true,typescriptThreePlus=true,apiPackage=api,modelPackage=models,npmName=@spy-house/api-client,npmVersion=1.0.0,stringEnums=true,enumNameSuffix=Enum,withoutRuntimeChecks=true,legacyDiscriminatorBehavior=false,useSingleRequestParameter=false",
+    "generate:api:remote": "openapi-generator-cli generate -i http://localhost:8000/api/documentation.json -g typescript-axios -o ./resources/js/api/generated --additional-properties=supportsES6=true,withInterfaces=true,typescriptThreePlus=true,stringEnums=true",
+    "docs:generate": "php artisan l5-swagger:generate && npm run generate:api"
   },
   "devDependencies": {
+    "@openapitools/openapi-generator-cli": "^2.21.0",
+    "@types/lodash.debounce": "^4.0.9",
     "@types/node": "^24.0.3",
     "@vitest/coverage-v8": "^3.2.1",
     "@vitest/ui": "^3.2.1",
+    "@vue/test-utils": "^2.4.6",
     "axios": "^1.8.2",
     "bootstrap": "^5.3.5",
     "concurrently": "^9.0.1",
+    "happy-dom": "^18.0.1",
     "laravel-vite-plugin": "^1.2.0",
     "lightningcss": "^1.30.1",
     "sass": "^1.87.0",
@@ -31,6 +38,7 @@
     "@types/slick-carousel": "^1.6.40",
     "@vitejs/plugin-vue": "^5.2.4",
     "@vueuse/core": "^13.4.0",
+    "axios-cache-interceptor": "^1.8.0",
     "bootstrap-select": "^1.13.18",
     "counterup": "^1.0.2",
     "css-element-queries": "^1.2.3",
@@ -39,11 +47,9 @@
     "jquery-validation": "^1.21.0",
     "lodash.debounce": "^4.0.8",
     "lodash.throttle": "^4.1.1",
-    "navigo": "^8.11.1",
     "pinia": "^2.3.1",
     "slick-carousel": "^1.8.1",
     "sweetalert2": "^11.22.0",
-    "swiper": "^11.2.6",
     "vue": "^3.5.17"
   }
 }

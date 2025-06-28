@@ -26,6 +26,10 @@ class DatabaseSeeder extends Seeder
             PaymentSeeder::class,
             PromocodeSeeder::class,
             PromocodeActivationSeeder::class,
+            CountryAndLanguageSeeder::class,
+            AdvertismentNetworkSeeder::class,
+            BrowserSeeder::class,
+
             // Add other seeders here if needed
         ]);
     }

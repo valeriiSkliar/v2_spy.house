@@ -13,13 +13,7 @@ interface VueIslandElement extends HTMLElement {
     getAttribute(name: 'data-vue-props'): string | null;
 }
 
-// Глобальные объекты
-declare global {
-    interface Window {
-        initVueIslands: () => void;
-        __globalPinia?: Pinia;
-    }
-}
+
 
 // Создаем глобальный Pinia store для всех островков
 let globalPinia: Pinia | null = null;
@@ -48,10 +42,17 @@ if (token) {
  */
 const componentMap: Record<string, () => Promise<{ default: Component }>> = {
     // Основные компоненты
-    'ExampleCounter': () => import('./vue-components/ExampleCounter.vue'),
-    
+        
     // Креативы
     'CreativesFiltersComponent': () => import('./vue-components/creatives/FiltersComponent.vue'),
+    'CreativesTabsComponent': () => import('./vue-components/creatives/TabsComponent.vue'),
+    'CreativesListComponent': () => import('./vue-components/creatives/CreativesListComponent.vue'),
+    
+    // UI компоненты
+    'PaginationComponent': () => import('./vue-components/ui/PaginationComponent.vue'),
+    'FavoritesCounter': () => import('./vue-components/ui/FavoritesCounter.vue'),
+    'BaseSelect': () => import('./vue-components/ui/BaseSelect.vue'),
+    'PerPageSelect': () => import('./vue-components/creatives/PerPageSelect.vue'),
     
     // Добавьте здесь новые компоненты по мере создания
 };
@@ -69,6 +70,85 @@ function loadComponent(componentName: string): Promise<{ default: Component }> {
     // Fallback: попытка загрузки через прямой путь (может не работать с Vite)
     console.warn(`Компонент ${componentName} не найден в статической карте. Попытка прямой загрузки...`);
     return import(`./vue-components/${componentName}.vue`);
+}
+
+/**
+ * Конфигурация для Vue островков
+ */
+interface VueIslandsConfig {
+    /** Очищать ли data-vue-props после инициализации (по умолчанию true) */
+    cleanupProps?: boolean;
+    /** Задержка перед очисткой props в мс (по умолчанию 1000) */
+    cleanupDelay?: number;
+    /** Режим отладки (сохранять props в development) */
+    preservePropsInDev?: boolean;
+}
+
+// Конфигурация по умолчанию
+const DEFAULT_CONFIG: VueIslandsConfig = {
+    cleanupProps: true,
+    cleanupDelay: 300,
+    preservePropsInDev: true,
+};
+
+// Текущая конфигурация
+let currentConfig: VueIslandsConfig = { ...DEFAULT_CONFIG };
+
+/**
+ * Устанавливает конфигурацию для Vue островков
+ */
+export function configureVueIslands(config: Partial<VueIslandsConfig>): void {
+    currentConfig = { ...currentConfig, ...config };
+    console.log('Vue Islands конфигурация обновлена:', currentConfig);
+}
+
+/**
+ * Безопасно очищает props атрибут после инициализации компонента
+ */
+function cleanupPropsAttribute(element: VueIslandElement, componentName: string): void {
+    if (!currentConfig.cleanupProps) {
+        return;
+    }
+
+    // В development режиме можем сохранять props для отладки
+    if (currentConfig.preservePropsInDev && import.meta.env.DEV) {
+        console.log(`[DEV] Сохранение props для ${componentName} в development режиме`);
+        return;
+    }
+
+    setTimeout(() => {
+        try {
+            // Проверяем что элемент все еще существует и инициализирован
+            if (element.isConnected && element.hasAttribute('data-vue-initialized')) {
+                const propsValue = element.getAttribute('data-vue-props');
+                
+                if (propsValue) {
+                    // Логируем размер данных для анализа
+                    const dataSize = new Blob([propsValue]).size;
+                    console.log(`Очистка props для ${componentName} (размер: ${dataSize} байт)`);
+                    
+                    // Удаляем атрибут
+                    element.removeAttribute('data-vue-props');
+                    
+                    // Добавляем метку об очистке (опционально для отладки)
+                    element.setAttribute('data-vue-props-cleaned', 'true');
+                    
+                    // Эмитим событие об очистке
+                    const cleanupEvent = new CustomEvent('vue-component-props-cleaned', {
+                        detail: {
+                            componentName,
+                            element,
+                            dataSize,
+                            timestamp: new Date().toISOString(),
+                        }
+                    });
+                    document.dispatchEvent(cleanupEvent);
+                }
+            }
+        } catch (error) {
+            console.warn(`Ошибка при очистке props для ${componentName}:`, error);
+        }
+    }, currentConfig.cleanupDelay);
 }
 
 /**
@@ -127,11 +207,15 @@ export function initVueIslands(): void {
                 app.mount(vueContainer);
                 
                 console.log(`Vue компонент ${componentName} успешно инициализирован`);
+                
+                // 🚀 НОВОЕ: Очищаем props после успешной инициализации
+                cleanupPropsAttribute(element, componentName);
             })
             .catch((error: Error) => {
                 console.error(`Ошибка загрузки Vue компонента ${componentName}:`, error);
                 // Удаляем флаг инициализации при ошибке
                 element.removeAttribute('data-vue-initialized');
+                // НЕ очищаем props при ошибке - они могут понадобиться для повторной инициализации
             });
     });
 }

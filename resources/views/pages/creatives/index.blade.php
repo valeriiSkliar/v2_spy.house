@@ -7,48 +7,69 @@
 
     <div class="row align-items-center">
         <div class="col-12 col-md-auto mb-20 flex-grow-1">
-            <div class="filter-push">
-                <button class="filter-push__item active" data-tub="Push" data-group="push">Push <span
-                        class="filter-push__count">170k</span></button>
-                <button class="filter-push__item" data-tub="In Page" data-group="push">In Page <span
-                        class="filter-push__count">3.1k</span></button>
-                <button class="filter-push__item" data-tub="Facebook" data-group="push">Facebook <span
-                        class="filter-push__count">65.1k</span></button>
-                <button class="filter-push__item" data-tub="TikTok" data-group="push">TikTok <span
-                        class="filter-push__count">45.2m</span></button>
-            </div>
+            <x-creatives.vue.tabs :initialTabs="$tabs" :tabOptions="$tabOptions"
+                :tabsTranslations="$tabsTranslations" />
         </div>
         <div class="col-12 col-md-auto mb-2">
             <div class="row">
                 <div class="col-12 col-md-auto mb-15">
-                    <a href="#" class="btn justify-content-start _flex w-100 _medium _gray"><span
-                            class="icon-favorite-empty font-16 mr-2"></span>Favorites <span
-                            class="btn__count">31</span></a>
+                    <a href="#" class="btn justify-content-start _flex w-100 _medium _gray">
+                        <span class="icon-favorite-empty font-16 mr-2"></span>
+                        Favorites
+                        <x-creatives.vue.favorites-counter :initialCount="43" :translations="[
+                                'favoritesCountTooltip' => 'Количество избранных креативов. Нажмите для обновления.'
+                            ]" />
+                    </a>
                 </div>
                 <div class="col-12 col-md-auto mb-15">
-                    <div class="base-select-icon">
-                        <div class="base-select">
-                            <div class="base-select__trigger"><span class="base-select__value">On page — 12</span><span
-                                    class="base-select__arrow"></span></div>
-                            <ul class="base-select__dropdown" style="display: none;">
-                                <li class="base-select__option is-selected">12</li>
-                                <li class="base-select__option">24</li>
-                                <li class="base-select__option">48</li>
-                                <li class="base-select__option">96</li>
-                            </ul>
-                        </div>
-                        <span class="icon-list"></span>
-                    </div>
+                    {{-- Компонент выбора количества креативов на странице --}}
+                    <x-creatives.vue.per-page-select :options="$perPage['perPageOptions']"
+                        :activePerPage="$perPage['activePerPage']" :translations="[
+                            'onPage' => $listTranslations['onPage'] ?? 'На странице',
+                            'perPage' => $listTranslations['perPage'] ?? 'Элементов на странице'
+                        ]" />
                 </div>
             </div>
         </div>
     </div>
+    {{-- @dd($selectOptions) --}}
 
-    <x-creatives.vue.filters :filters="$filters" />
+    <x-creatives.vue.filters :filters="$filters" :selectOptions="$selectOptions"
+        :filtersTranslations="$filtersTranslations" :tabOptions="$tabOptions" />
+
+    {{-- Компонент списка креативов с новой системой композаблов --}}
+
+    <x-creatives.vue.list :listTranslations="$listTranslations" :perPage="12" :activeTab="$activeTab" />
+
+    {{-- Компонент пагинации --}}
+    <x-creatives.vue.pagination :translations="$listTranslations" :showInfo="true" :maxVisiblePages="5"
+        :alwaysShowFirstLast="true" />
+
 
     {{-- Подключение скрипта Vue островков --}}
     @vite(['resources/js/vue-islands.ts'])
 
+    {{--
+    Пример конфигурации Vue Islands (опционально):
+
+    <script type="module">
+        import { configureVueIslands } from '@/vue-islands';
+    
+    // Development конфигурация (по умолчанию)
+    configureVueIslands({
+        cleanupProps: true,           // Очищать props после инициализации
+        cleanupDelay: 1000,          // Задержка перед очисткой
+        preservePropsInDev: true,    // Сохранять props в development режиме
+    });
+    
+    // Продакшн конфигурация
+    configureVueIslands({
+        cleanupProps: true,
+        cleanupDelay: 500,           // Быстрая очистка
+        preservePropsInDev: false,   // Очищать даже в dev
+    });
+    </script>
+    --}}
 
 </div>
 @endsection

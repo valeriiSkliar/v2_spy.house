@@ -1,4 +1,3 @@
-<!-- resources/js/vue-components/FiltersComponent.vue -->
 <template>
   <div class="filter">
     <!-- Мобильный триггер -->
@@ -7,7 +6,7 @@
         <span class="icon-filter"></span>
         <span class="icon-up font-24" :class="{ rotated: isMobileFiltersOpen }"></span>
       </span>
-      Filter
+      {{ store.getTranslation('title', 'Filter') }}
     </div>
 
     <!-- Основной контент фильтров -->
@@ -17,12 +16,12 @@
         <div class="col-12 col-md-auto mb-10 d-none d-md-block">
           <button
             class="btn-icon _dark _big _filter js-toggle-detailed-filtering"
-            @click="initStore().toggleDetailedFilters()"
+            @click="store.toggleDetailedFilters()"
           >
             <span class="icon-filter"></span>
             <span
               class="icon-up font-24"
-              :class="{ rotated: initStore().filters.isDetailedVisible }"
+              :class="{ rotated: store.filters.isDetailedVisible }"
             ></span>
           </button>
         </div>
@@ -35,9 +34,9 @@
                 <span class="icon-search"></span>
                 <input
                   type="search"
-                  placeholder="Search by Keyword"
-                  :value="initStore().filters.searchKeyword"
-                  @input="initStore().setSearchKeyword(($event.target as HTMLInputElement).value)"
+                  :placeholder="store.getTranslation('searchKeyword', 'Search by Keyword')"
+                  :value="localSearchKeyword"
+                  @input="handleSearchInput"
                 />
               </div>
             </div>
@@ -45,40 +44,35 @@
             <!-- Выбор страны/категории -->
             <div class="col-12 col-md-6 col-lg-3 mb-10 w-lg-1 flex-grow-1">
               <BaseSelect
-                :value="initStore().filters.country"
-                :options="initStore().countryOptions"
-                placeholder="Country"
-                @update:value="initStore().setCountry($event)"
+                :value="store.filters.country"
+                :options="store.countryOptions"
+                :placeholder="store.getTranslation('country', 'Country')"
+                @update:value="value => store.updateFilter('country', value)"
               />
             </div>
 
             <!-- Выбор даты создания -->
             <div class="col-12 col-md-6 col-lg-3 mb-10 w-lg-1 flex-grow-1">
-              <!-- <DateSelect
-                :value="initStore().filters.dateCreation"
-                :options="initStore().dateRanges"
-                placeholder="Date of creation"
-                @update:value="initStore().setDateCreation($event)"
-              /> -->
               <DateSelect
-                v-model:value="initStore().filters.dateCreation"
-                :options="initStore().dateRanges"
+                v-model:value="store.filters.dateCreation"
+                :options="store.dateRanges"
                 :enable-custom-date="true"
                 :mode="'range'"
                 :date-format="'d-m-Y'"
-                placeholder="Select date range"
-                custom-date-label="Pick Custom Date"
-                @custom-date-selected="handleCustomDateSelected"
+                :placeholder="store.getTranslation('dateCreation', 'Date of creation')"
+                :custom-date-label="store.getTranslation('customDateLabel', 'Custom Date')"
+                @update:value="value => store.updateFilter('dateCreation', value)"
+                @custom-date-selected="handleDateCreationSelected"
               />
             </div>
 
             <!-- Сортировка -->
             <div class="col-12 col-md-12 col-lg-3 mb-10 w-lg-1 flex-grow-1">
               <BaseSelect
-                :value="initStore().filters.sortBy"
-                :options="initStore().sortOptions"
-                placeholder="Sort by"
-                @update:value="initStore().setSortBy($event)"
+                :value="store.filters.sortBy"
+                :options="store.sortOptions"
+                :placeholder="store.getTranslation('sortBy', 'Sort by')"
+                @update:value="value => store.updateFilter('sortBy', value)"
               />
             </div>
           </div>
@@ -87,7 +81,7 @@
         <!-- Кнопка сброса (десктоп) -->
         <div class="col-12 col-md-auto mb-10 d-none d-md-block">
           <div class="reset-btn">
-            <button class="btn-icon" @click="initStore().resetFilters()">
+            <button class="btn-icon" @click="handleResetFilters()">
               <span class="icon-clear"></span>
               <span class="ml-2 d-md-none">Reset</span>
             </button>
@@ -96,76 +90,90 @@
       </div>
 
       <!-- Детальные фильтры -->
-      <div class="filter__detailed" v-show="initStore().filters.isDetailedVisible">
-        <div class="filter__title">Detailed filtering</div>
+      <div class="filter__detailed" v-show="store.filters.isDetailedVisible">
+        <div class="filter__title">
+          {{ store.getTranslation('isDetailedVisible', 'Detailed filtering') }}
+        </div>
         <div class="row">
           <!-- Период отображения -->
           <div class="col-12 col-md-6 col-lg-3 mb-15">
             <DateSelect
-              :value="initStore().filters.periodDisplay"
-              :options="initStore().dateRanges"
-              placeholder="Period of display"
-              @update:value="initStore().setPeriodDisplay($event)"
+              v-model:value="store.filters.periodDisplay"
+              :options="store.dateRanges"
+              :enable-custom-date="true"
+              :mode="'range'"
+              :date-format="'d-m-Y'"
+              :custom-date-label="store.getTranslation('customDateLabel', 'Custom Date')"
+              :placeholder="store.getTranslation('periodDisplay', 'Period of display')"
+              @update:value="value => store.updateFilter('periodDisplay', value)"
+              @custom-date-selected="handlePeriodDisplaySelected"
             />
           </div>
 
           <!-- Рекламные сети -->
           <div class="col-12 col-md-6 col-lg-3 mb-15">
             <MultiSelect
-              :values="initStore().filters.advertisingNetworks"
-              placeholder="Advertising networks"
-              @add="initStore().addToMultiSelect('advertisingNetworks', $event)"
-              @remove="initStore().removeFromMultiSelect('advertisingNetworks', $event)"
+              :show-logo="true"
+              :values="store.filters.advertisingNetworks"
+              :options="store.advertisingNetworksOptions"
+              :placeholder="store.getTranslation('advertisingNetworks', 'Advertising networks')"
+              @add="value => store.addToMultiSelect('advertisingNetworks', value)"
+              @remove="value => store.removeFromMultiSelect('advertisingNetworks', value)"
             />
           </div>
 
           <!-- Языки -->
           <div class="col-12 col-md-6 col-lg-3 mb-15">
             <MultiSelect
-              :values="initStore().filters.languages"
-              placeholder="Languages"
-              @add="initStore().addToMultiSelect('languages', $event)"
-              @remove="initStore().removeFromMultiSelect('languages', $event)"
+              :values="store.filters.languages"
+              :options="store.languagesOptions"
+              :placeholder="store.getTranslation('languages', 'Languages')"
+              @add="value => store.addToMultiSelect('languages', value)"
+              @remove="value => store.removeFromMultiSelect('languages', value)"
             />
           </div>
 
           <!-- Операционные системы -->
           <div class="col-12 col-md-6 col-lg-3 mb-15">
             <MultiSelect
-              :values="initStore().filters.operatingSystems"
-              placeholder="Operation systems"
-              @add="initStore().addToMultiSelect('operatingSystems', $event)"
-              @remove="initStore().removeFromMultiSelect('operatingSystems', $event)"
+              :values="store.filters.operatingSystems"
+              :options="store.operatingSystemsOptions"
+              :placeholder="store.getTranslation('operatingSystems', 'Operation systems')"
+              @add="value => store.addToMultiSelect('operatingSystems', value)"
+              @remove="value => store.removeFromMultiSelect('operatingSystems', value)"
             />
           </div>
 
           <!-- Браузеры -->
           <div class="col-12 col-md-6 col-lg-3 mb-15">
             <MultiSelect
-              :values="initStore().filters.browsers"
-              placeholder="Browsers"
-              @add="initStore().addToMultiSelect('browsers', $event)"
-              @remove="initStore().removeFromMultiSelect('browsers', $event)"
+              :values="store.filters.browsers"
+              :options="store.browsersOptions"
+              :placeholder="store.getTranslation('browsers', 'Browsers')"
+              @add="value => store.addToMultiSelect('browsers', value)"
+              @remove="value => store.removeFromMultiSelect('browsers', value)"
             />
           </div>
 
           <!-- Устройства -->
           <div class="col-12 col-md-6 col-lg-3 mb-15">
             <MultiSelect
-              :values="initStore().filters.devices"
-              placeholder="Devices"
-              @add="initStore().addToMultiSelect('devices', $event)"
-              @remove="initStore().removeFromMultiSelect('devices', $event)"
+              :values="store.filters.devices"
+              :options="store.devicesOptions"
+              :placeholder="store.getTranslation('devices', 'Devices')"
+              @add="value => store.addToMultiSelect('devices', value)"
+              @remove="value => store.removeFromMultiSelect('devices', value)"
             />
           </div>
 
           <!-- Размеры изображений -->
           <div class="col-12 col-md-6 col-lg-3 mb-15">
             <MultiSelect
-              :values="initStore().filters.imageSizes"
-              placeholder="Image sizes"
-              @add="initStore().addToMultiSelect('imageSizes', $event)"
-              @remove="initStore().removeFromMultiSelect('imageSizes', $event)"
+              :values="store.filters.imageSizes"
+              :options="store.imageSizesOptions"
+              :placeholder="store.getTranslation('imageSizes', 'Image sizes')"
+              @add="value => store.addToMultiSelect('imageSizes', value)"
+              @remove="value => store.removeFromMultiSelect('imageSizes', value)"
             />
           </div>
 
@@ -173,12 +181,12 @@
           <div class="col-12 col-md-6 col-lg-3 mb-15">
             <label class="checkbox-toggle _with-background">
               <span class="icon-18 font-20"></span>
-              <span class="mr-auto">Only adult</span>
+              <span class="mr-auto">{{ store.getTranslation('onlyAdult', 'Only adult') }}</span>
               <input
                 type="checkbox"
                 id="adult"
-                :checked="initStore().filters.onlyAdult"
-                @change="initStore().toggleAdultFilter()"
+                :checked="store.filters.onlyAdult"
+                @change="store.toggleAdultFilter()"
               />
               <span class="checkbox-toggle-visible"></span>
             </label>
@@ -186,28 +194,30 @@
 
           <!-- Сохраненные настройки -->
           <div class="col-12 col-md-6 col-lg-3 mb-15">
-            <MultiSelect
-              :values="initStore().filters.savedSettings"
-              placeholder="Saved settings"
-              @add="initStore().addToMultiSelect('savedSettings', $event)"
-              @remove="initStore().removeFromMultiSelect('savedSettings', $event)"
+            <BaseSelect
+              :value="
+                store.filters.savedSettings.length > 0 ? store.filters.savedSettings[0] : 'default'
+              "
+              :options="[]"
+              :placeholder="store.getTranslation('savedSettings', 'Saved settings')"
+              @update:value="() => {}"
             />
           </div>
 
           <!-- Кнопка сохранения настроек -->
           <div class="col-12 col-md-auto mb-10">
-            <button class="btn _flex _dark _medium w-100" @click="initStore().saveSettings()">
+            <button class="btn _flex _dark _medium w-100" @click="store.saveSettings()">
               <span class="icon-save mr-2 font-16"></span>
-              Save settings
+              {{ store.getTranslation('saveSettings', 'Save settings') }}
             </button>
           </div>
         </div>
 
-        <!-- Кнопка сброса (мобильный) -->
+        <!-- Кнопка сброса (мобильная) -->
         <div class="reset-btn d-md-none">
-          <button class="btn-icon" @click="initStore().resetFilters()">
+          <button class="btn-icon" @click="handleResetFilters()">
             <span class="icon-clear"></span>
-            <span class="ml-2">Reset</span>
+            <span class="ml-2 d-md-none">Reset</span>
           </button>
         </div>
       </div>
@@ -216,82 +226,241 @@
 </template>
 
 <script setup lang="ts">
+import type { FilterState, SelectOptions, TabOptions } from '@/types/creatives';
+import debounce from 'lodash.debounce';
 import { onMounted, onUnmounted, ref } from 'vue';
-import { useFiltersStore } from '../../stores/creatives';
-import type { FilterState } from '../../types/creatives';
+import { useCreativesFiltersStore } from '../../stores/useFiltersStore';
 import BaseSelect from '../ui/BaseSelect.vue';
 import DateSelect from '../ui/DateSelect_with_flatpickr.vue';
 import MultiSelect from '../ui/MultiSelect.vue';
 
+// ============================================================================
+// ИНТЕРФЕЙСЫ И PROPS
+// ============================================================================
+
 interface Props {
   initialFilters?: Partial<FilterState>;
+  selectOptions?: Partial<SelectOptions>;
+  translations?: Record<string, string>;
+  tabOptions?: Partial<TabOptions>;
+  enableUrlSync?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   initialFilters: () => ({}),
+  selectOptions: () => ({}),
+  translations: () => ({}),
+  tabOptions: () => ({}),
+  enableUrlSync: true,
 });
 
-// Ленивая инициализация store согласно архитектуре островков
-let store: ReturnType<typeof useFiltersStore>;
+// ============================================================================
+// СОСТОЯНИЕ И STORE
+// ============================================================================
 
-function initStore() {
-  if (!store) {
-    store = useFiltersStore();
-  }
-  return store;
+// Основной store с новыми композаблами
+const store = useCreativesFiltersStore();
+
+// Локальное состояние компонента
+const isMobileFiltersOpen = ref(false);
+const localSearchKeyword = ref('');
+const isComponentReady = ref(false);
+
+// ============================================================================
+// ОБРАБОТЧИКИ СОБЫТИЙ
+// ============================================================================
+
+/**
+ * Обработчик ввода в поле поиска с debounce
+ */
+const debouncedUpdateSearch = debounce((value: string) => {
+  store.updateFilter('searchKeyword', value);
+}, 300);
+
+/**
+ * Обработчик изменения поля поиска
+ */
+function handleSearchInput(event: Event): void {
+  const target = event.target as HTMLInputElement;
+  const value = target.value;
+
+  localSearchKeyword.value = value;
+  debouncedUpdateSearch(value);
 }
 
-console.log(props.initialFilters);
+/**
+ * Обработчик выбора пользовательской даты создания
+ */
+function handleDateCreationSelected(dates: Date[]): void {
+  if (dates.length >= 2) {
+    const from = dates[0].toLocaleDateString('en-GB'); // dd/mm/yyyy format
+    const to = dates[1].toLocaleDateString('en-GB');
+    const customValue = `${from}_${to}`;
+    store.updateFilter('dateCreation', customValue);
+  }
+}
 
-// Локальное состояние для мобильного интерфейса
-const isMobileFiltersOpen = ref(false);
+/**
+ * Обработчик выбора пользовательского периода отображения
+ */
+function handlePeriodDisplaySelected(dates: Date[]): void {
+  if (dates.length >= 2) {
+    const from = dates[0].toLocaleDateString('en-GB'); // dd/mm/yyyy format
+    const to = dates[1].toLocaleDateString('en-GB');
+    const customValue = `${from}_${to}`;
+    store.updateFilter('periodDisplay', customValue);
+  }
+}
 
+/**
+ * Обработчик сброса фильтров
+ */
+function handleResetFilters(): void {
+  // Сбрасываем локальное состояние поиска
+  localSearchKeyword.value = '';
+
+  // Сбрасываем фильтры в store
+  store.resetFilters();
+
+  // Эмитим событие для обратной совместимости
+  emitFiltersReset();
+}
+
+/**
+ * Переключение мобильных фильтров
+ */
 function toggleMobileFilters(): void {
   isMobileFiltersOpen.value = !isMobileFiltersOpen.value;
 }
 
-function handleCustomDateSelected(dates: Date[]): void {
-  if (dates.length > 0) {
-    const dateString = dates[0].toISOString().split('T')[0];
-    initStore().setDateCreation(dateString);
-  }
+/**
+ * Синхронизация локального поля поиска с store
+ */
+function syncLocalSearchWithStore(): void {
+  // Устанавливаем начальное значение из store
+  localSearchKeyword.value = store.filters.searchKeyword || '';
+
+  // При программном изменении searchKeyword в store обновляем локальное значение
+  // Это предотвращает рассинхронизацию при загрузке из URL
 }
 
-// Обработчик изменения размера экрана
+/**
+ * Обработчик изменения размера экрана
+ */
 function handleResize(): void {
   if (window.innerWidth >= 768) {
     isMobileFiltersOpen.value = false;
   }
 }
 
-// Lifecycle hooks
-onMounted(() => {
-  // Инициализируем store и применяем начальные фильтры
-  const storeInstance = initStore();
+// ============================================================================
+// СОБЫТИЯ ДЛЯ ОБРАТНОЙ СОВМЕСТИМОСТИ
+// ============================================================================
 
-  // Применяем переданные фильтры через специальный метод
-  if (props.initialFilters && Object.keys(props.initialFilters).length > 0) {
-    storeInstance.initializeFromProps(props.initialFilters);
-    console.log('Applied initial filters:', props.initialFilters);
-  }
+/**
+ * Эмитит событие готовности компонента
+ */
+function emitComponentReady(): void {
+  const event = new CustomEvent('vue-component-ready', {
+    detail: {
+      component: 'CreativesFiltersComponent',
+      props: props,
+      filters: store.filters,
+      urlSyncEnabled: props.enableUrlSync,
+      hasActiveFilters: store.hasActiveFilters,
+      timestamp: new Date().toISOString(),
+    },
+  });
+  document.dispatchEvent(event);
+}
 
-  // Добавляем обработчик resize
-  window.addEventListener('resize', handleResize);
+/**
+ * Эмитит событие сброса фильтров
+ */
+function emitFiltersReset(): void {
+  const event = new CustomEvent('creatives:filters-reset', {
+    detail: {
+      source: 'user',
+      timestamp: new Date().toISOString(),
+    },
+  });
+  document.dispatchEvent(event);
+}
 
-  console.log('Filters store инициализирован:', storeInstance.filters);
+/**
+ * Эмитит событие изменения фильтров
+ */
+function emitFiltersChanged(): void {
+  const event = new CustomEvent('creatives:filters-changed', {
+    detail: {
+      filters: store.filters,
+      hasActiveFilters: store.hasActiveFilters,
+      source: 'user',
+      timestamp: new Date().toISOString(),
+    },
+  });
+  document.dispatchEvent(event);
+}
 
-  // Уведомляем о готовности компонента после следующего тика
-  setTimeout(() => {
-    // Генерируем событие готовности компонента
-    const event = new CustomEvent('vue-component-ready', {
-      detail: { component: 'CreativesFiltersComponent' },
+// ============================================================================
+// LIFECYCLE HOOKS
+// ============================================================================
+
+onMounted(async () => {
+  console.log('FiltersComponent mounting with new store integration...');
+
+  try {
+    // 1. FiltersComponent всегда выполняет полную инициализацию store с selectOptions
+    // Даже если TabsComponent уже установил свои опции - это не проблема
+    console.log('🚀 FiltersComponent performing full store initialization...');
+    await store.initializeFilters(
+      props.initialFilters,
+      props.selectOptions,
+      props.translations,
+      props.tabOptions
+    );
+
+    console.log('Store initialized with composables:', {
+      filters: store.filters,
+      isInitialized: store.isInitialized,
+      urlSyncEnabled: props.enableUrlSync,
     });
-    document.dispatchEvent(event);
-  }, 100);
+
+    // 2. Синхронизируем локальное поле поиска
+    syncLocalSearchWithStore();
+
+    // 3. Настраиваем обработчики
+    window.addEventListener('resize', handleResize);
+
+    // 4. Эмитим событие готовности
+    emitComponentReady();
+
+    isComponentReady.value = true;
+
+    console.log('FiltersComponent successfully mounted with new composables integration');
+  } catch (error) {
+    console.error('Error initializing FiltersComponent:', error);
+
+    // Эмитим событие ошибки
+    const errorEvent = new CustomEvent('vue-component-error', {
+      detail: {
+        component: 'CreativesFiltersComponent',
+        error: error,
+        timestamp: new Date().toISOString(),
+      },
+    });
+    document.dispatchEvent(errorEvent);
+  }
 });
 
 onUnmounted(() => {
+  // Отменяем pending debounced вызовы
+  debouncedUpdateSearch.cancel();
+
+  // Очищаем обработчики
   window.removeEventListener('resize', handleResize);
+
+  console.log('FiltersComponent unmounted');
 });
 </script>
 
@@ -313,5 +482,19 @@ onUnmounted(() => {
 
 .icon-up {
   transition: transform 0.3s ease;
+}
+
+/* Индикатор URL синхронизации для отладки */
+.url-sync-indicator {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 9999;
+  pointer-events: none;
 }
 </style>

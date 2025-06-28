@@ -1,36 +1,72 @@
-<!-- resources/js/vue-components/ui/BaseSelect.vue -->
 <template>
-  <div class="base-select" ref="selectRef">
+  <!-- Условный рендеринг: с иконкой или без -->
+  <div v-if="icon" data-vue-test class="base-select-icon">
+    <div class="base-select" ref="selectRef">
+      <div class="base-select__trigger" @click="toggleDropdown">
+        <span class="base-select__value">{{ displayValue }}</span>
+        <span class="base-select__arrow" :class="{ 'is-open': isOpen }"></span>
+      </div>
+      <ul class="base-select__dropdown" v-show="isOpen">
+        <li
+          v-for="option in safeOptions"
+          :key="option.value"
+          :data-value="option.value"
+          class="base-select__option"
+          :class="{ 'is-selected': String(option.value) === String(value) }"
+          @click="selectOption(option)"
+        >
+          {{ option.label }}
+        </li>
+        <li v-if="safeOptions.length === 0" class="base-select__no-options">
+          No options available
+        </li>
+      </ul>
+    </div>
+    <span :class="`icon-${icon}`" data-vue-test></span>
+  </div>
+
+  <!-- Обычный вариант без иконки -->
+  <div v-else class="base-select" ref="selectRef">
     <div class="base-select__trigger" @click="toggleDropdown">
       <span class="base-select__value">{{ selectedLabel || placeholder }}</span>
       <span class="base-select__arrow" :class="{ 'is-open': isOpen }"></span>
     </div>
     <ul class="base-select__dropdown" v-show="isOpen">
       <li
-        v-for="option in options"
+        v-for="option in safeOptions"
         :key="option.value"
+        :data-value="option.value"
         class="base-select__option"
-        :class="{ 'is-selected': option.value === value }"
+        :class="{ 'is-selected': String(option.value) === String(value) }"
         @click="selectOption(option)"
       >
         {{ option.label }}
       </li>
+      <li v-if="safeOptions.length === 0" class="base-select__no-options">No options available</li>
     </ul>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 
 interface Option {
   value: string;
   label: string;
 }
 
+interface OnPageTranslations {
+  onPage: string;
+  perPage: string;
+}
+
 interface Props {
-  value: string;
+  value: string | number;
   options: Option[];
   placeholder?: string;
+  icon?: string;
+  initialValue?: string | number;
+  onPageTranslations?: OnPageTranslations;
 }
 
 interface Emits {
@@ -39,6 +75,12 @@ interface Emits {
 
 const props = withDefaults(defineProps<Props>(), {
   placeholder: 'Select option',
+  icon: undefined,
+  initialValue: '12',
+  onPageTranslations: () => ({
+    onPage: 'On page',
+    perPage: 'Per page',
+  }),
 });
 
 const emit = defineEmits<Emits>();
@@ -47,8 +89,39 @@ const isOpen = ref(false);
 const selectRef = ref<HTMLElement>();
 
 const selectedLabel = computed(() => {
-  const selected = props.options.find(option => option.value === props.value);
+  if (!Array.isArray(props.options)) {
+    console.warn('BaseSelect: options prop must be an array, got:', typeof props.options);
+    return '';
+  }
+
+  const selected = props.options.find(option => String(option.value) === String(props.value));
   return selected?.label || '';
+});
+
+// Для варианта с иконкой используем специальный формат отображения как в Blade
+const displayValue = computed(() => {
+  if (props.icon && props.onPageTranslations) {
+    const currentValue = props.value || props.initialValue;
+    return `${props.onPageTranslations.onPage} — ${currentValue}`;
+  }
+  return selectedLabel.value || props.placeholder;
+});
+
+const safeOptions = computed(() => {
+  const isValidArray = Array.isArray(props.options);
+  const hasOptions = isValidArray && props.options.length > 0;
+
+  // Only log when we have actual options to avoid race condition logging
+  if (hasOptions) {
+    console.log('🔍 BaseSelect safeOptions:', {
+      options: props.options,
+      length: props.options.length,
+      firstOption: props.options[0],
+      placeholder: props.placeholder,
+    });
+  }
+
+  return isValidArray ? props.options.filter(option => option.value !== 'default') : [];
 });
 
 function toggleDropdown(): void {
@@ -78,67 +151,3 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
 });
 </script>
-
-<!-- <style scoped>
-.base-select {
-  position: relative;
-}
-
-.base-select__trigger {
-  background: white;
-  border: 1px solid #ddd;
-  padding: 8px 12px;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-radius: 4px;
-}
-
-.base-select__trigger:hover {
-  border-color: #999;
-}
-
-.base-select__arrow {
-  transition: transform 0.2s ease;
-}
-
-.base-select__arrow.is-open {
-  transform: rotate(180deg);
-}
-
-.base-select__dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: white;
-  border: 1px solid #ddd;
-  border-top: none;
-  max-height: 200px;
-  overflow-y: auto;
-  z-index: 1000;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.base-select__option {
-  padding: 8px 12px;
-  cursor: pointer;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.base-select__option:hover {
-  background-color: #f5f5f5;
-}
-
-.base-select__option.is-selected {
-  background-color: #e3f2fd;
-  font-weight: 500;
-}
-
-.base-select__option:last-child {
-  border-bottom: none;
-}
-</style> -->
