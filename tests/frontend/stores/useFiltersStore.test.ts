@@ -139,4 +139,72 @@ describe('useCreativesFiltersStore edge cases', () => {
     expect(urlSyncMock.syncFiltersToUrl).toHaveBeenCalled();
     expect(creativesMock.loadCreativesWithFilters).toHaveBeenCalled();
   });
+
+  it('initializes with provided filters and options', async () => {
+    await store.initializeFilters(
+      { country: 'US', languages: ['en'], onlyAdult: true },
+      {
+        countries: [{ value: 'US', label: 'United States' }],
+        languages: [{ value: 'en', label: 'English' }],
+      },
+      { tabs: { facebook: { title: 'FB' } } } as any,
+      { availableTabs: ['push', 'facebook'], activeTab: 'facebook' },
+    );
+
+    expect(store.filters.country).toBe('US');
+    expect(store.filters.languages).toEqual(['en']);
+    expect(store.filters.onlyAdult).toBe(true);
+    expect(store.countryOptions[0].value).toBe('US');
+    expect(store.languagesOptions[0].label).toBe('English');
+    expect(store.tabs.activeTab).toBe('facebook');
+    expect(store.getTranslation('tabs.facebook.title')).toBe('FB');
+  });
+
+  it('initializes again and keeps isInitialized true', async () => {
+    await store.initializeFilters();
+    expect(store.isInitialized).toBe(true);
+    await store.initializeFilters({ country: 'CA' });
+    expect(store.filters.country).toBe('CA');
+    expect(filtersSyncMock.initialize).toHaveBeenCalledTimes(2);
+    expect(store.isInitialized).toBe(true);
+  });
+
+  it('initialization ignores invalid data', async () => {
+    await store.initializeFilters(
+      undefined,
+      { languages: null } as any,
+      undefined,
+      { availableTabs: 'oops' as any, activeTab: 'bad' } as any,
+    );
+
+    expect(store.languagesOptions).toEqual([]);
+    expect(store.tabs.activeTab).toBe('push');
+  });
+
+  it('setSelectOptions handles empty arrays and partial data', () => {
+    store.setSelectOptions({
+      advertisingNetworks: [],
+      languages: [{ value: 'en', label: 'English' }],
+    });
+
+    expect(store.advertisingNetworksOptions).toEqual([]);
+    expect(store.languagesOptions).toEqual([{ value: 'en', label: 'English' }]);
+    expect(store.devicesOptions).toEqual([]);
+  });
+
+  it('setSelectOptions ignores null and undefined values', () => {
+    store.setSelectOptions({ advertisingNetworks: null, languages: undefined } as any);
+    expect(store.advertisingNetworksOptions).toEqual([]);
+    expect(store.languagesOptions).toEqual([]);
+  });
+
+  it('setTabOptions updates counts and keeps activeTab valid', () => {
+    store.setTabOptions({
+      tabCounts: { push: '999', newTab: '5k' },
+      activeTab: 'unknown' as any,
+    });
+
+    expect(store.tabs.tabCounts.newTab).toBe('5k');
+    expect(store.tabs.activeTab).toBe('push');
+  });
 });
