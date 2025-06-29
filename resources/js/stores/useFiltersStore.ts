@@ -351,7 +351,16 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
    * Добавление в мультиселект
    */
   function addToMultiSelect(field: keyof FilterState, value: string): void {
-    const currentValues = filters[field] as string[];
+    const currentValues = filters[field];
+    
+    // Проверяем что поле существует и является массивом
+    if (!Array.isArray(currentValues)) {
+      // Если поле не существует или не является массивом, создаем новый массив
+      (filters[field] as any) = [value];
+      return;
+    }
+    
+    // Проверяем что значение еще не добавлено (избегаем дубликатов)
     if (!currentValues.includes(value)) {
       const newValues = [...currentValues, value];
       (filters[field] as any) = newValues;
@@ -362,7 +371,14 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
    * Удаление из мультиселекта
    */
   function removeFromMultiSelect(field: keyof FilterState, value: string): void {
-    const currentValues = filters[field] as string[];
+    const currentValues = filters[field];
+    
+    // Проверяем что поле существует и является массивом
+    if (!Array.isArray(currentValues)) {
+      // Если поле не существует или не является массивом, ничего не делаем
+      return;
+    }
+    
     const index = currentValues.indexOf(value);
     if (index > -1) {
       const newValues = currentValues.filter(item => item !== value);
