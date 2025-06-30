@@ -44,16 +44,17 @@
     {{-- Компонент пагинации --}}
     <x-creatives.vue.pagination :translations="$listTranslations" :showInfo="true" :maxVisiblePages="5"
         :alwaysShowFirstLast="true" />
+</div>
 
 
-    {{-- Подключение скрипта Vue островков --}}
-    @vite(['resources/js/vue-islands.ts'])
+{{-- Подключение скрипта Vue островков --}}
+@vite(['resources/js/vue-islands.ts'])
 
-    {{--
-    Пример конфигурации Vue Islands (опционально):
+{{--
+Пример конфигурации Vue Islands (опционально):
 
-    <script type="module">
-        import { configureVueIslands } from '@/vue-islands';
+<script type="module">
+    import { configureVueIslands } from '@/vue-islands';
     
     // Development конфигурация (по умолчанию)
     configureVueIslands({
@@ -68,8 +69,7 @@
         cleanupDelay: 500,           // Быстрая очистка
         preservePropsInDev: false,   // Очищать даже в dev
     });
-    </script>
-    --}}
+</script>
+--}}
 
-</div>
 @endsection
