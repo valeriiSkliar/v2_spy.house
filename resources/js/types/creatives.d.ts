@@ -22,11 +22,14 @@ export type DateRangeValue = 'today' | 'yesterday' | 'last7' | 'last30' | 'last9
 export interface Creative {
   id: CreativeId;
   name: string;
+  title: string;
+  description: string;
   category: string;
   country: CountryCode;
   file_url: string;
   preview_url?: string;
   video_url?: string;
+  has_video?: boolean;
   created_at: string;
   activity_date?: string;
   advertising_networks?: string[];

@@ -21,7 +21,7 @@
             </button>
           </div>
           <div class="creative-item__title">
-            {{ creative.name || '⚡ What are the pensions the increase? 💰' }}
+            {{ creative.title }}
           </div>
         </div>
         <div class="text-with-copy">
@@ -32,7 +32,7 @@
             </button>
           </div>
           <div class="creative-item__desc">
-            {{ creative.category || 'How much did Kazakhstanis begin to receive' }}
+            {{ creative.description }}
           </div>
         </div>
       </div>
@@ -193,7 +193,7 @@ const handleDownload = (): void => {
 
 // Функция для обработки клика по кнопке копирования названия
 const handleCopyTitle = async (): Promise<void> => {
-  const title = props.creative.name || '⚡ What are the pensions the increase? 💰';
+  const title = props.creative.title;
 
   try {
     await navigator.clipboard.writeText(title);
@@ -234,7 +234,7 @@ const handleCopyTitle = async (): Promise<void> => {
 
 // Функция для обработки клика по кнопке копирования описания
 const handleCopyDescription = async (): Promise<void> => {
-  const description = props.creative.category || 'How much did Kazakhstanis begin to receive';
+  const description = props.creative.description;
 
   try {
     await navigator.clipboard.writeText(description);

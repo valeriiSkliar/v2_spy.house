@@ -79,19 +79,19 @@ document.addEventListener(
       });
 
       //--------1111111------------------------------------
-      $('.creative-video').hover(
-        function () {
-          let video = $('.creative-video__content', this).data('video');
-          $('.creative-video__content', this).html(
-            '<video loop="loop" autoplay muted="muted" webkit-playsinline playsinline controls><source type="video/mp4" src="' +
-              video +
-              '"></video>'
-          );
-        },
-        function () {
-          $('.creative-video__content', this).html(' ');
-        }
-      );
+      // $('.creative-video').hover(
+      //   function () {
+      //     let video = $('.creative-video__content', this).data('video');
+      //     $('.creative-video__content', this).html(
+      //       '<video loop="loop" autoplay muted="muted" webkit-playsinline playsinline controls><source type="video/mp4" src="' +
+      //         video +
+      //         '"></video>'
+      //     );
+      //   },
+      //   function () {
+      //     $('.creative-video__content', this).html(' ');
+      //   }
+      // );
 
       //--------Toggle tariff------------------------------------
       // $('body').on('click', '.js-toggle-rate', function () {
