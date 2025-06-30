@@ -298,6 +298,163 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   setupFiltersWatchers();
 
   // ============================================================================
+  // ГЛОБАЛЬНЫЕ СЛУШАТЕЛИ СОБЫТИЙ - ЦЕНТРАЛИЗОВАННОЕ УПРАВЛЕНИЕ
+  // ============================================================================
+  
+  /**
+   * Настраивает глобальные слушатели событий для избранного
+   * Обрабатывает события от карточек креативов
+   */
+  function setupGlobalEventListeners(): void {
+    // Слушатель событий избранного от карточек
+    const handleFavoriteToggle = async (event: CustomEvent) => {
+      const { creativeId, isFavorite } = event.detail;
+      
+      try {
+        if (isFavorite) {
+          await removeFromFavorites(creativeId);
+        } else {
+          await addToFavorites(creativeId);
+        }
+      } catch (error) {
+        console.error('Ошибка обработки избранного:', error);
+        
+        // Эмитируем событие ошибки для UI
+        document.dispatchEvent(new CustomEvent('creatives:favorites-error', {
+          detail: {
+            creativeId,
+            action: isFavorite ? 'remove' : 'add',
+            error: error instanceof Error ? error.message : 'Unknown error',
+            timestamp: new Date().toISOString()
+          }
+        }));
+      }
+    };
+
+    // Слушатель событий загрузки от карточек
+    const handleDownload = (event: CustomEvent) => {
+      const { creative } = event.detail;
+      
+      // Эмитируем событие для возможной обработки в других компонентах
+      document.dispatchEvent(new CustomEvent('creatives:download-requested', {
+        detail: {
+          creativeId: creative.id,
+          creative,
+          timestamp: new Date().toISOString()
+        }
+      }));
+      
+      // Базовая обработка - открытие файла
+      if (creative.file_url) {
+        window.open(creative.file_url, '_blank');
+      }
+    };
+
+    // Слушатель событий показа деталей
+    const handleShowDetails = (event: CustomEvent) => {
+      const { creative } = event.detail;
+      
+      // Эмитируем событие для обработки в компонентах модалов/деталей
+      document.dispatchEvent(new CustomEvent('creatives:details-requested', {
+        detail: {
+          creativeId: creative.id,
+          creative,
+          timestamp: new Date().toISOString()
+        }
+      }));
+    };
+
+    // Слушатель событий копирования
+    const handleCopySuccess = (event: CustomEvent) => {
+      const { text, type, creativeId, fallback } = event.detail;
+      
+      // Эмитируем уведомление об успешном копировании
+      document.dispatchEvent(new CustomEvent('creatives:show-notification', {
+        detail: {
+          type: 'success',
+          message: `${type === 'title' ? 'Название' : 'Описание'} скопировано${fallback ? ' (fallback)' : ''}`,
+          creativeId,
+          timestamp: new Date().toISOString()
+        }
+      }));
+      
+      // Логирование для аналитики
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('analytics:copy-action', {
+          detail: {
+            type,
+            creativeId,
+            method: fallback ? 'fallback' : 'clipboard-api',
+            timestamp: Date.now()
+          }
+        }));
+      }
+    };
+
+    // Слушатель событий открытия в новой вкладке
+    const handleOpenInNewTab = (event: CustomEvent) => {
+      const { creative } = event.detail;
+      
+      // Логирование для аналитики
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('analytics:open-in-new-tab', {
+          detail: {
+            creativeId: creative.id,
+            url: creative.file_url || creative.preview_url,
+            timestamp: Date.now()
+          }
+        }));
+      }
+    };
+
+    // Регистрируем слушатели
+    document.addEventListener('creatives:toggle-favorite', handleFavoriteToggle as unknown as EventListener);
+    document.addEventListener('creatives:download', handleDownload as unknown as EventListener);
+    document.addEventListener('creatives:show-details', handleShowDetails as unknown as EventListener);
+    document.addEventListener('creatives:copy-success', handleCopySuccess as unknown as EventListener);
+    document.addEventListener('creatives:open-in-new-tab', handleOpenInNewTab as unknown as EventListener);
+    
+    // Логирование для production отладки
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('store:event-listeners-setup', {
+        detail: { 
+          store: 'CreativesFiltersStore',
+          listeners: ['toggle-favorite', 'download', 'show-details', 'copy-success', 'open-in-new-tab'],
+          timestamp: Date.now()
+        }
+      }));
+    }
+  }
+
+  // КРИТИЧЕСКИ ВАЖНО: Слушатели должны быть настроены СРАЗУ при создании store
+  setupGlobalEventListeners();
+
+  // ============================================================================
+  // МЕТОДЫ ОЧИСТКИ
+  // ============================================================================
+  
+  /**
+   * Очищает глобальные слушатели событий (для cleanup при unmount)
+   */
+  function cleanupEventListeners(): void {
+    document.removeEventListener('creatives:toggle-favorite', () => {});
+    document.removeEventListener('creatives:download', () => {});
+    document.removeEventListener('creatives:show-details', () => {});
+    document.removeEventListener('creatives:copy-success', () => {});
+    document.removeEventListener('creatives:open-in-new-tab', () => {});
+    
+    // Логирование для production отладки
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('store:event-listeners-cleanup', {
+        detail: { 
+          store: 'CreativesFiltersStore',
+          timestamp: Date.now()
+        }
+      }));
+    }
+  }
+
+  // ============================================================================
   // COMPUTED СВОЙСТВА
   // ============================================================================
   
@@ -362,6 +519,13 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   const isOnLastPage = computed(() => currentPage.value >= lastPage.value);
   const canLoadMore = computed(() => currentPage.value < lastPage.value);
   const shouldShowPagination = computed(() => lastPage.value > 1);
+
+  // Computed свойства для избранного
+  const isFavoriteCreative = computed(() => {
+    return (creativeId: number): boolean => {
+      return favoritesItems.value.includes(creativeId);
+    };
+  });
 
   // ============================================================================
   // МЕТОДЫ ИНИЦИАЛИЗАЦИИ
@@ -1012,6 +1176,11 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     shouldShowPagination,       // Нужно ли показывать пагинацию
     
     // ========================================
+    // COMPUTED СВОЙСТВА ИЗБРАННОГО
+    // ========================================
+    isFavoriteCreative,         // Функция проверки избранного креатива
+    
+    // ========================================
     // МЕТОДЫ ИНИЦИАЛИЗАЦИИ
     // ========================================
     initializeFilters,          // Основная инициализация Store
@@ -1067,5 +1236,10 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     creativesComposable,        // useCreatives композабл
     urlSync,                    // useCreativesUrlSync композабл  
     filtersSync,                // useFiltersSynchronization композабл
+    
+    // ========================================
+    // МЕТОДЫ ОЧИСТКИ
+    // ========================================
+    cleanupEventListeners,      // Очистка слушателей событий
   };
 });

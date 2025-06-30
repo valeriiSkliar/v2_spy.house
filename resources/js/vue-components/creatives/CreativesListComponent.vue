@@ -23,20 +23,51 @@
     <div v-else class="creatives-list__items">
       <template v-for="creative in creatives" :key="creative.id">
         <!-- Push компонент -->
-        <PushCreativeCard v-if="currentTab === 'push'" :creative="creative" />
+        <PushCreativeCard
+          v-if="currentTab === 'push'"
+          :creative="creative"
+          :is-favorite="store.isFavoriteCreative(creative.id)"
+          :is-favorite-loading="store.isFavoritesLoading"
+          @toggle-favorite="handleToggleFavorite"
+          @download="handleDownload"
+          @show-details="handleShowDetails"
+          @open-in-new-tab="handleOpenInNewTab"
+        />
 
         <!-- InPage компонент -->
-        <InpageCreativeCard v-else-if="currentTab === 'inpage'" :creative="creative" />
+        <InpageCreativeCard
+          v-else-if="currentTab === 'inpage'"
+          :creative="creative"
+          :is-favorite="store.isFavoriteCreative(creative.id)"
+          :is-favorite-loading="store.isFavoritesLoading"
+          @toggle-favorite="handleToggleFavorite"
+          @download="handleDownload"
+          @show-details="handleShowDetails"
+        />
 
         <!-- Facebook/TikTok компонент (пока используется универсальная разметка) -->
         <!-- <SocialCreativeCard
           v-else-if="currentTab === 'facebook' || currentTab === 'tiktok'"
           :creative="creative"
           :social-type="currentTab"
+          :is-favorite="store.isFavoriteCreative(creative.id)"
+          :is-favorite-loading="store.isFavoritesLoading"
+          @toggle-favorite="handleToggleFavorite"
+          @download="handleDownload"
+          @show-details="handleShowDetails"
         /> -->
 
         <!-- Универсальная карточка для остальных типов -->
-        <!-- <UniversalCreativeCard v-else :creative="creative" :card-type="currentTab" /> -->
+        <!-- <UniversalCreativeCard 
+          v-else 
+          :creative="creative" 
+          :card-type="currentTab"
+          :is-favorite="store.isFavoriteCreative(creative.id)"
+          :is-favorite-loading="store.isFavoritesLoading"
+          @toggle-favorite="handleToggleFavorite"
+          @download="handleDownload"
+          @show-details="handleShowDetails"
+        /> -->
       </template>
     </div>
   </div>
@@ -115,6 +146,31 @@ function formatDate(dateString: string): string {
 
 function handleRetry(): void {
   store.refreshCreatives();
+}
+
+/**
+ * Обработчики событий от карточек креативов
+ * Централизованная логика обрабатывается в Store через DOM события,
+ * но здесь можем добавить дополнительную логику если нужно
+ */
+function handleToggleFavorite(creativeId: number, isFavorite: boolean): void {
+  console.log(`Карточка эмитировала toggle-favorite: ${creativeId}, isFavorite: ${isFavorite}`);
+  // Основная логика обрабатывается в Store через DOM события
+}
+
+function handleDownload(creative: Creative): void {
+  console.log(`Карточка эмитировала download:`, creative);
+  // Основная логика обрабатывается в Store через DOM события
+}
+
+function handleShowDetails(creative: Creative): void {
+  console.log(`Карточка эмитировала show-details:`, creative);
+  // Основная логика обрабатывается в Store через DOM события
+}
+
+function handleOpenInNewTab(creative: Creative): void {
+  console.log(`Карточка эмитировала open-in-new-tab:`, creative);
+  // Основная логика обрабатывается в Store через DOM события
 }
 
 // Watcher для скрытия placeholder когда данные загружены

@@ -8,7 +8,7 @@
         <div class="text-with-copy">
           <div class="text-with-copy__btn">
             <!-- Заглушка для copy-button компонента -->
-            <button class="btn-icon _copy" type="button">
+            <button class="btn-icon _copy" type="button" @click="handleCopyTitle">
               <span class="icon-copy"></span>
             </button>
           </div>
@@ -19,7 +19,7 @@
         <div class="text-with-copy">
           <div class="text-with-copy__btn">
             <!-- Заглушка для copy-button компонента -->
-            <button class="btn-icon _copy" type="button">
+            <button class="btn-icon _copy" type="button" @click="handleCopyDescription">
               <span class="icon-copy"></span>
             </button>
           </div>
@@ -31,7 +31,7 @@
       <div class="creative-item__icon thumb thumb-with-controls-small">
         <img :src="getIconUrl()" alt="" />
         <div class="thumb-controls">
-          <a href="#" class="btn-icon _black">
+          <a href="#" class="btn-icon _black" @click.prevent="handleDownload">
             <span class="icon-download2 remore_margin"></span>
           </a>
         </div>
@@ -40,10 +40,10 @@
     <div class="creative-item__image thumb thumb-with-controls">
       <img :src="getImageUrl()" alt="" />
       <div class="thumb-controls">
-        <a href="#" class="btn-icon _black">
+        <a href="#" class="btn-icon _black" @click.prevent="handleDownload">
           <span class="icon-download2 remore_margin"></span>
         </a>
-        <a href="#" class="btn-icon _black">
+        <a href="#" class="btn-icon _black" @click.prevent="handleOpenInNewTab">
           <span class="icon-new-tab remore_margin"></span>
         </a>
       </div>
@@ -62,10 +62,15 @@
         </div>
       </div>
       <div class="creative-item__btns">
-        <button class="btn-icon btn-favorite" :class="{ active: isFavorite }">
+        <button
+          class="btn-icon btn-favorite"
+          :class="{ active: isFavorite }"
+          @click="handleFavoriteClick"
+          :disabled="isFavoriteLoading"
+        >
           <span :class="getFavoriteIconClass() + ' remore_margin'"></span>
         </button>
-        <button class="btn-icon _dark js-show-details">
+        <button class="btn-icon _dark js-show-details" @click="handleShowDetails">
           <span class="icon-info remore_margin"></span>
         </button>
       </div>
@@ -79,6 +84,15 @@ import { computed } from 'vue';
 
 const props = defineProps<{
   creative: Creative;
+  isFavorite?: boolean;
+  isFavoriteLoading?: boolean;
+}>();
+
+const emit = defineEmits<{
+  'toggle-favorite': [creativeId: number, isFavorite: boolean];
+  download: [creative: Creative];
+  'show-details': [creative: Creative];
+  'open-in-new-tab': [creative: Creative];
 }>();
 
 // Computed для определения активности (заглушка)
@@ -87,11 +101,154 @@ const isActive = computed((): boolean => {
   return true;
 });
 
-// Computed для избранного (заглушка)
+// Computed для избранного
 const isFavorite = computed((): boolean => {
-  // Логика будет добавлена позже
-  return false;
+  return props.isFavorite ?? props.creative.isFavorite ?? false;
 });
+
+// Обработчики событий
+const handleFavoriteClick = (): void => {
+  if (props.isFavoriteLoading) return;
+
+  emit('toggle-favorite', props.creative.id, isFavorite.value);
+
+  // Эмитируем DOM событие для Store
+  document.dispatchEvent(
+    new CustomEvent('creatives:toggle-favorite', {
+      detail: {
+        creativeId: props.creative.id,
+        isFavorite: isFavorite.value,
+      },
+    })
+  );
+};
+
+const handleDownload = (): void => {
+  emit('download', props.creative);
+
+  // Эмитируем DOM событие для Store
+  document.dispatchEvent(
+    new CustomEvent('creatives:download', {
+      detail: {
+        creative: props.creative,
+      },
+    })
+  );
+};
+
+const handleShowDetails = (): void => {
+  emit('show-details', props.creative);
+
+  // Эмитируем DOM событие для Store
+  document.dispatchEvent(
+    new CustomEvent('creatives:show-details', {
+      detail: {
+        creative: props.creative,
+      },
+    })
+  );
+};
+
+const handleOpenInNewTab = (): void => {
+  emit('open-in-new-tab', props.creative);
+
+  // Эмитируем DOM событие для возможной обработки в Store
+  document.dispatchEvent(
+    new CustomEvent('creatives:open-in-new-tab', {
+      detail: {
+        creative: props.creative,
+      },
+    })
+  );
+
+  // Базовая реализация - открытие файла/превью в новой вкладке
+  const url = props.creative.file_url || props.creative.preview_url;
+  if (url) {
+    window.open(url, '_blank');
+  }
+};
+
+// Функция для обработки клика по кнопке копирования названия
+const handleCopyTitle = async (): Promise<void> => {
+  const title = props.creative.name || '⚡ What are the pensions the increase? 💰';
+
+  try {
+    await navigator.clipboard.writeText(title);
+
+    // Эмитируем событие успешного копирования
+    document.dispatchEvent(
+      new CustomEvent('creatives:copy-success', {
+        detail: {
+          text: title,
+          type: 'title',
+          creativeId: props.creative.id,
+        },
+      })
+    );
+  } catch (error) {
+    console.error('Ошибка копирования названия:', error);
+
+    // Fallback для старых браузеров
+    const textarea = document.createElement('textarea');
+    textarea.value = title;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+
+    document.dispatchEvent(
+      new CustomEvent('creatives:copy-success', {
+        detail: {
+          text: title,
+          type: 'title',
+          creativeId: props.creative.id,
+          fallback: true,
+        },
+      })
+    );
+  }
+};
+
+// Функция для обработки клика по кнопке копирования описания
+const handleCopyDescription = async (): Promise<void> => {
+  const description = props.creative.category || 'How much did Kazakhstanis begin to receive';
+
+  try {
+    await navigator.clipboard.writeText(description);
+
+    // Эмитируем событие успешного копирования
+    document.dispatchEvent(
+      new CustomEvent('creatives:copy-success', {
+        detail: {
+          text: description,
+          type: 'description',
+          creativeId: props.creative.id,
+        },
+      })
+    );
+  } catch (error) {
+    console.error('Ошибка копирования описания:', error);
+
+    // Fallback для старых браузеров
+    const textarea = document.createElement('textarea');
+    textarea.value = description;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+
+    document.dispatchEvent(
+      new CustomEvent('creatives:copy-success', {
+        detail: {
+          text: description,
+          type: 'description',
+          creativeId: props.creative.id,
+          fallback: true,
+        },
+      })
+    );
+  }
+};
 
 // Функция для формирования текста активности
 const getActiveText = (): string => {

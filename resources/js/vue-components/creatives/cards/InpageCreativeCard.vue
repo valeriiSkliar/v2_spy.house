@@ -4,7 +4,7 @@
       <div class="creative-item__icon thumb thumb-with-controls-small mr-2">
         <img :src="creative.preview_url || creative.file_url || '/img/th-2.jpg'" alt="" />
         <div class="thumb-controls">
-          <a href="#" class="btn-icon _black">
+          <a href="#" class="btn-icon _black" @click.prevent="handleDownload">
             <span class="icon-download2 remore_margin"></span>
           </a>
         </div>
@@ -16,7 +16,7 @@
         <div class="text-with-copy">
           <div class="text-with-copy__btn">
             <!-- Заглушка для copy-button компонента -->
-            <button class="btn-icon _copy" type="button">
+            <button class="btn-icon _copy" type="button" @click="handleCopyTitle">
               <span class="icon-copy"></span>
             </button>
           </div>
@@ -27,7 +27,7 @@
         <div class="text-with-copy">
           <div class="text-with-copy__btn">
             <!-- Заглушка для copy-button компонента -->
-            <button class="btn-icon _copy" type="button">
+            <button class="btn-icon _copy" type="button" @click="handleCopyDescription">
               <span class="icon-copy"></span>
             </button>
           </div>
@@ -52,10 +52,15 @@
         </div>
       </div>
       <div class="creative-item__btns">
-        <button class="btn-icon btn-favorite">
-          <span class="icon-favorite-empty remore_margin"></span>
+        <button
+          class="btn-icon btn-favorite"
+          :class="{ active: isFavorite }"
+          @click="handleFavoriteClick"
+          :disabled="isFavoriteLoading"
+        >
+          <span :class="getFavoriteIconClass() + ' remore_margin'"></span>
         </button>
-        <button class="btn-icon _dark js-show-details">
+        <button class="btn-icon _dark js-show-details" @click="handleShowDetails">
           <span class="icon-info remore_margin"></span>
         </button>
       </div>
@@ -65,10 +70,46 @@
 
 <script setup lang="ts">
 import type { Creative } from '@/types/creatives.d';
+import { computed } from 'vue';
 
 const props = defineProps<{
   creative: Creative;
+  isFavorite?: boolean;
+  isFavoriteLoading?: boolean;
 }>();
+
+const emit = defineEmits<{
+  'toggle-favorite': [creativeId: number, isFavorite: boolean];
+  download: [creative: Creative];
+  'show-details': [creative: Creative];
+}>();
+
+// Computed для избранного
+const isFavorite = computed((): boolean => {
+  return props.isFavorite ?? props.creative.isFavorite ?? false;
+});
+
+// Функция для обработки клика по избранному
+const handleFavoriteClick = (): void => {
+  if (props.isFavoriteLoading) return;
+
+  emit('toggle-favorite', props.creative.id, isFavorite.value);
+
+  // Эмитируем DOM событие для Store
+  document.dispatchEvent(
+    new CustomEvent('creatives:toggle-favorite', {
+      detail: {
+        creativeId: props.creative.id,
+        isFavorite: isFavorite.value,
+      },
+    })
+  );
+};
+
+// Функция для получения CSS класса иконки избранного
+const getFavoriteIconClass = (): string => {
+  return isFavorite.value ? 'icon-favorite' : 'icon-favorite-empty';
+};
 
 // Функция для формирования текста активности
 const getActiveText = (): string => {
@@ -130,5 +171,115 @@ const getDeviceText = (): string => {
     return device;
   }
   return 'PC';
+};
+
+// Функция для обработки клика по кнопке скачивания
+const handleDownload = (): void => {
+  emit('download', props.creative);
+
+  // Эмитируем DOM событие для Store
+  document.dispatchEvent(
+    new CustomEvent('creatives:download', {
+      detail: {
+        creative: props.creative,
+      },
+    })
+  );
+};
+
+// Функция для обработки клика по кнопке копирования названия
+const handleCopyTitle = async (): Promise<void> => {
+  const title = props.creative.name || '⚡ What are the pensions the increase? 💰';
+
+  try {
+    await navigator.clipboard.writeText(title);
+
+    // Эмитируем событие успешного копирования
+    document.dispatchEvent(
+      new CustomEvent('creatives:copy-success', {
+        detail: {
+          text: title,
+          type: 'title',
+          creativeId: props.creative.id,
+        },
+      })
+    );
+  } catch (error) {
+    console.error('Ошибка копирования названия:', error);
+
+    // Fallback для старых браузеров
+    const textarea = document.createElement('textarea');
+    textarea.value = title;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+
+    document.dispatchEvent(
+      new CustomEvent('creatives:copy-success', {
+        detail: {
+          text: title,
+          type: 'title',
+          creativeId: props.creative.id,
+          fallback: true,
+        },
+      })
+    );
+  }
+};
+
+// Функция для обработки клика по кнопке копирования описания
+const handleCopyDescription = async (): Promise<void> => {
+  const description = props.creative.category || 'How much did Kazakhstanis begin to receive';
+
+  try {
+    await navigator.clipboard.writeText(description);
+
+    // Эмитируем событие успешного копирования
+    document.dispatchEvent(
+      new CustomEvent('creatives:copy-success', {
+        detail: {
+          text: description,
+          type: 'description',
+          creativeId: props.creative.id,
+        },
+      })
+    );
+  } catch (error) {
+    console.error('Ошибка копирования описания:', error);
+
+    // Fallback для старых браузеров
+    const textarea = document.createElement('textarea');
+    textarea.value = description;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+
+    document.dispatchEvent(
+      new CustomEvent('creatives:copy-success', {
+        detail: {
+          text: description,
+          type: 'description',
+          creativeId: props.creative.id,
+          fallback: true,
+        },
+      })
+    );
+  }
+};
+
+// Функция для обработки клика по кнопке показа деталей
+const handleShowDetails = (): void => {
+  emit('show-details', props.creative);
+
+  // Эмитируем DOM событие для Store
+  document.dispatchEvent(
+    new CustomEvent('creatives:show-details', {
+      detail: {
+        creative: props.creative,
+      },
+    })
+  );
 };
 </script>

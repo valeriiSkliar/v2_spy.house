@@ -6,70 +6,82 @@
     :class="{
       'favorites-counter--loading': isLoading,
       'favorites-counter--animated': shouldAnimate,
+      'favorites-counter--has-data': hasData,
     }"
     @click.stop="handleCounterClick"
     :title="getTooltip()"
   >
     <transition name="counter-update" mode="out-in">
       <span :key="displayCount" class="favorites-counter__value">
-        {{ displayCount }}
+        {{ formatCount(displayCount) }}
       </span>
     </transition>
 
     <!-- Индикатор загрузки -->
-    <span v-if="isLoading" class="favorites-counter__loader">
+    <!-- <span v-if="isLoading" class="favorites-counter__loader">
       <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-    </span>
+    </span> -->
   </span>
 </template>
 
 <script setup lang="ts">
 import { useCreativesFiltersStore } from '@/stores/useFiltersStore';
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 
 interface Props {
-  /** Начальное количество избранного */
-  initialCount?: number;
   /** Переводы для tooltip'ов */
   translations?: Record<string, string>;
   /** Включить анимацию при изменении */
   enableAnimation?: boolean;
   /** Показывать ли loader при загрузке */
   showLoader?: boolean;
+  /** Автоматически загружать счетчик при монтировании */
+  autoLoad?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  initialCount: 0,
   translations: () => ({}),
   enableAnimation: true,
   showLoader: true,
+  autoLoad: true,
 });
 
 // ============================================================================
-// СОСТОЯНИЕ КОМПОНЕНТА
+// ИНТЕГРАЦИЯ СО STORE (БЕЗ ДУБЛИРОВАНИЯ СЛУШАТЕЛЕЙ)
 // ============================================================================
 
 const store = useCreativesFiltersStore();
-const isLoading = ref(false);
 const shouldAnimate = ref(false);
 
-// Локальное состояние счетчика (для оптимистичных обновлений)
-const localCount = ref(props.initialCount);
-
 // ============================================================================
-// COMPUTED СВОЙСТВА
+// COMPUTED СВОЙСТВА (ЧИСТОЕ ОТОБРАЖЕНИЕ ДАННЫХ STORE)
 // ============================================================================
 
 /** Отображаемое количество избранного */
 const displayCount = computed(() => {
-  // Приоритет: Store > локальное состояние > props
-  return store.favoritesCount ?? localCount.value;
+  return store.favoritesCount ?? 0;
+});
+
+/** Индикатор загрузки (из Store) */
+const isLoading = computed(() => {
+  return store.isFavoritesLoading;
+});
+
+/** Есть ли данные для отображения */
+const hasData = computed(() => {
+  return store.favoritesCount !== undefined;
 });
 
 /** Получение tooltip'а для счетчика */
 function getTooltip(): string {
   const key = 'favoritesCountTooltip';
-  const defaultText = `Избранное: ${displayCount.value}`;
+  const count = displayCount.value;
+  const defaultText = `Избранное: ${formatCount(count)}`;
+
+  if (!hasData.value) {
+    return props.translations.loading || 'Загрузка избранного...';
+  }
+
   return props.translations[key] || defaultText;
 }
 
@@ -82,41 +94,16 @@ function getTooltip(): string {
  * Показывает список избранного или обновляет данные
  */
 async function handleCounterClick(): Promise<void> {
-  if (isLoading.value) return;
-
-  try {
-    isLoading.value = true;
-
-    // Эмитим событие для родительского компонента
-    emit('counter-clicked', {
-      currentCount: displayCount.value,
-      timestamp: new Date().toISOString(),
-    });
-
-    // Обновляем счетчик через Store
-    await store.refreshFavoritesCount();
-
-    // Анимация при успешном обновлении
-    if (props.enableAnimation) {
-      triggerAnimation();
-    }
-  } catch (error) {
-    console.error('Ошибка при обновлении счетчика избранного:', error);
-
-    // Эмитим событие об ошибке
-    emit('counter-error', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      timestamp: new Date().toISOString(),
-    });
-  } finally {
-    isLoading.value = false;
-  }
+  console.log('🔄 FavoritesCounter: клик по счетчику');
+  // TODO: реализовать логику клика по счетчику
 }
 
 /**
  * Запуск анимации счетчика
  */
 function triggerAnimation(): void {
+  if (!props.enableAnimation) return;
+
   shouldAnimate.value = true;
   setTimeout(() => {
     shouldAnimate.value = false;
@@ -136,19 +123,25 @@ function formatCount(count: number): string {
 }
 
 // ============================================================================
-// WATCHERS
+// РЕАКТИВНОСТЬ ЧЕРЕЗ WATCHER (БЕЗ ДУБЛИРОВАНИЯ СЛУШАТЕЛЕЙ)
 // ============================================================================
 
-// Отслеживаем изменения в Store и обновляем локальное состояние
+// Отслеживаем изменения счетчика в Store для анимации
 watch(
   () => store.favoritesCount,
-  newCount => {
-    if (newCount !== undefined && newCount !== localCount.value) {
-      localCount.value = newCount;
+  (newCount, oldCount) => {
+    // Анимация только при изменении существующих данных
+    if (oldCount !== undefined && newCount !== undefined && newCount !== oldCount) {
+      console.log(`🔄 FavoritesCounter: изменение счетчика ${oldCount} → ${newCount}`);
 
-      if (props.enableAnimation) {
-        triggerAnimation();
-      }
+      emit('counter-updated', {
+        oldCount,
+        newCount,
+        timestamp: new Date().toISOString(),
+      });
+
+      // Запускаем анимацию при изменении
+      triggerAnimation();
     }
   }
 );
@@ -166,13 +159,22 @@ interface Events {
 const emit = defineEmits<Events>();
 
 // ============================================================================
-// LIFECYCLE
+// LIFECYCLE (ТОЛЬКО АВТОЗАГРУЗКА, БЕЗ СЛУШАТЕЛЕЙ)
 // ============================================================================
 
-// При монтировании компонента устанавливаем начальное значение в Store
-if (store.favoritesCount === undefined && props.initialCount > 0) {
-  store.setFavoritesCount(props.initialCount);
-}
+onMounted(async () => {
+  console.log('🔄 FavoritesCounter: компонент смонтирован');
+
+  // Автоматически загружаем счетчик если данных нет и включена автозагрузка
+  if (props.autoLoad && store.favoritesCount === undefined) {
+    try {
+      console.log('🚀 FavoritesCounter: автоматическая загрузка счетчика');
+      await store.refreshFavoritesCount();
+    } catch (error) {
+      console.error('❌ FavoritesCounter: ошибка автозагрузки:', error);
+    }
+  }
+});
 </script>
 
 <style scoped>
@@ -187,14 +189,14 @@ if (store.favoritesCount === undefined && props.initialCount > 0) {
   user-select: none;
 }
 
-.favorites-counter:hover {
+/* .favorites-counter:hover {
   background-color: rgba(61, 201, 138, 0.1);
   transform: scale(1.05);
-}
+} */
 
-.favorites-counter:active {
-  transform: scale(0.95);
-}
+/* .favorites-counter:active {
+    transform: scale(0.95);
+  } */
 
 /* ============================================================================
    СОСТОЯНИЯ СЧЕТЧИКА
@@ -213,20 +215,20 @@ if (store.favoritesCount === undefined && props.initialCount > 0) {
    ИНДИКАТОР ЗАГРУЗКИ
    ============================================================================ */
 
-.favorites-counter__loader {
+/* .favorites-counter__loader {
   position: absolute;
   top: 50%;
   right: -20px;
   transform: translateY(-50%);
   opacity: 0.8;
-}
+} */
 
-.favorites-counter__loader .spinner-border-sm {
+/* .favorites-counter__loader .spinner-border-sm {
   width: 14px;
   height: 14px;
   border-width: 2px;
   color: #3dc98a;
-}
+} */
 
 /* ============================================================================
    АНИМАЦИИ
