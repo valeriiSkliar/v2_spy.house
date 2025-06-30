@@ -2323,3 +2323,563 @@ describe('useCreativesFiltersStore - Проксирование композаб
     expect(store.filters.languages).toContain('fr');
   });
 });
+
+describe('useCreativesFiltersStore - Управление избранным', () => {
+  let store: ReturnType<typeof useCreativesFiltersStore>;
+
+  beforeEach(() => {
+    const pinia = createPinia();
+    setActivePinia(pinia);
+    vi.clearAllMocks();
+    store = useCreativesFiltersStore();
+    store.filtersSync.disable();
+
+    // Мокируем (window as any).axios
+    (window as any).axios = {
+      get: vi.fn(),
+      post: vi.fn(),
+      delete: vi.fn(),
+    };
+
+    // Мокируем document.dispatchEvent
+    vi.spyOn(document, 'dispatchEvent').mockImplementation(() => true);
+  });
+
+  it('setFavoritesCount с различными числовыми значениями', () => {
+    // Проверяем установку положительных чисел
+    store.setFavoritesCount(42);
+    expect(store.favoritesCount).toBe(42);
+
+    store.setFavoritesCount(0);
+    expect(store.favoritesCount).toBe(0);
+
+    store.setFavoritesCount(999);
+    expect(store.favoritesCount).toBe(999);
+
+    // Проверяем установку больших чисел
+    store.setFavoritesCount(1000000);
+    expect(store.favoritesCount).toBe(1000000);
+
+    // Проверяем дробные числа
+    store.setFavoritesCount(3.14);
+    expect(store.favoritesCount).toBe(3.14);
+
+    // Проверяем отрицательные числа
+    store.setFavoritesCount(-5);
+    expect(store.favoritesCount).toBe(-5);
+
+    // Проверяем NaN и Infinity
+    store.setFavoritesCount(NaN);
+    expect(store.favoritesCount).toBeNaN();
+
+    store.setFavoritesCount(Infinity);
+    expect(store.favoritesCount).toBe(Infinity);
+
+    store.setFavoritesCount(-Infinity);
+    expect(store.favoritesCount).toBe(-Infinity);
+  });
+
+  it('refreshFavoritesCount - успешный API запрос', async () => {
+    const mockResponse = {
+      data: {
+        data: {
+          count: 75,
+          lastUpdated: '2024-01-01T10:00:00.000Z'
+        }
+      }
+    };
+
+    ((window as any).axios.get as any).mockResolvedValue(mockResponse);
+
+    // Проверяем начальное состояние
+    expect(store.favoritesCount).toBeUndefined();
+    expect(store.isFavoritesLoading).toBe(false);
+
+    // Выполняем запрос
+    await store.refreshFavoritesCount();
+
+    // Проверяем что API был вызван
+    expect((window as any).axios.get).toHaveBeenCalledWith('/api/creatives/favorites/count');
+
+    // Проверяем что состояние обновилось
+    expect(store.favoritesCount).toBe(75);
+    expect(store.isFavoritesLoading).toBe(false);
+
+    // Проверяем что событие было эмитировано
+    expect(document.dispatchEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'creatives:favorites-updated',
+        detail: expect.objectContaining({
+          count: 75,
+          action: 'refresh',
+          timestamp: expect.any(String)
+        })
+      })
+    );
+  });
+
+  it('refreshFavoritesCount - обработка ошибок API', async () => {
+    const apiError = new Error('Network error');
+    ((window as any).axios.get as any).mockRejectedValue(apiError);
+
+    // Проверяем начальное состояние
+    expect(store.isFavoritesLoading).toBe(false);
+
+    // Выполняем запрос и ожидаем ошибку
+    await expect(store.refreshFavoritesCount()).rejects.toThrow('Network error');
+
+    // Проверяем что API был вызван
+    expect((window as any).axios.get).toHaveBeenCalledWith('/api/creatives/favorites/count');
+
+    // Проверяем что состояние загрузки сброшено
+    expect(store.isFavoritesLoading).toBe(false);
+
+    // Проверяем что событие обновления НЕ было эмитировано при ошибке
+    const updateEvents = (document.dispatchEvent as any).mock.calls.filter(
+      (call: any) => call[0].type === 'creatives:favorites-updated'
+    );
+    expect(updateEvents).toHaveLength(0);
+  });
+
+  it('refreshFavoritesCount при уже выполняющемся запросе (защита от дублирования)', async () => {
+    let resolveFirstRequest: (value: any) => void;
+    const firstRequest = new Promise(resolve => {
+      resolveFirstRequest = resolve;
+    });
+
+    ((window as any).axios.get as any).mockReturnValue(firstRequest);
+
+    // Запускаем первый запрос
+    const firstPromise = store.refreshFavoritesCount();
+    
+    // Проверяем что состояние загрузки установлено
+    expect(store.isFavoritesLoading).toBe(true);
+
+    // Пытаемся запустить второй запрос - он должен игнорироваться
+    const secondPromise = store.refreshFavoritesCount();
+
+    // Проверяем что второй запрос завершился сразу (не ждет API)
+    await secondPromise;
+
+    // Проверяем что API был вызван только один раз
+    expect((window as any).axios.get).toHaveBeenCalledTimes(1);
+
+    // Завершаем первый запрос
+    resolveFirstRequest({
+      data: { data: { count: 50 } }
+    });
+    await firstPromise;
+
+    // Проверяем что состояние обновилось
+    expect(store.favoritesCount).toBe(50);
+    expect(store.isFavoritesLoading).toBe(false);
+  });
+
+  it('addToFavorites - оптимистичное обновление', async () => {
+    const mockResponse = {
+      data: {
+        data: {
+          creativeId: 123,
+          isFavorite: true,
+          totalFavorites: 51
+        }
+      }
+    };
+
+    ((window as any).axios.post as any).mockResolvedValue(mockResponse);
+
+    // Устанавливаем начальное состояние
+    store.setFavoritesCount(50);
+    expect(store.favoritesItems).toEqual([]);
+
+    // Выполняем добавление
+    await store.addToFavorites(123);
+
+    // Проверяем оптимистичное обновление
+    expect(store.favoritesItems).toContain(123);
+    expect(store.favoritesCount).toBe(51); // обновлено из API ответа
+
+    // Проверяем API вызов
+    expect((window as any).axios.post).toHaveBeenCalledWith('/api/creatives/123/favorite');
+
+    // Проверяем событие
+    expect(document.dispatchEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'creatives:favorites-updated',
+        detail: expect.objectContaining({
+          count: 51,
+          action: 'add',
+          creativeId: 123,
+          timestamp: expect.any(String)
+        })
+      })
+    );
+  });
+
+  it('addToFavorites - откат при ошибке API', async () => {
+    const apiError = new Error('Add to favorites failed');
+    ((window as any).axios.post as any).mockRejectedValue(apiError);
+
+    // Устанавливаем начальное состояние
+    store.setFavoritesCount(50);
+    const originalItems = [...store.favoritesItems];
+
+    // Выполняем добавление и ожидаем ошибку
+    await expect(store.addToFavorites(456)).rejects.toThrow('Add to favorites failed');
+
+    // Проверяем что состояние откатилось
+    expect(store.favoritesItems).toEqual(originalItems);
+    expect(store.favoritesCount).toBe(50); // вернулось к исходному значению
+
+    // Проверяем что состояние загрузки сброшено
+    expect(store.isFavoritesLoading).toBe(false);
+
+    // Проверяем что событие обновления НЕ было эмитировано при ошибке
+    const updateEvents = (document.dispatchEvent as any).mock.calls.filter(
+      (call: any) => call[0].type === 'creatives:favorites-updated'
+    );
+    expect(updateEvents).toHaveLength(0);
+  });
+
+  it('addToFavorites дубликата (уже в избранном)', async () => {
+    const mockResponse = {
+      data: {
+        data: {
+          creativeId: 789,
+          isFavorite: true,
+          totalFavorites: 50
+        }
+      }
+    };
+
+    ((window as any).axios.post as any).mockResolvedValue(mockResponse);
+
+    // Устанавливаем начальное состояние с уже добавленным креативом
+    store.setFavoritesCount(50);
+    store.favoritesItems.push(789);
+
+    const originalItemsLength = store.favoritesItems.length;
+
+    // Пытаемся добавить дубликат
+    await store.addToFavorites(789);
+
+    // Проверяем что дубликат не добавился
+    expect(store.favoritesItems.filter(id => id === 789)).toHaveLength(1);
+    expect(store.favoritesItems.length).toBe(originalItemsLength);
+
+    // Проверяем что счетчик обновился из API ответа
+    expect(store.favoritesCount).toBe(50);
+
+    // Проверяем что API все равно был вызван (для синхронизации с сервером)
+    expect((window as any).axios.post).toHaveBeenCalledWith('/api/creatives/789/favorite');
+
+    // Проверяем событие
+    expect(document.dispatchEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'creatives:favorites-updated',
+        detail: expect.objectContaining({
+          action: 'add',
+          creativeId: 789
+        })
+      })
+    );
+  });
+
+  it('removeFromFavorites - оптимистичное обновление', async () => {
+    const mockResponse = {
+      data: {
+        data: {
+          creativeId: 555,
+          isFavorite: false,
+          totalFavorites: 49
+        }
+      }
+    };
+
+    ((window as any).axios.delete as any).mockResolvedValue(mockResponse);
+
+    // Устанавливаем начальное состояние с креативом в избранном
+    store.setFavoritesCount(50);
+    store.favoritesItems.push(555, 777);
+
+    // Выполняем удаление
+    await store.removeFromFavorites(555);
+
+    // Проверяем оптимистичное обновление
+    expect(store.favoritesItems).not.toContain(555);
+    expect(store.favoritesItems).toContain(777); // другие остались
+    expect(store.favoritesCount).toBe(49); // обновлено из API ответа
+
+    // Проверяем API вызов
+    expect((window as any).axios.delete).toHaveBeenCalledWith('/api/creatives/555/favorite');
+
+    // Проверяем событие
+    expect(document.dispatchEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'creatives:favorites-updated',
+        detail: expect.objectContaining({
+          count: 49,
+          action: 'remove',
+          creativeId: 555,
+          timestamp: expect.any(String)
+        })
+      })
+    );
+  });
+
+  it('removeFromFavorites - откат при ошибке API', async () => {
+    const apiError = new Error('Remove from favorites failed');
+    ((window as any).axios.delete as any).mockRejectedValue(apiError);
+
+    // Устанавливаем начальное состояние с креативом в избранном
+    store.setFavoritesCount(50);
+    store.favoritesItems.push(888);
+    const originalItems = [...store.favoritesItems];
+
+    // Выполняем удаление и ожидаем ошибку
+    await expect(store.removeFromFavorites(888)).rejects.toThrow('Remove from favorites failed');
+
+    // Проверяем что состояние откатилось
+    expect(store.favoritesItems).toEqual(originalItems);
+    expect(store.favoritesItems).toContain(888); // креатив вернулся
+    expect(store.favoritesCount).toBe(50); // счетчик вернулся
+
+    // Проверяем что состояние загрузки сброшено
+    expect(store.isFavoritesLoading).toBe(false);
+
+    // Проверяем что событие обновления НЕ было эмитировано при ошибке
+    const updateEvents = (document.dispatchEvent as any).mock.calls.filter(
+      (call: any) => call[0].type === 'creatives:favorites-updated'
+    );
+    expect(updateEvents).toHaveLength(0);
+  });
+
+  it('removeFromFavorites несуществующего элемента', async () => {
+    const mockResponse = {
+      data: {
+        data: {
+          creativeId: 999,
+          isFavorite: false,
+          totalFavorites: 50
+        }
+      }
+    };
+
+    ((window as any).axios.delete as any).mockResolvedValue(mockResponse);
+
+    // Устанавливаем начальное состояние без целевого креатива
+    store.setFavoritesCount(50);
+    store.favoritesItems.push(111, 222);
+    const originalItems = [...store.favoritesItems];
+
+    // Пытаемся удалить несуществующий креатив
+    await store.removeFromFavorites(999);
+
+    // Проверяем что массив не изменился (кроме попытки удаления)
+    expect(store.favoritesItems).toEqual(originalItems);
+    expect(store.favoritesItems).toContain(111);
+    expect(store.favoritesItems).toContain(222);
+
+    // Проверяем что счетчик обновился из API ответа
+    expect(store.favoritesCount).toBe(50);
+
+    // Проверяем что API все равно был вызван
+    expect((window as any).axios.delete).toHaveBeenCalledWith('/api/creatives/999/favorite');
+
+    // Проверяем событие
+    expect(document.dispatchEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'creatives:favorites-updated',
+        detail: expect.objectContaining({
+          action: 'remove',
+          creativeId: 999
+        })
+      })
+    );
+  });
+
+  it('эмиссия событий "creatives:favorites-updated" с корректными данными', async () => {
+    const addResponse = {
+      data: { data: { creativeId: 123, isFavorite: true, totalFavorites: 51 } }
+    };
+    const removeResponse = {
+      data: { data: { creativeId: 123, isFavorite: false, totalFavorites: 50 } }
+    };
+    const refreshResponse = {
+      data: { data: { count: 75 } }
+    };
+
+    ((window as any).axios.post as any).mockResolvedValue(addResponse);
+    ((window as any).axios.delete as any).mockResolvedValue(removeResponse);
+    ((window as any).axios.get as any).mockResolvedValue(refreshResponse);
+
+    store.setFavoritesCount(50);
+
+    // Тест события при добавлении
+    await store.addToFavorites(123);
+
+    let lastEvent = (document.dispatchEvent as any).mock.calls.slice(-1)[0][0];
+    expect(lastEvent.type).toBe('creatives:favorites-updated');
+    expect(lastEvent.detail).toMatchObject({
+      count: 51,
+      action: 'add',
+      creativeId: 123,
+      timestamp: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
+    });
+
+    vi.clearAllMocks();
+
+    // Тест события при удалении
+    await store.removeFromFavorites(123);
+
+    lastEvent = (document.dispatchEvent as any).mock.calls.slice(-1)[0][0];
+    expect(lastEvent.type).toBe('creatives:favorites-updated');
+    expect(lastEvent.detail).toMatchObject({
+      count: 50,
+      action: 'remove',
+      creativeId: 123,
+      timestamp: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
+    });
+
+    vi.clearAllMocks();
+
+    // Тест события при обновлении счетчика
+    await store.refreshFavoritesCount();
+
+    lastEvent = (document.dispatchEvent as any).mock.calls.slice(-1)[0][0];
+    expect(lastEvent.type).toBe('creatives:favorites-updated');
+    expect(lastEvent.detail).toMatchObject({
+      count: 75,
+      action: 'refresh',
+      timestamp: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
+    });
+    expect(lastEvent.detail.creativeId).toBeUndefined(); // для refresh нет creativeId
+  });
+
+  it('состояние isFavoritesLoading во время операций', async () => {
+    let resolveRefresh: Function;
+    let resolveAdd: Function;
+    let resolveRemove: Function;
+
+    const refreshPromise = new Promise(resolve => { resolveRefresh = resolve; });
+    const addPromise = new Promise(resolve => { resolveAdd = resolve; });
+    const removePromise = new Promise(resolve => { resolveRemove = resolve; });
+
+    // Проверяем начальное состояние
+    expect(store.isFavoritesLoading).toBe(false);
+
+    // Тест состояния загрузки для refreshFavoritesCount
+    ((window as any).axios.get as any).mockReturnValue(refreshPromise);
+    const refreshOperation = store.refreshFavoritesCount();
+
+    expect(store.isFavoritesLoading).toBe(true);
+
+    resolveRefresh({ data: { data: { count: 50 } } });
+    await refreshOperation;
+
+    expect(store.isFavoritesLoading).toBe(false);
+
+    // Тест состояния загрузки для addToFavorites
+    ((window as any).axios.post as any).mockReturnValue(addPromise);
+    const addOperation = store.addToFavorites(123);
+
+    expect(store.isFavoritesLoading).toBe(true);
+
+    resolveAdd({ data: { data: { creativeId: 123, isFavorite: true, totalFavorites: 51 } } });
+    await addOperation;
+
+    expect(store.isFavoritesLoading).toBe(false);
+
+    // Тест состояния загрузки для removeFromFavorites
+    ((window as any).axios.delete as any).mockReturnValue(removePromise);
+    const removeOperation = store.removeFromFavorites(123);
+
+    expect(store.isFavoritesLoading).toBe(true);
+
+    resolveRemove({ data: { data: { creativeId: 123, isFavorite: false, totalFavorites: 50 } } });
+    await removeOperation;
+
+    expect(store.isFavoritesLoading).toBe(false);
+  });
+
+  it('состояние isFavoritesLoading сбрасывается при ошибках', async () => {
+    const apiError = new Error('API Error');
+
+    // Тест сброса состояния при ошибке refreshFavoritesCount
+    ((window as any).axios.get as any).mockRejectedValue(apiError);
+    
+    expect(store.isFavoritesLoading).toBe(false);
+    
+    await expect(store.refreshFavoritesCount()).rejects.toThrow('API Error');
+    expect(store.isFavoritesLoading).toBe(false);
+
+    // Тест сброса состояния при ошибке addToFavorites
+    ((window as any).axios.post as any).mockRejectedValue(apiError);
+    
+    await expect(store.addToFavorites(456)).rejects.toThrow('API Error');
+    expect(store.isFavoritesLoading).toBe(false);
+
+    // Тест сброса состояния при ошибке removeFromFavorites
+    ((window as any).axios.delete as any).mockRejectedValue(apiError);
+    
+    await expect(store.removeFromFavorites(789)).rejects.toThrow('API Error');
+    expect(store.isFavoritesLoading).toBe(false);
+  });
+
+  it('защита от параллельных операций избранного', async () => {
+    let resolveFirst: Function;
+    const firstPromise = new Promise(resolve => { resolveFirst = resolve; });
+
+    ((window as any).axios.post as any).mockReturnValue(firstPromise);
+
+    // Запускаем первую операцию
+    const firstOperation = store.addToFavorites(111);
+    expect(store.isFavoritesLoading).toBe(true);
+
+    // Пытаемся запустить вторую операцию - должна игнорироваться
+    const secondOperation = store.addToFavorites(222);
+    await secondOperation; // завершается сразу
+
+    // Проверяем что API вызван только один раз
+    expect((window as any).axios.post).toHaveBeenCalledTimes(1);
+    expect((window as any).axios.post).toHaveBeenCalledWith('/api/creatives/111/favorite');
+
+    // Завершаем первую операцию
+    resolveFirst({ data: { data: { creativeId: 111, isFavorite: true, totalFavorites: 51 } } });
+    await firstOperation;
+
+    expect(store.isFavoritesLoading).toBe(false);
+  });
+
+  it('корректная обработка undefined favoritesCount при оптимистичных обновлениях', async () => {
+    const addResponse = {
+      data: { data: { creativeId: 123, isFavorite: true, totalFavorites: 1 } }
+    };
+    const removeResponse = {
+      data: { data: { creativeId: 123, isFavorite: false, totalFavorites: 0 } }
+    };
+
+    ((window as any).axios.post as any).mockResolvedValue(addResponse);
+    ((window as any).axios.delete as any).mockResolvedValue(removeResponse);
+
+    // Начальное состояние: favoritesCount = undefined
+    expect(store.favoritesCount).toBeUndefined();
+
+    // Добавляем креатив когда счетчик undefined
+    await store.addToFavorites(123);
+
+    // Счетчик должен установиться из API ответа
+    expect(store.favoritesCount).toBe(1);
+    expect(store.favoritesItems).toContain(123);
+
+    // Сбрасываем счетчик в undefined
+    store.favoritesCount = undefined;
+
+    // Удаляем креатив когда счетчик undefined
+    await store.removeFromFavorites(123);
+
+    // Счетчик должен установиться из API ответа
+    expect(store.favoritesCount).toBe(0);
+    expect(store.favoritesItems).not.toContain(123);
+  });
+});
