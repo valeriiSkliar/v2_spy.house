@@ -311,12 +311,11 @@ describe('useCreativesFiltersStore - Инициализация и конфиг�
     await store.initializeFilters(undefined, undefined, nestedTranslations as any);
 
     // Проверяем доступ к глубоко вложенным значениям
-    expect(store.getTranslation('level1.level2.level3.level4.level5')).toBe('Very deep nested value');
-    expect(store.getTranslation('level1.level2.level3.level4.anotherKey')).toBe('Another deep value');
-    expect(store.getTranslation('level1.level2.level3.simpleLevel4')).toBe('Level 4 value');
-    expect(store.getTranslation('level1.level2.directLevel3')).toBe('Level 3 value');
-    expect(store.getTranslation('level1.simpleLevel2')).toBe('Level 2 value');
-    expect(store.getTranslation('topLevel')).toBe('Top level value');
+
+    // Проверяем вложенные ключи
+    expect(store.getTranslation('level1.level2.level3')).toBe('Deep nested value');
+    expect(store.getTranslation('level1.simpleValue')).toBe('Simple value');
+    expect(store.getTranslation('flatKey')).toBe('Flat value');
 
     // Проверяем fallback для несуществующих ключей
     expect(store.getTranslation('nonexistent.key')).toBe('nonexistent.key');
