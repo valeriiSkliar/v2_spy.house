@@ -7,7 +7,7 @@
         "translations": {{ json_encode($listTranslations) }},
         "perPage": {{ $perPage }},
         "activeTab": {{ json_encode($activeTab) }}
-    }'>
+    }' data-vue-placeholder-manual>
 
     <!-- Placeholder карточек креативов (количество = perPage) -->
     <div class="creatives-list" data-vue-placeholder>

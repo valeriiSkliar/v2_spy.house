@@ -1,13 +1,13 @@
 <template>
   <div class="creatives-list">
     <!-- Состояние загрузки -->
-    <div v-if="isLoading && !hasCreatives" class="creatives-list__loading">
+    <!-- <div v-if="isLoading && !hasCreatives" class="creatives-list__loading">
       <div class="loading-spinner"></div>
       <p>{{ translations.loading || 'Загрузка креативов...' }}</p>
-    </div>
+    </div> -->
 
     <!-- Состояние ошибки -->
-    <div v-else-if="error && !hasCreatives" class="creatives-list__error">
+    <div v-if="error && !hasCreatives" class="creatives-list__error">
       <p>{{ translations.error || 'Ошибка загрузки креативов' }}</p>
       <button @click="handleRetry" class="btn btn-secondary">
         {{ translations.retry || 'Повторить' }}
@@ -15,7 +15,7 @@
     </div>
 
     <!-- Пустое состояние -->
-    <div v-else-if="!hasCreatives && !isLoading" class="creatives-list__empty">
+    <div v-if="!hasCreatives && !isLoading" class="creatives-list__empty">
       <p>{{ translations.noData || 'Креативы не найдены' }}</p>
     </div>
 
@@ -44,7 +44,8 @@
 
 <script setup lang="ts">
 import { useCreativesFiltersStore } from '@/stores/useFiltersStore';
-import { computed, onMounted } from 'vue';
+import { hidePlaceholderManually } from '@/vue-islands';
+import { computed, onMounted, watch } from 'vue';
 import type { Creative } from '../../types/creatives';
 import InpageCreativeCard from './cards/InpageCreativeCard.vue';
 import PushCreativeCard from './cards/PushCreativeCard.vue';
@@ -116,6 +117,31 @@ function handleRetry(): void {
   store.refreshCreatives();
 }
 
+// Watcher для скрытия placeholder когда данные загружены
+watch(
+  () => creatives.value.length,
+  newLength => {
+    if (newLength > 0) {
+      hidePlaceholderManually('CreativesListComponent');
+      // Скрываем placeholder только когда есть данные
+      // const readyEvent = new CustomEvent('vue-component-ready', {
+      //   detail: {
+      //     component: 'CreativesListComponent',
+      //     hasData: true,
+      //     activeTab: currentTab.value,
+      //   },
+      // });
+      // document.dispatchEvent(readyEvent);
+
+      console.log('🎯 Креативы загружены, placeholder скрыт', {
+        creativesCount: newLength,
+        currentTab: currentTab.value,
+      });
+    }
+  },
+  { immediate: true }
+);
+
 // Инициализация при монтировании
 onMounted(() => {
   console.log('🎯 CreativesListComponent смонтирован, данные из store:', {
@@ -126,14 +152,7 @@ onMounted(() => {
     currentTab: currentTab.value,
   });
 
-  // Эмитируем событие готовности компонента
-  const readyEvent = new CustomEvent('vue-component-ready', {
-    detail: {
-      component: 'CreativesListComponent',
-      hasData: hasCreatives.value,
-      activeTab: currentTab.value,
-    },
-  });
-  document.dispatchEvent(readyEvent);
+  // Убираем автоматическое скрытие placeholder при монтировании
+  // Placeholder будет скрыт только через watcher когда появятся данные
 });
 </script>

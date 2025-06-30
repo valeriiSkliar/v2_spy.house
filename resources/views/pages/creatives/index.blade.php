@@ -42,7 +42,7 @@
     <x-creatives.vue.list :listTranslations="$listTranslations" :perPage="12" :activeTab="$activeTab" />
 
     {{-- Компонент пагинации --}}
-    <x-creatives.vue.pagination :translations="$listTranslations" :showInfo="true" :maxVisiblePages="5"
+    <x-creatives.vue.pagination :translations="$listTranslations" :showInfo="false" :maxVisiblePages="5"
         :alwaysShowFirstLast="true" />
 </div>
 

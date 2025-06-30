@@ -9,6 +9,7 @@ declare global {
     $: JQueryStatic;
     jQuery: JQueryStatic;
     initVueIslands: () => void;
+    hidePlaceholderManually: (componentName: string) => void;
     __globalPinia?: any;
 
     // blogServerData?: BlogServerData;

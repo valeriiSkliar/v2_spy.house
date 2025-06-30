@@ -57,6 +57,7 @@
 
 <script setup lang="ts">
 import { useCreativesFiltersStore } from '@/stores/useFiltersStore';
+import { hidePlaceholderManually } from '@/vue-islands';
 import { computed, onBeforeUnmount, onMounted } from 'vue';
 
 /**
@@ -263,16 +264,16 @@ onMounted(() => {
 
   // Добавляем обработчик клавиатуры
   document.addEventListener('keydown', handleKeydown);
-
+  hidePlaceholderManually('PaginationComponent');
   // Эмитируем событие готовности компонента
-  const readyEvent = new CustomEvent('vue-component-ready', {
-    detail: {
-      component: 'PaginationComponent',
-      currentPage: currentPage.value,
-      lastPage: lastPage.value,
-    },
-  });
-  document.dispatchEvent(readyEvent);
+  // const readyEvent = new CustomEvent('vue-component-ready', {
+  //   detail: {
+  //     component: 'PaginationComponent',
+  //     currentPage: currentPage.value,
+  //     lastPage: lastPage.value,
+  //   },
+  // });
+  // document.dispatchEvent(readyEvent);
 });
 
 // Очистка при размонтировании
