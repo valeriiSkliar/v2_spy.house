@@ -10,26 +10,19 @@
     }'>
 
     <!-- Placeholder карточек креативов (количество = perPage) -->
-    <div class="creatives-list__placeholder" data-vue-placeholder>
+    <div class="creatives-list" data-vue-placeholder>
         <div class="creatives-list__items">
-            @for ($i = 0; $i < $perPage; $i++) <div class="creative-item placeholder">
-                <div class="creative-item__header">
-                    <div class="creative-item__title placeholder-line"></div>
-                    <div class="creative-item__status placeholder-badge"></div>
-                </div>
-                <div class="creative-item__info">
-                    <div class="creative-item__description placeholder-line"></div>
-                    <div class="creative-item__meta">
-                        <div class="meta-item placeholder-line"></div>
-                        <div class="meta-item placeholder-line"></div>
-                        <div class="meta-item placeholder-line"></div>
-                    </div>
+            @for ($i = 0; $i < $perPage; $i++) <div style="padding: 0;" class="creative-item">
+                <div class="creative-item__placeholder creative-item__placeholder--{{ $activeTab }}">
+                    <img src="/img/empty.svg" alt="placeholder">
                 </div>
         </div>
         @endfor
     </div>
 </div>
 </div>
+
+
 
 {{--
 Компонент для списка креативов с использованием Vue Islands.
