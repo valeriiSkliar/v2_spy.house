@@ -66,10 +66,10 @@ export function useCreatives(): UseCreativesReturn {
     };
   });
   
-  // Вспомогательные computed
-  const hasCreatives = computed((): boolean => creatives.value.length > 0);
-  const hasError = computed((): boolean => error.value !== null);
-  const hasSearch = computed((): boolean => meta.value.hasSearch);
+  // Вспомогательные computed (commented out - unused)
+  // const hasCreatives = computed((): boolean => creatives.value.length > 0);
+  // const hasError = computed((): boolean => error.value !== null);
+  // const hasSearch = computed((): boolean => meta.value.hasSearch);
   
   // Состояние пагинации
   const canLoadMore = computed((): boolean => {
@@ -77,8 +77,8 @@ export function useCreatives(): UseCreativesReturn {
     return pag.currentPage < pag.lastPage;
   });
   
-  const isFirstPage = computed((): boolean => pagination.value.currentPage === 1);
-  const isLastPage = computed((): boolean => pagination.value.currentPage === pagination.value.lastPage);
+  // const isFirstPage = computed((): boolean => pagination.value.currentPage === 1);
+  // const isLastPage = computed((): boolean => pagination.value.currentPage === pagination.value.lastPage);
 
   // ============================================================================
   // УТИЛИТАРНЫЕ ФУНКЦИИ
@@ -213,11 +213,11 @@ export function useCreatives(): UseCreativesReturn {
   /**
    * Загружает конкретную страницу
    */
-  async function loadPage(page: number): Promise<void> {
-    if (page < 1 || page > pagination.value.lastPage || isLoading.value) return;
-    
-    await loadCreatives(page);
-  }
+  // async function loadPage(page: number): Promise<void> {
+  //   if (page < 1 || page > pagination.value.lastPage || isLoading.value) return;
+  //   
+  //   await loadCreatives(page);
+  // }
   
   /**
    * Очищает данные креативов
@@ -232,17 +232,17 @@ export function useCreatives(): UseCreativesReturn {
   /**
    * Отменяет все активные запросы
    */
-  function cancelRequests(): void {
-    creativesService.cancelAllRequests();
-    isLoading.value = false;
-  }
+  // function cancelRequests(): void {
+  //   creativesService.cancelAllRequests();
+  //   isLoading.value = false;
+  // }
   
   /**
    * Сбрасывает состояние ошибки
    */
-  function clearError(): void {
-    error.value = null;
-  }
+  // function clearError(): void {
+  //   error.value = null;
+  // }
 
   // ============================================================================
   // МЕТОДЫ ДЛЯ РАБОТЫ С ОТДЕЛЬНЫМИ КРЕАТИВАМИ
@@ -251,20 +251,20 @@ export function useCreatives(): UseCreativesReturn {
   /**
    * Находит креатив по ID
    */
-  function findCreativeById(id: number): Creative | undefined {
-    return creatives.value.find(creative => creative.id === id);
-  }
+  // function findCreativeById(id: number): Creative | undefined {
+  //   return creatives.value.find(creative => creative.id === id);
+  // }
   
   /**
    * Добавляет креатив в избранное (заглушка)
    */
-  function toggleFavorite(creativeId: number): void {
-    const creative = findCreativeById(creativeId);
-    if (creative) {
-      creative.isFavorite = !creative.isFavorite;
-      // TODO: Отправить изменение на сервер
-    }
-  }
+  // function toggleFavorite(creativeId: number): void {
+  //   const creative = findCreativeById(creativeId);
+  //   if (creative) {
+  //     creative.isFavorite = !creative.isFavorite;
+  //     // TODO: Отправить изменение на сервер
+  //   }
+  // }
   
   /**
    * Фильтрует креативы по критерию
@@ -276,23 +276,23 @@ export function useCreatives(): UseCreativesReturn {
   /**
    * Получает креативы для взрослых
    */
-  function getAdultCreatives(): Creative[] {
-    return filterCreatives(creative => creative.is_adult === true);
-  }
+  // function getAdultCreatives(): Creative[] {
+  //   return filterCreatives(creative => creative.is_adult === true);
+  // }
   
   /**
    * Получает недавние креативы
    */
-  function getRecentCreatives(): Creative[] {
-    return filterCreatives(creative => creative.isRecent === true);
-  }
+  // function getRecentCreatives(): Creative[] {
+  //   return filterCreatives(creative => creative.isRecent === true);
+  // }
   
   /**
    * Получает избранные креативы
    */
-  function getFavoriteCreatives(): Creative[] {
-    return filterCreatives(creative => creative.isFavorite === true);
-  }
+  // function getFavoriteCreatives(): Creative[] {
+  //   return filterCreatives(creative => creative.isFavorite === true);
+  // }
 
   // ============================================================================
   // СТАТИСТИКА И УТИЛИТЫ
@@ -301,35 +301,35 @@ export function useCreatives(): UseCreativesReturn {
   /**
    * Получает статистику креативов
    */
-  function getCreativesStats() {
-    const total = creatives.value.length;
-    const adult = getAdultCreatives().length;
-    const recent = getRecentCreatives().length;
-    const favorites = getFavoriteCreatives().length;
-    
-    return {
-      total,
-      adult,
-      recent,
-      favorites,
-      adultPercentage: total > 0 ? Math.round((adult / total) * 100) : 0,
-      recentPercentage: total > 0 ? Math.round((recent / total) * 100) : 0,
-    };
-  }
+  // function getCreativesStats() {
+  //   const total = creatives.value.length;
+  //   const adult = getAdultCreatives().length;
+  //   const recent = getRecentCreatives().length;
+  //   const favorites = getFavoriteCreatives().length;
+  //   
+  //   return {
+  //     total,
+  //     adult,
+  //     recent,
+  //     favorites,
+  //     adultPercentage: total > 0 ? Math.round((adult / total) * 100) : 0,
+  //     recentPercentage: total > 0 ? Math.round((recent / total) * 100) : 0,
+  //   };
+  // }
   
   /**
    * Проверяет состояние загрузки от сервиса
    */
-  function isServiceLoading(): boolean {
-    return creativesService.isLoading();
-  }
+  // function isServiceLoading(): boolean {
+  //   return creativesService.isLoading();
+  // }
   
   /**
    * Получает информацию о кэше сервиса
    */
-  function getCacheInfo() {
-    return creativesService.getCacheStats();
-  }
+  // function getCacheInfo() {
+  //   return creativesService.getCacheStats();
+  // }
 
   // ============================================================================
   // ВОЗВРАЩАЕМЫЙ ОБЪЕКТ

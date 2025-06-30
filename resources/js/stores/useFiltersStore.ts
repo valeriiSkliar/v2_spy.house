@@ -104,6 +104,9 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   const favoritesCount = ref<number | undefined>(undefined);
   const favoritesItems = ref<number[]>([]);
   const isFavoritesLoading = ref(false);
+  
+  // Состояние загрузки для конкретных креативов (предотвращение множественных запросов)
+  const favoritesLoadingMap = ref<Map<number, boolean>>(new Map());
 
   // Опции для селектов
   const countryOptions = ref<FilterOption[]>([{ value: 'default', label: 'Все страны' }]);
@@ -440,6 +443,13 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   const isFavoriteCreative = computed(() => {
     return (creativeId: number): boolean => {
       return favoritesItems.value.includes(creativeId);
+    };
+  });
+  
+  // Computed свойство для проверки состояния загрузки избранного конкретного креатива
+  const isFavoriteLoading = computed(() => {
+    return (creativeId: number): boolean => {
+      return favoritesLoadingMap.value.get(creativeId) ?? false;
     };
   });
 
@@ -937,9 +947,15 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
    * Добавление креатива в избранное
    */
   async function addToFavorites(creativeId: number): Promise<void> {
-    if (isFavoritesLoading.value) return;
+    // Проверяем глобальное состояние загрузки и состояние конкретного креатива
+    if (isFavoritesLoading.value || favoritesLoadingMap.value.get(creativeId)) {
+      console.warn(`Добавление в избранное для креатива ${creativeId} уже выполняется`);
+      return;
+    }
 
     try {
+      // Устанавливаем состояние загрузки для конкретного креатива
+      favoritesLoadingMap.value.set(creativeId, true);
       isFavoritesLoading.value = true;
       
       // Оптимистичное обновление
@@ -982,6 +998,8 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
       console.error('Ошибка при добавлении в избранное:', error);
       throw error;
     } finally {
+      // Очищаем состояние загрузки для конкретного креатива и глобально
+      favoritesLoadingMap.value.delete(creativeId);
       isFavoritesLoading.value = false;
     }
   }
@@ -990,9 +1008,15 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
    * Удаление креатива из избранного
    */
   async function removeFromFavorites(creativeId: number): Promise<void> {
-    if (isFavoritesLoading.value) return;
+    // Проверяем глобальное состояние загрузки и состояние конкретного креатива
+    if (isFavoritesLoading.value || favoritesLoadingMap.value.get(creativeId)) {
+      console.warn(`Удаление из избранного для креатива ${creativeId} уже выполняется`);
+      return;
+    }
 
     try {
+      // Устанавливаем состояние загрузки для конкретного креатива
+      favoritesLoadingMap.value.set(creativeId, true);
       isFavoritesLoading.value = true;
       
       // Оптимистичное обновление
@@ -1035,6 +1059,8 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
       console.error('Ошибка при удалении из избранного:', error);
       throw error;
     } finally {
+      // Очищаем состояние загрузки для конкретного креатива и глобально
+      favoritesLoadingMap.value.delete(creativeId);
       isFavoritesLoading.value = false;
     }
   }
@@ -1095,6 +1121,7 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     // COMPUTED СВОЙСТВА ИЗБРАННОГО
     // ========================================
     isFavoriteCreative,         // Функция проверки избранного креатива
+    isFavoriteLoading,          // Функция проверки состояния загрузки избранного креатива
     
     // ========================================
     // МЕТОДЫ ИНИЦИАЛИЗАЦИИ
@@ -1141,6 +1168,7 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     favoritesCount,             // Количество избранного
     favoritesItems,             // Список ID избранных креативов
     isFavoritesLoading,         // Состояние загрузки избранного
+    favoritesLoadingMap,        // Map состояний загрузки для конкретных креативов
     setFavoritesCount,          // Установка количества избранного
     refreshFavoritesCount,      // Обновление счетчика с сервера
     addToFavorites,             // Добавление в избранное

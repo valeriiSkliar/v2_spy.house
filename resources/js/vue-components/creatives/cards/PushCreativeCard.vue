@@ -108,7 +108,11 @@ const isFavorite = computed((): boolean => {
 
 // Обработчики событий
 const handleFavoriteClick = (): void => {
-  if (props.isFavoriteLoading) return;
+  // Блокируем повторные клики если уже идет обработка для этого креатива
+  if (props.isFavoriteLoading) {
+    console.warn(`Операция с избранным для креатива ${props.creative.id} уже выполняется`);
+    return;
+  }
 
   emit('toggle-favorite', props.creative.id, isFavorite.value);
 

@@ -281,17 +281,17 @@ export function useFiltersSynchronization(
   /**
    * Проверяет есть ли активные фильтры
    */
-  function hasActiveFilters(): boolean {
-    return Object.entries(filters).some(([key, value]) => {
-      if (['isDetailedVisible', 'savedSettings'].includes(key)) return false;
-      
-      if (Array.isArray(value)) return value.length > 0;
-      if (typeof value === 'boolean') return value;
-      if (typeof value === 'string') return value !== '' && value !== 'default';
-      
-      return false;
-    });
-  }
+  // function hasActiveFilters(): boolean {
+  //   return Object.entries(filters).some(([key, value]) => {
+  //     if (['isDetailedVisible', 'savedSettings'].includes(key)) return false;
+  //     
+  //     if (Array.isArray(value)) return value.length > 0;
+  //     if (typeof value === 'boolean') return value;
+  //     if (typeof value === 'string') return value !== '' && value !== 'default';
+  //     
+  //     return false;
+  //   });
+  // }
 
   // ============================================================================
   // WATCHERS УДАЛЕНЫ - ТЕПЕРЬ В STORE
