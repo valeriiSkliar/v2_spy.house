@@ -1,6 +1,6 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useCreativesFiltersStore } from '../../../resources/js/stores/useFiltersStore';
 
 let creativesMock: any;
@@ -1220,9 +1220,20 @@ describe('useCreativesFiltersStore - Управление фильтрами', (
     // Обновляем тем же массивом (по содержимому)
     store.updateFilter('languages', ['en', 'ru']);
     
-    // Значение обновится, так как это новый массив (новая ссылка)
-    expect(store.filters.languages).not.toBe(originalLanguages);
+    // Логика корректно НЕ заменяет массивы с идентичным содержимым (оптимизация производительности)
+    // Ссылка остается той же, так как содержимое идентично
+    expect(store.filters.languages).toBe(originalLanguages);
     expect(store.filters.languages).toEqual(['en', 'ru']);
+
+    // Но если содержимое отличается, то должна быть новая ссылка
+    store.updateFilter('languages', ['en', 'ru', 'fr']);
+    const updatedLanguages = store.filters.languages;
+    expect(updatedLanguages).not.toBe(originalLanguages); // новая ссылка
+    expect(updatedLanguages).toEqual(['en', 'ru', 'fr']); // новое содержимое
+
+    // И если передаем точно ту же ссылку, она не должна измениться
+    store.updateFilter('languages', updatedLanguages);
+    expect(store.filters.languages).toBe(updatedLanguages); // та же ссылка
 
     // Тестируем с boolean
     store.updateFilter('onlyAdult', true);
@@ -2072,16 +2083,30 @@ describe('useCreativesFiltersStore - Проксирование композаб
   });
 
   it('loadNextPage - вызов метода композабла', async () => {
-    // Проверяем что метод loadNextPage корректно проксируется
+    // Мокаем пагинацию для правильной работы loadNextPage
+    creativesMock.pagination = computed(() => ({
+      currentPage: 2,
+      lastPage: 5,
+      total: 100,
+      perPage: 12,
+      from: 13,
+      to: 24
+    }));
+
+    // Проверяем что метод loadNextPage теперь вызывает loadCreatives с правильной страницей
     await store.loadNextPage();
     
-    expect(creativesMock.loadNextPage).toHaveBeenCalledTimes(1);
-    expect(creativesMock.loadNextPage).toHaveBeenCalledWith();
+    // loadNextPage теперь внутри вызывает loadCreatives, что приводит к вызову loadCreativesWithFilters
+    expect(creativesMock.loadCreativesWithFilters).toHaveBeenCalledTimes(1);
+    
+    // Проверяем что передается правильная страница (currentPage + 1 = 3)
+    const callArgs = creativesMock.mapFiltersToCreativesFilters.mock.calls[0];
+    expect(callArgs[2]).toBe(3); // третий аргумент - номер страницы
 
     // Проверяем повторный вызов
     await store.loadNextPage();
     
-    expect(creativesMock.loadNextPage).toHaveBeenCalledTimes(2);
+    expect(creativesMock.loadCreativesWithFilters).toHaveBeenCalledTimes(2);
   });
 
   it('refreshCreatives - вызов метода композабла', async () => {
@@ -2185,15 +2210,25 @@ describe('useCreativesFiltersStore - Проксирование композаб
     // Восстанавливаем нормальное поведение
     creativesMock.loadCreativesWithFilters.mockResolvedValue(undefined);
 
-    // Тестируем обработку ошибок в loadNextPage
+    // Тестируем обработку ошибок в loadNextPage (теперь вызывает loadCreatives)
+    // Сначала настроим пагинацию для корректной работы
+    creativesMock.pagination = computed(() => ({
+      currentPage: 1,
+      lastPage: 3,
+      total: 50,
+      perPage: 12,
+      from: 1,
+      to: 12
+    }));
+
     const nextPageError = new Error('Next page failed');
-    creativesMock.loadNextPage.mockRejectedValue(nextPageError);
+    creativesMock.loadCreativesWithFilters.mockRejectedValue(nextPageError);
 
     await expect(store.loadNextPage()).rejects.toThrow('Next page failed');
-    expect(creativesMock.loadNextPage).toHaveBeenCalled();
+    expect(creativesMock.loadCreativesWithFilters).toHaveBeenCalled();
 
     // Восстанавливаем нормальное поведение
-    creativesMock.loadNextPage.mockResolvedValue(undefined);
+    creativesMock.loadCreativesWithFilters.mockResolvedValue(undefined);
 
     // Тестируем обработку ошибок в refreshCreatives
     const refreshError = new Error('Refresh failed');
@@ -2230,13 +2265,23 @@ describe('useCreativesFiltersStore - Проксирование композаб
   });
 
   it('вызовы композаблов не влияют на состояние Store', async () => {
+    // Настроим пагинацию для корректной работы loadNextPage
+    creativesMock.pagination = computed(() => ({
+      currentPage: 1,
+      lastPage: 5,
+      total: 100,
+      perPage: 12,
+      from: 1,
+      to: 12
+    }));
+
     // Сохраняем начальное состояние
     const initialFilters = { ...store.filters };
     const initialActiveTab = store.tabs.activeTab;
 
     // Выполняем различные операции композаблов
     await store.loadCreatives(5);
-    await store.loadNextPage();
+    await store.loadNextPage(); // теперь вызывает loadCreatives(2)
     await store.refreshCreatives();
 
     // Проверяем что состояние Store не изменилось
@@ -2245,7 +2290,8 @@ describe('useCreativesFiltersStore - Проксирование композаб
 
     // Проверяем что методы композаблов были вызваны
     expect(creativesMock.loadCreativesWithFilters).toHaveBeenCalled();
-    expect(creativesMock.loadNextPage).toHaveBeenCalled();
+    // loadNextPage теперь вызывает loadCreatives, а не композабл напрямую
+    expect(creativesMock.loadCreativesWithFilters).toHaveBeenCalledTimes(2); // loadCreatives + loadNextPage
     expect(creativesMock.refreshCreatives).toHaveBeenCalled();
   });
 
