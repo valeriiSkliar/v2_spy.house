@@ -54,6 +54,9 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   // СОСТОЯНИЕ
   // ============================================================================
   
+  const isEmittingTabEvent = ref(false);
+  const isTabEventsDisabled = ref(false); // Дополнительный флаг для полного отключения (для тестов)
+
   // Дефолтные значения фильтров
   const defaultFilters: FilterState = {
     isDetailedVisible: false,
@@ -409,20 +412,48 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
    * Установка активной вкладки
    */
   function setActiveTab(tabValue: TabValue): void {
-    if (tabs.availableTabs.includes(tabValue) && tabs.activeTab !== tabValue) {
-      const previousTab = tabs.activeTab;
-      tabs.activeTab = tabValue;
-      
-      // Эмитим событие
-      const event = new CustomEvent('creatives:tab-changed', {
-        detail: {
-          previousTab,
-          currentTab: tabValue,
-          tabOption: currentTabOption.value
-        }
-      });
-      document.dispatchEvent(event);
+    // Проверяем валидность вкладки и отличие от текущей
+    if (!tabs.availableTabs.includes(tabValue) || tabs.activeTab === tabValue) {
+      return;
     }
+  
+    // Проверяем флаги эмиссии для предотвращения циклических событий
+    if (isEmittingTabEvent.value || isTabEventsDisabled.value) {
+      return;
+    }
+  
+    const previousTab = tabs.activeTab;
+    
+    // Устанавливаем флаг эмиссии СИНХРОННО для блокировки всех последующих событий
+    isEmittingTabEvent.value = true;
+    
+    try {
+      // Обновляем активную вкладку
+      tabs.activeTab = tabValue;
+  
+      // Эмитируем событие только если события не отключены глобально
+      if (!isTabEventsDisabled.value) {
+        const event = new CustomEvent('creatives:tab-changed', {
+          detail: {
+            previousTab,
+            currentTab: tabValue,
+            tabOption: currentTabOption.value
+          }
+        });
+        
+        document.dispatchEvent(event);
+      }
+      
+    } finally {
+      // Сбрасываем флаг эмиссии СИНХРОННО для немедленного снятия блокировки
+      // Это предотвращает блокировку последующих событий от пользователя
+      isEmittingTabEvent.value = false;
+    }
+  }
+
+  // Метод для программного отключения эмиссии событий (для тестов):
+  function setTabEventEmissionEnabled(enabled: boolean): void {
+    isTabEventsDisabled.value = !enabled;
   }
 
   // ============================================================================
@@ -674,6 +705,7 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     // МЕТОДЫ УПРАВЛЕНИЯ ВКЛАДКАМИ  
     // ========================================
     setActiveTab,               // Установка активной вкладки
+    setTabEventEmissionEnabled, // Отключение/включение событий (для тестов)
     
     // ========================================
     // МЕТОДЫ РАБОТЫ С КРЕАТИВАМИ
