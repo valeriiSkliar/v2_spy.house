@@ -2217,11 +2217,16 @@ describe('useCreativesFiltersStore - Проксирование композаб
     await store.loadCreatives(3);
     expect(urlSyncMock.syncFiltersToUrl).toHaveBeenCalledTimes(3);
 
-    // Проверяем что каждый раз вызывается syncFiltersToUrl (без параметров)
+    // Проверяем что каждый раз вызывается syncFiltersToUrl с правильными параметрами
     expect(urlSyncMock.syncFiltersToUrl).toHaveBeenCalledTimes(3);
-    urlSyncMock.syncFiltersToUrl.mock.calls.forEach(call => {
-      expect(call).toEqual([]);
-    });
+    
+    // Проверяем параметры последнего вызова
+    const lastCall = urlSyncMock.syncFiltersToUrl.mock.calls[2];
+    expect(lastCall[0]).toEqual(expect.objectContaining({
+      country: 'FR'
+    })); // filters
+    expect(lastCall[1]).toBe('push'); // activeTab
+    expect(lastCall[2]).toBe(3); // page
   });
 
   it('вызовы композаблов не влияют на состояние Store', async () => {
