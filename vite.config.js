@@ -79,43 +79,53 @@ export default defineConfig({
     },
     rollupOptions: {
       treeshake: {
-        moduleSideEffects: false,
+        moduleSideEffects: id => {
+          const normalizedId = id.replace(/\\/g, '/');
+
+          if (
+            normalizedId.includes('.vue') ||
+            normalizedId.includes('/stores/') ||
+            normalizedId.includes('/composables/') ||
+            normalizedId.includes('vue-islands') ||
+            normalizedId.includes('pinia') ||
+            normalizedId.includes('useFiltersStore') ||
+            normalizedId.includes('useCreatives') ||
+            normalizedId.includes('useFiltersSynchronization') ||
+            normalizedId.includes('useCreativesUrlSync')
+          ) {
+            return true;
+          }
+          return false;
+        },
         propertyReadSideEffects: false,
         tryCatchDeoptimization: false,
       },
       output: {
         manualChunks(id) {
-          // Включаем loader в основной app чанк
           if (id.includes('components/loader')) {
             return 'app';
           }
 
-          // Выносим jQuery в отдельный vendor чанк
           if (id.includes('node_modules/jquery')) {
             return 'vendor-jquery';
           }
 
-          // Тяжелые UI библиотеки в отдельный чанк
           if (id.includes('sweetalert2') || id.includes('flatpickr')) {
             return 'vendor-ui';
           }
 
-          // Bootstrap и связанные библиотеки
           if (id.includes('bootstrap')) {
             return 'vendor-bootstrap';
           }
 
-          // Слайдеры и карусели (только если используются)
           if (id.includes('swiper')) {
             return 'vendor-sliders';
           }
 
-          // Alpine.js в отдельный чанк
           if (id.includes('alpinejs')) {
             return 'vendor-alpine';
           }
 
-          // Остальные vendor библиотеки
           if (id.includes('node_modules')) {
             return 'vendor-misc';
           }
