@@ -46,7 +46,8 @@ import {
   type TabOption,
   type TabsState,
   type TabValue
-} from '@/types/creatives';
+} from '@/types/creatives.d';
+import debounce from 'lodash.debounce';
 import { defineStore } from 'pinia';
 import { computed, nextTick, reactive, ref, watchEffect } from 'vue';
 
@@ -147,27 +148,21 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   // ============================================================================
   
   /**
-   * Debounced функция для загрузки креативов
+   * Debounced функция для загрузки креативов (используем lodash.debounce)
    */
-  const loadCreativesDebounced = (() => {
-    let timeoutId: NodeJS.Timeout;
-    return () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(async () => {
-        try {
-          const creativesFilters = creativesComposable.mapFiltersToCreativesFilters(
-            filters, 
-            tabs.activeTab, 
-            1 // Всегда загружаем первую страницу при изменении фильтров
-          );
-          
-          await creativesComposable.loadCreativesWithFilters(creativesFilters);
-        } catch (error) {
-          console.error('Ошибка загрузки креативов в Store:', error);
-        }
-      }, CREATIVES_CONSTANTS.DEBOUNCE_DELAY); 
-    };
-  })();
+  const loadCreativesDebounced = debounce(async () => {
+    try {
+      const creativesFilters = creativesComposable.mapFiltersToCreativesFilters(
+        filters, 
+        tabs.activeTab, 
+        1 // Всегда загружаем первую страницу при изменении фильтров
+      );
+      
+      await creativesComposable.loadCreativesWithFilters(creativesFilters);
+    } catch (error) {
+      console.error('Ошибка загрузки креативов в Store:', error);
+    }
+  }, CREATIVES_CONSTANTS.DEBOUNCE_DELAY);
   
   /**
    * Настраивает все watchers для автоматической синхронизации
