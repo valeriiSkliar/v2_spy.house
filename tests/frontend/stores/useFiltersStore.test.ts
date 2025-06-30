@@ -141,6 +141,57 @@ describe('useCreativesFiltersStore edge cases', () => {
   });
 });
 
+describe('useCreativesFiltersStore - Computed свойства', () => {
+  let store: ReturnType<typeof useCreativesFiltersStore>;
+
+  beforeEach(() => {
+    const pinia = createPinia();
+    setActivePinia(pinia);
+    vi.clearAllMocks();
+    store = useCreativesFiltersStore();
+  });
+
+  it('hasActiveFilters при полностью дефолтных значениях', () => {
+    expect(store.hasActiveFilters).toBe(false);
+  });
+
+  it('hasActiveFilters при различных комбинациях активных фильтров', () => {
+    expect(store.hasActiveFilters).toBe(false);
+
+    store.updateFilter('searchKeyword', 'foo');
+    expect(store.hasActiveFilters).toBe(true);
+
+    store.updateFilter('searchKeyword', '');
+    expect(store.hasActiveFilters).toBe(false);
+
+    store.updateFilter('country', 'US');
+    store.updateFilter('languages', ['en']);
+    expect(store.hasActiveFilters).toBe(true);
+
+    store.resetFilters();
+    expect(store.hasActiveFilters).toBe(false);
+  });
+
+  it('hasCreatives при пустом массиве креативов', () => {
+    creativesMock.creatives.value = [];
+    expect(store.hasCreatives).toBe(false);
+  });
+
+  it('hasCreatives при наличии креативов', () => {
+    creativesMock.creatives.value = [{ id: 1 }, { id: 2 }];
+    expect(store.hasCreatives).toBe(true);
+  });
+
+  it('computed опции мультиселектов при пустых данных', () => {
+    expect(store.advertisingNetworksOptions).toEqual([]);
+    expect(store.languagesOptions).toEqual([]);
+    expect(store.operatingSystemsOptions).toEqual([]);
+    expect(store.browsersOptions).toEqual([]);
+    expect(store.devicesOptions).toEqual([]);
+    expect(store.imageSizesOptions).toEqual([]);
+  });
+});
+
 describe('useCreativesFiltersStore - Инициализация и конфигурация', () => {
   let store: ReturnType<typeof useCreativesFiltersStore>;
 
