@@ -240,7 +240,7 @@ onMounted(async () => {
   }
   50% {
     box-shadow: 0 0 0 8px rgba(61, 201, 138, 0.2);
-    background-color: rgba(61, 201, 138, 0.1);
+    /* background-color: rgba(61, 201, 138, 0.1); */
   }
   100% {
     box-shadow: 0 0 0 0 rgba(61, 201, 138, 0);
@@ -255,12 +255,12 @@ onMounted(async () => {
 
 .counter-update-enter-from {
   opacity: 0;
-  transform: translateY(-10px) scale(0.8);
+  transform: translateY(-10px);
 }
 
 .counter-update-leave-to {
   opacity: 0;
-  transform: translateY(10px) scale(0.8);
+  transform: translateY(10px);
 }
 
 /* ============================================================================
@@ -288,7 +288,7 @@ onMounted(async () => {
    ============================================================================ */
 
 .favorites-counter:focus {
-  outline: 2px solid #3dc98a;
+  /* outline: 2px solid #3dc98a; */
   outline-offset: 2px;
 }
 
