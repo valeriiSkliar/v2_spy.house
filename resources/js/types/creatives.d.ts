@@ -26,6 +26,7 @@ export interface Creative {
   country: CountryCode;
   file_url: string;
   preview_url?: string;
+  video_url?: string;
   created_at: string;
   activity_date?: string;
   advertising_networks?: string[];
