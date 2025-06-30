@@ -39,15 +39,16 @@
 import { useCreatives } from '@/composables/useCreatives';
 import { useCreativesUrlSync } from '@/composables/useCreativesUrlSync';
 import { useFiltersSynchronization } from '@/composables/useFiltersSynchronization';
-import type {
-  FilterOption,
-  FilterState,
-  TabOption,
-  TabsState,
-  TabValue
+import {
+  CREATIVES_CONSTANTS,
+  type FilterOption,
+  type FilterState,
+  type TabOption,
+  type TabsState,
+  type TabValue
 } from '@/types/creatives';
 import { defineStore } from 'pinia';
-import { computed, reactive, ref } from 'vue';
+import { computed, nextTick, reactive, ref, watchEffect } from 'vue';
 
 export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   // ============================================================================
@@ -133,13 +134,101 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   // 2️⃣ URL синхронизация (зависит от типов креативов)
   const urlSync = useCreativesUrlSync();
   
-  // 3️⃣ Координатор синхронизации (связывает все воедино)
+  // 3️⃣ Координатор синхронизации (теперь только утилитарные функции)
   const filtersSync = useFiltersSynchronization(
     filters,              // Реактивное состояние фильтров из Store
     tabs,                 // Реактивное состояние вкладок из Store  
     urlSync,              // URL синхронизация
     creativesComposable   // API и данные креативов
   );
+
+  // ============================================================================
+  // WATCHERS - ЦЕНТРАЛИЗОВАННАЯ СИНХРОНИЗАЦИЯ
+  // ============================================================================
+  
+  /**
+   * Debounced функция для загрузки креативов
+   */
+  const loadCreativesDebounced = (() => {
+    let timeoutId: NodeJS.Timeout;
+    return () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(async () => {
+        try {
+          const creativesFilters = creativesComposable.mapFiltersToCreativesFilters(
+            filters, 
+            tabs.activeTab, 
+            1 // Всегда загружаем первую страницу при изменении фильтров
+          );
+          
+          await creativesComposable.loadCreativesWithFilters(creativesFilters);
+        } catch (error) {
+          console.error('Ошибка загрузки креативов в Store:', error);
+        }
+      }, CREATIVES_CONSTANTS.DEBOUNCE_DELAY); 
+    };
+  })();
+  
+  /**
+   * Настраивает все watchers для автоматической синхронизации
+   * Все watchers централизованы в Store для предотвращения дублирования
+   */
+  function setupFiltersWatchers(): void {
+    // Watcher 1: Store -> URL синхронизация
+    watchEffect(() => {
+      if (!isInitialized.value) return;
+      
+      // Отслеживаем изменения фильтров (исключая служебные)
+      const filtersToWatch = { ...filters };
+      delete (filtersToWatch as any).isDetailedVisible;
+      delete (filtersToWatch as any).savedSettings;
+      
+      // Отслеживаем активную вкладку
+      const activeTab = tabs.activeTab;
+      
+      // Синхронизируем в URL с debounce
+      filtersSync.syncToUrl();
+    });
+    
+    // Watcher 2: URL -> Store синхронизация  
+    watchEffect(() => {
+      if (!isInitialized.value) return;
+      
+      // Отслеживаем изменения URL состояния
+      const urlState = urlSync.state.value;
+      
+      // Синхронизируем из URL
+      if (Object.keys(urlState).length > 0) {
+        filtersSync.syncFromUrl();
+      }
+    });
+    
+    // Watcher 3: Автоматическая загрузка креативов при изменении фильтров
+    watchEffect(() => {
+      if (!isInitialized.value) return;
+      
+      // Отслеживаем значимые фильтры с безопасной проверкой массивов
+      const watchedFilters = {
+        searchKeyword: filters.searchKeyword,
+        country: filters.country,
+        dateCreation: filters.dateCreation,
+        sortBy: filters.sortBy,
+        periodDisplay: filters.periodDisplay,
+        advertisingNetworks: Array.isArray(filters.advertisingNetworks) ? [...filters.advertisingNetworks] : [],
+        languages: Array.isArray(filters.languages) ? [...filters.languages] : [],
+        operatingSystems: Array.isArray(filters.operatingSystems) ? [...filters.operatingSystems] : [],
+        browsers: Array.isArray(filters.browsers) ? [...filters.browsers] : [],
+        devices: Array.isArray(filters.devices) ? [...filters.devices] : [],
+        imageSizes: Array.isArray(filters.imageSizes) ? [...filters.imageSizes] : [],
+        onlyAdult: filters.onlyAdult,
+        perPage: filters.perPage,
+        activeTab: tabs.activeTab
+      };
+      
+      // Загружаем креативы с debounce
+      loadCreativesDebounced();
+    });
+  }
 
   // ============================================================================
   // COMPUTED СВОЙСТВА
@@ -316,11 +405,15 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
       Object.assign(filters, propsFilters);
     }
     
-    // 3. Инициализируем синхронизацию фильтров
+    // 3. Инициализируем синхронизацию фильтров (только утилиты)
     await filtersSync.initialize();
     
+    // 4. Настраиваем watchers в Store (централизованно)
+    await nextTick();
+    setupFiltersWatchers();
+    
     isInitialized.value = true;
-    console.log('✅ CreativesFiltersStore инициализирован');
+    console.log('✅ CreativesFiltersStore инициализирован с централизованными watchers');
   }
 
   // ============================================================================
@@ -417,8 +510,14 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
       return;
     }
   
-    // Проверяем флаги эмиссии для предотвращения циклических событий
-    if (isEmittingTabEvent.value || isTabEventsDisabled.value) {
+    // Если события отключены, обновляем состояние но не эмитируем
+    if (isTabEventsDisabled.value) {
+      tabs.activeTab = tabValue;
+      return;
+    }
+    
+    // Проверяем флаг эмиссии для предотвращения циклических событий
+    if (isEmittingTabEvent.value) {
       return;
     }
   
