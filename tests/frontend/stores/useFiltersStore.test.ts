@@ -1386,3 +1386,470 @@ describe('useCreativesFiltersStore - Мультиселект операции',
     expect(store.filters.languages).toEqual([]);
   });
 });
+
+describe('useCreativesFiltersStore - Управление вкладками', () => {
+  let store: ReturnType<typeof useCreativesFiltersStore>;
+
+  beforeEach(() => {
+    const pinia = createPinia();
+    setActivePinia(pinia);
+    vi.clearAllMocks();
+    
+    // Полностью сбрасываем все моки
+    vi.restoreAllMocks();
+    
+    store = useCreativesFiltersStore();
+  });
+
+  // Отладочный тест для выявления источника лишних событий
+  it('DEBUG: проверка источников dispatchEvent при создании store', () => {
+    const dispatchSpy = vi.spyOn(document, 'dispatchEvent');
+    
+    // Создаем новый store
+    const pinia = createPinia();
+    setActivePinia(pinia);
+    const newStore = useCreativesFiltersStore();
+    
+    console.log('Events after store creation:', dispatchSpy.mock.calls.length);
+    dispatchSpy.mock.calls.forEach((call, index) => {
+      const event = call[0] as CustomEvent;
+      console.log(`Event ${index + 1}:`, event.type, event.detail);
+    });
+    
+    // Вызываем setActiveTab
+    newStore.setActiveTab('facebook');
+    
+    console.log('Events after setActiveTab:', dispatchSpy.mock.calls.length);
+    dispatchSpy.mock.calls.forEach((call, index) => {
+      const event = call[0] as CustomEvent;
+      console.log(`Event ${index + 1}:`, event.type, event.detail);
+    });
+    
+    dispatchSpy.mockRestore();
+  });
+
+  it('setActiveTab с невалидной вкладкой (не в availableTabs)', () => {
+    // Создаем полностью свежий store и spy для этого теста
+    const pinia = createPinia();
+    setActivePinia(pinia);
+    const testStore = useCreativesFiltersStore();
+    
+    // Отключаем синхронизацию для изоляции тестов
+    testStore.filtersSync.disable();
+    
+    const dispatchSpy = vi.spyOn(document, 'dispatchEvent');
+    
+    // Проверяем начальное состояние
+    expect(testStore.tabs.activeTab).toBe('push');
+    expect(testStore.tabs.availableTabs).toEqual(['push', 'inpage', 'facebook', 'tiktok']);
+
+    // Пытаемся установить невалидную вкладку
+    testStore.setActiveTab('invalid_tab' as any);
+    
+    // Проверяем что активная вкладка не изменилась
+    expect(testStore.tabs.activeTab).toBe('push');
+    
+    // Проверяем что событие не было эмитировано
+    expect(dispatchSpy).not.toHaveBeenCalled();
+
+    // Пытаемся установить еще одну невалидную вкладку
+    testStore.setActiveTab('another_invalid' as any);
+    
+    // Проверяем что активная вкладка все еще не изменилась
+    expect(testStore.tabs.activeTab).toBe('push');
+    expect(dispatchSpy).not.toHaveBeenCalled();
+
+    // Устанавливаем валидную вкладку для проверки что метод работает
+    testStore.setActiveTab('facebook');
+    expect(testStore.tabs.activeTab).toBe('facebook');
+    expect(dispatchSpy).toHaveBeenCalledTimes(1);
+
+    dispatchSpy.mockRestore();
+  });
+
+  it('setActiveTab с той же активной вкладкой (без изменений)', () => {
+    // Создаем полностью свежий store и spy для этого теста
+    const pinia = createPinia();
+    setActivePinia(pinia);
+    const testStore = useCreativesFiltersStore();
+    
+    // Отключаем синхронизацию для изоляции тестов
+    testStore.filtersSync.disable();
+    
+    const dispatchSpy = vi.spyOn(document, 'dispatchEvent');
+
+    // Устанавливаем активную вкладку
+    testStore.setActiveTab('facebook');
+    expect(testStore.tabs.activeTab).toBe('facebook');
+    expect(dispatchSpy).toHaveBeenCalledTimes(1);
+
+    // Сбрасываем счетчик после первого вызова
+    dispatchSpy.mockClear();
+
+    // Пытаемся установить ту же вкладку
+    testStore.setActiveTab('facebook');
+    
+    // Проверяем что состояние не изменилось
+    expect(testStore.tabs.activeTab).toBe('facebook');
+    
+    // Проверяем что событие не было эмитировано (нет изменений)
+    expect(dispatchSpy).not.toHaveBeenCalled();
+
+    // Пытаемся еще раз установить ту же вкладку
+    testStore.setActiveTab('facebook');
+    expect(testStore.tabs.activeTab).toBe('facebook');
+    expect(dispatchSpy).not.toHaveBeenCalled();
+
+    // Устанавливаем другую вкладку для проверки что изменения работают
+    testStore.setActiveTab('tiktok');
+    expect(testStore.tabs.activeTab).toBe('tiktok');
+    expect(dispatchSpy).toHaveBeenCalledTimes(1);
+
+    // Снова устанавливаем ту же новую вкладку
+    testStore.setActiveTab('tiktok');
+    expect(testStore.tabs.activeTab).toBe('tiktok');
+    expect(dispatchSpy).toHaveBeenCalledTimes(1); // счетчик не увеличился
+
+    dispatchSpy.mockRestore();
+  });
+
+  it('проверка эмиссии события creatives:tab-changed с корректными данными', () => {
+    // Создаем полностью свежий store и spy для этого теста
+    const pinia = createPinia();
+    setActivePinia(pinia);
+    const testStore = useCreativesFiltersStore();
+    
+    // Отключаем синхронизацию для изоляции тестов
+    testStore.filtersSync.disable();
+    
+    const dispatchSpy = vi.spyOn(document, 'dispatchEvent');
+    
+    // Устанавливаем начальную вкладку
+    testStore.setActiveTab('facebook');
+    expect(dispatchSpy).toHaveBeenCalledTimes(1);
+
+    // Проверяем первое событие
+    let eventCall = dispatchSpy.mock.calls[0][0] as CustomEvent;
+    expect(eventCall.type).toBe('creatives:tab-changed');
+    expect(eventCall.detail).toEqual({
+      previousTab: 'push', // изначальная вкладка
+      currentTab: 'facebook',
+      tabOption: {
+        value: 'facebook',
+        label: 'facebook', // fallback, так как переводы не установлены
+        count: '65.1k'
+      }
+    });
+
+    // Устанавливаем переводы для более точной проверки
+    testStore.setTranslations({
+      tabs: {
+        tiktok: 'TikTok Ads',
+        inpage: 'In-Page Ads'
+      }
+    } as any);
+
+    // Переключаемся на tiktok
+    testStore.setActiveTab('tiktok');
+    expect(dispatchSpy).toHaveBeenCalledTimes(2);
+
+    // Проверяем второе событие с переводами
+    eventCall = dispatchSpy.mock.calls[1][0] as CustomEvent;
+    expect(eventCall.type).toBe('creatives:tab-changed');
+    expect(eventCall.detail).toEqual({
+      previousTab: 'facebook',
+      currentTab: 'tiktok',
+      tabOption: {
+        value: 'tiktok',
+        label: 'TikTok Ads', // используется перевод
+        count: '45.2m'
+      }
+    });
+
+    // Переключаемся на inpage
+    testStore.setActiveTab('inpage');
+    expect(dispatchSpy).toHaveBeenCalledTimes(3);
+
+    // Проверяем третье событие
+    eventCall = dispatchSpy.mock.calls[2][0] as CustomEvent;
+    expect(eventCall.type).toBe('creatives:tab-changed');
+    expect(eventCall.detail).toEqual({
+      previousTab: 'tiktok',
+      currentTab: 'inpage',
+      tabOption: {
+        value: 'inpage',
+        label: 'In-Page Ads', // используется перевод
+        count: '3.1k'
+      }
+    });
+
+    // Переключаемся на push (без перевода)
+    testStore.setActiveTab('push');
+    expect(dispatchSpy).toHaveBeenCalledTimes(4);
+
+    eventCall = dispatchSpy.mock.calls[3][0] as CustomEvent;
+    expect(eventCall.type).toBe('creatives:tab-changed');
+    expect(eventCall.detail).toEqual({
+      previousTab: 'inpage',
+      currentTab: 'push',
+      tabOption: {
+        value: 'push',
+        label: 'push', // fallback, так как перевода нет
+        count: '170k'
+      }
+    });
+
+    dispatchSpy.mockRestore();
+  });
+
+  it('currentTabOption computed при отсутствии активной вкладки', () => {
+    // Устанавливаем невалидную активную вкладку через прямое изменение состояния
+    store.tabs.activeTab = 'nonexistent_tab' as any;
+    
+    // Проверяем что currentTabOption возвращает undefined
+    expect(store.currentTabOption).toBeUndefined();
+
+    // Устанавливаем пустую строку как активную вкладку
+    store.tabs.activeTab = '' as any;
+    expect(store.currentTabOption).toBeUndefined();
+
+    // Устанавливаем null как активную вкладку
+    store.tabs.activeTab = null as any;
+    expect(store.currentTabOption).toBeUndefined();
+
+    // Устанавливаем undefined как активную вкладку
+    store.tabs.activeTab = undefined as any;
+    expect(store.currentTabOption).toBeUndefined();
+
+    // Проверяем что при валидной вкладке computed работает корректно
+    store.setActiveTab('facebook');
+    expect(store.currentTabOption).toEqual({
+      value: 'facebook',
+      label: 'facebook',
+      count: '65.1k'
+    });
+
+    // Снова устанавливаем невалидную вкладку
+    store.tabs.activeTab = 'invalid' as any;
+    expect(store.currentTabOption).toBeUndefined();
+  });
+
+  it('tabOptions computed с пустым массивом availableTabs', () => {
+    // Проверяем изначальное состояние (не пустой массив)
+    expect(store.tabs.availableTabs).toEqual(['push', 'inpage', 'facebook', 'tiktok']);
+    expect(store.tabOptions).toHaveLength(4);
+
+    // Устанавливаем пустой массив доступных вкладок
+    store.tabs.availableTabs = [];
+    
+    // Проверяем что tabOptions возвращает пустой массив
+    expect(store.tabOptions).toEqual([]);
+    expect(store.tabOptions).toHaveLength(0);
+
+    // Проверяем что currentTabOption становится undefined
+    expect(store.currentTabOption).toBeUndefined();
+
+    // Восстанавливаем одну вкладку
+    store.tabs.availableTabs = ['push'];
+    
+    // Проверяем что tabOptions содержит одну опцию
+    expect(store.tabOptions).toEqual([
+      {
+        value: 'push',
+        label: 'push',
+        count: '170k'
+      }
+    ]);
+    expect(store.tabOptions).toHaveLength(1);
+
+    // Устанавливаем активную вкладку и проверяем currentTabOption
+    store.setActiveTab('push');
+    expect(store.currentTabOption).toEqual({
+      value: 'push',
+      label: 'push',
+      count: '170k'
+    });
+
+    // Снова очищаем массив
+    store.tabs.availableTabs = [];
+    expect(store.tabOptions).toEqual([]);
+    expect(store.currentTabOption).toBeUndefined();
+  });
+
+  it('tabOptions computed с частично отсутствующими счетчиками', () => {
+    // Устанавливаем вкладки с частично отсутствующими счетчиками
+    store.setTabOptions({
+      availableTabs: ['push', 'facebook', 'custom1', 'custom2'],
+      tabCounts: {
+        push: '200k',
+        facebook: '150k'
+        // custom1 и custom2 отсутствуют в счетчиках
+      }
+    });
+
+    const tabOptions = store.tabOptions;
+    expect(tabOptions).toHaveLength(4);
+
+    // Проверяем вкладки с счетчиками
+    expect(tabOptions.find(tab => tab.value === 'push')).toEqual({
+      value: 'push',
+      label: 'push',
+      count: '200k'
+    });
+
+    expect(tabOptions.find(tab => tab.value === 'facebook')).toEqual({
+      value: 'facebook',
+      label: 'facebook',
+      count: '150k'
+    });
+
+    // Проверяем вкладки без счетчиков (должны получить 0)
+    expect(tabOptions.find(tab => tab.value === 'custom1')).toEqual({
+      value: 'custom1',
+      label: 'custom1',
+      count: 0
+    });
+
+    expect(tabOptions.find(tab => tab.value === 'custom2')).toEqual({
+      value: 'custom2',
+      label: 'custom2',
+      count: 0
+    });
+  });
+
+  it('tabOptions computed с переводами и счетчиками', () => {
+    // Устанавливаем переводы для вкладок
+    store.setTranslations({
+      tabs: {
+        push: 'Push Notifications',
+        facebook: 'Facebook Ads',
+        custom: 'Custom Tab'
+      }
+    } as any);
+
+    // Устанавливаем кастомные вкладки и счетчики
+    store.setTabOptions({
+      availableTabs: ['push', 'facebook', 'custom', 'notranslation'],
+      tabCounts: {
+        push: '500k',
+        facebook: '300k',
+        custom: '100k',
+        notranslation: '50k'
+      }
+    });
+
+    const tabOptions = store.tabOptions;
+    expect(tabOptions).toHaveLength(4);
+
+    // Проверяем вкладки с переводами
+    expect(tabOptions.find(tab => tab.value === 'push')).toEqual({
+      value: 'push',
+      label: 'Push Notifications',
+      count: '500k'
+    });
+
+    expect(tabOptions.find(tab => tab.value === 'facebook')).toEqual({
+      value: 'facebook',
+      label: 'Facebook Ads',
+      count: '300k'
+    });
+
+    expect(tabOptions.find(tab => tab.value === 'custom')).toEqual({
+      value: 'custom',
+      label: 'Custom Tab',
+      count: '100k'
+    });
+
+    // Проверяем вкладку без перевода (fallback к value)
+    expect(tabOptions.find(tab => tab.value === 'notranslation')).toEqual({
+      value: 'notranslation',
+      label: 'notranslation',
+      count: '50k'
+    });
+  });
+
+  it('setActiveTab с обновлением доступных вкладок во время работы', () => {
+    // Создаем полностью свежий store и spy для этого теста
+    const pinia = createPinia();
+    setActivePinia(pinia);
+    const testStore = useCreativesFiltersStore();
+    
+    // Отключаем синхронизацию для изоляции тестов
+    testStore.filtersSync.disable();
+    
+    const dispatchSpy = vi.spyOn(document, 'dispatchEvent');
+
+    // Устанавливаем активную вкладку
+    testStore.setActiveTab('facebook');
+    expect(testStore.tabs.activeTab).toBe('facebook');
+    expect(dispatchSpy).toHaveBeenCalledTimes(1);
+
+    // Сбрасываем счетчик после первого вызова
+    dispatchSpy.mockClear();
+
+    // Обновляем список доступных вкладок, исключая текущую активную
+    testStore.setTabOptions({
+      availableTabs: ['push', 'tiktok'], // facebook больше нет в списке
+      tabCounts: {
+        push: '100k',
+        tiktok: '200k'
+      }
+    });
+
+    // Активная вкладка остается facebook, хотя её нет в availableTabs
+    expect(testStore.tabs.activeTab).toBe('facebook');
+
+    // Пытаемся установить facebook снова - должно игнорироваться
+    testStore.setActiveTab('facebook');
+    expect(testStore.tabs.activeTab).toBe('facebook');
+    expect(dispatchSpy).not.toHaveBeenCalled(); // событие не эмитировалось
+
+    // Устанавливаем валидную вкладку из нового списка
+    testStore.setActiveTab('tiktok');
+    expect(testStore.tabs.activeTab).toBe('tiktok');
+    expect(dispatchSpy).toHaveBeenCalledTimes(1);
+
+    // Проверяем что currentTabOption работает с новым списком
+    expect(testStore.currentTabOption).toEqual({
+      value: 'tiktok',
+      label: 'tiktok',
+      count: '200k'
+    });
+
+    dispatchSpy.mockRestore();
+  });
+
+  it('setActiveTab с null и undefined значениями', () => {
+    // Создаем полностью свежий store и spy для этого теста
+    const pinia = createPinia();
+    setActivePinia(pinia);
+    const testStore = useCreativesFiltersStore();
+    
+    // Отключаем синхронизацию для изоляции тестов
+    testStore.filtersSync.disable();
+    
+    const dispatchSpy = vi.spyOn(document, 'dispatchEvent');
+
+    // Пытаемся установить null
+    testStore.setActiveTab(null as any);
+    expect(testStore.tabs.activeTab).toBe('push'); // остается дефолтной
+    expect(dispatchSpy).not.toHaveBeenCalled();
+
+    // Пытаемся установить undefined
+    testStore.setActiveTab(undefined as any);
+    expect(testStore.tabs.activeTab).toBe('push'); // остается дефолтной
+    expect(dispatchSpy).not.toHaveBeenCalled();
+
+    // Пытаемся установить пустую строку
+    testStore.setActiveTab('' as any);
+    expect(testStore.tabs.activeTab).toBe('push'); // остается дефолтной
+    expect(dispatchSpy).not.toHaveBeenCalled();
+
+    // Устанавливаем валидную вкладку для проверки что метод работает
+    testStore.setActiveTab('facebook');
+    expect(testStore.tabs.activeTab).toBe('facebook');
+    expect(dispatchSpy).toHaveBeenCalledTimes(1);
+
+    dispatchSpy.mockRestore();
+  });
+});
