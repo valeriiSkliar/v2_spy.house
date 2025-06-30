@@ -71,6 +71,8 @@ use Illuminate\Support\Facades\Auth;
     </script>
     @endif
 
+    <!-- Routes for ajax -->
+    @if (Auth::check())
     <script>
         window.routes = {
             landingsAjaxList: '{{ route("landings.list.ajax") }}',
@@ -78,6 +80,8 @@ use Illuminate\Support\Facades\Auth;
             landingsAjaxDestroyBase: '{{ route("landings.destroy.ajax", ["landing" => ":id"]) }}',
         };
     </script>
+    @endif
+    <!-- Routes -->
     @stack('scripts')
     @stack('modals')
 </body>
