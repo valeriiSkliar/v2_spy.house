@@ -39,6 +39,7 @@ export interface Creative {
   social_likes?: number | string;
   social_comments?: number | string;
   social_shares?: number | string;
+  duration?: string;
   // Computed свойства (добавляются на frontend)
   displayName?: string;
   isRecent?: boolean;

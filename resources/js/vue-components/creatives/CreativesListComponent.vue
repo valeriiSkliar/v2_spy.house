@@ -46,16 +46,16 @@
         />
 
         <!-- Facebook/TikTok компонент (пока используется универсальная разметка) -->
-        <!-- <SocialCreativeCard
+        <SocialCreativeCard
           v-else-if="currentTab === 'facebook' || currentTab === 'tiktok'"
+          :active-tab="currentTab"
           :creative="creative"
-          :social-type="currentTab"
           :is-favorite="store.isFavoriteCreative(creative.id)"
-          :is-favorite-loading="store.isFavoritesLoading"
+          :is-favorite-loading="store.isFavoriteLoading(creative.id)"
           @toggle-favorite="handleToggleFavorite"
           @download="handleDownload"
-          @show-details="handleShowDetails"
-        /> -->
+          @show-details="handleShowDetails" 
+        />
 
         <!-- Универсальная карточка для остальных типов -->
         <!-- <UniversalCreativeCard 
@@ -80,6 +80,7 @@ import { computed, onMounted, watch } from 'vue';
 import type { Creative } from '../../types/creatives';
 import InpageCreativeCard from './cards/InpageCreativeCard.vue';
 import PushCreativeCard from './cards/PushCreativeCard.vue';
+import SocialCreativeCard from './cards/SocialCreativeCard.vue';
 
 interface Props {
   translations?: Record<string, string>;

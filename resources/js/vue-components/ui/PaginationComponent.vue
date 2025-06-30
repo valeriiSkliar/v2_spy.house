@@ -11,7 +11,7 @@
           @click.prevent="goToPreviousPage"
         >
           <span class="icon-prev"></span>
-          <span class="pagination-link__txt">{{ translations.previous || 'Предыдущая' }}</span>
+          <span class="pagination-link__txt"></span>
         </a>
       </li>
 
@@ -41,7 +41,7 @@
           href="#"
           @click.prevent="goToNextPage"
         >
-          <span class="pagination-link__txt">{{ translations.next || 'Следующая' }}</span>
+          <span class="pagination-link__txt"></span>
           <span class="icon-next"></span>
         </a>
       </li>

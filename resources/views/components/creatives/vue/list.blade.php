@@ -10,7 +10,8 @@
     }' data-vue-placeholder-manual>
 
     <!-- Placeholder карточек креативов (количество = perPage) -->
-    <div class="creatives-list" data-vue-placeholder>
+    <div class="creatives-list" @if ($activeTab==='facebook' || $activeTab==='tiktok' ) {{ '_social' }} @endif
+        data-vue-placeholder>
         <div class="creatives-list__items">
             @for ($i = 0; $i < $perPage; $i++) <div style="padding: 0;" class="creative-item">
                 <div class="creative-item__placeholder creative-item__placeholder--{{ $activeTab }}">
