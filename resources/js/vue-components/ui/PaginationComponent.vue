@@ -91,18 +91,18 @@ const store = useCreativesFiltersStore();
 const pagination = computed(() => store.pagination);
 const isLoading = computed(() => store.isLoading);
 
-// Извлекаем данные из пагинации
-const currentPage = computed(() => pagination.value.currentPage);
-const lastPage = computed(() => pagination.value.lastPage);
-const totalItems = computed(() => pagination.value.total);
-const perPage = computed(() => pagination.value.perPage);
-const fromItem = computed(() => pagination.value.from);
-const toItem = computed(() => pagination.value.to);
+// Используем computed свойства из store для лучшей инкапсуляции
+const currentPage = computed(() => store.currentPage);
+const lastPage = computed(() => store.lastPage);
+const totalItems = computed(() => store.totalItems);
+const perPage = computed(() => store.perPage);
+const fromItem = computed(() => store.fromItem);
+const toItem = computed(() => store.toItem);
 
-// Состояние пагинации
-const isOnFirstPage = computed(() => currentPage.value <= 1);
-const isOnLastPage = computed(() => currentPage.value >= lastPage.value);
-const shouldShow = computed(() => lastPage.value > 1);
+// Состояния пагинации из store
+const isOnFirstPage = computed(() => store.isOnFirstPage);
+const isOnLastPage = computed(() => store.isOnLastPage);
+const shouldShow = computed(() => store.shouldShowPagination);
 
 // ============================================================================
 // PAGINATION LOGIC
@@ -175,6 +175,11 @@ const visiblePages = computed((): PageItem[] => {
 // ============================================================================
 
 /**
+ * Все методы навигации используют методы store для правильной инкапсуляции.
+ * Store обеспечивает синхронизацию с URL и корректное управление состоянием.
+ */
+
+/**
  * Переход на конкретную страницу
  */
 function goToPage(page: number): void {
@@ -183,7 +188,7 @@ function goToPage(page: number): void {
   }
 
   console.log(`🔄 Pagination: переход на страницу ${page}`);
-  store.loadCreatives(page);
+  store.loadPage(page);
 }
 
 /**
@@ -191,7 +196,7 @@ function goToPage(page: number): void {
  */
 function goToPreviousPage(): void {
   if (!isOnFirstPage.value) {
-    goToPage(currentPage.value - 1);
+    store.goToPreviousPage();
   }
 }
 
@@ -200,7 +205,7 @@ function goToPreviousPage(): void {
  */
 function goToNextPage(): void {
   if (!isOnLastPage.value) {
-    goToPage(currentPage.value + 1);
+    store.goToNextPage();
   }
 }
 
@@ -208,14 +213,14 @@ function goToNextPage(): void {
  * Переход на первую страницу
  */
 function goToFirstPage(): void {
-  goToPage(1);
+  store.goToFirstPage();
 }
 
 /**
  * Переход на последнюю страницу
  */
 function goToLastPage(): void {
-  goToPage(lastPage.value);
+  store.goToLastPage();
 }
 
 // ============================================================================
@@ -291,9 +296,9 @@ defineExpose({
   goToNextPage,
   goToFirstPage,
   goToLastPage,
-  currentPage: currentPage.value,
-  lastPage: lastPage.value,
-  isLoading: isLoading.value,
+  currentPage,
+  lastPage,
+  isLoading,
 });
 </script>
 <style lang="scss" scoped>

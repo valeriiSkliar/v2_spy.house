@@ -1,5 +1,7 @@
 // composables/useCreatives.ts
 // Композабл для управления креативами
+//
+// ВАЖНО: Содержит побочные эффекты (ref, computed), не удалять через tree-shaking!
 
 import { creativesService } from '@/services/CreativesService';
 import type {

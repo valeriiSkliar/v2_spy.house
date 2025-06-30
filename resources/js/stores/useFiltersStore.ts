@@ -35,6 +35,10 @@
 // - Debounced операции для URL синхронизации
 // - Кэширование API запросов
 // - Reactive updates только при реальных изменениях
+//
+// 🚨 ВАЖНО ДЛЯ TREE-SHAKING:
+// Содержит побочные эффекты (watchEffect, реактивные watchers)!
+// НЕ УДАЛЯТЬ через tree-shaking в production сборке!
 
 import { useCreatives } from '@/composables/useCreatives';
 import { useCreativesUrlSync } from '@/composables/useCreativesUrlSync';
@@ -152,6 +156,17 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
    */
   const loadCreativesDebounced = debounce(async () => {
     try {
+      // Логирование для production отладки
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('store:load-creatives', {
+          detail: { 
+            page: 1,
+            source: 'debounced-watcher',
+            timestamp: Date.now()
+          }
+        }));
+      }
+      
       const creativesFilters = creativesComposable.mapFiltersToCreativesFilters(
         filters, 
         tabs.activeTab, 
@@ -161,14 +176,32 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
       await creativesComposable.loadCreativesWithFilters(creativesFilters);
     } catch (error) {
       console.error('Ошибка загрузки креативов в Store:', error);
+      
+      // Логирование ошибки для production
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('store:load-error', {
+          detail: { 
+            error: error instanceof Error ? error.message : String(error),
+            timestamp: Date.now()
+          }
+        }));
+      }
     }
   }, CREATIVES_CONSTANTS.DEBOUNCE_DELAY);
   
   /**
    * Настраивает все watchers для автоматической синхронизации
    * Все watchers централизованы в Store для предотвращения дублирования
+   * ВАЖНО: Вызывается СРАЗУ при создании store для предотвращения проблем с tree-shaking в production
    */
   function setupFiltersWatchers(): void {
+    // Логирование для production (через события)
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('store:watchers-initialized', {
+        detail: { store: 'CreativesFiltersStore', timestamp: Date.now() }
+      }));
+    }
+    
     // Watcher 1: Store -> URL синхронизация
     watchEffect(() => {
       if (!isInitialized.value) return;
@@ -180,6 +213,17 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
       
       // Отслеживаем активную вкладку
       const activeTab = tabs.activeTab;
+      
+      // Событие для production отладки
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('store:sync-to-url', {
+          detail: { 
+            filters: Object.keys(filtersToWatch).length,
+            activeTab,
+            timestamp: Date.now()
+          }
+        }));
+      }
       
       // Синхронизируем в URL с debounce
       filtersSync.syncToUrl();
@@ -194,6 +238,16 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
       
       // Синхронизируем из URL
       if (Object.keys(urlState).length > 0) {
+        // Событие для production отладки
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('store:sync-from-url', {
+            detail: { 
+              urlStateKeys: Object.keys(urlState).length,
+              timestamp: Date.now()
+            }
+          }));
+        }
+        
         filtersSync.syncFromUrl();
       }
     });
@@ -220,10 +274,28 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
         activeTab: tabs.activeTab
       };
       
+      // Событие для production отладки
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('store:filters-changed', {
+          detail: { 
+            filtersCount: Object.keys(watchedFilters).length,
+            timestamp: Date.now()
+          }
+        }));
+      }
+      
       // Загружаем креативы с debounce
       loadCreativesDebounced();
     });
   }
+
+  // ============================================================================
+  // ИНИЦИАЛИЗАЦИЯ WATCHERS - СРАЗУ ПРИ СОЗДАНИИ STORE
+  // ============================================================================
+  
+  // КРИТИЧЕСКИ ВАЖНО: Watchers должны быть созданы СРАЗУ при создании store
+  // Это предотвращает их удаление через tree-shaking в production
+  setupFiltersWatchers();
 
   // ============================================================================
   // COMPUTED СВОЙСТВА
@@ -268,7 +340,7 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   });
 
   // ============================================================================
-  // ПРОКСИРОВАНИЕ ДАННЫХ ИЗ КОМПОЗАБЛОВ
+  // ПРОКСИРОВАННЫЕ ДАННЫЕ ИЗ КОМПОЗАБЛОВ
   // ============================================================================
   
   // Проксируем computed свойства из композабла креативов для единого API:
@@ -278,6 +350,18 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   const error = computed(() => creativesComposable.error.value);
   const hasCreatives = computed(() => creatives.value.length > 0);
   const meta = computed(() => creativesComposable.meta.value);
+
+  // Computed свойства для пагинации (для инкапсуляции в PaginationComponent)
+  const currentPage = computed(() => pagination.value.currentPage);
+  const lastPage = computed(() => pagination.value.lastPage);
+  const totalItems = computed(() => pagination.value.total);
+  const perPage = computed(() => pagination.value.perPage);
+  const fromItem = computed(() => pagination.value.from);
+  const toItem = computed(() => pagination.value.to);
+  const isOnFirstPage = computed(() => currentPage.value <= 1);
+  const isOnLastPage = computed(() => currentPage.value >= lastPage.value);
+  const canLoadMore = computed(() => currentPage.value < lastPage.value);
+  const shouldShowPagination = computed(() => lastPage.value > 1);
 
   // ============================================================================
   // МЕТОДЫ ИНИЦИАЛИЗАЦИИ
@@ -403,12 +487,11 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     // 3. Инициализируем синхронизацию фильтров (только утилиты)
     await filtersSync.initialize();
     
-    // 4. Настраиваем watchers в Store (централизованно)
+    // 4. Устанавливаем флаг инициализации для активации watchers
     await nextTick();
-    setupFiltersWatchers();
-    
     isInitialized.value = true;
-    console.log('✅ CreativesFiltersStore инициализирован с централизованными watchers');
+    
+    console.log('✅ CreativesFiltersStore инициализирован, watchers активированы');
   }
 
   // ============================================================================
@@ -417,11 +500,84 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   
   /**
    * Универсальное обновление фильтра
+   * Обеспечивает принудительную реактивность для production
    */
   function updateFilter<K extends keyof FilterState>(key: K, value: FilterState[K]): void {
-    if (filters[key] !== value) {
-      filters[key] = value;
+    const oldValue = filters[key];
+    
+    if (oldValue !== value) {
+      // Для массивов делаем глубокое сравнение
+      if (Array.isArray(value) && Array.isArray(filters[key])) {
+        const currentArray = filters[key] as any[];
+        const newArray = value as any[];
+        
+        // Проверяем действительно ли изменился массив
+        const hasChanged = currentArray.length !== newArray.length ||
+                          !currentArray.every((item, index) => item === newArray[index]);
+        
+        if (hasChanged) {
+          // Принудительное обновление для реактивности
+          (filters[key] as any) = [...newArray];
+          
+          // Событие для production отладки
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('store:filter-updated', {
+              detail: { 
+                key, 
+                type: 'array',
+                oldLength: currentArray.length,
+                newLength: newArray.length,
+                timestamp: Date.now()
+              }
+            }));
+          }
+          
+          // ПРИНУДИТЕЛЬНАЯ перезагрузка креативов если watchers не работают
+          triggerCreativesReload('filter-update', key);
+        }
+      } else {
+        // Для примитивных значений
+        filters[key] = value;
+        
+        // Событие для production отладки
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('store:filter-updated', {
+            detail: { 
+              key, 
+              type: typeof value,
+              oldValue: oldValue,
+              newValue: value,
+              timestamp: Date.now()
+            }
+          }));
+        }
+        
+        // ПРИНУДИТЕЛЬНАЯ перезагрузка креативов если watchers не работают
+        triggerCreativesReload('filter-update', key);
+      }
     }
+  }
+
+  /**
+   * Принудительная перезагрузка креативов
+   * Используется как fallback если watchers не работают в production
+   */
+  function triggerCreativesReload(source: string, trigger?: string): void {
+    if (!isInitialized.value) return;
+    
+    // Логирование для отладки
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('store:trigger-reload', {
+        detail: { 
+          source,
+          trigger,
+          timestamp: Date.now()
+        }
+      }));
+    }
+    
+    // Принудительная перезагрузка через debounced функцию
+    loadCreativesDebounced();
   }
 
   /**
@@ -563,6 +719,17 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
    * - Загрузку данных через API композабл
    */
   async function loadCreatives(page: number = 1): Promise<void> {
+    // Логирование для production отладки
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('store:load-creatives', {
+        detail: { 
+          page,
+          source: 'direct-call',
+          timestamp: Date.now()
+        }
+      }));
+    }
+    
     const creativesFilters = creativesComposable.mapFiltersToCreativesFilters(
       filters,
       tabs.activeTab,
@@ -579,7 +746,62 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
    * Загрузка следующей страницы (используется в PaginationComponent)
    */
   async function loadNextPage(): Promise<void> {
-    await creativesComposable.loadNextPage();
+    const nextPage = pagination.value.currentPage + 1;
+    if (nextPage <= pagination.value.lastPage) {
+      await loadCreatives(nextPage);
+    }
+  }
+
+  /**
+   * Загрузка конкретной страницы (используется в PaginationComponent)
+   */
+  async function loadPage(page: number): Promise<void> {
+    if (page >= 1 && page <= pagination.value.lastPage && page !== pagination.value.currentPage && !isLoading.value) {
+      await loadCreatives(page);
+    }
+  }
+
+  /**
+   * Загрузка предыдущей страницы (используется в PaginationComponent)
+   */
+  async function loadPreviousPage(): Promise<void> {
+    const prevPage = pagination.value.currentPage - 1;
+    if (prevPage >= 1) {
+      await loadCreatives(prevPage);
+    }
+  }
+
+  /**
+   * Переход на первую страницу (используется в PaginationComponent)
+   */
+  async function goToFirstPage(): Promise<void> {
+    if (pagination.value.currentPage !== 1) {
+      await loadCreatives(1);
+    }
+  }
+
+  /**
+   * Переход на последнюю страницу (используется в PaginationComponent)
+   */
+  async function goToLastPage(): Promise<void> {
+    const lastPage = pagination.value.lastPage;
+    if (pagination.value.currentPage !== lastPage) {
+      await loadCreatives(lastPage);
+    }
+  }
+
+  /**
+   * Переход на следующую страницу (используется в PaginationComponent)
+   */
+  async function goToNextPage(): Promise<void> {
+    await loadNextPage();
+  }
+
+  /**
+   * Переход на предыдущую страницу (используется в PaginationComponent)
+   */
+  async function goToPreviousPage(): Promise<void> {
+    await loadPreviousPage();
   }
 
   /**
@@ -776,6 +998,20 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     hasActiveFilters,           // Есть ли активные фильтры
     
     // ========================================
+    // COMPUTED СВОЙСТВА ПАГИНАЦИИ
+    // ========================================
+    currentPage,                // Текущая страница
+    lastPage,                   // Последняя страница
+    totalItems,                 // Общее количество элементов
+    perPage,                    // Элементов на страницу
+    fromItem,                   // Номер первого элемента на странице
+    toItem,                     // Номер последнего элемента на странице
+    isOnFirstPage,              // Находимся ли на первой странице
+    isOnLastPage,               // Находимся ли на последней странице
+    canLoadMore,                // Можно ли загрузить еще
+    shouldShowPagination,       // Нужно ли показывать пагинацию
+    
+    // ========================================
     // МЕТОДЫ ИНИЦИАЛИЗАЦИИ
     // ========================================
     initializeFilters,          // Основная инициализация Store
@@ -806,6 +1042,12 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     // ========================================
     loadCreatives,              // Загрузка креативов (с page)
     loadNextPage,               // Загрузка следующей страницы
+    loadPage,                   // Загрузка конкретной страницы
+    loadPreviousPage,           // Загрузка предыдущей страницы
+    goToFirstPage,             // Переход на первую страницу
+    goToLastPage,              // Переход на последнюю страницу
+    goToNextPage,              // Переход на следующую страницу
+    goToPreviousPage,          // Переход на предыдущую страницу
     refreshCreatives,           // Перезагрузка креативов
     
     // ========================================

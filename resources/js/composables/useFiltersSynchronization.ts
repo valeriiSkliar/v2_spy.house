@@ -21,6 +21,8 @@ export interface UseFiltersSynchronizationReturn {
 /**
  * Композабл для синхронизации фильтров
  * Связывает воедино URL, Store состояние и загрузку креативов
+ * 
+ * ВАЖНО: Содержит побочные эффекты (watchers), не удалять через tree-shaking!
  */
 export function useFiltersSynchronization(
   filters: FilterState,
