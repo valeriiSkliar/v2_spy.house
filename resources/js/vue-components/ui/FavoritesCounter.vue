@@ -91,11 +91,13 @@ function getTooltip(): string {
 
 /**
  * Обработчик клика по счетчику
- * Показывает список избранного или обновляет данные
+ * Эмитирует событие для родительского компонента
  */
-async function handleCounterClick(): Promise<void> {
-  console.log('🔄 FavoritesCounter: клик по счетчику');
-  // TODO: реализовать логику клика по счетчику
+function handleCounterClick(): void {
+  emit('counter-clicked', {
+    currentCount: displayCount.value,
+    timestamp: new Date().toISOString(),
+  });
 }
 
 /**
@@ -132,8 +134,6 @@ watch(
   (newCount, oldCount) => {
     // Анимация только при изменении существующих данных
     if (oldCount !== undefined && newCount !== undefined && newCount !== oldCount) {
-      console.log(`🔄 FavoritesCounter: изменение счетчика ${oldCount} → ${newCount}`);
-
       emit('counter-updated', {
         oldCount,
         newCount,
@@ -163,15 +163,15 @@ const emit = defineEmits<Events>();
 // ============================================================================
 
 onMounted(async () => {
-  console.log('🔄 FavoritesCounter: компонент смонтирован');
-
   // Автоматически загружаем счетчик если данных нет и включена автозагрузка
   if (props.autoLoad && store.favoritesCount === undefined) {
     try {
-      console.log('🚀 FavoritesCounter: автоматическая загрузка счетчика');
       await store.refreshFavoritesCount();
     } catch (error) {
-      console.error('❌ FavoritesCounter: ошибка автозагрузки:', error);
+      emit('counter-error', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString(),
+      });
     }
   }
 });
