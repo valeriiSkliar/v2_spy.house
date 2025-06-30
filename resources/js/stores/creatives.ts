@@ -1,10 +1,10 @@
 // DEPRECATED: 
-import { FilterOption, FilterState, TabOption, TabsState } from '@/types/creatives';
+import type { Creative, CreativesFilters, ProcessedCreativesData } from '@/types/creatives';
+import { FilterOption, FilterState, TabOption, TabsState, TabValue } from '@/types/creatives';
 import debounce from 'lodash.debounce';
 import { defineStore } from 'pinia';
 import { computed, reactive, ref, watch } from 'vue';
 import { useCreativesUrlSync } from '../composables/useCreativesUrlSync';
-import type { Creative, CreativesFilters, ProcessedCreativesData } from '../services/CreativesService';
 import { creativesService } from '../services/CreativesService';
 
 export const useFiltersStore = defineStore('filters', () => {
@@ -23,7 +23,8 @@ export const useFiltersStore = defineStore('filters', () => {
     devices: [],
     imageSizes: [],
     onlyAdult: false,
-    savedSettings: []
+    savedSettings: [],
+    perPage: 12
   };
 
   // Состояние вкладок с дефолтными значениями
@@ -347,7 +348,7 @@ export const useFiltersStore = defineStore('filters', () => {
         console.log('🔗 URL параметры не найдены, синхронизируем текущее состояние с URL');
         // Синхронизируем текущее состояние store с URL
         if (urlSync) {
-          urlSync.syncWithFilterState(
+          urlSync.syncFiltersToUrl(
             JSON.parse(JSON.stringify(filters)), 
             tabs.activeTab
           );
@@ -436,7 +437,7 @@ export const useFiltersStore = defineStore('filters', () => {
         
         // Создаем копию состояния для избежания проблем с Proxy
         const filtersCopy = JSON.parse(JSON.stringify(filters));
-        urlSync.syncWithFilterState(filtersCopy, tabs.activeTab);
+        urlSync.syncFiltersToUrl(filtersCopy, tabs.activeTab);
       }
       
       isStoreUpdating = false;
@@ -445,7 +446,7 @@ export const useFiltersStore = defineStore('filters', () => {
     const debouncedUrlToStore = debounce((newUrlState: any) => {
       console.log('🔄 debouncedUrlToStore вызван с новым состоянием:', newUrlState);
       if (urlSync && isUrlSyncEnabled.value) {
-        const updates = urlSync.getFilterStateUpdates();
+        const updates = urlSync.getFilterUpdates();
         updateFromUrl(updates);
       }
       
@@ -488,7 +489,7 @@ export const useFiltersStore = defineStore('filters', () => {
     isUrlSyncEnabled.value = false;
 
     // Загружаем состояние фильтров
-    const filterUpdates = urlSync.getFilterStateUpdates();
+    const filterUpdates = urlSync.getFilterUpdates();
     console.log('🔧 Обновления фильтров из URL:', filterUpdates);
     
     // Обновляем фильтры без triggering watchers
@@ -624,7 +625,7 @@ export const useFiltersStore = defineStore('filters', () => {
   }
 
   // Методы для вкладок
-  function setActiveTab(tabValue: string): void {
+  function setActiveTab(tabValue: TabValue): void {
     if (tabs.availableTabs.includes(tabValue) && tabs.activeTab !== tabValue) {
       const previousTab = tabs.activeTab;
       tabs.activeTab = tabValue;
@@ -645,7 +646,7 @@ export const useFiltersStore = defineStore('filters', () => {
     tabs.tabCounts = { ...tabs.tabCounts, ...counts };
   }
 
-  function setAvailableTabs(newTabs: string[]): void {
+  function setAvailableTabs(newTabs: TabValue[]): void {
     tabs.availableTabs = [...newTabs];
     
     // Проверяем что текущая вкладка все еще доступна
