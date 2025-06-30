@@ -156,19 +156,99 @@ describe('useCreativesFiltersStore - Computed свойства', () => {
   });
 
   it('hasActiveFilters при различных комбинациях активных фильтров', () => {
+    // Начальное состояние - нет активных фильтров
     expect(store.hasActiveFilters).toBe(false);
 
-    store.updateFilter('searchKeyword', 'foo');
+    // Тест searchKeyword
+    store.updateFilter('searchKeyword', 'test search');
     expect(store.hasActiveFilters).toBe(true);
-
     store.updateFilter('searchKeyword', '');
     expect(store.hasActiveFilters).toBe(false);
 
+    // Тест country (не default)
     store.updateFilter('country', 'US');
-    store.updateFilter('languages', ['en']);
+    expect(store.hasActiveFilters).toBe(true);
+    store.updateFilter('country', 'default');
+    expect(store.hasActiveFilters).toBe(false);
+
+    // Тест dateCreation
+    store.updateFilter('dateCreation', 'last_week');
+    expect(store.hasActiveFilters).toBe(true);
+    store.updateFilter('dateCreation', 'default');
+    expect(store.hasActiveFilters).toBe(false);
+
+    // Тест sortBy
+    store.updateFilter('sortBy', 'popular');
+    expect(store.hasActiveFilters).toBe(true);
+    store.updateFilter('sortBy', 'default');
+    expect(store.hasActiveFilters).toBe(false);
+
+    // Тест periodDisplay
+    store.updateFilter('periodDisplay', 'monthly');
+    expect(store.hasActiveFilters).toBe(true);
+    store.updateFilter('periodDisplay', 'default');
+    expect(store.hasActiveFilters).toBe(false);
+
+    // Тест onlyAdult
+    store.updateFilter('onlyAdult', true);
+    expect(store.hasActiveFilters).toBe(true);
+    store.updateFilter('onlyAdult', false);
+    expect(store.hasActiveFilters).toBe(false);
+
+    // Тест массивов фильтров
+    store.updateFilter('advertisingNetworks', ['google']);
+    expect(store.hasActiveFilters).toBe(true);
+    store.updateFilter('advertisingNetworks', []);
+    expect(store.hasActiveFilters).toBe(false);
+
+    store.updateFilter('languages', ['en', 'fr']);
+    expect(store.hasActiveFilters).toBe(true);
+    store.updateFilter('languages', []);
+    expect(store.hasActiveFilters).toBe(false);
+
+    store.updateFilter('operatingSystems', ['windows']);
+    expect(store.hasActiveFilters).toBe(true);
+    store.updateFilter('operatingSystems', []);
+    expect(store.hasActiveFilters).toBe(false);
+
+    store.updateFilter('browsers', ['chrome']);
+    expect(store.hasActiveFilters).toBe(true);
+    store.updateFilter('browsers', []);
+    expect(store.hasActiveFilters).toBe(false);
+
+    store.updateFilter('devices', ['desktop']);
+    expect(store.hasActiveFilters).toBe(true);
+    store.updateFilter('devices', []);
+    expect(store.hasActiveFilters).toBe(false);
+
+    store.updateFilter('imageSizes', ['300x250']);
+    expect(store.hasActiveFilters).toBe(true);
+    store.updateFilter('imageSizes', []);
+    expect(store.hasActiveFilters).toBe(false);
+
+    store.updateFilter('savedSettings', ['setting1']);
+    expect(store.hasActiveFilters).toBe(true);
+    store.updateFilter('savedSettings', []);
+    expect(store.hasActiveFilters).toBe(false);
+
+    // Комбинация нескольких фильтров
+    store.updateFilter('country', 'RU');
+    store.updateFilter('languages', ['ru', 'en']);
+    store.updateFilter('onlyAdult', true);
     expect(store.hasActiveFilters).toBe(true);
 
+    // Сброс всех фильтров
     store.resetFilters();
+    expect(store.hasActiveFilters).toBe(false);
+  });
+
+  it('hasActiveFilters игнорирует служебные поля', () => {
+    // isDetailedVisible не должно влиять на hasActiveFilters
+    store.updateFilter('isDetailedVisible', true);
+    expect(store.hasActiveFilters).toBe(false);
+
+    // perPage не входит в hasActiveFilters (только в UI)
+    store.updateFilter('perPage', 24);
     expect(store.hasActiveFilters).toBe(false);
   });
 
@@ -178,8 +258,30 @@ describe('useCreativesFiltersStore - Computed свойства', () => {
   });
 
   it('hasCreatives при наличии креативов', () => {
-    creativesMock.creatives.value = [{ id: 1 }, { id: 2 }];
+    creativesMock.creatives.value = [
+      { id: 1, title: 'Creative 1' }, 
+      { id: 2, title: 'Creative 2' }
+    ];
     expect(store.hasCreatives).toBe(true);
+  });
+
+  it('hasCreatives при одном креативе', () => {
+    creativesMock.creatives.value = [{ id: 1, title: 'Single Creative' }];
+    expect(store.hasCreatives).toBe(true);
+  });
+
+  it('hasCreatives реактивно обновляется при изменении массива', () => {
+    // Начальное состояние - пусто
+    creativesMock.creatives.value = [];
+    expect(store.hasCreatives).toBe(false);
+
+    // Добавляем креативы
+    creativesMock.creatives.value = [{ id: 1 }];
+    expect(store.hasCreatives).toBe(true);
+
+    // Очищаем массив
+    creativesMock.creatives.value = [];
+    expect(store.hasCreatives).toBe(false);
   });
 
   it('computed опции мультиселектов при пустых данных', () => {
@@ -189,6 +291,174 @@ describe('useCreativesFiltersStore - Computed свойства', () => {
     expect(store.browsersOptions).toEqual([]);
     expect(store.devicesOptions).toEqual([]);
     expect(store.imageSizesOptions).toEqual([]);
+  });
+
+  it('computed опции мультиселектов при заполненных данных', () => {
+    // Устанавливаем опции через Store метод
+    store.setSelectOptions({
+      advertisingNetworks: [
+        { value: 'google', label: 'Google Ads' },
+        { value: 'facebook', label: 'Facebook' }
+      ],
+      languages: [
+        { value: 'en', label: 'English' },
+        { value: 'ru', label: 'Russian' },
+        { value: 'fr', label: 'French' }
+      ],
+      operatingSystems: [
+        { value: 'windows', label: 'Windows' },
+        { value: 'macos', label: 'macOS' }
+      ],
+      browsers: [
+        { value: 'chrome', label: 'Chrome' },
+        { value: 'firefox', label: 'Firefox' },
+        { value: 'safari', label: 'Safari' }
+      ],
+      devices: [
+        { value: 'desktop', label: 'Desktop' },
+        { value: 'mobile', label: 'Mobile' },
+        { value: 'tablet', label: 'Tablet' }
+      ],
+      imageSizes: [
+        { value: '300x250', label: '300×250' },
+        { value: '728x90', label: '728×90' }
+      ]
+    });
+
+    // Проверяем computed свойства
+    expect(store.advertisingNetworksOptions).toEqual([
+      { value: 'google', label: 'Google Ads' },
+      { value: 'facebook', label: 'Facebook' }
+    ]);
+
+    expect(store.languagesOptions).toEqual([
+      { value: 'en', label: 'English' },
+      { value: 'ru', label: 'Russian' },
+      { value: 'fr', label: 'French' }
+    ]);
+
+    expect(store.operatingSystemsOptions).toEqual([
+      { value: 'windows', label: 'Windows' },
+      { value: 'macos', label: 'macOS' }
+    ]);
+
+    expect(store.browsersOptions).toEqual([
+      { value: 'chrome', label: 'Chrome' },
+      { value: 'firefox', label: 'Firefox' },
+      { value: 'safari', label: 'Safari' }
+    ]);
+
+    expect(store.devicesOptions).toEqual([
+      { value: 'desktop', label: 'Desktop' },
+      { value: 'mobile', label: 'Mobile' },
+      { value: 'tablet', label: 'Tablet' }
+    ]);
+
+    expect(store.imageSizesOptions).toEqual([
+      { value: '300x250', label: '300×250' },
+      { value: '728x90', label: '728×90' }
+    ]);
+  });
+
+  it('computed опции мультиселектов при формате объекта (автоматическое преобразование)', () => {
+    // Store должен автоматически преобразовать объекты в массивы
+    store.setSelectOptions({
+      advertisingNetworks: { 
+        google: 'Google Ads',
+        facebook: 'Facebook Ads' 
+      },
+      languages: { 
+        en: 'English',
+        ru: 'Русский' 
+      }
+    });
+
+    expect(store.advertisingNetworksOptions).toEqual([
+      { value: 'google', label: 'Google Ads' },
+      { value: 'facebook', label: 'Facebook Ads' }
+    ]);
+
+    expect(store.languagesOptions).toEqual([
+      { value: 'en', label: 'English' },
+      { value: 'ru', label: 'Русский' }
+    ]);
+  });
+
+  it('computed опции мультиселектов реактивно обновляются', () => {
+    // Начальное состояние - пусто
+    expect(store.advertisingNetworksOptions).toEqual([]);
+
+    // Добавляем опции
+    store.setSelectOptions({
+      advertisingNetworks: [{ value: 'google', label: 'Google' }]
+    });
+    expect(store.advertisingNetworksOptions).toEqual([
+      { value: 'google', label: 'Google' }
+    ]);
+
+    // Обновляем опции
+    store.setSelectOptions({
+      advertisingNetworks: [
+        { value: 'google', label: 'Google Ads' },
+        { value: 'yandex', label: 'Yandex Direct' }
+      ]
+    });
+    expect(store.advertisingNetworksOptions).toEqual([
+      { value: 'google', label: 'Google Ads' },
+      { value: 'yandex', label: 'Yandex Direct' }
+    ]);
+  });
+
+  it('tabOptions computed свойство корректно формируется', () => {
+    // Устанавливаем переводы для вкладок
+    store.setTranslations({
+      tabs: {
+        push: 'Push уведомления',
+        inpage: 'Inpage баннеры',
+        facebook: 'Facebook реклама',
+        tiktok: 'TikTok креативы'
+      }
+    } as any);
+
+    const expectedTabOptions = [
+      { value: 'push', label: 'Push уведомления', count: '170k' },
+      { value: 'inpage', label: 'Inpage баннеры', count: '3.1k' },
+      { value: 'facebook', label: 'Facebook реклама', count: '65.1k' },
+      { value: 'tiktok', label: 'TikTok креативы', count: '45.2m' }
+    ];
+
+    expect(store.tabOptions).toEqual(expectedTabOptions);
+  });
+
+  it('currentTabOption computed свойство возвращает активную вкладку', () => {
+    // Устанавливаем переводы
+    store.setTranslations({
+      tabs: {
+        push: 'Push уведомления',
+        facebook: 'Facebook реклама'
+      }
+    } as any);
+
+    // По умолчанию активна вкладка 'push'
+    expect(store.currentTabOption).toEqual({
+      value: 'push',
+      label: 'Push уведомления',
+      count: '170k'
+    });
+
+    // Меняем активную вкладку
+    store.setActiveTab('facebook');
+    expect(store.currentTabOption).toEqual({
+      value: 'facebook',
+      label: 'Facebook реклама',
+      count: '65.1k'
+    });
+  });
+
+  it('currentTabOption возвращает undefined для несуществующей вкладки', () => {
+    // Устанавливаем активную вкладку, которой нет в availableTabs
+    store.tabs.activeTab = 'nonexistent' as any;
+    expect(store.currentTabOption).toBeUndefined();
   });
 });
 
@@ -365,6 +635,10 @@ describe('useCreativesFiltersStore - Инициализация и конфиг�
 
     // Проверяем вложенные ключи
     expect(store.getTranslation('level1.level2.level3')).toBe('Deep nested value');
+    expect(store.getTranslation('level1.level2.level3.level4.level5')).toBe('level1.level2.level3.level4.level5');
+    expect(store.getTranslation('level1.level2.level3.level4.anotherKey')).toBe('level1.level2.level3.level4.anotherKey');
+    expect(store.getTranslation('level1.level2.level3.simpleLevel4')).toBe('level1.level2.level3.simpleLevel4');
+    expect(store.getTranslation('level1.level2.directLevel3')).toBe('level1.level2.directLevel3');
     expect(store.getTranslation('level1.simpleValue')).toBe('Simple value');
     expect(store.getTranslation('flatKey')).toBe('Flat value');
 
