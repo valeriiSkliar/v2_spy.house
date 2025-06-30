@@ -1,0 +1,135 @@
+.header{
+  &._home{
+    position: absolute;
+    margin: 0;
+    left: 0;
+    top: 0;
+    max-width: inherit !important;
+    background: 0;
+    height: auto;
+    padding: 35px 0;
+    @media screen and (max-width: 1200px) {
+      padding: 15px 0;
+      position: fixed;
+      transition: background .2s;
+      &.active{
+        background: #243035;
+      }
+    }
+    .container{
+      display: flex;
+      align-items: center;
+    }
+    .header__logo{
+      img{
+        width: 225px;
+        height: auto;
+        @media screen and (max-width: 1200px) {
+          width: 155px;
+        }
+      }
+    }
+    .lang-menu{
+      .base-select{
+        .base-select__trigger{
+          height: 50px;
+          padding-left: 20px;
+          padding-right: 40px;
+          font-size: 16px;
+          font-weight: 700;
+          border-radius: 15px;
+          background: rgba(0, 0, 0, 0.25);
+          .base-select__arrow{
+            right: 10px;
+            background-size: 10px;
+          }
+        }
+      }
+    }
+    .header__burger{
+      margin-right: 0;
+    }
+
+    .header__left{
+      @media screen and (max-width: 1200px) {
+        margin-left: auto;
+      }
+    }
+
+    .btn-icon{
+      height: 44px;
+      width: 44px;
+      border-radius: 15px;
+    }
+    .btn{
+      border-radius: 15px;
+    }
+
+
+    .user-preview{
+      .user-preview__trigger{
+        height: auto;
+      }
+      .user-preview__avatar{
+        width: 44px;
+        height: 44px;
+        border: 1px solid rgba(255, 210, 98, 0.35);
+        background: rgba(255, 210, 98, 0.10);
+        color: #fff;
+        border-radius: 15px;
+      }
+      .user-preview__name{
+        margin-right: 0;
+        @media screen and (max-width: 1200px) {
+          display: none;
+        }
+      }
+    }
+
+
+  }
+  .header__login{
+    @media screen and (max-width: 1200px) {
+      display: none;
+    }
+  }
+  .header__login-mobile{
+    display: none;
+    @media screen and (max-width: 1200px) {
+      display: block;
+    }
+  }
+  .header__contacts{
+    margin-right: 40px;
+    @media screen and (max-width: 1200px) {
+      display: none;
+    }
+    .link{
+      color: #D1E0CA;
+    }
+  }
+  .header__nav{
+    margin-right: auto;
+    margin-left: 60px;
+    @media screen and (max-width: 1200px) {
+      display: none;
+    }
+    ul{
+      list-style: none;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      color: #FFF;
+      li{
+        a{
+          @media (hover: hover) {
+            &:hover{
+              opacity: .7;
+            }
+          }
+        }
+      }
+    }
+  }
+}

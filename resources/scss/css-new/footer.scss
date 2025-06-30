@@ -1,7 +1,8 @@
 .footer{
-  padding: 40px 0;
+  padding: 55px 0;
   background: #1E282C;
   color: #7E878B;
+  font-size: 14px;
   .footer__content{
     display: flex;
     justify-content: space-between;
@@ -65,6 +66,11 @@
   .lang-menu .base-select .base-select__dropdown{
     top: auto;
     bottom: calc(100% + 5px);
+  }
+  
+  .footer__copy{
+    color: #C4C8C9;
+    font-weight: 300;
   }
 }
 

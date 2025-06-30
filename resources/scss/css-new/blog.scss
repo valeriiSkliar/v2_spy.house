@@ -60,6 +60,8 @@
   box-shadow: 0px 0px 0.724px 0px rgba(0, 0, 0, 0.21), 0px 1.448px 0.724px 0px rgba(0, 0, 0, 0.12);
   padding: 20px 20px;
   transition: box-shadow .3s;
+  display: flex;
+  flex-direction: column;
 
   @media screen and (max-width: 767px) {
     padding: 15px 15px 20px;
@@ -81,7 +83,7 @@
     font-weight: 500;
     font-size: 18px;
     display: block;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -170,6 +172,17 @@
         }
       }
     }
+  }
+
+  .article__bottom{
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    justify-content: space-between;
+    margin-top: auto;
+  }
+  .article__link{
+    margin-top: 20px;
   }
 
 
