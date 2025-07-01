@@ -60,7 +60,7 @@
       <div class="creative-item__btns">
         <div class="creative-item-info"><img src="@img/flags/KZ.svg" alt="" /></div>
         <button class="btn-icon btn-favorite"><span class="icon-favorite-empty"></span></button>
-        <button class="btn-icon _dark js-show-details"><span class="icon-info"></span></button>
+        <button class="btn-icon _dark" @click="showDetails"><span class="icon-info"></span></button>
       </div>
     </div>
   </div>
@@ -77,6 +77,10 @@ import { computed, ref } from 'vue';
 const props = defineProps<{
   activeTab: TabValue;
   creative: Creative;
+}>();
+
+const emit = defineEmits<{
+  (e: 'show-details', creative: Creative): void;
 }>();
 
 const activeTab = computed(() => props.activeTab);
@@ -109,6 +113,19 @@ const onVideoLeave = () => {
   if (creative.value.has_video) {
     isVideoHovered.value = false;
   }
+};
+
+const showDetails = () => {
+  emit('show-details', props.creative);
+
+  // Эмитируем DOM событие для Store
+  document.dispatchEvent(
+    new CustomEvent('creatives:show-details', {
+      detail: {
+        creative: props.creative,
+      },
+    })
+  );
 };
 </script>
 

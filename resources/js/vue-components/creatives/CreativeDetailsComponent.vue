@@ -12,6 +12,7 @@
             </div>
             <div class="col-auto">
               <button
+                v-if="activeTab === 'push' || activeTab === 'inpage'"
                 class="btn _flex _gray _small btn-favorite"
                 :class="{ active: isFavorite }"
                 @click="handleFavoriteClick"
@@ -34,7 +35,10 @@
         </div>
 
         <!-- Details first row (Icon details) -->
-        <div class="creative-details__group _first">
+        <div
+          v-if="activeTab === 'push' || activeTab === 'inpage'"
+          class="creative-details__group _first"
+        >
           <div class="row _offset20 align-items-center">
             <div class="col-5">
               <div class="thumb thumb-icon">
@@ -61,6 +65,49 @@
                   >{{ getTranslation('details.open-tab', 'Open in tab') }}</a
                 >
               </div>
+            </div>
+          </div>
+        </div>
+        <div v-else class="creative-details__group _first">
+          <div class="creative-video _single">
+            <div class="thumb">
+              <img :src="facebookImage" :alt="selectedCreative?.title" class="thumb-blur" />
+              <img :src="facebookImage" :alt="selectedCreative?.title" class="thumb-contain" />
+            </div>
+            <span class="icon-play"></span>
+            <div class="creative-video__time">00:45</div>
+            <div
+              class="creative-video__content"
+              data-video="https://dev.vitaliimaksymchuk.com.ua/spy/img/video-2.mp4"
+            ></div>
+          </div>
+          <div class="row">
+            <div class="col-auto flex-grow-1 mb-10">
+              <a href="#" class="btn _flex _medium _green w-100"
+                ><span class="icon-download2 font-16 mr-2"></span
+                >{{ getTranslation('details.download', 'Download') }}</a
+              >
+            </div>
+            <div class="col-auto flex-grow-1 mb-10">
+              <a href="#" class="btn _flex _medium _gray w-100"
+                ><span class="icon-new-tab font-16 mr-2"></span
+                >{{ getTranslation('details.open-tab', 'Open in tab') }}</a
+              >
+            </div>
+            <div class="col-auto flex-grow-1 mb-10 d-none d-md-block">
+              <button
+                class="btn _flex _gray _medium btn-favorite w-100"
+                :class="{ active: isFavorite }"
+                @click="handleFavoriteClick"
+                :disabled="isFavoriteLoading"
+              >
+                <span class="icon-favorite font-16 mr-2"></span
+                >{{
+                  isFavorite
+                    ? getTranslation('details.remove-from-favorites', 'Remove from favorites')
+                    : getTranslation('details.add-to-favorites', 'Add to favorites')
+                }}
+              </button>
             </div>
           </div>
         </div>
@@ -210,7 +257,11 @@
               </div>
               <div class="details-table__col">
                 <div class="creative-status" :class="{ 'icon-dot': selectedCreative?.is_active }">
-                  {{ getTranslation('details.active', 'Active') }}
+                  {{
+                    selectedCreative?.is_active
+                      ? getTranslation('details.active', 'Active')
+                      : getTranslation('details.inactive', 'Inactive')
+                  }}
                 </div>
               </div>
             </div>
@@ -303,6 +354,7 @@
 import { useCreativesFiltersStore } from '@/stores/useFiltersStore';
 import type { Creative } from '@/types/creatives.d';
 import emptyImage from '@img/empty.svg';
+import facebookImage from '@img/facebook-2.jpg';
 import { computed } from 'vue';
 
 interface Props {

@@ -232,6 +232,8 @@ class CreativesService {
     displayName: this.generateDisplayName(creative),
     isRecent: this.isRecentCreative(creative),
     isFavorite: false, // TODO: реализовать логику избранного
+    // Принудительно приводим is_active к булевому типу (может прийти как 1/0 или строка)
+    is_active: Boolean(creative.is_active),
   });
 
   /**
