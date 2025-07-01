@@ -15,9 +15,9 @@
     </div>
 
     <!-- Пустое состояние -->
-    <div v-if="!hasCreatives && !isLoading" class="creatives-list__empty">
+    <!-- <div v-if="!hasCreatives && !isLoading" class="creatives-list__empty">
       <p>{{ translations.noData || 'Креативы не найдены' }}</p>
-    </div>
+    </div> -->
 
     <!-- Список креативов -->
     <div v-else class="creatives-list__items">
