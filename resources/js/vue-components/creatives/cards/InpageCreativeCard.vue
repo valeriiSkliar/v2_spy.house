@@ -2,7 +2,7 @@
   <div class="creative-item">
     <div class="creative-item__head">
       <div class="creative-item__icon thumb thumb-with-controls-small mr-2">
-        <img :src="creative.preview_url || creative.file_url || '/img/th-2.jpg'" alt="" />
+        <img :src="creative.icon_url" alt="" />
         <div class="thumb-controls">
           <a href="#" class="btn-icon _black" @click.prevent="handleDownload">
             <span class="icon-download2 remore_margin"></span>

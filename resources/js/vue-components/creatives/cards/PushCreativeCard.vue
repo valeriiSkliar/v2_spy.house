@@ -169,7 +169,7 @@ const handleOpenInNewTab = (): void => {
   );
 
   // Базовая реализация - открытие файла/превью в новой вкладке
-  const url = props.creative.file_url || props.creative.preview_url;
+  const url = props.creative.main_image_url;
   if (url) {
     window.open(url, '_blank');
   }
@@ -275,12 +275,12 @@ const getActiveText = (): string => {
 
 // Функция для получения URL иконки
 const getIconUrl = (): string => {
-  return props.creative.preview_url || props.creative.file_url || '/img/th-2.jpg';
+  return props.creative.icon_url;
 };
 
 // Функция для получения URL изображения
 const getImageUrl = (): string => {
-  return props.creative.file_url || '/img/th-3.jpg';
+  return props.creative.main_image_url || 'https://picsum.photos/300/200';
 };
 
 // Функция для получения текста сети

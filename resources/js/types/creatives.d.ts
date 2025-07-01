@@ -27,10 +27,10 @@ export interface Creative {
   category: string;
   country: CountryCode;
   file_size: string;
-  file_url: string;
+  // file_url: string;s
   icon_url: string;
   landing_page_url: string;
-  preview_url?: string;
+  // preview_url?: string;
   video_url?: string;
   has_video?: boolean;
   created_at: string;

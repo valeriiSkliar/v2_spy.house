@@ -42,7 +42,7 @@
           <div class="row _offset20 align-items-center">
             <div class="col-5">
               <div class="thumb thumb-icon">
-                <img :src="selectedCreative?.preview_url" :alt="selectedCreative?.title" />
+                <img :src="selectedCreative?.icon_url" :alt="selectedCreative?.title" />
               </div>
             </div>
             <div class="col-6">
@@ -281,7 +281,7 @@
             <div class="creative-item">
               <div class="creative-item__head">
                 <div class="creative-item__icon thumb thumb-with-controls-small mr-2">
-                  <img :src="selectedCreative?.preview_url" :alt="selectedCreative?.title" />
+                  <img :src="selectedCreative?.icon_url" :alt="selectedCreative?.title" />
                   <div class="thumb-controls">
                     <a href="#" class="btn-icon _black"><span class="icon-download2"></span></a>
                   </div>
