@@ -179,8 +179,9 @@ class CreativesController extends FrontendController
                 'title' => "Creative {$i}",
                 'description' => "Creative {$i} description",
                 'country' => 'US',
-                'file_url' => "https://via.assets.so/img.jpg?w=400&h=400&tc=blue&bg=#cecece",
-                'preview_url' => "https://via.assets.so/img.jpg?w=400&h=400&tc=blue&bg=#cecece",
+                'file_url' => "https://picsum.photos/300/200",
+                'preview_url' => "https://picsum.photos/300/200",
+                'main_image_url' => "https://picsum.photos/300/200",
                 'video_url' => "https://dev.vitaliimaksymchuk.com.ua/spy/img/video-3.mp4",
                 'has_video' => false,
                 'created_at' => now()->subDays(rand(1, 30))->format('Y-m-d'),
@@ -192,6 +193,7 @@ class CreativesController extends FrontendController
                 'devices' => ['desktop', 'mobile'],
                 'image_sizes' => ['16x9', '1x1'],
                 'is_adult' => false,
+                'is_active' => rand(0, 1) === 1,
             ];
         }
 

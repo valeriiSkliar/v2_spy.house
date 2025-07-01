@@ -26,7 +26,10 @@ export interface Creative {
   description: string;
   category: string;
   country: CountryCode;
+  file_size: string;
   file_url: string;
+  icon_url: string;
+  landing_page_url: string;
   preview_url?: string;
   video_url?: string;
   has_video?: boolean;
@@ -38,6 +41,8 @@ export interface Creative {
   browsers?: string[];
   devices?: string[];
   image_sizes?: string[];
+  main_image_size?: string;
+  main_image_url?: string;
   is_adult?: boolean;
   // Поля для социальных сетей
   social_likes?: number | string;
@@ -48,6 +53,9 @@ export interface Creative {
   displayName?: string;
   isRecent?: boolean;
   isFavorite?: boolean;
+  created_at_formatted?: string;
+  last_activity_date_formatted?: string;
+  is_active?: boolean;
 }
 
 /**
