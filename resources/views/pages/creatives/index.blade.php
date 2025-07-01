@@ -39,11 +39,14 @@
 
     {{-- Компонент списка креативов с новой системой композаблов --}}
 
-    <x-creatives.vue.list :listTranslations="$listTranslations" :perPage="12" :activeTab="$activeTab" />
+    <x-creatives.vue.list :listTranslations="$listTranslations" :perPage="12" :activeTab="$activeTab"
+        :detailsTranslations="$detailsTranslations ?? []" :showSimilarCreatives="false" />
+
 
     {{-- Компонент пагинации --}}
     <x-creatives.vue.pagination :translations="$listTranslations" :showInfo="false" :maxVisiblePages="5"
         :alwaysShowFirstLast="true" />
+
 </div>
 
 

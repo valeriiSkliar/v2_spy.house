@@ -54,7 +54,7 @@
           :is-favorite-loading="store.isFavoriteLoading(creative.id)"
           @toggle-favorite="handleToggleFavorite"
           @download="handleDownload"
-          @show-details="handleShowDetails" 
+          @show-details="handleShowDetails"
         />
 
         <!-- Универсальная карточка для остальных типов -->
@@ -70,6 +70,7 @@
         /> -->
       </template>
     </div>
+    <CreativeDetailsComponent :showSimilarCreatives="true" :translations="translations" />
   </div>
 </template>
 
@@ -81,6 +82,7 @@ import type { Creative } from '../../types/creatives';
 import InpageCreativeCard from './cards/InpageCreativeCard.vue';
 import PushCreativeCard from './cards/PushCreativeCard.vue';
 import SocialCreativeCard from './cards/SocialCreativeCard.vue';
+import CreativeDetailsComponent from './CreativeDetailsComponent.vue';
 
 interface Props {
   translations?: Record<string, string>;
