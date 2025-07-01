@@ -8,8 +8,8 @@
         <div class="text-with-copy">
           <div class="text-with-copy__btn">
             <!-- Заглушка для copy-button компонента -->
-            <button class="btn-icon _copy" type="button" @click="handleCopyTitle">
-              <span class="icon-copy"></span>
+            <button class="btn copy-btn _flex _dark" type="button" @click="handleCopyTitle">
+              <span class="icon-copy">{{ store.getTranslation('copyButton', 'Copy') }}</span>
             </button>
           </div>
           <div class="creative-item__title">
@@ -19,8 +19,8 @@
         <div class="text-with-copy">
           <div class="text-with-copy__btn">
             <!-- Заглушка для copy-button компонента -->
-            <button class="btn-icon _copy" type="button" @click="handleCopyDescription">
-              <span class="icon-copy"></span>
+            <button class="btn copy-btn _flex _dark" type="button" @click="handleCopyDescription">
+              <span class="icon-copy">{{ store.getTranslation('copyButton', 'Copy') }}</span>
             </button>
           </div>
           <div class="creative-item__desc">
@@ -79,8 +79,11 @@
 </template>
 
 <script setup lang="ts">
+import { useCreativesFiltersStore } from '@/stores/useFiltersStore';
 import type { Creative } from '@/types/creatives.d';
 import { computed } from 'vue';
+
+const store = useCreativesFiltersStore();
 
 const props = defineProps<{
   creative: Creative;
