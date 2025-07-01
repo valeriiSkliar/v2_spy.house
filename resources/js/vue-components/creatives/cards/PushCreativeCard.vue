@@ -1,5 +1,12 @@
 <template>
-  <div class="creative-item">
+  <div
+    v-if="!isCreativesLoading"
+    class="creative-item"
+    :class="{
+      'creative-item--loading': isCreativesLoading,
+      'creative-item--disabled': isAnyLoading,
+    }"
+  >
     <div class="creative-item__head">
       <div class="creative-item__txt">
         <div class="creative-item__active" :class="{ 'icon-dot': isActive }">
@@ -8,7 +15,12 @@
         <div class="text-with-copy">
           <div class="text-with-copy__btn">
             <!-- Заглушка для copy-button компонента -->
-            <button class="btn copy-btn _flex _dark" type="button" @click="handleCopyTitle">
+            <button
+              class="btn copy-btn _flex _dark"
+              type="button"
+              @click="handleCopyTitle"
+              :disabled="isCreativesLoading"
+            >
               <span class="icon-copy">{{ store.getTranslation('copyButton', 'Copy') }}</span>
             </button>
           </div>
@@ -19,7 +31,12 @@
         <div class="text-with-copy">
           <div class="text-with-copy__btn">
             <!-- Заглушка для copy-button компонента -->
-            <button class="btn copy-btn _flex _dark" type="button" @click="handleCopyDescription">
+            <button
+              class="btn copy-btn _flex _dark"
+              type="button"
+              @click="handleCopyDescription"
+              :disabled="isCreativesLoading"
+            >
               <span class="icon-copy">{{ store.getTranslation('copyButton', 'Copy') }}</span>
             </button>
           </div>
@@ -31,7 +48,12 @@
       <div class="creative-item__icon thumb thumb-with-controls-small">
         <img :src="getIconUrl()" alt="" />
         <div class="thumb-controls">
-          <a href="#" class="btn-icon _black" @click.prevent="handleDownload">
+          <a
+            href="#"
+            class="btn-icon _black"
+            @click.prevent="handleDownload"
+            :class="{ disabled: isCreativesLoading }"
+          >
             <span class="icon-download2 remore_margin"></span>
           </a>
         </div>
@@ -40,10 +62,20 @@
     <div class="creative-item__image thumb thumb-with-controls">
       <img :src="getImageUrl()" alt="" />
       <div class="thumb-controls">
-        <a href="#" class="btn-icon _black" @click.prevent="handleDownload">
+        <a
+          href="#"
+          class="btn-icon _black"
+          @click.prevent="handleDownload"
+          :class="{ disabled: isCreativesLoading }"
+        >
           <span class="icon-download2 remore_margin"></span>
         </a>
-        <a href="#" class="btn-icon _black" @click.prevent="handleOpenInNewTab">
+        <a
+          href="#"
+          class="btn-icon _black"
+          @click.prevent="handleOpenInNewTab"
+          :class="{ disabled: isCreativesLoading }"
+        >
           <span class="icon-new-tab remore_margin"></span>
         </a>
       </div>
@@ -64,16 +96,28 @@
       <div class="creative-item__btns">
         <button
           class="btn-icon btn-favorite"
-          :class="{ active: isFavorite }"
+          :class="{
+            active: isFavorite,
+            loading: props.isFavoriteLoading,
+          }"
           @click="handleFavoriteClick"
-          :disabled="isFavoriteLoading"
+          :disabled="isAnyLoading"
         >
           <span :class="getFavoriteIconClass() + ' remore_margin'"></span>
         </button>
-        <button class="btn-icon _dark js-show-details" @click="handleShowDetails">
+        <button
+          class="btn-icon _dark js-show-details"
+          @click="handleShowDetails"
+          :disabled="isCreativesLoading"
+        >
           <span class="icon-info remore_margin"></span>
         </button>
       </div>
+    </div>
+  </div>
+  <div v-else class="similar-creatives">
+    <div class="similar-creative-empty _push">
+      <img :src="empty" alt="empty" />
     </div>
   </div>
 </template>
@@ -81,6 +125,7 @@
 <script setup lang="ts">
 import { useCreativesFiltersStore } from '@/stores/useFiltersStore';
 import type { Creative } from '@/types/creatives.d';
+import empty from '@img/empty.svg';
 import { computed } from 'vue';
 
 const store = useCreativesFiltersStore();
@@ -109,11 +154,23 @@ const isFavorite = computed((): boolean => {
   return props.isFavorite ?? props.creative.isFavorite ?? false;
 });
 
+// Computed для глобального состояния загрузки креативов
+const isCreativesLoading = computed((): boolean => {
+  return store.isLoading;
+});
+
+// Computed для объединенного состояния загрузки (блокирует все операции)
+const isAnyLoading = computed((): boolean => {
+  return isCreativesLoading.value || props.isFavoriteLoading || false;
+});
+
 // Обработчики событий
 const handleFavoriteClick = (): void => {
-  // Блокируем повторные клики если уже идет обработка для этого креатива
-  if (props.isFavoriteLoading) {
-    console.warn(`Операция с избранным для креатива ${props.creative.id} уже выполняется`);
+  // Блокируем повторные клики если уже идет обработка для этого креатива или загружается список
+  if (isAnyLoading.value) {
+    console.warn(
+      `Операция с избранным для креатива ${props.creative.id} заблокирована: идет загрузка`
+    );
     return;
   }
 
@@ -131,6 +188,12 @@ const handleFavoriteClick = (): void => {
 };
 
 const handleDownload = (): void => {
+  // Блокируем скачивание во время загрузки списка
+  if (isCreativesLoading.value) {
+    console.warn(`Скачивание креатива ${props.creative.id} заблокировано: идет загрузка списка`);
+    return;
+  }
+
   emit('download', props.creative);
 
   // Эмитируем DOM событие для Store
@@ -144,6 +207,14 @@ const handleDownload = (): void => {
 };
 
 const handleShowDetails = (): void => {
+  // Блокируем просмотр деталей во время загрузки списка
+  if (isCreativesLoading.value) {
+    console.warn(
+      `Просмотр деталей креатива ${props.creative.id} заблокирован: идет загрузка списка`
+    );
+    return;
+  }
+
   emit('show-details', props.creative);
 
   // Эмитируем DOM событие для Store
@@ -157,6 +228,14 @@ const handleShowDetails = (): void => {
 };
 
 const handleOpenInNewTab = (): void => {
+  // Блокируем открытие в новой вкладке во время загрузки списка
+  if (isCreativesLoading.value) {
+    console.warn(
+      `Открытие креатива ${props.creative.id} в новой вкладке заблокировано: идет загрузка списка`
+    );
+    return;
+  }
+
   emit('open-in-new-tab', props.creative);
 
   // Эмитируем DOM событие для возможной обработки в Store
@@ -177,6 +256,14 @@ const handleOpenInNewTab = (): void => {
 
 // Функция для обработки клика по кнопке копирования названия
 const handleCopyTitle = async (): Promise<void> => {
+  // Блокируем копирование во время загрузки списка
+  if (isCreativesLoading.value) {
+    console.warn(
+      `Копирование названия креатива ${props.creative.id} заблокировано: идет загрузка списка`
+    );
+    return;
+  }
+
   const title = props.creative.title;
 
   try {
@@ -218,6 +305,14 @@ const handleCopyTitle = async (): Promise<void> => {
 
 // Функция для обработки клика по кнопке копирования описания
 const handleCopyDescription = async (): Promise<void> => {
+  // Блокируем копирование во время загрузки списка
+  if (isCreativesLoading.value) {
+    console.warn(
+      `Копирование описания креатива ${props.creative.id} заблокировано: идет загрузка списка`
+    );
+    return;
+  }
+
   const description = props.creative.description;
 
   try {

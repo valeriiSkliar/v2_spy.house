@@ -1,5 +1,15 @@
 <template>
-  <div class="creative-item" :class="`_${activeTab}`">
+  <div
+    v-if="!isCreativesLoading"
+    class="creative-item"
+    :class="[
+      `_${activeTab}`,
+      {
+        'creative-item--loading': isCreativesLoading,
+        'creative-item--disabled': isAnyLoading,
+      },
+    ]"
+  >
     <div
       class="creative-video"
       :class="{ 'has-video': creative.has_video }"
@@ -40,7 +50,11 @@
         {{ creative.description }}
       </div>
       <div class="creative-item__copy">
-        <button class="btn-icon js-copy _border-gray">
+        <button
+          class="btn-icon js-copy _border-gray"
+          @click="handleCopyDescription"
+          :disabled="isCreativesLoading"
+        >
           <span class="icon-copy"></span>
           <span class="icon-check d-none"></span>
         </button>
@@ -53,34 +67,60 @@
     </div>
     <div class="creative-item__footer">
       <div class="creative-item__info">
-        <div class="creative-status icon-dot font-roboto">
-          Active: {{ creative.activity_date }} day
-        </div>
+        <div class="creative-status icon-dot font-roboto">Active: {{ getActiveText() }}</div>
       </div>
       <div class="creative-item__btns">
-        <div class="creative-item-info"><img src="@img/flags/KZ.svg" alt="" /></div>
-        <button class="btn-icon btn-favorite"><span class="icon-favorite-empty"></span></button>
-        <button class="btn-icon _dark" @click="showDetails"><span class="icon-info"></span></button>
+        <div class="creative-item-info">
+          <img :src="getFlagIcon()" alt="" />
+          {{ creative.country || 'KZ' }}
+        </div>
+        <button
+          class="btn-icon btn-favorite"
+          :class="{
+            active: isFavorite,
+            loading: props.isFavoriteLoading,
+          }"
+          @click="handleFavoriteClick"
+          :disabled="isAnyLoading"
+        >
+          <span :class="getFavoriteIconClass()"></span>
+        </button>
+        <button class="btn-icon _dark" @click="handleShowDetails" :disabled="isCreativesLoading">
+          <span class="icon-info"></span>
+        </button>
       </div>
+    </div>
+  </div>
+  <div v-else class="similar-creatives">
+    <div class="similar-creative-empty _social">
+      <img :src="empty" alt="empty" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useCreativesFiltersStore } from '@/stores/useFiltersStore';
 import type { Creative, TabValue } from '@/types/creatives.d';
+import empty from '@img/empty.svg';
 import facebookIcon from '@img/facebook.svg';
 import icon from '@img/icon-1.jpg';
 import tiktokIcon from '@img/tiktok.svg';
 // import instagramIcon from '@img/instagram.svg';
 import { computed, ref } from 'vue';
 
+const store = useCreativesFiltersStore();
+
 const props = defineProps<{
   activeTab: TabValue;
   creative: Creative;
+  isFavorite?: boolean;
+  isFavoriteLoading?: boolean;
 }>();
 
 const emit = defineEmits<{
-  (e: 'show-details', creative: Creative): void;
+  'show-details': [creative: Creative];
+  'toggle-favorite': [creativeId: number, isFavorite: boolean];
+  download: [creative: Creative];
 }>();
 
 const activeTab = computed(() => props.activeTab);
@@ -88,6 +128,21 @@ const creative = computed(() => props.creative);
 
 // Реактивное состояние для отслеживания hover
 const isVideoHovered = ref(false);
+
+// Computed для избранного
+const isFavorite = computed((): boolean => {
+  return props.isFavorite ?? props.creative.isFavorite ?? false;
+});
+
+// Computed для глобального состояния загрузки креативов
+const isCreativesLoading = computed((): boolean => {
+  return store.isLoading;
+});
+
+// Computed для объединенного состояния загрузки (блокирует все операции)
+const isAnyLoading = computed((): boolean => {
+  return isCreativesLoading.value || props.isFavoriteLoading || false;
+});
 
 // Computed для управления контентом видео
 const videoContent = computed(() => {
@@ -115,7 +170,38 @@ const onVideoLeave = () => {
   }
 };
 
-const showDetails = () => {
+// Обработчики событий
+const handleFavoriteClick = (): void => {
+  // Блокируем повторные клики если уже идет обработка для этого креатива или загружается список
+  if (isAnyLoading.value) {
+    console.warn(
+      `Операция с избранным для креатива ${props.creative.id} заблокирована: идет загрузка`
+    );
+    return;
+  }
+
+  emit('toggle-favorite', props.creative.id, isFavorite.value);
+
+  // Эмитируем DOM событие для Store
+  document.dispatchEvent(
+    new CustomEvent('creatives:toggle-favorite', {
+      detail: {
+        creativeId: props.creative.id,
+        isFavorite: isFavorite.value,
+      },
+    })
+  );
+};
+
+const handleShowDetails = (): void => {
+  // Блокируем просмотр деталей во время загрузки списка
+  if (isCreativesLoading.value) {
+    console.warn(
+      `Просмотр деталей креатива ${props.creative.id} заблокирован: идет загрузка списка`
+    );
+    return;
+  }
+
   emit('show-details', props.creative);
 
   // Эмитируем DOM событие для Store
@@ -126,6 +212,86 @@ const showDetails = () => {
       },
     })
   );
+};
+
+// Функция для обработки клика по кнопке копирования описания
+const handleCopyDescription = async (): Promise<void> => {
+  // Блокируем копирование во время загрузки списка
+  if (isCreativesLoading.value) {
+    console.warn(
+      `Копирование описания креатива ${props.creative.id} заблокировано: идет загрузка списка`
+    );
+    return;
+  }
+
+  const description = props.creative.description;
+
+  try {
+    await navigator.clipboard.writeText(description);
+
+    // Эмитируем событие успешного копирования
+    document.dispatchEvent(
+      new CustomEvent('creatives:copy-success', {
+        detail: {
+          text: description,
+          type: 'description',
+          creativeId: props.creative.id,
+        },
+      })
+    );
+  } catch (error) {
+    console.error('Ошибка копирования описания:', error);
+
+    // Fallback для старых браузеров
+    const textarea = document.createElement('textarea');
+    textarea.value = description;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+
+    document.dispatchEvent(
+      new CustomEvent('creatives:copy-success', {
+        detail: {
+          text: description,
+          type: 'description',
+          creativeId: props.creative.id,
+          fallback: true,
+        },
+      })
+    );
+  }
+};
+
+// Функция для формирования текста активности
+const getActiveText = (): string => {
+  if (props.creative.activity_date) {
+    const activityDate = new Date(props.creative.activity_date);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - activityDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 1) {
+      return `${diffDays} day`;
+    }
+    return `${diffDays} days`;
+  }
+  return '3 days';
+};
+
+// Функция для получения иконки флага
+const getFlagIcon = (): string => {
+  return `/img/flags/${props.creative.country || 'KZ'}.svg`;
+};
+
+// Функция для получения CSS класса иконки избранного
+const getFavoriteIconClass = (): string => {
+  return isFavorite.value ? 'icon-favorite' : 'icon-favorite-empty';
+};
+
+// Совместимость с предыдущей версией (deprecated)
+const showDetails = () => {
+  handleShowDetails();
 };
 </script>
 

@@ -29,6 +29,7 @@ class BaseCreativesController extends FrontendController
                 'file_url' => "https://picsum.photos/300/200",
                 'preview_url' => "https://picsum.photos/300/200",
                 'main_image_url' => "https://picsum.photos/300/200",
+                'icon_url' => "https://picsum.photos/300/200",
                 'video_url' => "https://dev.vitaliimaksymchuk.com.ua/spy/img/video-3.mp4",
                 'has_video' => false,
                 'created_at' => now()->subDays(rand(1, 30))->format('Y-m-d'),
