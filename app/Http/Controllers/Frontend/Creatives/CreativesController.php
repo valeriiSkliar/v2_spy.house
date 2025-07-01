@@ -120,6 +120,22 @@ class CreativesController extends FrontendController
             'reset' => __('creatives.reset'),
             'country' => __('creatives.country'),
             'search' => __('creatives.search'),
+            'dateCreation' => 'Дата создания',
+            'sortBy' => 'Сортировка',
+            'periodDisplay' => 'Период отображения',
+            'searchKeyword' => 'Поиск',
+            'onlyAdult' => 'Только для взрослых',
+            'isDetailedVisible' => 'Подробный фильтр',
+            'advertisingNetworks' => 'Рекламные сети',
+            'languages' => 'Языки',
+            'operatingSystems' => 'Операционные системы',
+            'browsers' => 'Браузеры',
+            'devices' => 'Устройства',
+            'imageSizes' => 'Размеры изображений',
+            'savedSettings' => 'Сохраненные настройки',
+            'onPage' => 'На странице',
+            'savePresetButton' => 'Сохранить настройки',
+            'resetButton' => 'Сбросить',
         ];
 
         // Минимальные переводы для вкладок

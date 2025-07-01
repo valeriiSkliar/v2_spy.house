@@ -208,7 +208,7 @@
           <div class="col-12 col-md-auto mb-10">
             <button class="btn _flex _dark _medium w-100" @click="store.saveSettings()">
               <span class="icon-save mr-2 font-16"></span>
-              {{ store.getTranslation('saveSettings', 'Save settings') }}
+              {{ store.getTranslation('savePresetButton', 'Save settings') }}
             </button>
           </div>
         </div>
@@ -217,7 +217,7 @@
         <div class="reset-btn d-md-none">
           <button class="btn-icon" @click="handleResetFilters()">
             <span class="icon-clear"></span>
-            <span class="ml-2 d-md-none">Reset</span>
+            <span class="ml-2 d-md-none">{{ store.getTranslation('resetButton', 'Reset') }}</span>
           </button>
         </div>
       </div>
