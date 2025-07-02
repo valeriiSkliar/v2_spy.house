@@ -1012,7 +1012,7 @@ describe('useCreativesFiltersStore - Система переводов с защ
     expect(store.getTranslation('nullObject')).toBe('nullObject');
   });
 
-  it('setTranslations с перезаписью существующих переводов', () => {
+  it('setTranslations мержит переводы (предотвращает race condition)', () => {
     // Устанавливаем начальные переводы
     const initialTranslations = {
       key1: 'Initial value 1',
@@ -1028,7 +1028,7 @@ describe('useCreativesFiltersStore - Система переводов с защ
     expect(store.getTranslation('key1')).toBe('Initial value 1');
     expect(store.getTranslation('nested.subkey1')).toBe('Initial nested value 1');
 
-    // Перезаписываем переводы (полная замена)
+    // Добавляем новые переводы (merge с существующими)
     const newTranslations = {
       key1: 'Updated value 1',
       key3: 'New value 3',
@@ -1040,13 +1040,13 @@ describe('useCreativesFiltersStore - Система переводов с защ
 
     store.setTranslations(newTranslations as any);
 
-    // Проверяем что переводы полностью заменились
-    expect(store.getTranslation('key1')).toBe('Updated value 1');
-    expect(store.getTranslation('key2')).toBe('key2'); // fallback, так как ключ удален
-    expect(store.getTranslation('key3')).toBe('New value 3');
-    expect(store.getTranslation('nested.subkey1')).toBe('Updated nested value 1');
-    expect(store.getTranslation('nested.subkey2')).toBe('nested.subkey2'); // fallback
-    expect(store.getTranslation('nested.subkey3')).toBe('New nested value 3');
+    // Проверяем что переводы смержились (старые сохранились + новые добавились)
+    expect(store.getTranslation('key1')).toBe('Updated value 1'); // обновился
+    expect(store.getTranslation('key2')).toBe('Initial value 2'); // сохранился из первого набора
+    expect(store.getTranslation('key3')).toBe('New value 3'); // добавился новый
+    expect(store.getTranslation('nested.subkey1')).toBe('Updated nested value 1'); // обновился
+    expect(store.getTranslation('nested.subkey2')).toBe('Initial nested value 2'); // сохранился
+    expect(store.getTranslation('nested.subkey3')).toBe('New nested value 3'); // добавился новый
   });
 
   it('защита от race condition - isTranslationsReady флаг', () => {
