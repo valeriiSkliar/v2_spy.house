@@ -588,9 +588,11 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
 
   /**
    * Устанавливает переводы с защитой от race condition
+   * МЕРЖИТ новые переводы с существующими (не перезаписывает!)
    */
   function setTranslations(translationsData: Record<string, string>): void {
-    translations.value = { ...translationsData };
+    // Мержим новые переводы с существующими вместо полной перезаписи
+    translations.value = { ...translations.value, ...translationsData };
     
     // Устанавливаем флаг готовности
     isTranslationsReady.value = true;

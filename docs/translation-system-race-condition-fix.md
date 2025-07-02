@@ -206,6 +206,31 @@ filter.title: Filter
 searchKeyword: Search by Keyword
 ```
 
+### ✅ Race condition между компонентами (2024-12-12)
+
+**Проблема**: После загрузки FiltersComponent с правильными переводами, при загрузке карточек креативов переводы FiltersComponent перезаписывались на английские fallback значения.
+
+**Причина**: Метод `setTranslations()` в Store выполнял полную перезапись:
+
+```typescript
+// Проблемный код:
+translations.value = { ...translationsData }; // ПОЛНАЯ ПЕРЕЗАПИСЬ!
+```
+
+**Симптом**:
+
+1. ✅ FiltersComponent → русские переводы корректно
+2. ❌ Загрузка карточек → FiltersComponent переводы становятся английскими
+
+**Решение**: Изменен метод `setTranslations()` на merge вместо replace:
+
+```typescript
+// Исправленный код:
+translations.value = { ...translations.value, ...translationsData }; // MERGE!
+```
+
+**Результат**: Теперь каждый компонент добавляет свои переводы к существующим, не затирая переводы других компонентов.
+
 ## Следующие шаги
 
 Все компоненты карточек креативов успешно мигрированы. Система готова к продакшену.
