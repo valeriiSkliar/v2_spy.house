@@ -6,7 +6,7 @@
         <span class="icon-filter"></span>
         <span class="icon-up font-24" :class="{ rotated: isMobileFiltersOpen }"></span>
       </span>
-      {{ store.getTranslation('title', 'Filter') }}
+      {{ translations.title.value }}
     </div>
 
     <!-- Основной контент фильтров -->
@@ -34,7 +34,7 @@
                 <span class="icon-search"></span>
                 <input
                   type="search"
-                  :placeholder="store.getTranslation('searchKeyword', 'Search by Keyword')"
+                  :placeholder="translations.searchKeyword.value"
                   :value="localSearchKeyword"
                   @input="handleSearchInput"
                 />
@@ -46,7 +46,7 @@
               <BaseSelect
                 :value="store.filters.country"
                 :options="store.countryOptions"
-                :placeholder="store.getTranslation('country', 'Country')"
+                :placeholder="translations.country.value"
                 @update:value="value => store.updateFilter('country', value)"
               />
             </div>
@@ -59,8 +59,8 @@
                 :enable-custom-date="true"
                 :mode="'range'"
                 :date-format="'d-m-Y'"
-                :placeholder="store.getTranslation('dateCreation', 'Date of creation')"
-                :custom-date-label="store.getTranslation('customDateLabel', 'Custom Date')"
+                :placeholder="translations.dateCreation.value"
+                :custom-date-label="translations.customDateLabel.value"
                 @update:value="value => store.updateFilter('dateCreation', value)"
                 @custom-date-selected="handleDateCreationSelected"
               />
@@ -71,7 +71,7 @@
               <BaseSelect
                 :value="store.filters.sortBy"
                 :options="store.sortOptions"
-                :placeholder="store.getTranslation('sortBy', 'Sort by')"
+                :placeholder="translations.sortBy.value"
                 @update:value="value => store.updateFilter('sortBy', value)"
               />
             </div>
@@ -83,7 +83,7 @@
           <div class="reset-btn">
             <button class="btn-icon" @click="handleResetFilters()">
               <span class="icon-clear"></span>
-              <span class="ml-2 d-md-none">Reset</span>
+              <span class="ml-2 d-md-none">{{ translations.resetButton.value }}</span>
             </button>
           </div>
         </div>
@@ -92,7 +92,7 @@
       <!-- Детальные фильтры -->
       <div class="filter__detailed" v-show="store.filters.isDetailedVisible">
         <div class="filter__title">
-          {{ store.getTranslation('isDetailedVisible', 'Detailed filtering') }}
+          {{ translations.isDetailedVisible.value }}
         </div>
         <div class="row">
           <!-- Период отображения -->
@@ -103,8 +103,8 @@
               :enable-custom-date="true"
               :mode="'range'"
               :date-format="'d-m-Y'"
-              :custom-date-label="store.getTranslation('customDateLabel', 'Custom Date')"
-              :placeholder="store.getTranslation('periodDisplay', 'Period of display')"
+              :custom-date-label="translations.customDateLabel.value"
+              :placeholder="translations.periodDisplay.value"
               @update:value="value => store.updateFilter('periodDisplay', value)"
               @custom-date-selected="handlePeriodDisplaySelected"
             />
@@ -116,7 +116,7 @@
               :show-logo="true"
               :values="store.filters.advertisingNetworks"
               :options="store.advertisingNetworksOptions"
-              :placeholder="store.getTranslation('advertisingNetworks', 'Advertising networks')"
+              :placeholder="translations.advertisingNetworks.value"
               @add="value => store.addToMultiSelect('advertisingNetworks', value)"
               @remove="value => store.removeFromMultiSelect('advertisingNetworks', value)"
             />
@@ -127,7 +127,7 @@
             <MultiSelect
               :values="store.filters.languages"
               :options="store.languagesOptions"
-              :placeholder="store.getTranslation('languages', 'Languages')"
+              :placeholder="translations.languages.value"
               @add="value => store.addToMultiSelect('languages', value)"
               @remove="value => store.removeFromMultiSelect('languages', value)"
             />
@@ -138,7 +138,7 @@
             <MultiSelect
               :values="store.filters.operatingSystems"
               :options="store.operatingSystemsOptions"
-              :placeholder="store.getTranslation('operatingSystems', 'Operation systems')"
+              :placeholder="translations.operatingSystems.value"
               @add="value => store.addToMultiSelect('operatingSystems', value)"
               @remove="value => store.removeFromMultiSelect('operatingSystems', value)"
             />
@@ -149,7 +149,7 @@
             <MultiSelect
               :values="store.filters.browsers"
               :options="store.browsersOptions"
-              :placeholder="store.getTranslation('browsers', 'Browsers')"
+              :placeholder="translations.browsers.value"
               @add="value => store.addToMultiSelect('browsers', value)"
               @remove="value => store.removeFromMultiSelect('browsers', value)"
             />
@@ -160,7 +160,7 @@
             <MultiSelect
               :values="store.filters.devices"
               :options="store.devicesOptions"
-              :placeholder="store.getTranslation('devices', 'Devices')"
+              :placeholder="translations.devices.value"
               @add="value => store.addToMultiSelect('devices', value)"
               @remove="value => store.removeFromMultiSelect('devices', value)"
             />
@@ -171,7 +171,7 @@
             <MultiSelect
               :values="store.filters.imageSizes"
               :options="store.imageSizesOptions"
-              :placeholder="store.getTranslation('imageSizes', 'Image sizes')"
+              :placeholder="translations.imageSizes.value"
               @add="value => store.addToMultiSelect('imageSizes', value)"
               @remove="value => store.removeFromMultiSelect('imageSizes', value)"
             />
@@ -181,7 +181,7 @@
           <div class="col-12 col-md-6 col-lg-3 mb-15">
             <label class="checkbox-toggle _with-background">
               <span class="icon-18 font-20"></span>
-              <span class="mr-auto">{{ store.getTranslation('onlyAdult', 'Only adult') }}</span>
+              <span class="mr-auto">{{ translations.onlyAdult.value }}</span>
               <input
                 type="checkbox"
                 id="adult"
@@ -199,7 +199,7 @@
                 store.filters.savedSettings.length > 0 ? store.filters.savedSettings[0] : 'default'
               "
               :options="[]"
-              :placeholder="store.getTranslation('savedSettings', 'Saved settings')"
+              :placeholder="translations.savedSettings.value"
               @update:value="() => {}"
             />
           </div>
@@ -208,7 +208,7 @@
           <div class="col-12 col-md-auto mb-10">
             <button class="btn _flex _dark _medium w-100" @click="store.saveSettings()">
               <span class="icon-save mr-2 font-16"></span>
-              {{ store.getTranslation('savePresetButton', 'Save settings') }}
+              {{ translations.savePresetButton.value }}
             </button>
           </div>
         </div>
@@ -217,7 +217,7 @@
         <div class="reset-btn d-md-none">
           <button class="btn-icon" @click="handleResetFilters()">
             <span class="icon-clear"></span>
-            <span class="ml-2 d-md-none">{{ store.getTranslation('resetButton', 'Reset') }}</span>
+            <span class="ml-2 d-md-none">{{ translations.resetButton.value }}</span>
           </button>
         </div>
       </div>
@@ -226,6 +226,11 @@
 </template>
 
 <script setup lang="ts">
+import {
+  createReactiveTranslations,
+  mergePropsTranslations,
+  useTranslations,
+} from '@/composables/useTranslations';
 import type { FilterState, SelectOptions, TabOptions } from '@/types/creatives';
 import debounce from 'lodash.debounce';
 import { onMounted, onUnmounted, ref } from 'vue';
@@ -255,11 +260,63 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 // ============================================================================
-// СОСТОЯНИЕ И STORE
+// ПЕРЕВОДЫ И STORE
 // ============================================================================
 
 // Основной store с новыми композаблами
 const store = useCreativesFiltersStore();
+
+// Новая система переводов с защитой от race condition
+const { t, isReady, waitForReady } = useTranslations();
+
+// Reactive переводы для UI элементов
+const translations = createReactiveTranslations(
+  {
+    title: 'title',
+    searchKeyword: 'searchKeyword',
+    country: 'country',
+    dateCreation: 'dateCreation',
+    sortBy: 'sortBy',
+    resetButton: 'resetButton',
+    isDetailedVisible: 'isDetailedVisible',
+    customDateLabel: 'customDateLabel',
+    periodDisplay: 'periodDisplay',
+    advertisingNetworks: 'advertisingNetworks',
+    languages: 'languages',
+    operatingSystems: 'operatingSystems',
+    browsers: 'browsers',
+    devices: 'devices',
+    imageSizes: 'imageSizes',
+    onlyAdult: 'onlyAdult',
+    savedSettings: 'savedSettings',
+    savePresetButton: 'savePresetButton',
+  },
+  {
+    // Fallback значения для критических переводов
+    title: 'Filter',
+    searchKeyword: 'Search by Keyword',
+    country: 'Country',
+    dateCreation: 'Date of creation',
+    sortBy: 'Sort by',
+    resetButton: 'Reset',
+    isDetailedVisible: 'Detailed filtering',
+    customDateLabel: 'Custom Date',
+    periodDisplay: 'Period of display',
+    advertisingNetworks: 'Advertising networks',
+    languages: 'Languages',
+    operatingSystems: 'Operation systems',
+    browsers: 'Browsers',
+    devices: 'Devices',
+    imageSizes: 'Image sizes',
+    onlyAdult: 'Only adult',
+    savedSettings: 'Saved settings',
+    savePresetButton: 'Save settings',
+  }
+);
+
+// ============================================================================
+// СОСТОЯНИЕ
+// ============================================================================
 
 // Локальное состояние компонента
 const isMobileFiltersOpen = ref(false);
@@ -407,10 +464,18 @@ function emitFiltersChanged(): void {
 // ============================================================================
 
 onMounted(async () => {
-  console.log('FiltersComponent mounting with new store integration...');
+  console.log('FiltersComponent mounting with new translation system...');
 
   try {
-    // 1. FiltersComponent всегда выполняет полную инициализацию store с selectOptions
+    // 1. Обратная совместимость - устанавливаем переводы из props
+    mergePropsTranslations(props.translations, store.setTranslations);
+
+    // 2. Ожидаем готовности переводов для защиты от race condition
+    console.log('⏳ Waiting for translations to be ready...');
+    await waitForReady();
+    console.log('✅ Translations are ready, proceeding with initialization...');
+
+    // 3. FiltersComponent всегда выполняет полную инициализацию store с selectOptions
     // Даже если TabsComponent уже установил свои опции - это не проблема
     console.log('🚀 FiltersComponent performing full store initialization...');
     await store.initializeFilters(
@@ -424,22 +489,23 @@ onMounted(async () => {
       filters: store.filters,
       isInitialized: store.isInitialized,
       urlSyncEnabled: props.enableUrlSync,
+      translationsReady: isReady.value,
     });
 
-    // 2. Синхронизируем локальное поле поиска
+    // 4. Синхронизируем локальное поле поиска
     syncLocalSearchWithStore();
 
-    // 3. Настраиваем обработчики
+    // 5. Настраиваем обработчики
     window.addEventListener('resize', handleResize);
 
-    // 4. Эмитим событие готовности
+    // 6. Эмитим событие готовности
     emitComponentReady();
 
     isComponentReady.value = true;
 
-    console.log('FiltersComponent successfully mounted with new composables integration');
+    console.log('✅ FiltersComponent successfully mounted with new translation system');
   } catch (error) {
-    console.error('Error initializing FiltersComponent:', error);
+    console.error('❌ Error initializing FiltersComponent:', error);
 
     // Эмитим событие ошибки
     const errorEvent = new CustomEvent('vue-component-error', {
