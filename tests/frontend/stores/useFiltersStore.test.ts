@@ -1,6 +1,6 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { computed, ref } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 import { useCreativesFiltersStore } from '../../../resources/js/stores/useFiltersStore';
 
 let creativesMock: any;
@@ -907,7 +907,7 @@ describe('useCreativesFiltersStore - Управление опциями сел�
   });
 });
 
-describe('useCreativesFiltersStore - Система переводов', () => {
+describe('useCreativesFiltersStore - Система переводов с защитой от race condition', () => {
   let store: ReturnType<typeof useCreativesFiltersStore>;
 
   beforeEach(() => {
@@ -1049,6 +1049,73 @@ describe('useCreativesFiltersStore - Система переводов', () => {
     expect(store.getTranslation('nested.subkey3')).toBe('New nested value 3');
   });
 
+  it('защита от race condition - isTranslationsReady флаг', () => {
+    // Изначально переводы не готовы
+    expect(store.isTranslationsReady).toBe(false);
+    
+    // getTranslation должен возвращать fallback из defaultTranslations
+    expect(store.getTranslation('copyButton')).toBe('Copy');
+    expect(store.getTranslation('details.title')).toBe('Details');
+    
+    // После установки переводов - флаг становится true
+    store.setTranslations({
+      'copyButton': 'Копировать',
+      'details.title': 'Детали'
+    });
+    
+    expect(store.isTranslationsReady).toBe(true);
+    expect(store.getTranslation('copyButton')).toBe('Копировать');
+    expect(store.getTranslation('details.title')).toBe('Детали');
+  });
+
+  it('waitForTranslations() ожидает готовности переводов', async () => {
+    expect(store.isTranslationsReady).toBe(false);
+    
+    // Запускаем ожидание
+    const waitPromise = store.waitForTranslations();
+    
+    // В другом потоке устанавливаем переводы
+    setTimeout(() => {
+      store.setTranslations({
+        'test.key': 'Test value'
+      });
+    }, 10);
+    
+    // Ожидаем готовности
+    await waitPromise;
+    
+    expect(store.isTranslationsReady).toBe(true);
+  });
+
+  it('waitForTranslations() сразу резолвится если переводы готовы', async () => {
+    // Устанавливаем переводы сначала
+    store.setTranslations({
+      'test.key': 'value'
+    });
+    
+    expect(store.isTranslationsReady).toBe(true);
+    
+    // waitForTranslations должен сразу резолвиться
+    await expect(store.waitForTranslations()).resolves.toBeUndefined();
+  });
+
+  it('useTranslation() возвращает reactive computed', async () => {
+    const reactiveTranslation = store.useTranslation('dynamic.key', 'Default Value');
+    
+    // Изначально должен возвращать fallback
+    expect(reactiveTranslation.value).toBe('Default Value');
+    
+    // Устанавливаем переводы
+    store.setTranslations({
+      'dynamic.key': 'Reactive Value'
+    });
+    
+    await nextTick();
+    
+    // Теперь должен вернуть актуальный перевод
+    expect(reactiveTranslation.value).toBe('Reactive Value');
+  });
+
   it('обработка переводов с null/undefined значениями', () => {
     const translationsWithNulls = {
       validKey: 'Valid value',
@@ -1133,8 +1200,8 @@ describe('useCreativesFiltersStore - Система переводов', () => {
     // Проверяем пустой ключ
     expect(store.getTranslation('')).toBe('Empty key value');
 
-    // Проверяем ключи с точками (будут интерпретированы как вложенные)
-    expect(store.getTranslation('key.with.dots')).toBe('key.with.dots'); // fallback, так как нет такого пути
+    // Проверяем ключи с точками (теперь находятся как плоские ключи с приоритетом)
+    expect(store.getTranslation('key.with.dots')).toBe('Key with dots value'); // плоский ключ найден
 
     // Проверяем нормальные вложенные ключи
     expect(store.getTranslation('normal.')).toBe('Empty nested key');

@@ -7,7 +7,7 @@
           <div class="row align-items-center">
             <div class="col-auto mr-auto">
               <h2 class="mb-0">
-                {{ getTranslation('details.title', 'Details') }}
+                {{ translations.title.value }}
               </h2>
             </div>
             <div class="col-auto">
@@ -21,8 +21,8 @@
                 <span class="icon-favorite-empty font-16 mr-2"></span>
                 {{
                   isFavorite
-                    ? getTranslation('details.remove-from-favorites', 'Remove from favorites')
-                    : getTranslation('details.add-to-favorites', 'Add to favorites')
+                    ? translations.removeFromFavorites.value
+                    : translations.addToFavorites.value
                 }}
               </button>
             </div>
@@ -47,13 +47,13 @@
             </div>
             <div class="col-6">
               <p class="font-16 mb-15">
-                <span class="font-weight-600">{{ getTranslation('details.icon', 'Icon') }}</span>
+                <span class="font-weight-600">{{ translations.icon.value }}</span>
                 {{ selectedCreative?.file_size }}
               </p>
               <div class="mb-10">
                 <a href="#" class="btn _flex _medium _green w-100"
                   ><span class="icon-download2 font-16 mr-2"></span
-                  >{{ getTranslation('details.download', 'Download') }}</a
+                  >{{ translations.download.value }}</a
                 >
               </div>
               <div class="mb-0">
@@ -62,7 +62,7 @@
                   target="_blank"
                   class="btn _flex _medium _gray w-100"
                   ><span class="icon-new-tab font-16 mr-2"></span
-                  >{{ getTranslation('details.open-tab', 'Open in tab') }}</a
+                  >{{ translations.openTab.value }}</a
                 >
               </div>
             </div>
@@ -85,13 +85,12 @@
             <div class="col-auto flex-grow-1 mb-10">
               <a href="#" class="btn _flex _medium _green w-100"
                 ><span class="icon-download2 font-16 mr-2"></span
-                >{{ getTranslation('details.download', 'Download') }}</a
+                >{{ translations.download.value }}</a
               >
             </div>
             <div class="col-auto flex-grow-1 mb-10">
               <a href="#" class="btn _flex _medium _gray w-100"
-                ><span class="icon-new-tab font-16 mr-2"></span
-                >{{ getTranslation('details.open-tab', 'Open in tab') }}</a
+                ><span class="icon-new-tab font-16 mr-2"></span>{{ translations.openTab.value }}</a
               >
             </div>
             <div class="col-auto flex-grow-1 mb-10 d-none d-md-block">
@@ -104,8 +103,8 @@
                 <span class="icon-favorite font-16 mr-2"></span
                 >{{
                   isFavorite
-                    ? getTranslation('details.remove-from-favorites', 'Remove from favorites')
-                    : getTranslation('details.add-to-favorites', 'Add to favorites')
+                    ? translations.removeFromFavorites.value
+                    : translations.addToFavorites.value
                 }}
               </button>
             </div>
@@ -115,7 +114,7 @@
         <!-- Details second row (Image details) -->
         <div v-if="activeTab === 'push'" class="creative-details__group">
           <p class="font-16 mb-15">
-            <span class="font-weight-600">{{ getTranslation('details.image', 'Image') }}</span>
+            <span class="font-weight-600">{{ translations.image.value }}</span>
             {{ selectedCreative?.main_image_size }}
           </p>
           <div class="thumb thumb-image mb-15">
@@ -128,7 +127,7 @@
                 download
                 class="btn _flex _medium _green w-100"
                 ><span class="icon-download2 font-16 mr-2"></span
-                >{{ getTranslation('details.download', 'Download') }}</a
+                >{{ translations.download.value }}</a
               >
             </div>
             <div class="col-6">
@@ -136,8 +135,7 @@
                 :href="selectedCreative?.main_image_url"
                 target="_blank"
                 class="btn _flex _medium _gray w-100"
-                ><span class="icon-new-tab font-16 mr-2"></span
-                >{{ getTranslation('details.open-tab', 'Open in tab') }}</a
+                ><span class="icon-new-tab font-16 mr-2"></span>{{ translations.openTab.value }}</a
               >
             </div>
           </div>
@@ -145,20 +143,18 @@
         <!-- Details second row (Text details) -->
         <div class="creative-details__group">
           <p class="mb-15 font-16 font-weight-600">
-            {{ getTranslation('details.text', 'Text') }}
+            {{ translations.text.value }}
           </p>
           <div class="mb-20">
             <div class="mb-10 row align-items-center justify-content-between">
               <div class="col-auto">
-                <span class="txt-gray">{{ getTranslation('details.title', 'Title') }}</span>
+                <span class="txt-gray">{{ translations.titleField.value }}</span>
               </div>
               <div class="col-auto">
                 <button class="btn copy-btn _flex _dark js-copy">
                   <span class="icon-copy"></span>
-                  {{ getTranslation('details.copy', 'Copy') }}
-                  <span class="copy-btn__copied">{{
-                    getTranslation('details.copied', 'Copied')
-                  }}</span>
+                  {{ translations.copy.value }}
+                  <span class="copy-btn__copied">{{ translations.copied.value }}</span>
                 </button>
               </div>
             </div>
@@ -169,17 +165,13 @@
           <div class="mb-20">
             <div class="mb-10 row align-items-center justify-content-between">
               <div class="col-auto">
-                <span class="txt-gray">{{
-                  getTranslation('details.description', 'Description')
-                }}</span>
+                <span class="txt-gray">{{ translations.description.value }}</span>
               </div>
               <div class="col-auto">
                 <button class="btn copy-btn _flex _dark js-copy">
                   <span class="icon-copy"></span>
-                  {{ getTranslation('details.copy', 'Copy') }}
-                  <span class="copy-btn__copied">{{
-                    getTranslation('details.copied', 'Copied')
-                  }}</span>
+                  {{ translations.copy.value }}
+                  <span class="copy-btn__copied">{{ translations.copied.value }}</span>
                 </button>
               </div>
             </div>
@@ -196,7 +188,7 @@
         <!-- Details third row (Redirects details) -->
         <div class="creative-details__group">
           <h3 class="mb-20">
-            {{ getTranslation('details.redirects-details', 'Redirects details') }}
+            {{ translations.redirectsDetails.value }}
           </h3>
           <div class="form-link mb-25">
             <input type="url" :value="selectedCreative?.landing_page_url" readonly />
@@ -207,7 +199,7 @@
           <div class="details-table">
             <div class="details-table__row">
               <div class="details-table__col">
-                {{ getTranslation('details.advertising-networks', 'Advertising networks') }}
+                {{ translations.advertisingNetworks.value }}
               </div>
               <div class="details-table__col">
                 <a href="#" class="link _gray">{{
@@ -217,7 +209,7 @@
             </div>
             <div class="details-table__row">
               <div class="details-table__col">
-                {{ getTranslation('details.country', 'Country') }}
+                {{ translations.country.value }}
               </div>
               <div class="details-table__col">
                 <img
@@ -229,7 +221,7 @@
             </div>
             <div class="details-table__row">
               <div class="details-table__col">
-                {{ getTranslation('details.language', 'Language') }}
+                {{ translations.language.value }}
               </div>
               <div class="details-table__col">
                 {{ selectedCreative?.languages?.join(', ') }}
@@ -237,7 +229,7 @@
             </div>
             <div class="details-table__row">
               <div class="details-table__col">
-                {{ getTranslation('details.first-display-date', 'First display date') }}
+                {{ translations.firstDisplayDate.value }}
               </div>
               <div class="details-table__col">
                 {{ selectedCreative?.created_at_formatted }}
@@ -245,7 +237,7 @@
             </div>
             <div class="details-table__row">
               <div class="details-table__col">
-                {{ getTranslation('details.last-display-date', 'Last display date') }}
+                {{ translations.lastDisplayDate.value }}
               </div>
               <div class="details-table__col">
                 {{ selectedCreative?.last_activity_date_formatted }}
@@ -253,14 +245,14 @@
             </div>
             <div class="details-table__row">
               <div class="details-table__col">
-                {{ getTranslation('details.status', 'Status') }}
+                {{ translations.status.value }}
               </div>
               <div class="details-table__col">
                 <div class="creative-status" :class="{ 'icon-dot': selectedCreative?.is_active }">
                   {{
                     selectedCreative?.is_active
-                      ? getTranslation('details.active', 'Active')
-                      : getTranslation('details.inactive', 'Inactive')
+                      ? translations.active.value
+                      : translations.inactive.value
                   }}
                 </div>
               </div>
@@ -351,11 +343,16 @@
 </template>
 
 <script setup lang="ts">
+import {
+  createReactiveTranslations,
+  mergePropsTranslations,
+  useTranslations,
+} from '@/composables/useTranslations';
 import { useCreativesFiltersStore } from '@/stores/useFiltersStore';
 import type { Creative } from '@/types/creatives.d';
 import emptyImage from '@img/empty.svg';
 import facebookImage from '@img/facebook-2.jpg';
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 
 interface Props {
   showSimilarCreatives?: boolean;
@@ -367,8 +364,40 @@ const props = withDefaults(defineProps<Props>(), {
   translations: () => ({}),
 });
 
-// Подключение к store
+// Подключение к store и композаблу переводов
 const store = useCreativesFiltersStore();
+const { t, isReady: isTranslationsReady } = useTranslations();
+
+// Объединяем переводы из props со store (для обратной совместимости)
+onMounted(() => {
+  mergePropsTranslations(props.translations, store.setTranslations);
+});
+
+// Создаем reactive переводы для часто используемых ключей
+const translations = createReactiveTranslations({
+  title: 'details.title',
+  addToFavorites: 'details.add-to-favorites',
+  removeFromFavorites: 'details.remove-from-favorites',
+  download: 'details.download',
+  openTab: 'details.open-tab',
+  copy: 'details.copy',
+  copied: 'details.copied',
+  icon: 'details.icon',
+  image: 'details.image',
+  text: 'details.text',
+  titleField: 'details.title',
+  description: 'details.description',
+  translateText: 'details.translate-text',
+  redirectsDetails: 'details.redirects-details',
+  advertisingNetworks: 'details.advertising-networks',
+  country: 'details.country',
+  language: 'details.language',
+  firstDisplayDate: 'details.first-display-date',
+  lastDisplayDate: 'details.last-display-date',
+  status: 'details.status',
+  active: 'details.active',
+  inactive: 'details.inactive',
+});
 
 // Computed свойства
 const selectedCreative = computed((): Creative | null => store.currentCreativeDetails);
@@ -387,7 +416,7 @@ const isFavoriteLoading = computed((): boolean => {
 
 // Методы
 function getTranslation(key: string, fallback: string = key): string {
-  return props.translations[key] || store.getTranslation(key, fallback);
+  return t(key, fallback);
 }
 
 function getFavoriteIconClass(): string {

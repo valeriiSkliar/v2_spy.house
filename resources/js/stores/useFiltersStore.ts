@@ -101,6 +101,45 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   const isInitialized = ref(false);
   const translations = ref<Record<string, string>>({});
   
+  // ============================================================================
+  // СИСТЕМА ПЕРЕВОДОВ С ЗАЩИТОЙ ОТ RACE CONDITION
+  // ============================================================================
+  
+  // Состояние готовности переводов
+  const isTranslationsReady = ref(false);
+  const translationsLoadingPromise = ref<Promise<void> | null>(null);
+  
+  // Очередь ожидающих переводы компонентов
+  const translationWaitingQueue = ref<Array<() => void>>([]);
+  
+  // Базовые переводы (fallback для критических ключей)
+  const defaultTranslations: Record<string, string> = {
+    'title': 'Filter',
+    'searchKeyword': 'Search by Keyword',
+    'country': 'Country',
+    'dateCreation': 'Date of creation',
+    'sortBy': 'Sort by',
+    'isDetailedVisible': 'Detailed filtering',
+    'languages': 'Languages',
+    'advertisingNetworks': 'Advertising networks',
+    'operatingSystems': 'Operation systems',
+    'browsers': 'Browsers',
+    'devices': 'Devices',
+    'imageSizes': 'Image sizes',
+    'onlyAdult': 'Only adult',
+    'copyButton': 'Copy',
+    'details.title': 'Details',
+    'details.add-to-favorites': 'Add to favorites',
+    'details.remove-from-favorites': 'Remove from favorites',
+    'details.download': 'Download',
+    'details.copy': 'Copy',
+    'details.copied': 'Copied',
+    'tabs.push': 'Push',
+    'tabs.inpage': 'Inpage',
+    'tabs.facebook': 'Facebook',
+    'tabs.tiktok': 'TikTok'
+  };
+  
   // Состояние избранного
   const favoritesCount = ref<number | undefined>(undefined);
   const favoritesItems = ref<number[]>([]);
@@ -548,17 +587,88 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   }
 
   /**
-   * Устанавливает переводы
+   * Устанавливает переводы с защитой от race condition
    */
   function setTranslations(translationsData: Record<string, string>): void {
     translations.value = { ...translationsData };
+    
+    // Устанавливаем флаг готовности
+    isTranslationsReady.value = true;
+    
+    // Обрабатываем очередь ожидающих компонентов
+    const queue = translationWaitingQueue.value.splice(0);
+    queue.forEach(callback => {
+      try {
+        callback();
+      } catch (error) {
+        console.error('Ошибка при обработке ожидающего компонента переводов:', error);
+      }
+    });
+    
+    // Очищаем промис загрузки для новых запросов
+    translationsLoadingPromise.value = null;
+    
+    // Логирование для production отладки
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('store:translations-ready', {
+        detail: { 
+          translationsCount: Object.keys(translationsData).length,
+          queueProcessed: queue.length,
+          timestamp: Date.now()
+        }
+      }));
+    }
   }
 
   /**
-   * Получает перевод с fallback с поддержкой dot-notation
+   * Ожидает готовности переводов
+   * Используется компонентами для предотвращения race condition
    */
-  function getTranslation(key: string, fallback: string = key): string {
-    // Поддержка dot-notation для вложенных объектов (например: 'filter.title')
+  async function waitForTranslations(): Promise<void> {
+    if (isTranslationsReady.value) {
+      return Promise.resolve();
+    }
+    
+    // Если уже есть промис загрузки, ждем его
+    if (translationsLoadingPromise.value) {
+      return translationsLoadingPromise.value;
+    }
+    
+    // Создаем новый промис ожидания
+    translationsLoadingPromise.value = new Promise<void>((resolve) => {
+      if (isTranslationsReady.value) {
+        resolve();
+        return;
+      }
+      
+      // Добавляем в очередь ожидания
+      translationWaitingQueue.value.push(resolve);
+    });
+    
+    return translationsLoadingPromise.value;
+  }
+
+  /**
+   * Получает перевод с fallback и защитой от race condition
+   * Поддерживает как плоские ключи с точками, так и dot-notation для вложенных объектов
+   */
+  function getTranslation(key: string, fallback?: string): string {
+    const effectiveFallback = fallback || defaultTranslations[key] || key;
+    
+    // Если переводы не готовы, возвращаем fallback
+    if (!isTranslationsReady.value) {
+      return effectiveFallback;
+    }
+    
+    // ПРИОРИТЕТ 1: Сначала ищем плоский ключ (например: 'details.title' как есть)
+    if (key in translations.value) {
+      const directResult = translations.value[key];
+      if (typeof directResult === 'string') {
+        return directResult;
+      }
+    }
+    
+    // ПРИОРИТЕТ 2: Поддержка dot-notation для вложенных объектов (например: 'details.title' → obj.details.title)
     const keys = key.split('.');
     let result: any = translations.value;
     
@@ -566,7 +676,7 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
       if (result && typeof result === 'object' && k in result) {
         result = result[k];
       } else {
-        return fallback;
+        return effectiveFallback;
       }
     }
     
@@ -576,10 +686,18 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
         return result.title;
       }
       // Или возвращаем fallback если не смогли извлечь строку
-      return fallback;
+      return effectiveFallback;
     }
     
-    return typeof result === 'string' ? result : fallback;
+    return typeof result === 'string' ? result : effectiveFallback;
+  }
+
+  /**
+   * Reactive computed для безопасного получения перевода
+   * Автоматически обновляется когда переводы становятся доступными
+   */
+  function useTranslation(key: string, fallback?: string) {
+    return computed(() => getTranslation(key, fallback));
   }
 
   /**
@@ -1262,6 +1380,14 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     setTabOptions,              // Установка опций вкладок
     setTranslations,            // Установка переводов
     getTranslation,             // Получение перевода с fallback
+    useTranslation,             // Reactive перевод для компонентов
+    waitForTranslations,        // Ожидание готовности переводов
+    
+    // ========================================
+    // СОСТОЯНИЕ ПЕРЕВОДОВ
+    // ========================================
+    isTranslationsReady,        // Готовы ли переводы
+    defaultTranslations,        // Базовые переводы (fallback)
     
     // ========================================
     // МЕТОДЫ УПРАВЛЕНИЯ ФИЛЬТРАМИ
