@@ -20,28 +20,51 @@ class BaseCreativesController extends FrontendController
 
         // Заглушка данных для тестирования
         $mockCreatives = [];
+        $categories = ['push', 'inpage', 'banner', 'video', 'native'];
+        $countries = ['US', 'GB', 'DE', 'FR', 'CA', 'AU', 'RU', 'UA'];
+        $imageSizes = ['16x9', '1x1', '9x16', '3x2', '2x3', '4x3'];
+
         for ($i = 1; $i <= $filters['perPage']; $i++) {
+            $hasVideo = rand(0, 3) === 0; // 25% шанс на видео
+            $category = $categories[array_rand($categories)];
+            $country = $countries[array_rand($countries)];
+            $imageSize = $imageSizes[array_rand($imageSizes)];
+
             $mockCreatives[] = [
                 'id' => $i,
-                'title' => "Creative {$i}",
-                'description' => "Creative {$i} description",
-                'country' => 'US',
-                'file_url' => "https://picsum.photos/300/200",
-                'preview_url' => "https://picsum.photos/300/200",
-                'main_image_url' => "https://picsum.photos/300/200",
-                'icon_url' => "https://picsum.photos/300/200",
-                'video_url' => "https://dev.vitaliimaksymchuk.com.ua/spy/img/video-3.mp4",
-                'has_video' => false,
+                'name' => "Creative {$i} Name",
+                'title' => "Creative {$i} Title",
+                'description' => "Detailed description for creative {$i} with marketing content",
+                'category' => $category,
+                'country' => $country,
+                'file_size' => rand(100, 5000) . 'KB',
+                'icon_url' => "https://picsum.photos/64/64?random={$i}",
+                'landing_page_url' => "https://example-landing-{$i}.com",
+                'main_image_url' => "https://picsum.photos/400/300?random={$i}",
+                'video_url' => $hasVideo ? "https://dev.vitaliimaksymchuk.com.ua/spy/img/video-3.mp4" : null,
+                'has_video' => $hasVideo,
                 'created_at' => now()->subDays(rand(1, 30))->format('Y-m-d'),
-                'activity_date' => now()->subDays(rand(1, 7))->format('d'),
-                'advertising_networks' => ['facebook', 'google'],
-                'languages' => ['en', 'ru'],
-                'operating_systems' => ['windows', 'android'],
-                'browsers' => ['chrome', 'firefox'],
-                'devices' => ['desktop', 'mobile'],
-                'image_sizes' => ['16x9', '1x1'],
-                'is_adult' => false,
+                'activity_date' => (string)rand(1, 7),
+                'advertising_networks' => ['facebook', 'google', 'tiktok'][rand(0, 2)] ? ['facebook', 'google'] : ['tiktok'],
+                'languages' => ['en', 'ru', 'de'][rand(0, 2)] ? ['en', 'ru'] : ['de'],
+                'operating_systems' => ['windows', 'android', 'ios'][rand(0, 2)] ? ['windows', 'android'] : ['ios'],
+                'browsers' => ['chrome', 'firefox', 'safari'][rand(0, 2)] ? ['chrome', 'firefox'] : ['safari'],
+                'devices' => ['desktop', 'mobile', 'tablet'][rand(0, 2)] ? ['desktop', 'mobile'] : ['tablet'],
+                'image_sizes' => [$imageSize],
+                'main_image_size' => $imageSize,
+                'is_adult' => rand(0, 10) === 0, // 10% шанс adult контента
                 'is_active' => rand(0, 1) === 1,
+                // Социальные поля
+                'social_likes' => rand(100, 50000),
+                'social_comments' => rand(10, 5000),
+                'social_shares' => rand(5, 1000),
+                'duration' => $hasVideo ? rand(15, 120) . 's' : null,
+                // Computed свойства для фронтенда
+                'displayName' => "Creative {$i} Display Name",
+                'isRecent' => rand(0, 2) === 0,
+                'isFavorite' => rand(0, 4) === 0, // 25% в избранном
+                'created_at_formatted' => now()->subDays(rand(1, 30))->format('d.m.Y'),
+                'last_activity_date_formatted' => now()->subDays(rand(1, 7))->format('d.m.Y'),
             ];
         }
 
