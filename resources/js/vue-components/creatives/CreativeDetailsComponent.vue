@@ -343,7 +343,11 @@
 </template>
 
 <script setup lang="ts">
-import { createReactiveTranslations, mergePropsTranslations } from '@/composables/useTranslations';
+import {
+  createReactiveTranslations,
+  mergePropsTranslations,
+  useTranslations,
+} from '@/composables/useTranslations';
 import { useCreativesFiltersStore } from '@/stores/useFiltersStore';
 import type { Creative } from '@/types/creatives.d';
 import emptyImage from '@img/empty.svg';
@@ -362,10 +366,15 @@ const props = withDefaults(defineProps<Props>(), {
 
 // Подключение к store и композаблу переводов
 const store = useCreativesFiltersStore();
+const { waitForReady } = useTranslations();
 
 // Объединяем переводы из props со store (для обратной совместимости)
-onMounted(() => {
+onMounted(async () => {
+  // Мержим переводы из props с Store для обратной совместимости
   mergePropsTranslations(props.translations, store.setTranslations);
+
+  // Ждем готовности переводов для предотвращения race condition
+  await waitForReady();
 });
 
 // Создаем reactive переводы для часто используемых ключей
