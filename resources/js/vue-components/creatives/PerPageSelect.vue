@@ -83,7 +83,7 @@ const displayValue = computed(() => {
   const currentValue = store.isInitialized
     ? store.filters.perPage ?? localPerPage.value
     : localPerPage.value;
-  return `${props.translations.onPage} — ${currentValue}`;
+  return `${props.translations.onPage} ${currentValue}`;
 });
 
 const isComponentReady = computed(() => {
