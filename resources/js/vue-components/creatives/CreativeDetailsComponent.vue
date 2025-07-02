@@ -366,41 +366,90 @@ const props = withDefaults(defineProps<Props>(), {
 
 // Подключение к store и композаблу переводов
 const store = useCreativesFiltersStore();
-const { waitForReady } = useTranslations();
+const { waitForReady, t } = useTranslations();
+
+// Создаем reactive переводы для часто используемых ключей с fallback значениями
+const translations = createReactiveTranslations(
+  {
+    title: 'details.title',
+    addToFavorites: 'details.add-to-favorites',
+    removeFromFavorites: 'details.remove-from-favorites',
+    download: 'details.download',
+    openTab: 'details.open-tab',
+    copy: 'details.copy',
+    copied: 'details.copied',
+    icon: 'details.icon',
+    image: 'details.image',
+    text: 'details.text',
+    titleField: 'details.creative-title',
+    description: 'details.description',
+    translateText: 'details.translate',
+    redirectsDetails: 'details.redirects-details',
+    advertisingNetworks: 'details.advertising-networks',
+    country: 'details.country',
+    language: 'details.language',
+    firstDisplayDate: 'details.first-display-date',
+    lastDisplayDate: 'details.last-display-date',
+    status: 'details.status',
+    active: 'details.active',
+    inactive: 'details.inactive',
+  },
+  {
+    // Fallback значения
+    title: 'Details',
+    addToFavorites: 'Add to favorites',
+    removeFromFavorites: 'Remove from favorites',
+    download: 'Download',
+    openTab: 'Open in new tab',
+    copy: 'Copy',
+    copied: 'Copied',
+    icon: 'Icon',
+    image: 'Image',
+    text: 'Text',
+    titleField: 'Title',
+    description: 'Description',
+    translateText: 'Translate',
+    redirectsDetails: 'Redirects',
+    advertisingNetworks: 'Advertising networks',
+    country: 'Country',
+    language: 'Language',
+    firstDisplayDate: 'First display date',
+    lastDisplayDate: 'Last display date',
+    status: 'Status',
+    active: 'Active',
+    inactive: 'Inactive',
+  }
+);
 
 // Объединяем переводы из props со store (для обратной совместимости)
 onMounted(async () => {
+  console.log('CreativeDetailsComponent: Initializing translations...');
+  console.log('Props translations:', props.translations);
+  console.log('Props translations keys:', Object.keys(props.translations));
+
+  // Проверяем содержимое переводов
+  Object.entries(props.translations).forEach(([key, value]) => {
+    console.log(`Translation "${key}": "${value}"`);
+  });
+
   // Мержим переводы из props с Store для обратной совместимости
-  mergePropsTranslations(props.translations, store.setTranslations);
+  if (Object.keys(props.translations).length > 0) {
+    console.log('🔄 Merging props translations with store...');
+    mergePropsTranslations(props.translations, store.setTranslations);
+    console.log('✅ Props translations merged successfully');
+  } else {
+    console.warn('⚠️ No translations in props! Props are empty.');
+  }
+
+  console.log('Store isTranslationsReady after merge:', store.isTranslationsReady);
 
   // Ждем готовности переводов для предотвращения race condition
   await waitForReady();
-});
 
-// Создаем reactive переводы для часто используемых ключей
-const translations = createReactiveTranslations({
-  title: 'details.title',
-  addToFavorites: 'details.add-to-favorites',
-  removeFromFavorites: 'details.remove-from-favorites',
-  download: 'details.download',
-  openTab: 'details.open-tab',
-  copy: 'details.copy',
-  copied: 'details.copied',
-  icon: 'details.icon',
-  image: 'details.image',
-  text: 'details.text',
-  titleField: 'details.title',
-  description: 'details.description',
-  translateText: 'details.translate-text',
-  redirectsDetails: 'details.redirects-details',
-  advertisingNetworks: 'details.advertising-networks',
-  country: 'details.country',
-  language: 'details.language',
-  firstDisplayDate: 'details.first-display-date',
-  lastDisplayDate: 'details.last-display-date',
-  status: 'details.status',
-  active: 'details.active',
-  inactive: 'details.inactive',
+  console.log('Translations ready! Testing translations:');
+  console.log('- details.title:', t('details.title'));
+  console.log('- details.download:', t('details.download'));
+  console.log('- details.copy:', t('details.copy'));
 });
 
 // Computed свойства

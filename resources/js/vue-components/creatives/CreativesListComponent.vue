@@ -73,7 +73,7 @@
         /> -->
       </template>
     </div>
-    <CreativeDetailsComponent :showSimilarCreatives="true" :translations="translations" />
+    <CreativeDetailsComponent :showSimilarCreatives="true" :translations="detailsTranslations" />
   </div>
 </template>
 
@@ -90,6 +90,7 @@ import CreativeDetailsComponent from './CreativeDetailsComponent.vue';
 interface Props {
   translations?: Record<string, string>;
   cardTranslations?: Record<string, string>;
+  detailsTranslations?: Record<string, string>;
   perPage?: number;
   activeTab?: string;
 }
@@ -97,6 +98,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   translations: () => ({}),
   cardTranslations: () => ({}),
+  detailsTranslations: () => ({}),
   perPage: 12,
   activeTab: 'push',
 });
