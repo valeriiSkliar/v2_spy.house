@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Frontend\Creatives;
 use App\Http\Controllers\FrontendController;
 use App\Http\Requests\Frontend\CreativesRequest;
 use App\Http\DTOs\CreativeDTO;
+use App\Http\DTOs\CreativesFiltersDTO;
 use App\Helpers\IsoCodesHelper;
 use App\Models\AdvertismentNetwork;
 use App\Models\Browser;
@@ -71,18 +72,21 @@ abstract class BaseCreativesController extends FrontendController
     }
     public function apiIndex(CreativesRequest $request)
     {
-        // Получаем валидированные и санитизированные фильтры
-        $filters = $request->getCreativesFilters();
+        // Создаем DTO для фильтров с автоматической валидацией и санитизацией
+        $filtersDTO = CreativesFiltersDTO::fromRequest($request);
 
         // Генерируем мок данные и преобразуем через DTO для type safety
-        $mockCreativesData = $this->generateMockCreativesData($filters['perPage']);
+        $mockCreativesData = $this->generateMockCreativesData($filtersDTO->perPage);
 
         // Используем DTO для обеспечения type safety между frontend и backend
-        $creativesCollection = CreativeDTO::collection($mockCreativesData, $request->user()?->id);
+        // Получаем компактную версию для списков (оптимизация размера ответа)
+        $creativesCollection = array_map(
+            fn($item) => CreativeDTO::fromArrayWithComputed($item, $request->user()?->id)->toCompactArray(),
+            $mockCreativesData
+        );
 
         // Вызываем getSearchCount для консистентности
-        $totalCount = $this->getSearchCount($filters);
-        $lastPage = max(1, ceil($totalCount / $filters['perPage']));
+        $totalCount = $this->getSearchCount($filtersDTO->toArray());
 
         return response()->json([
             'status' => 'success',
@@ -90,19 +94,19 @@ abstract class BaseCreativesController extends FrontendController
                 'items' => $creativesCollection,
                 'pagination' => [
                     'total' => $totalCount,
-                    'perPage' => $filters['perPage'],
-                    'currentPage' => $filters['page'],
-                    'lastPage' => $lastPage,
-                    'from' => (($filters['page'] - 1) * $filters['perPage']) + 1,
-                    'to' => min($filters['page'] * $filters['perPage'], $totalCount)
+                    'perPage' => $filtersDTO->perPage,
+                    'currentPage' => $filtersDTO->page,
+                    'lastPage' => $filtersDTO->getLastPage($totalCount),
+                    'from' => $filtersDTO->getFromNumber($totalCount),
+                    'to' => $filtersDTO->getToNumber($totalCount)
                 ],
                 'meta' => [
-                    'hasSearch' => !empty($filters['searchKeyword']),
-                    'activeFiltersCount' => count(array_filter($filters, function ($value, $key) {
-                        return !in_array($key, ['page', 'perPage', 'activeTab']) && !empty($value);
-                    }, ARRAY_FILTER_USE_BOTH)),
-                    'cacheKey' => md5(json_encode($filters)),
-                    'appliedFilters' => $filters
+                    'hasSearch' => !empty($filtersDTO->searchKeyword),
+                    'activeFiltersCount' => $filtersDTO->getActiveFiltersCount(),
+                    'hasActiveFilters' => $filtersDTO->hasActiveFilters(),
+                    'cacheKey' => $filtersDTO->getCacheKey(),
+                    'appliedFilters' => $filtersDTO->toArray(),
+                    'activeFilters' => $filtersDTO->getActiveFilters()
                 ]
             ]
         ]);
@@ -197,8 +201,9 @@ abstract class BaseCreativesController extends FrontendController
         // Получаем исходные данные для анализа
         $originalInput = $request->all();
 
-        // Получаем валидированные фильтры
-        $validatedFilters = $request->getCreativesFilters();
+        // Создаем DTO с валидацией
+        $filtersDTO = CreativesFiltersDTO::fromRequest($request);
+        $validatedFilters = $filtersDTO->toArray();
 
         // Анализируем что было отклонено/санитизировано
         $rejectedValues = [];
@@ -220,7 +225,10 @@ abstract class BaseCreativesController extends FrontendController
                 'rejectedValues' => $rejectedValues,
                 'sanitizedCount' => $sanitizedCount,
                 'originalCount' => count($originalInput),
-                'validatedCount' => count($validatedFilters)
+                'validatedCount' => count($validatedFilters),
+                'hasActiveFilters' => $filtersDTO->hasActiveFilters(),
+                'activeFiltersCount' => $filtersDTO->getActiveFiltersCount(),
+                'cacheKey' => $filtersDTO->getCacheKey()
             ]
         ]);
     }

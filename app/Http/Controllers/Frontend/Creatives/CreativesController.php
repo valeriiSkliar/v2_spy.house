@@ -3,21 +3,25 @@
 namespace App\Http\Controllers\Frontend\Creatives;
 
 use App\Http\Requests\Frontend\CreativesRequest;
+use App\Http\DTOs\CreativesFiltersDTO;
 
 class CreativesController extends BaseCreativesController
 {
     public function index(CreativesRequest $request)
     {
+        // Создаем DTO для фильтров с автоматической валидацией и санитизацией
+        $filtersDTO = CreativesFiltersDTO::fromRequest($request);
+
         // Дефолтные значения фильтров (состояние) - что выбрано по умолчанию
         $defaultFilters = $this->getDefaultFilters();
 
-        // Получаем валидированные фильтры из Request
-        $validatedFilters = $request->getCreativesFilters();
+        // Получаем валидированные фильтры из DTO
+        $validatedFilters = $filtersDTO->toArray();
 
-        // Получаем activeTab из валидированных данных или дефолтное значение  
-        $activeTabFromUrl = $validatedFilters['activeTab'] ?? 'push';
+        // Получаем activeTab из DTO
+        $activeTabFromUrl = $filtersDTO->activeTab;
 
-        // Обновляем defaultFilters значениями из URL/Request
+        // Обновляем defaultFilters значениями из DTO
         $defaultFilters = $this->updateDefaultFilters($validatedFilters);
 
         $defaultTabs = $this->getDefaultTabs();
@@ -160,7 +164,9 @@ class CreativesController extends BaseCreativesController
      */
     public function getSearchCountApi(CreativesRequest $request)
     {
-        $filters = $request->getCreativesFilters();
+        // Создаем DTO для фильтров с автоматической валидацией и санитизацией
+        $filtersDTO = CreativesFiltersDTO::fromRequest($request);
+        $filters = $filtersDTO->toArray();
         $count = $this->getSearchCount($filters);
 
         return response()->json([
@@ -168,6 +174,11 @@ class CreativesController extends BaseCreativesController
             'data' => [
                 'count' => $count,
                 'filters' => $filters,
+                'filtersInfo' => [
+                    'hasActiveFilters' => $filtersDTO->hasActiveFilters(),
+                    'activeFiltersCount' => $filtersDTO->getActiveFiltersCount(),
+                    'cacheKey' => $filtersDTO->getCacheKey()
+                ],
                 'timestamp' => now()->toISOString()
             ]
         ]);
