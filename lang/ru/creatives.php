@@ -37,6 +37,11 @@ return [
     'savePresetButton' => 'Сохранить настройки',
     'resetButton' => 'Сбросить',
     'customDateLabel' => 'Пользовательская дата',
+    'copyButton' => 'Копировать',
+    'likes' => 'Лайков',
+    'comments' => 'Комментарии',
+    'shared' => 'Поделились',
+    'active' => 'Активно:',
 
     // Переводы для вкладок
     'tabs' => [

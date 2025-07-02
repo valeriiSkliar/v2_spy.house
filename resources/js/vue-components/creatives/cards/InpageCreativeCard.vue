@@ -34,7 +34,7 @@
               @click="handleCopyTitle"
               :disabled="isCreativesLoading"
             >
-              <span class="icon-copy">{{ store.getTranslation('copyButton', 'Copy') }}</span>
+              <span class="icon-copy">{{ translations.copyButton.value }}</span>
             </button>
           </div>
           <div class="creative-item__title">
@@ -50,7 +50,7 @@
               @click="handleCopyDescription"
               :disabled="isCreativesLoading"
             >
-              <span class="icon-copy">{{ store.getTranslation('copyButton', 'Copy') }}</span>
+              <span class="icon-copy">{{ translations.copyButton.value }}</span>
             </button>
           </div>
           <div class="creative-item__desc">
@@ -106,14 +106,35 @@
 import { useCreativesFiltersStore } from '@/stores/useFiltersStore';
 import type { Creative } from '@/types/creatives.d';
 import empty from '@img/empty.svg';
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
+
+// Импорты новой системы переводов
+import {
+  createReactiveTranslations,
+  mergePropsTranslations,
+  useTranslations,
+} from '@/composables/useTranslations';
 
 const store = useCreativesFiltersStore();
+
+// Новая система переводов
+const { waitForReady } = useTranslations();
+
+// Создание reactive переводов для карточки
+const translations = createReactiveTranslations(
+  {
+    copyButton: 'copyButton',
+  },
+  {
+    copyButton: 'Copy',
+  }
+);
 
 const props = defineProps<{
   creative: Creative;
   isFavorite?: boolean;
   isFavoriteLoading?: boolean;
+  translations?: Record<string, string>;
 }>();
 
 const emit = defineEmits<{
@@ -121,6 +142,15 @@ const emit = defineEmits<{
   download: [creative: Creative];
   'show-details': [creative: Creative];
 }>();
+
+// Защита от race condition при инициализации
+onMounted(async () => {
+  // Мержим переводы из props с Store для обратной совместимости
+  mergePropsTranslations(props.translations, store.setTranslations);
+
+  // Ждем готовности переводов
+  await waitForReady();
+});
 
 // Computed для избранного
 const isFavorite = computed((): boolean => {

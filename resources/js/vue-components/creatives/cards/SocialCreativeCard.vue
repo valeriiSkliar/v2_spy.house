@@ -61,13 +61,21 @@
       </div>
     </div>
     <div class="creative-item__social">
-      <div class="creative-item__social-item"><strong>285</strong> <span>Like</span></div>
-      <div class="creative-item__social-item"><strong>2</strong> <span>Comments</span></div>
-      <div class="creative-item__social-item"><strong>7</strong> <span>Shared</span></div>
+      <div class="creative-item__social-item">
+        <strong>285</strong> <span>{{ translations.likes.value }}</span>
+      </div>
+      <div class="creative-item__social-item">
+        <strong>2</strong> <span>{{ translations.comments.value }}</span>
+      </div>
+      <div class="creative-item__social-item">
+        <strong>7</strong> <span>{{ translations.shared.value }}</span>
+      </div>
     </div>
     <div class="creative-item__footer">
       <div class="creative-item__info">
-        <div class="creative-status icon-dot font-roboto">Active: {{ getActiveText() }}</div>
+        <div class="creative-status icon-dot font-roboto">
+          {{ translations.active.value }} {{ getActiveText() }}
+        </div>
       </div>
       <div class="creative-item__btns">
         <div class="creative-item-info">
@@ -106,15 +114,42 @@ import facebookIcon from '@img/facebook.svg';
 import icon from '@img/icon-1.jpg';
 import tiktokIcon from '@img/tiktok.svg';
 // import instagramIcon from '@img/instagram.svg';
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
+
+// Импорты новой системы переводов
+import {
+  createReactiveTranslations,
+  mergePropsTranslations,
+  useTranslations,
+} from '@/composables/useTranslations';
 
 const store = useCreativesFiltersStore();
+
+// Новая система переводов
+const { waitForReady } = useTranslations();
+
+// Создание reactive переводов для карточки
+const translations = createReactiveTranslations(
+  {
+    likes: 'likes',
+    comments: 'comments',
+    shared: 'shared',
+    active: 'active',
+  },
+  {
+    likes: 'Like',
+    comments: 'Comments',
+    shared: 'Shared',
+    active: 'Active:',
+  }
+);
 
 const props = defineProps<{
   activeTab: TabValue;
   creative: Creative;
   isFavorite?: boolean;
   isFavoriteLoading?: boolean;
+  translations?: Record<string, string>;
 }>();
 
 const emit = defineEmits<{
@@ -122,6 +157,15 @@ const emit = defineEmits<{
   'toggle-favorite': [creativeId: number, isFavorite: boolean];
   download: [creative: Creative];
 }>();
+
+// Защита от race condition при инициализации
+onMounted(async () => {
+  // Мержим переводы из props с Store для обратной совместимости
+  mergePropsTranslations(props.translations, store.setTranslations);
+
+  // Ждем готовности переводов
+  await waitForReady();
+});
 
 const activeTab = computed(() => props.activeTab);
 const creative = computed(() => props.creative);
