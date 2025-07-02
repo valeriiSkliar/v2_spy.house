@@ -4,13 +4,15 @@
 'activeTab' => 'push',
 'detailsTranslations' => [],
 'showSimilarCreatives' => false,
+'cardTranslations' => [],
 ])
 <div class="vue-component-wrapper" data-vue-component="CreativesListComponent" data-vue-props='{
         "translations": {{ json_encode($listTranslations) }},
         "perPage": {{ $perPage }},
         "activeTab": {{ json_encode($activeTab) }},
         "detailsTranslations": {{ json_encode($detailsTranslations) }},
-        "showSimilarCreatives": {{ json_encode($showSimilarCreatives) }}
+        "showSimilarCreatives": {{ json_encode($showSimilarCreatives) }},
+        "cardTranslations": {{ json_encode($cardTranslations) }}
     }' data-vue-placeholder-manual>
 
     <!-- Placeholder карточек креативов (количество = perPage) -->

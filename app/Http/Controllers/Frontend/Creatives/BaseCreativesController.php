@@ -205,8 +205,8 @@ class BaseCreativesController extends FrontendController
     protected function getFiltersTranslations(): array
     {
         return [
-            // Основные переводы
-            'title' => __('creatives.filter'),
+            // Основные переводы  
+            'title' => __('creatives.filter.title'),
             'reset' => __('creatives.reset'),
             'country' => __('creatives.country'),
             'search' => __('creatives.search'),
@@ -310,6 +310,20 @@ class BaseCreativesController extends FrontendController
     }
 
     /**
+     * Получить переводы для карточек креативов
+     */
+    protected function getCardTranslations(): array
+    {
+        return [
+            'copyButton' => __('creatives.copyButton'),
+            'likes' => __('creatives.likes'),
+            'comments' => __('creatives.comments'),
+            'shared' => __('creatives.shared'),
+            'active' => __('creatives.active'),
+        ];
+    }
+
+    /**
      * Получить все переводы для фронтенда в едином плоском формате
      * (как указано в документации новой системы переводов)
      */
@@ -321,7 +335,8 @@ class BaseCreativesController extends FrontendController
             $this->getDetailsTranslations(),
             $this->getListTranslations(),
             $this->getStatesTranslations(),
-            $this->getActionsTranslations()
+            $this->getActionsTranslations(),
+            $this->getCardTranslations()
         );
     }
     protected function getDefaultFilters(): array

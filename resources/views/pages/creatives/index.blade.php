@@ -34,13 +34,17 @@
     </div>
     {{-- @dd($selectOptions) --}}
 
+    {{-- DEBUG: Проверим что передается в filtersTranslations --}}
+    {{-- @dump($filtersTranslations) --}}
+
     <x-creatives.vue.filters :filters="$filters" :selectOptions="$selectOptions"
         :filtersTranslations="$filtersTranslations" :tabOptions="$tabOptions" />
 
     {{-- Компонент списка креативов с новой системой композаблов --}}
 
     <x-creatives.vue.list :listTranslations="$listTranslations" :perPage="12" :activeTab="$activeTab"
-        :detailsTranslations="$detailsTranslations ?? []" :showSimilarCreatives="false" />
+        :detailsTranslations="$detailsTranslations ?? []" :showSimilarCreatives="false"
+        :cardTranslations="$cardTranslations ?? []" />
 
 
     {{-- Компонент пагинации --}}

@@ -343,11 +343,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  createReactiveTranslations,
-  mergePropsTranslations,
-  useTranslations,
-} from '@/composables/useTranslations';
+import { createReactiveTranslations, mergePropsTranslations } from '@/composables/useTranslations';
 import { useCreativesFiltersStore } from '@/stores/useFiltersStore';
 import type { Creative } from '@/types/creatives.d';
 import emptyImage from '@img/empty.svg';
@@ -366,7 +362,6 @@ const props = withDefaults(defineProps<Props>(), {
 
 // Подключение к store и композаблу переводов
 const store = useCreativesFiltersStore();
-const { t, isReady: isTranslationsReady } = useTranslations();
 
 // Объединяем переводы из props со store (для обратной совместимости)
 onMounted(() => {
@@ -414,15 +409,6 @@ const isFavoriteLoading = computed((): boolean => {
   return store.isFavoriteLoading(selectedCreative.value.id);
 });
 
-// Методы
-function getTranslation(key: string, fallback: string = key): string {
-  return t(key, fallback);
-}
-
-function getFavoriteIconClass(): string {
-  return isFavorite.value ? 'icon-favorite' : 'icon-favorite-empty';
-}
-
 async function handleFavoriteClick(): Promise<void> {
   if (!selectedCreative.value || isFavoriteLoading.value) return;
 
@@ -434,21 +420,6 @@ async function handleFavoriteClick(): Promise<void> {
     }
   } catch (error) {
     console.error('Ошибка обработки избранного в деталях:', error);
-  }
-}
-
-function formatDate(dateString: string): string {
-  try {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ru-RU', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  } catch {
-    return dateString;
   }
 }
 </script>

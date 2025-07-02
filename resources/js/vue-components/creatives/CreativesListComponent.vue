@@ -28,6 +28,7 @@
           :creative="creative"
           :is-favorite="store.isFavoriteCreative(creative.id)"
           :is-favorite-loading="store.isFavoriteLoading(creative.id)"
+          :translations="cardTranslations"
           @toggle-favorite="handleToggleFavorite"
           @download="handleDownload"
           @show-details="handleShowDetails"
@@ -40,6 +41,7 @@
           :creative="creative"
           :is-favorite="store.isFavoriteCreative(creative.id)"
           :is-favorite-loading="store.isFavoriteLoading(creative.id)"
+          :translations="cardTranslations"
           @toggle-favorite="handleToggleFavorite"
           @download="handleDownload"
           @show-details="handleShowDetails"
@@ -52,6 +54,7 @@
           :creative="creative"
           :is-favorite="store.isFavoriteCreative(creative.id)"
           :is-favorite-loading="store.isFavoriteLoading(creative.id)"
+          :translations="cardTranslations"
           @toggle-favorite="handleToggleFavorite"
           @download="handleDownload"
           @show-details="handleShowDetails"
@@ -86,12 +89,14 @@ import CreativeDetailsComponent from './CreativeDetailsComponent.vue';
 
 interface Props {
   translations?: Record<string, string>;
+  cardTranslations?: Record<string, string>;
   perPage?: number;
   activeTab?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   translations: () => ({}),
+  cardTranslations: () => ({}),
   perPage: 12,
   activeTab: 'push',
 });

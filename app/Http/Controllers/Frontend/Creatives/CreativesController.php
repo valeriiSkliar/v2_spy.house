@@ -31,6 +31,7 @@ class CreativesController extends BaseCreativesController
         $filtersTranslations = $this->getFiltersTranslations();
         $tabsTranslations = $this->getTabsTranslations();
         $detailsTranslations = $this->getDetailsTranslations();
+        $cardTranslations = $this->getCardTranslations();
 
         $selectOptions = $this->getSelectOptions();
         $tabOptions = $this->getTabOptions($activeTabFromUrl);
@@ -53,6 +54,7 @@ class CreativesController extends BaseCreativesController
             'filtersTranslations' => $filtersTranslations,
             'tabsTranslations' => $tabsTranslations,
             'detailsTranslations' => $detailsTranslations,
+            'cardTranslations' => $cardTranslations,
         ]);
     }
 }
