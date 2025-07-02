@@ -15,7 +15,7 @@
                 <div class="col-12 col-md-auto mb-15">
                     <a href="#" class="btn justify-content-start _flex w-100 _medium _gray">
                         <span class="icon-favorite-empty font-16 mr-2"></span>
-                        Favorites
+                        {{ __('creatives.favorites') }}
                         <x-creatives.vue.favorites-counter :initialCount="43" :translations="[
                                 'favoritesCountTooltip' => 'Количество избранных креативов. Нажмите для обновления.'
                             ]" />
