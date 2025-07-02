@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Frontend\Creatives;
 
 use App\Http\Controllers\FrontendController;
 use App\Http\Requests\Frontend\CreativesRequest;
+use App\Http\DTOs\CreativeDTO;
 use App\Helpers\IsoCodesHelper;
 use App\Models\AdvertismentNetwork;
 use App\Models\Browser;
@@ -18,18 +19,18 @@ abstract class BaseCreativesController extends FrontendController
      * Должен быть переопределен в дочерних классах
      */
     abstract protected function getSearchCount($filters = []);
-    public function apiIndex(CreativesRequest $request)
-    {
-        // Получаем валидированные и санитизированные фильтры
-        $filters = $request->getCreativesFilters();
 
-        // Заглушка данных для тестирования
+    /**
+     * Генерация мок данных для тестирования DTO
+     */
+    protected function generateMockCreativesData(int $count): array
+    {
         $mockCreatives = [];
         $categories = ['push', 'inpage', 'banner', 'video', 'native'];
         $countries = ['US', 'GB', 'DE', 'FR', 'CA', 'AU', 'RU', 'UA'];
         $imageSizes = ['16x9', '1x1', '9x16', '3x2', '2x3', '4x3'];
 
-        for ($i = 1; $i <= $filters['perPage']; $i++) {
+        for ($i = 1; $i <= $count; $i++) {
             $hasVideo = rand(0, 3) === 0; // 25% шанс на видео
             $category = $categories[array_rand($categories)];
             $country = $countries[array_rand($countries)];
@@ -49,29 +50,35 @@ abstract class BaseCreativesController extends FrontendController
                 'video_url' => $hasVideo ? "https://dev.vitaliimaksymchuk.com.ua/spy/img/video-3.mp4" : null,
                 'has_video' => $hasVideo,
                 'created_at' => now()->subDays(rand(1, 30))->format('Y-m-d'),
-                'activity_date' => (string)rand(1, 7),
-                'advertising_networks' => ['facebook', 'google', 'tiktok'][rand(0, 2)] ? ['facebook', 'google'] : ['tiktok'],
-                'languages' => ['en', 'ru', 'de'][rand(0, 2)] ? ['en', 'ru'] : ['de'],
-                'operating_systems' => ['windows', 'android', 'ios'][rand(0, 2)] ? ['windows', 'android'] : ['ios'],
-                'browsers' => ['chrome', 'firefox', 'safari'][rand(0, 2)] ? ['chrome', 'firefox'] : ['safari'],
-                'devices' => ['desktop', 'mobile', 'tablet'][rand(0, 2)] ? ['desktop', 'mobile'] : ['tablet'],
+                'activity_date' => now()->subDays(rand(1, 7))->format('Y-m-d'),
+                'advertising_networks' => rand(0, 1) ? ['facebook', 'google'] : ['tiktok'],
+                'languages' => rand(0, 1) ? ['en', 'ru'] : ['de'],
+                'operating_systems' => rand(0, 1) ? ['windows', 'android'] : ['ios'],
+                'browsers' => rand(0, 1) ? ['chrome', 'firefox'] : ['safari'],
+                'devices' => rand(0, 1) ? ['desktop', 'mobile'] : ['tablet'],
                 'image_sizes' => [$imageSize],
                 'main_image_size' => $imageSize,
                 'is_adult' => rand(0, 10) === 0, // 10% шанс adult контента
-                'is_active' => rand(0, 1) === 1,
                 // Социальные поля
                 'social_likes' => rand(100, 50000),
                 'social_comments' => rand(10, 5000),
                 'social_shares' => rand(5, 1000),
                 'duration' => $hasVideo ? rand(15, 120) . 's' : null,
-                // Computed свойства для фронтенда
-                'displayName' => "Creative {$i} Display Name",
-                'isRecent' => rand(0, 2) === 0,
-                'isFavorite' => rand(0, 4) === 0, // 25% в избранном
-                'created_at_formatted' => now()->subDays(rand(1, 30))->format('d.m.Y'),
-                'last_activity_date_formatted' => now()->subDays(rand(1, 7))->format('d.m.Y'),
             ];
         }
+
+        return $mockCreatives;
+    }
+    public function apiIndex(CreativesRequest $request)
+    {
+        // Получаем валидированные и санитизированные фильтры
+        $filters = $request->getCreativesFilters();
+
+        // Генерируем мок данные и преобразуем через DTO для type safety
+        $mockCreativesData = $this->generateMockCreativesData($filters['perPage']);
+
+        // Используем DTO для обеспечения type safety между frontend и backend
+        $creativesCollection = CreativeDTO::collection($mockCreativesData, $request->user()?->id);
 
         // Вызываем getSearchCount для консистентности
         $totalCount = $this->getSearchCount($filters);
@@ -80,7 +87,7 @@ abstract class BaseCreativesController extends FrontendController
         return response()->json([
             'status' => 'success',
             'data' => [
-                'items' => $mockCreatives,
+                'items' => $creativesCollection,
                 'pagination' => [
                     'total' => $totalCount,
                     'perPage' => $filters['perPage'],
