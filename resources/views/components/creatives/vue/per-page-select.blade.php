@@ -17,7 +17,7 @@
     <div data-vue-placeholder class="base-select-icon">
         <div class="base-select">
             <div class="base-select__trigger">
-                <span class="base-select__value">{{ $translations['onPage'] }} — {{ $activePerPage }}</span>
+                <span class="base-select__value">{{ $translations['onPage'] }} {{ $activePerPage }}</span>
                 <span class="base-select__arrow"></span>
             </div>
             <ul class="base-select__dropdown" style="display: none;">

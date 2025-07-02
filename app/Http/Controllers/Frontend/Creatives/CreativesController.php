@@ -22,16 +22,15 @@ class CreativesController extends BaseCreativesController
 
         $defaultTabs = $this->getDefaultTabs();
 
+        // Новая система переводов - единый источник для всех компонентов
+        $allTranslations = $this->getAllTranslationsForFrontend();
+
+        // Обратная совместимость - отдельные массивы переводов (deprecated)
         $translations = $this->getListTranslations();
-
-        // Минимальные переводы только для Vue компонентов (оптимизация памяти)
         $listTranslations = $this->getListTranslations();
-
-        // Минимальные переводы для фильтров (только необходимые)
         $filtersTranslations = $this->getFiltersTranslations();
-
-        // Минимальные переводы для вкладок
         $tabsTranslations = $this->getTabsTranslations();
+        $detailsTranslations = $this->getDetailsTranslations();
 
         $selectOptions = $this->getSelectOptions();
         $tabOptions = $this->getTabOptions($activeTabFromUrl);
@@ -44,10 +43,16 @@ class CreativesController extends BaseCreativesController
             'tabs' => $defaultTabs,
             'selectOptions' => $selectOptions,
             'tabOptions' => $tabOptions,
+
+            // Новая система переводов - единый источник
+            'allTranslations' => $allTranslations,  // Все переводы в плоском формате
+
+            // Обратная совместимость (deprecated, но поддерживается)
             'translations' => $translations,
-            'listTranslations' => $listTranslations,  // Отдельный массив для Vue
-            'filtersTranslations' => $filtersTranslations,  // Переводы для фильтров
-            'tabsTranslations' => $tabsTranslations,  // Переводы для вкладок
+            'listTranslations' => $listTranslations,
+            'filtersTranslations' => $filtersTranslations,
+            'tabsTranslations' => $tabsTranslations,
+            'detailsTranslations' => $detailsTranslations,
         ]);
     }
 }

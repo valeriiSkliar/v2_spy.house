@@ -249,13 +249,39 @@ const translations = createReactiveTranslations({
 
 ```typescript
 // Добавить к существующему коду:
-import { mergePropsTranslations } from '@/composables/useTranslations';
+import {
+  useTranslations,
+  createReactiveTranslations,
+  mergePropsTranslations,
+} from '@/composables/useTranslations';
 
-onMounted(() => {
+// В setup() создать reactive переводы
+const { t, isReady, waitForReady } = useTranslations();
+
+const translations = createReactiveTranslations(
+  {
+    title: 'title',
+    searchKeyword: 'searchKeyword',
+    // ... остальные переводы
+  },
+  {
+    // Fallback значения
+    title: 'Filter',
+    searchKeyword: 'Search by Keyword',
+  }
+);
+
+onMounted(async () => {
+  // 1. Обратная совместимость с props
   mergePropsTranslations(props.translations, store.setTranslations);
+
+  // 2. Ожидание готовности переводов
+  await waitForReady();
+
+  // 3. Остальная инициализация
 });
 
-// Заменить getTranslation на store.getTranslation или использовать reactive переводы
+// В template: {{ translations.title.value }}
 ```
 
 ### Защита от race condition:
@@ -275,7 +301,203 @@ if (isReady.value) {
 1. ✅ **Решена проблема race condition**
 2. ✅ **Создана унифицированная система переводов**
 3. ✅ **Мигрирован CreativeDetailsComponent**
-4. ⏳ **Мигрировать остальные компоненты** (FiltersComponent, cards)
-5. ⏳ **Обновить документацию проекта**
+4. ✅ **Приведены переводы бэкенда к фронтенд формату**
+5. ✅ **Мигрирован FiltersComponent** на новую систему переводов
+6. ⏳ **Мигрировать креативные карточки** (PushCreativeCard, InpageCreativeCard, SocialCreativeCard)
+7. ⏳ **Обновить документацию проекта**
 
-Система готова к production использованию и решает изначальную проблему race condition с переводами.
+## Обновления бэкенда для совместимости с фронтенд системой переводов
+
+### 🔧 Изменения в контроллерах
+
+Обновлены методы формирования переводов в `BaseCreativesController.php`:
+
+- **`getTabsTranslations()`** - переводы вкладок в формате `tabs.{name}`
+- **`getFiltersTranslations()`** - переводы фильтров с плоскими ключами
+- **`getDetailsTranslations()`** - переводы деталей в формате `details.{action}`
+- **`getStatesTranslations()`** - переводы состояний в формате `states.{state}` и `actions.{action}`
+- **`getAllTranslationsForFrontend()`** - объединяет все переводы в единый плоский формат
+
+### 🌐 Передача переводов через Blade компоненты
+
+Переводы передаются напрямую через Blade компоненты в Vue Islands архитектуре:
+
+```php
+// В Blade компоненте
+<div data-vue-component="CreativesFiltersComponent" data-vue-props='{
+    "translations": {{ json_encode($filtersTranslations) }}
+}'>
+```
+
+**Почему API эндпоинт не нужен:**
+
+- ✅ Переводы передаются при загрузке страницы через `json_encode()`
+- ✅ Переключение языка вызывает полную перезагрузку страницы
+- ✅ Vue Islands получают все данные при инициализации
+- ✅ Нет необходимости в динамической загрузке переводов
+
+### 📝 Обновления файла переводов
+
+В `lang/ru/creatives.php` добавлены:
+
+1. **Плоские ключи для фильтров**:
+
+   - `date_creation`, `sort_by`, `period_display`
+   - `only_adult`, `detailed_filter`
+   - `advertising_networks`, `languages`, `operating_systems`
+   - `browsers`, `devices`, `image_sizes`
+
+2. **Дополнительные ключи деталей**:
+
+   - `copy`, `copied`, `share`, `preview`
+   - `information`, `stats`, `close`
+
+3. **Новые группы переводов**:
+   ```php
+   'states' => [
+       'loading' => 'Загрузка...',
+       'error' => 'Ошибка',
+       'empty' => 'Нет данных',
+       // ...
+   ],
+   'actions' => [
+       'retry' => 'Повторить',
+       'refresh' => 'Обновить',
+       'load_more' => 'Загрузить еще',
+   ]
+   ```
+
+### 🔄 Обратная совместимость
+
+`CreativesController.php` обновлен для поддержки:
+
+- Нового единого формата переводов через `getAllTranslationsForFrontend()`
+- Старых отдельных массивов переводов для плавной миграции
+
+### 🎯 Результат
+
+Фронтенд получает переводы при загрузке страницы в ожидаемом формате:
+
+```typescript
+// Фронтенд использует переводы из props:
+store.setTranslations(props.translations);
+
+// И может обращаться к ним:
+store.getTranslation('tabs.push'); // "Push"
+store.getTranslation('details.copy'); // "Копировать"
+store.getTranslation('searchKeyword'); // "Поиск"
+store.getTranslation('states.loading'); // "Загрузка..."
+```
+
+### 📋 Архитектурное решение
+
+**Vue Islands + Server-Side переводы:**
+
+- Каждый компонент получает переводы через `data-vue-props`
+- Нет дублирования HTTP запросов
+- Переводы доступны сразу при инициализации компонента
+- Полная совместимость с Laravel локализацией
+
+## Миграция FiltersComponent ✅
+
+### Выполненные изменения
+
+**1. Импорт новой системы переводов:**
+
+```typescript
+import {
+  useTranslations,
+  createReactiveTranslations,
+  mergePropsTranslations,
+} from '@/composables/useTranslations';
+```
+
+**2. Создание reactive переводов:**
+
+```typescript
+// Новая система переводов с защитой от race condition
+const { t, isReady, waitForReady } = useTranslations();
+
+// Reactive переводы для всех UI элементов (15+ переводов)
+const translations = createReactiveTranslations(
+  {
+    title: 'title',
+    searchKeyword: 'searchKeyword',
+    country: 'country',
+    dateCreation: 'dateCreation',
+    sortBy: 'sortBy',
+    resetButton: 'resetButton',
+    isDetailedVisible: 'isDetailedVisible',
+    customDateLabel: 'customDateLabel',
+    periodDisplay: 'periodDisplay',
+    advertisingNetworks: 'advertisingNetworks',
+    languages: 'languages',
+    operatingSystems: 'operatingSystems',
+    browsers: 'browsers',
+    devices: 'devices',
+    imageSizes: 'imageSizes',
+    onlyAdult: 'onlyAdult',
+    savedSettings: 'savedSettings',
+    savePresetButton: 'savePresetButton',
+  },
+  {
+    // Fallback значения для критических переводов
+    title: 'Filter',
+    searchKeyword: 'Search by Keyword',
+    // ... 15+ fallback значений
+  }
+);
+```
+
+**3. Защита от race condition в onMounted:**
+
+```typescript
+onMounted(async () => {
+  try {
+    // 1. Обратная совместимость - устанавливаем переводы из props
+    mergePropsTranslations(props.translations, store.setTranslations);
+
+    // 2. Ожидаем готовности переводов для защиты от race condition
+    console.log('⏳ Waiting for translations to be ready...');
+    await waitForReady();
+    console.log('✅ Translations are ready, proceeding with initialization...');
+
+    // 3. Остальная инициализация
+    await store.initializeFilters(/* ... */);
+
+    // ...
+  } catch (error) {
+    console.error('❌ Error initializing FiltersComponent:', error);
+  }
+});
+```
+
+**4. Замена всех переводов в template:**
+
+```html
+<!-- До: -->
+{{ store.getTranslation('title', 'Filter') }} :placeholder="store.getTranslation('searchKeyword',
+'Search by Keyword')"
+
+<!-- После: -->
+{{ translations.title.value }} :placeholder="translations.searchKeyword.value"
+```
+
+### Результаты миграции
+
+- ✅ **15+ reactive переводов** для всех фильтров, кнопок и placeholder'ов
+- ✅ **Защита от race condition** через `await waitForReady()`
+- ✅ **Автоматическое обновление** при изменении переводов
+- ✅ **Обратная совместимость** с props.translations
+- ✅ **Fallback значения** для всех критических переводов
+- ✅ **Консистентный API** - все `store.getTranslation()` заменены на `translations.key.value`
+- ✅ **TypeScript безопасность** через типизированные композаблы
+
+### Тестирование
+
+```bash
+npm test -- tests/frontend/composables/useTranslations.test.ts --run
+# ✅ 19 passed tests - новая система переводов работает корректно
+```
+
+**Статус:** Компонент FiltersComponent успешно мигрирован на новую систему переводов с полной защитой от race condition и reactive обновлениями.

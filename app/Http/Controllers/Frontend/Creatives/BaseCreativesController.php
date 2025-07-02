@@ -186,6 +186,9 @@ class BaseCreativesController extends FrontendController
         ]);
     }
 
+    /**
+     * Получить переводы для вкладок в формате для фронтенда
+     */
     protected function getTabsTranslations(): array
     {
         return [
@@ -196,32 +199,68 @@ class BaseCreativesController extends FrontendController
         ];
     }
 
+    /**
+     * Получить переводы для фильтров в плоском формате (совместимость с фронтенд системой переводов)
+     */
     protected function getFiltersTranslations(): array
     {
         return [
-            'filter' => __('creatives.filter'),
+            // Основные переводы
+            'title' => __('creatives.filter'),
             'reset' => __('creatives.reset'),
             'country' => __('creatives.country'),
             'search' => __('creatives.search'),
-            'dateCreation' => 'Дата создания',
-            'sortBy' => 'Сортировка',
-            'periodDisplay' => 'Период отображения',
-            'searchKeyword' => 'Поиск',
-            'onlyAdult' => 'Только для взрослых',
-            'isDetailedVisible' => 'Подробный фильтр',
-            'advertisingNetworks' => 'Рекламные сети',
-            'languages' => 'Языки',
-            'operatingSystems' => 'Операционные системы',
-            'browsers' => 'Браузеры',
-            'devices' => 'Устройства',
-            'imageSizes' => 'Размеры изображений',
-            'savedSettings' => 'Сохраненные настройки',
-            'onPage' => 'На странице',
-            'savePresetButton' => 'Сохранить настройки',
-            'resetButton' => 'Сбросить',
+
+            // Плоские ключи для фронтенд совместимости
+            'searchKeyword' => __('creatives.searchKeyword'),
+            'dateCreation' => __('creatives.dateCreation'),
+            'sortBy' => __('creatives.sortBy'),
+            'periodDisplay' => __('creatives.periodDisplay'),
+            'onlyAdult' => __('creatives.onlyAdult'),
+            'isDetailedVisible' => __('creatives.isDetailedVisible'),
+            'advertisingNetworks' => __('creatives.advertisingNetworks'),
+            'languages' => __('creatives.languages'),
+            'operatingSystems' => __('creatives.operatingSystems'),
+            'browsers' => __('creatives.browsers'),
+            'devices' => __('creatives.devices'),
+            'imageSizes' => __('creatives.imageSizes'),
+            'savedSettings' => __('creatives.savedSettings'),
+            'savePresetButton' => __('creatives.savePresetButton'),
+            'resetButton' => __('creatives.resetButton'),
+            'customDateLabel' => __('creatives.customDateLabel'),
+
+            // Дополнительные
+            'onPage' => __('creatives.filter.on-page'),
         ];
     }
 
+    /**
+     * Получить переводы для деталей креативов в формате для фронтенда
+     */
+    protected function getDetailsTranslations(): array
+    {
+        return [
+            'title' => __('creatives.details.title'),
+            'addToFavorites' => __('creatives.details.add-to-favorites'),
+            'removeFromFavorites' => __('creatives.details.remove-from-favorites'),
+            'copy' => __('creatives.details.copy'),
+            'copied' => __('creatives.details.copied'),
+            'share' => __('creatives.details.share'),
+            'preview' => __('creatives.details.preview'),
+            'information' => __('creatives.details.information'),
+            'stats' => __('creatives.details.stats'),
+            'close' => __('creatives.details.close'),
+            'download' => __('creatives.details.download'),
+            'openInTab' => __('creatives.details.open-in-tab'),
+            'translate' => __('creatives.details.translate'),
+            'showAllText' => __('creatives.details.show-all-text'),
+            'hideText' => __('creatives.details.hide-text'),
+        ];
+    }
+
+    /**
+     * Получить переводы для списков креативов
+     */
     protected function getListTranslations(): array
     {
         return [
@@ -234,8 +273,56 @@ class BaseCreativesController extends FrontendController
             'page' => __('creatives.page'),
             'of' => __('creatives.of'),
             'perPage' => __('creatives.perPage'),
-            'onPage' => 'На странице',
+            'onPage' => __('creatives.filter.on-page'),
         ];
+    }
+
+    /**
+     * Получить переводы состояний
+     */
+    protected function getStatesTranslations(): array
+    {
+        return [
+            'loading' => __('creatives.states.loading'),
+            'error' => __('creatives.states.error'),
+            'empty' => __('creatives.states.empty'),
+            'success' => __('creatives.states.success'),
+            'processing' => __('creatives.states.processing'),
+        ];
+    }
+
+    /**
+     * Получить переводы действий
+     */
+    protected function getActionsTranslations(): array
+    {
+        return [
+            'retry' => __('creatives.actions.retry'),
+            'refresh' => __('creatives.actions.refresh'),
+            'loadMore' => __('creatives.actions.load_more'),
+            'save' => __('creatives.actions.save'),
+            'cancel' => __('creatives.actions.cancel'),
+            'edit' => __('creatives.actions.edit'),
+            'delete' => __('creatives.actions.delete'),
+            'add' => __('creatives.actions.add'),
+            'remove' => __('creatives.actions.remove'),
+        ];
+    }
+
+    /**
+     * Получить все переводы для фронтенда в едином плоском формате
+     * (как указано в документации новой системы переводов)
+     */
+    protected function getAllTranslationsForFrontend(): array
+    {
+        return array_merge(
+            $this->getFiltersTranslations(),
+            $this->getTabsTranslations(),
+            $this->getDetailsTranslations(),
+            $this->getListTranslations(),
+            $this->getStatesTranslations(),
+            $this->getActionsTranslations()
+        );
     }
     protected function getDefaultFilters(): array
     {
