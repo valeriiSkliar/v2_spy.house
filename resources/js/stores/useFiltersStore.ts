@@ -494,6 +494,7 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   const error = computed(() => creativesComposable.error.value);
   const hasCreatives = computed(() => creatives.value.length > 0);
   const meta = computed(() => creativesComposable.meta.value);
+  const searchCount = computed(() => creativesComposable.searchCount.value);
 
   // Computed свойства для пагинации (для инкапсуляции в PaginationComponent)
   const currentPage = computed(() => pagination.value.currentPage);
@@ -961,6 +962,27 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   // ============================================================================
   
   /**
+   * Загружает только количество креативов без полного списка
+   * Используется для быстрого обновления счетчика при изменении фильтров
+   */
+  async function loadSearchCount(): Promise<void> {
+    const creativesFilters = creativesComposable.mapFiltersToCreativesFilters(
+      filters,
+      tabs.activeTab,
+      1 // Для подсчета страница не важна
+    );
+    
+    await creativesComposable.loadSearchCount(creativesFilters);
+  }
+
+  /**
+   * Устанавливает количество найденных креативов
+   */
+  function setSearchCount(count: number): void {
+    creativesComposable.setSearchCount(count);
+  }
+
+  /**
    * Загрузка креативов с указанной страницей
    * 
    * Интегрирует:
@@ -1346,6 +1368,7 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     error,                      // Ошибки загрузки
     hasCreatives,               // Есть ли креативы для отображения
     meta,                       // Метаданные запроса
+    searchCount,                // Количество найденных креативов
     hasActiveFilters,           // Есть ли активные фильтры
     
     // ========================================
@@ -1423,6 +1446,8 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     goToNextPage,              // Переход на следующую страницу
     goToPreviousPage,          // Переход на предыдущую страницу
     refreshCreatives,           // Перезагрузка креативов
+    loadSearchCount,            // Загрузка только количества креативов
+    setSearchCount,             // Установка количества креативов
     
     // ========================================
     // СОСТОЯНИЕ И МЕТОДЫ ИЗБРАННОГО

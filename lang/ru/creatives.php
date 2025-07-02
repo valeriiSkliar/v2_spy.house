@@ -3,7 +3,7 @@
 return [
     'title' => 'Креативы',
     'favorites' => 'Избранное',
-    'advertisements' => ' <span>:count</span> объявление| <span>:count</span> объявления| <span>:count</span> объявлений',
+    'advertisements' => 'объявление | объявления | объявлений',
 
     // Переводы для Vue компонентов
     'loading' => 'Загрузка...',

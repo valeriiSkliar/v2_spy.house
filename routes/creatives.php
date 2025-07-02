@@ -14,6 +14,7 @@ Route::prefix('api/creatives')
     ->group(function () {
         Route::get('/tab-counts', [CreativesController::class, 'tabCounts'])->name('tabCounts');
         Route::get('/filters/validate', [CreativesController::class, 'validateFilters'])->name('validateFilters');
+        Route::get('/search-count', [CreativesController::class, 'getSearchCountApi'])->name('searchCount');
         Route::get('/', [CreativesController::class, 'apiIndex'])->name('index');
 
         // API для избранного

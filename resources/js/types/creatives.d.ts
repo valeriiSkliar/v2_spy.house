@@ -370,6 +370,7 @@ export interface UseCreativesReturn {
   meta: Readonly<Ref<RequestMeta>>;
   isLoading: Readonly<Ref<boolean>>;
   error: Readonly<Ref<string | null>>;
+  searchCount: Readonly<Ref<number>>;
   
   // Actions
   loadCreatives: (page?: number) => Promise<void>;
@@ -378,6 +379,8 @@ export interface UseCreativesReturn {
   clearCreatives: () => void;
   mapFiltersToCreativesFilters: (filters: FilterState, activeTab: TabValue, page: number) => CreativesFilters;
   loadCreativesWithFilters: (filters: CreativesFilters) => Promise<void>;
+  loadSearchCount: (filters: CreativesFilters) => Promise<void>;
+  setSearchCount: (count: number) => void;
 }
 
 export interface UseFiltersReturn {

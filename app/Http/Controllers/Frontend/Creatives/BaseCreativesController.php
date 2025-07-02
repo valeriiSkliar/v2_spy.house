@@ -11,8 +11,13 @@ use App\Enums\Frontend\DeviceType;
 use App\Enums\Frontend\OperationSystem;
 use Illuminate\Http\Request;
 
-class BaseCreativesController extends FrontendController
+abstract class BaseCreativesController extends FrontendController
 {
+    /**
+     * Получить количество креативов на основе фильтров
+     * Должен быть переопределен в дочерних классах
+     */
+    abstract protected function getSearchCount($filters = []);
     public function apiIndex(CreativesRequest $request)
     {
         // Получаем валидированные и санитизированные фильтры
@@ -68,17 +73,21 @@ class BaseCreativesController extends FrontendController
             ];
         }
 
+        // Вызываем getSearchCount для консистентности
+        $totalCount = $this->getSearchCount($filters);
+        $lastPage = max(1, ceil($totalCount / $filters['perPage']));
+
         return response()->json([
             'status' => 'success',
             'data' => [
                 'items' => $mockCreatives,
                 'pagination' => [
-                    'total' => 120,
+                    'total' => $totalCount,
                     'perPage' => $filters['perPage'],
                     'currentPage' => $filters['page'],
-                    'lastPage' => 10,
+                    'lastPage' => $lastPage,
                     'from' => (($filters['page'] - 1) * $filters['perPage']) + 1,
-                    'to' => min($filters['page'] * $filters['perPage'], 120)
+                    'to' => min($filters['page'] * $filters['perPage'], $totalCount)
                 ],
                 'meta' => [
                     'hasSearch' => !empty($filters['searchKeyword']),

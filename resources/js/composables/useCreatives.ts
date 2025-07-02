@@ -5,14 +5,14 @@
 
 import { creativesService } from '@/services/CreativesService';
 import type {
-  Creative,
-  CreativesFilters,
-  FilterState,
-  Pagination,
-  ProcessedCreativesData,
-  RequestMeta,
-  TabValue,
-  UseCreativesReturn
+    Creative,
+    CreativesFilters,
+    FilterState,
+    Pagination,
+    ProcessedCreativesData,
+    RequestMeta,
+    TabValue,
+    UseCreativesReturn
 } from '@/types/creatives.d';
 import { CREATIVES_CONSTANTS } from '@/types/creatives.d';
 import { computed, ref, shallowRef } from 'vue';
@@ -32,6 +32,9 @@ export function useCreatives(): UseCreativesReturn {
   // Состояние загрузки и ошибок
   const isLoading = ref(false);
   const error = ref<string | null>(null);
+  
+  // Количество найденных креативов
+  const searchCount = ref<number>(0);
   
   // Кэш последнего запроса для предотвращения дубликатов
   const lastRequestSignature = ref<string>('');
@@ -160,6 +163,11 @@ export function useCreatives(): UseCreativesReturn {
       const data = await creativesService.loadCreatives(filters);
       creativesData.value = data;
       
+      // Автоматически обновляем searchCount из pagination.total
+      if (data?.pagination?.total !== undefined) {
+        searchCount.value = data.pagination.total;
+      }
+      
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Неизвестная ошибка';
       error.value = errorMessage;
@@ -220,12 +228,53 @@ export function useCreatives(): UseCreativesReturn {
   // }
   
   /**
+   * Загружает только количество креативов без полного списка
+   * Используется для быстрого обновления счетчика при изменении фильтров
+   */
+  async function loadSearchCount(filters: CreativesFilters): Promise<void> {
+    try {
+      // Формируем URL для API запроса
+      const params = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          if (Array.isArray(value)) {
+            if (value.length > 0) {
+              params.append(key, value.join(','));
+            }
+          } else {
+            params.append(key, String(value));
+          }
+        }
+      });
+
+      // Запрос к API для получения только количества
+      const response = await window.axios.get(`/api/creatives/search-count?${params.toString()}`);
+      
+      if (response.data?.status === 'success' && response.data?.data?.count !== undefined) {
+        searchCount.value = response.data.data.count;
+      }
+
+    } catch (error) {
+      console.error('❌ Ошибка загрузки количества креативов:', error);
+      // Не сбрасываем счетчик при ошибке, оставляем предыдущее значение
+    }
+  }
+
+  /**
+   * Устанавливает количество найденных креативов
+   */
+  function setSearchCount(count: number): void {
+    searchCount.value = count;
+  }
+
+  /**
    * Очищает данные креативов
    */
   function clearCreatives(): void {
     creativesData.value = null;
     error.value = null;
     isLoading.value = false;
+    searchCount.value = 0;
     lastRequestSignature.value = '';
   }
   
@@ -342,6 +391,7 @@ export function useCreatives(): UseCreativesReturn {
     meta: computed(() => meta.value),
     isLoading: computed(() => isLoading.value),
     error: computed(() => error.value),
+    searchCount: computed(() => searchCount.value),
     
     // Вспомогательные computed
     // hasCreatives: computed(() => hasCreatives.value),
@@ -358,6 +408,8 @@ export function useCreatives(): UseCreativesReturn {
     loadNextPage,
     // loadPage,
     clearCreatives,
+    loadSearchCount,
+    setSearchCount,
     // cancelRequests,
     // clearError,
     

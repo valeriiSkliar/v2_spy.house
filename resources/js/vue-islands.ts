@@ -54,6 +54,7 @@ const componentMap: Record<string, () => Promise<{ default: Component }>> = {
     'FavoritesCounter': () => import('./vue-components/ui/FavoritesCounter.vue'),
     'BaseSelect': () => import('./vue-components/ui/BaseSelect.vue'),
     'PerPageSelect': () => import('./vue-components/creatives/PerPageSelect.vue'),
+    'SearchCountComponent': () => import('./vue-components/creatives/SearchCountComponent.vue'),
     
     // Добавьте здесь новые компоненты по мере создания
 };

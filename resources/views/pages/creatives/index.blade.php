@@ -40,6 +40,9 @@
     <x-creatives.vue.filters :filters="$filters" :selectOptions="$selectOptions"
         :filtersTranslations="$filtersTranslations" :tabOptions="$tabOptions" />
 
+    {{-- Search count component - Vue островок --}}
+    <x-creatives.vue.search-count :initialCount="$searchCount" />
+
     {{-- Компонент списка креативов с новой системой композаблов --}}
 
     <x-creatives.vue.list :listTranslations="$listTranslations" :perPage="12" :activeTab="$activeTab"
