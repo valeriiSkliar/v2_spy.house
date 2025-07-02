@@ -231,6 +231,77 @@ translations.value = { ...translations.value, ...translationsData }; // MERGE!
 
 **Результат**: Теперь каждый компонент добавляет свои переводы к существующим, не затирая переводы других компонентов.
 
+### ✅ Замена кастомного deepMerge на проверенную библиотеку (2024-12-12)
+
+**Проблема**: В Store использовалась кастомная функция `deepMerge()` для слияния переводов:
+
+```typescript
+// Кастомная функция (24 строки кода):
+function deepMerge(target: any, source: any): any {
+  const result = { ...target };
+
+  for (const key in source) {
+    if (source.hasOwnProperty(key)) {
+      if (
+        typeof source[key] === 'object' &&
+        source[key] !== null &&
+        !Array.isArray(source[key]) &&
+        typeof result[key] === 'object' &&
+        result[key] !== null &&
+        !Array.isArray(result[key])
+      ) {
+        result[key] = deepMerge(result[key], source[key]);
+      } else {
+        result[key] = source[key];
+      }
+    }
+  }
+
+  return result;
+}
+```
+
+**Проблемы кастомного решения**:
+
+- Потенциальные баги в edge cases
+- Дополнительный код для поддержки
+- Отсутствие comprehensive тестирования
+
+**Решение**: Заменена на проверенную библиотеку [deepmerge](https://www.npmjs.com/package/deepmerge):
+
+```bash
+npm install deepmerge @types/deepmerge
+```
+
+```typescript
+// Заменено на:
+import merge from 'deepmerge';
+
+function setTranslations(translationsData: Record<string, string>): void {
+  // Используем проверенную библиотеку deepmerge вместо кастомной функции
+  translations.value = merge(translations.value, translationsData);
+  // ... rest of function
+}
+```
+
+**Преимущества библиотечного решения**:
+
+- ✅ **54M+ загрузок в неделю** - проверенное сообществом решение
+- ✅ **723B minified+gzipped** - минимальный overhead
+- ✅ **TypeScript декларации** через @types/deepmerge
+- ✅ **Comprehensive тестирование** edge cases
+- ✅ **Активная поддержка** и багфиксы
+
+**Тестирование**: 107/107 тестов Store прошли успешно, включая специфичный тест для deep merge:
+
+```bash
+✓ setTranslations мержит переводы (предотвращает race condition)
+✓ Test Files  1 passed (1)
+✓ Tests  107 passed (107)
+```
+
+**Результат**: Уменьшено количество кода в Store, повышена надежность системы мержа переводов, используется industry-standard решение.
+
 ## Следующие шаги
 
 Все компоненты карточек креативов успешно мигрированы. Система готова к продакшену.

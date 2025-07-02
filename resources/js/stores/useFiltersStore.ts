@@ -52,6 +52,7 @@ import {
   type TabsState,
   type TabValue
 } from '@/types/creatives.d';
+import merge from 'deepmerge';
 import debounce from 'lodash.debounce';
 import { defineStore } from 'pinia';
 import { computed, nextTick, reactive, ref, watchEffect } from 'vue';
@@ -587,42 +588,14 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   }
 
   /**
-   * Глубокое слияние объектов для переводов
-   * Поддерживает вложенные объекты в отличие от spread operator
-   */
-  function deepMerge(target: any, source: any): any {
-    const result = { ...target };
-    
-    for (const key in source) {
-      if (source.hasOwnProperty(key)) {
-        if (
-          typeof source[key] === 'object' && 
-          source[key] !== null && 
-          !Array.isArray(source[key]) &&
-          typeof result[key] === 'object' && 
-          result[key] !== null && 
-          !Array.isArray(result[key])
-        ) {
-          // Рекурсивно мержим вложенные объекты
-          result[key] = deepMerge(result[key], source[key]);
-        } else {
-          // Заменяем примитивные значения или создаем новые ключи
-          result[key] = source[key];
-        }
-      }
-    }
-    
-    return result;
-  }
-
-  /**
    * Устанавливает переводы с защитой от race condition
    * МЕРЖИТ новые переводы с существующими (не перезаписывает!)
    * Поддерживает глубокое слияние вложенных объектов
    */
   function setTranslations(translationsData: Record<string, string>): void {
     // Глубоко мержим новые переводы с существующими вместо полной перезаписи
-    translations.value = deepMerge(translations.value, translationsData);
+    // Используем проверенную библиотеку deepmerge вместо кастомной функции
+    translations.value = merge(translations.value, translationsData);
     
     // Устанавливаем флаг готовности
     isTranslationsReady.value = true;
