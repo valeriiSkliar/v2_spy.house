@@ -264,19 +264,10 @@ const handleCopyDescription = async (): Promise<void> => {
 };
 
 // Функция для формирования текста активности
-const getActiveText = (): string => {
-  if (props.creative.activity_date) {
-    const activityDate = new Date(props.creative.activity_date);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - activityDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+import { getActiveDaysText } from '@/utils/getActiveDaysText';
 
-    if (diffDays === 1) {
-      return `${diffDays} day`;
-    }
-    return `${diffDays} days`;
-  }
-  return '3 days';
+const getActiveText = (): string => {
+  return getActiveDaysText(props.creative.activity_date, '3 days');
 };
 
 // Функция для получения иконки флага

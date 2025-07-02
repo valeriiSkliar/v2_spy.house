@@ -306,19 +306,10 @@ const getFavoriteIconClass = (): string => {
 };
 
 // Функция для формирования текста активности
-const getActiveText = (): string => {
-  if (props.creative.activity_date) {
-    const activityDate = new Date(props.creative.activity_date);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - activityDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+import { getActiveDaysText } from '@/utils/getActiveDaysText';
 
-    if (diffDays === 1) {
-      return `Active ${diffDays} day`;
-    }
-    return `Active ${diffDays} days`;
-  }
-  return 'Active 3 days';
+const getActiveText = (): string => {
+  return getActiveDaysText(props.creative.activity_date, 'Active 3 days');
 };
 
 // Функция для получения текста сети
