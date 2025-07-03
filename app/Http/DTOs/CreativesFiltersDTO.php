@@ -20,14 +20,14 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
         public string $periodDisplay = 'default',
         public bool $onlyAdult = false,
         public bool $isDetailedVisible = false,
-        
+
         // Пагинация
         public int $page = 1,
         public int $perPage = 12,
-        
+
         // Активная вкладка
         public string $activeTab = 'push',
-        
+
         // Мультиселект фильтры
         public array $advertisingNetworks = [],
         public array $languages = [],
@@ -76,7 +76,7 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
     public static function fromRequest($request): self
     {
         $data = $request->all();
-        
+
         // Автоматическая санитизация без выброса исключений
         return self::fromArraySafe($data);
     }
@@ -209,12 +209,12 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
 
         // Исключаем поля которые не считаются фильтрами
         $excludeFields = ['page', 'perPage', 'activeTab', 'isDetailedVisible'];
-        
+
         foreach ($current as $key => $value) {
             if (in_array($key, $excludeFields)) {
                 continue;
             }
-            
+
             if ($defaults[$key] !== $value) {
                 return true;
             }
@@ -234,12 +234,12 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
 
         // Исключаем поля которые не считаются фильтрами
         $excludeFields = ['page', 'perPage', 'activeTab', 'isDetailedVisible'];
-        
+
         foreach ($current as $key => $value) {
             if (in_array($key, $excludeFields)) {
                 continue;
             }
-            
+
             if ($defaults[$key] !== $value) {
                 $count++;
             }
@@ -273,7 +273,7 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
             if (in_array($key, $excludeFields)) {
                 continue;
             }
-            
+
             if ($defaults[$key] !== $value) {
                 $active[$key] = $value;
             }
@@ -294,7 +294,11 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
     {
         if (is_bool($value)) return $value;
         if (is_string($value)) {
-            return in_array(strtolower($value), ['true', '1', 'on', 'yes']);
+            $lowercaseValue = strtolower(trim($value));
+            return in_array($lowercaseValue, ['true', '1', 'on', 'yes']);
+        }
+        if (is_numeric($value)) {
+            return (int)$value === 1;
         }
         return (bool)$value;
     }
@@ -302,7 +306,7 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
     private static function sanitizeArray($value): array
     {
         if (!is_array($value)) return [];
-        return array_values(array_filter($value, function($item) {
+        return array_values(array_filter($value, function ($item) {
             return !empty($item) && is_string($item);
         }));
     }
@@ -310,15 +314,15 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
     private static function validateCountry(string $value, bool $safe = false): string
     {
         $validCountries = ['default', 'US', 'GB', 'DE', 'FR', 'CA', 'AU', 'RU', 'UA', 'IT', 'ES', 'NL', 'SE', 'NO', 'DK', 'FI', 'PL', 'CZ', 'SK', 'HU', 'RO', 'BG', 'HR', 'SI', 'EE', 'LV', 'LT'];
-        
+
         if (self::isValidCountry($value)) {
             return $value;
         }
-        
+
         if ($safe) {
             return 'default';
         }
-        
+
         throw new \InvalidArgumentException("Invalid country: {$value}");
     }
 
@@ -333,11 +337,11 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
         if (self::isValidDateOption($value)) {
             return $value;
         }
-        
+
         if ($safe) {
             return 'default';
         }
-        
+
         throw new \InvalidArgumentException("Invalid dateCreation: {$value}");
     }
 
@@ -352,11 +356,11 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
         if (self::isValidSortOption($value)) {
             return $value;
         }
-        
+
         if ($safe) {
             return 'default';
         }
-        
+
         throw new \InvalidArgumentException("Invalid sortBy: {$value}");
     }
 
@@ -371,11 +375,11 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
         if (self::isValidPeriodOption($value)) {
             return $value;
         }
-        
+
         if ($safe) {
             return 'default';
         }
-        
+
         throw new \InvalidArgumentException("Invalid periodDisplay: {$value}");
     }
 
@@ -391,11 +395,11 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
         if ($page >= 1 && $page <= 10000) {
             return $page;
         }
-        
+
         if ($safe) {
             return max(1, min(10000, $page));
         }
-        
+
         throw new \InvalidArgumentException("Invalid page: {$value}");
     }
 
@@ -403,11 +407,11 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
     {
         $perPage = (int)$value;
         $allowedValues = [6, 12, 24, 48, 96];
-        
+
         if (in_array($perPage, $allowedValues)) {
             return $perPage;
         }
-        
+
         if ($safe) {
             // Найти ближайшее допустимое значение
             $closest = $allowedValues[0];
@@ -418,7 +422,7 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
             }
             return $closest;
         }
-        
+
         throw new \InvalidArgumentException("Invalid perPage: {$value}");
     }
 
@@ -427,11 +431,11 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
         if (self::isValidActiveTab($value)) {
             return $value;
         }
-        
+
         if ($safe) {
             return 'push';
         }
-        
+
         throw new \InvalidArgumentException("Invalid activeTab: {$value}");
     }
 
@@ -532,14 +536,14 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
     public function toCompactArray(): array
     {
         $array = $this->toArray();
-        
+
         // Убираем пустые массивы для экономии трафика
         foreach ($array as $key => $value) {
             if (is_array($value) && empty($value)) {
                 unset($array[$key]);
             }
         }
-        
+
         return $array;
     }
 }

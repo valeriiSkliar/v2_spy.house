@@ -201,7 +201,12 @@ class CreativesRequest extends BaseRequest
 
         // Обработка простых полей
         foreach ($urlToFilterMapping as $urlParam => $filterParam) {
-            $filters[$filterParam] = $validated[$urlParam] ?? $validated[$filterParam] ?? null;
+            // Специальная обработка для boolean URL параметров
+            if ($urlParam === 'cr_onlyAdult' && isset($validated[$urlParam])) {
+                $filters[$filterParam] = $this->sanitizeBooleanInput($validated[$urlParam]);
+            } else {
+                $filters[$filterParam] = $validated[$urlParam] ?? $validated[$filterParam] ?? null;
+            }
         }
 
         // Обработка массивов с оптимизацией

@@ -201,8 +201,11 @@ abstract class BaseCreativesController extends FrontendController
         // Получаем исходные данные для анализа
         $originalInput = $request->all();
 
-        // Создаем DTO с валидацией
-        $filtersDTO = CreativesFiltersDTO::fromRequest($request);
+        // Используем обработанные фильтры с URL приоритетами из CreativesRequest
+        $processedFilters = $request->getCreativesFilters();
+
+        // Создаем DTO из обработанных фильтров (они уже имеют правильные приоритеты)
+        $filtersDTO = CreativesFiltersDTO::fromArraySafe($processedFilters);
         $validatedFilters = $filtersDTO->toArray();
 
         // Анализируем что было отклонено/санитизировано
