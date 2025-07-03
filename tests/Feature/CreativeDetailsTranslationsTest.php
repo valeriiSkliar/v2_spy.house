@@ -14,7 +14,7 @@ class CreativeDetailsTranslationsTest extends TestCase
         app()->setLocale('ru');
 
         // Тестируем контроллер напрямую
-        $controller = new \App\Http\Controllers\Frontend\Creatives\BaseCreativesController();
+        $controller = new \App\Http\Controllers\Frontend\Creatives\CreativesController();
 
         // Используем рефлексию для доступа к protected методу
         $reflection = new \ReflectionClass($controller);
