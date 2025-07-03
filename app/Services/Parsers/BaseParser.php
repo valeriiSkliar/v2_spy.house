@@ -64,13 +64,13 @@ abstract class BaseParser
     /**
      * Initialize parser with configuration
      *
-     * @param string|null $apiKey API key for authentication (null for open endpoints)
      * @param string $baseUrl Base URL for API endpoints
+     * @param string|null $apiKey API key for authentication (null for open endpoints)
      * @param array $options Additional configuration options
      * 
      * @throws ParserException If required parameters are missing
      */
-    public function __construct(?string $apiKey = null, string $baseUrl, array $options = [])
+    public function __construct(string $baseUrl, ?string $apiKey = null, array $options = [])
     {
         if (empty($baseUrl)) {
             throw new ParserException('Base URL is required');
@@ -78,12 +78,12 @@ abstract class BaseParser
 
         $this->apiKey = $apiKey;
         $this->baseUrl = rtrim($baseUrl, '/');
-        $this->timeout = $options['timeout'] ?? 30;
-        $this->rateLimit = $options['rate_limit'] ?? 60;
-        $this->maxRetries = $options['max_retries'] ?? 3;
-        $this->retryDelay = $options['retry_delay'] ?? 1;
+        $this->timeout = (int)($options['timeout'] ?? 30);
+        $this->rateLimit = (int)($options['rate_limit'] ?? 60);
+        $this->maxRetries = (int)($options['max_retries'] ?? 3);
+        $this->retryDelay = (int)($options['retry_delay'] ?? 1);
         $this->parserName = $options['parser_name'] ?? static::class;
-        $this->requiresAuth = $options['requires_auth'] ?? true;
+        $this->requiresAuth = (bool)($options['requires_auth'] ?? true);
 
         // Validate API key requirement
         if ($this->requiresAuth && empty($this->apiKey)) {
