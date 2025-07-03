@@ -66,7 +66,7 @@ class TikTokParser extends BaseParser
             'parser_name' => 'TikTok'
         ], $options);
 
-        parent::__construct($apiKey, $baseUrl, $tiktokOptions);
+        parent::__construct($baseUrl, $apiKey, $tiktokOptions);
     }
 
     /**

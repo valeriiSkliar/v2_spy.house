@@ -9,6 +9,7 @@ use App\Services\Parsers\TikTokParser;
 use App\Services\Parsers\ParserManager;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Service Provider for API Parsers
@@ -91,8 +92,15 @@ class ParserServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Validate parser configurations
-        $this->validateParserConfigurations();
+        // Validate parser configurations only in console mode or once per day
+        if ($this->app->runningInConsole() || !Cache::has('parser_config_validated_today')) {
+            $this->validateParserConfigurations();
+
+            // Mark as validated for today (only for web requests)
+            if (!$this->app->runningInConsole()) {
+                Cache::put('parser_config_validated_today', true, now()->addHours(24));
+            }
+        }
     }
 
     /**
@@ -123,29 +131,44 @@ class ParserServiceProvider extends ServiceProvider
 
             foreach ($requiredFields as $field) {
                 if (empty($config[$field])) {
-                    \Illuminate\Support\Facades\Log::warning("Parser configuration missing required field", [
-                        'parser' => $parser,
-                        'field' => $field
-                    ]);
+                    $cacheKey = "parser_config_missing_{$parser}_{$field}";
+                    if (!\Illuminate\Support\Facades\Cache::has($cacheKey)) {
+                        \Illuminate\Support\Facades\Log::warning("Parser configuration missing required field", [
+                            'parser' => $parser,
+                            'field' => $field
+                        ]);
+                        // Cache for 24 hours to prevent spam
+                        \Illuminate\Support\Facades\Cache::put($cacheKey, true, now()->addHours(24));
+                    }
                 }
             }
 
-            // Log warning if PushHouse API key is missing (but don't fail)
+            // Log warning if PushHouse API key is missing (but don't fail) - only once per day
             if ($parser === 'push_house' && empty($config['api_key'])) {
-                \Illuminate\Support\Facades\Log::info("PushHouse parser configured without API key - using open endpoints only", [
-                    'parser' => $parser
-                ]);
+                $cacheKey = "parser_config_warning_{$parser}_no_api_key";
+                if (!\Illuminate\Support\Facades\Cache::has($cacheKey)) {
+                    \Illuminate\Support\Facades\Log::info("PushHouse parser configured without API key - using open endpoints only", [
+                        'parser' => $parser
+                    ]);
+                    // Cache for 24 hours to prevent spam
+                    \Illuminate\Support\Facades\Cache::put($cacheKey, true, now()->addHours(24));
+                }
             }
 
             // Validate numeric fields
             $numericFields = ['rate_limit', 'timeout', 'max_retries', 'retry_delay'];
             foreach ($numericFields as $field) {
                 if (isset($config[$field]) && !is_numeric($config[$field])) {
-                    \Illuminate\Support\Facades\Log::warning("Parser configuration invalid numeric value", [
-                        'parser' => $parser,
-                        'field' => $field,
-                        'value' => $config[$field]
-                    ]);
+                    $cacheKey = "parser_config_invalid_{$parser}_{$field}";
+                    if (!\Illuminate\Support\Facades\Cache::has($cacheKey)) {
+                        \Illuminate\Support\Facades\Log::warning("Parser configuration invalid numeric value", [
+                            'parser' => $parser,
+                            'field' => $field,
+                            'value' => $config[$field]
+                        ]);
+                        // Cache for 24 hours to prevent spam
+                        \Illuminate\Support\Facades\Cache::put($cacheKey, true, now()->addHours(24));
+                    }
                 }
             }
         }

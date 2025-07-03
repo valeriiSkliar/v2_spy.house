@@ -12,30 +12,14 @@ use Illuminate\Support\Facades\Log;
  * 
  * Парсер для извлечения данных из PushHouse API
  * Поддерживает получение кампаний, креативов и статистики
+ * Использует пагинацию через path-параметры и фильтрацию статуса
  * 
  * @package App\Services\Parsers
  * @author SeniorSoftwareEngineer
- * @version 1.0.0
+ * @version 1.1.0
  */
 class PushHouseParser extends BaseParser
 {
-    /**
-     * Available endpoints for PushHouse API
-     */
-    private const ENDPOINTS = [
-        'campaigns' => 'campaigns',
-        'creatives' => 'creatives',
-        'statistics' => 'statistics',
-        'offers' => 'offers'
-    ];
-
-    /**
-     * Default parameters for PushHouse API
-     */
-    private array $defaultParams = [
-        'format' => 'json',
-        'version' => 'v1'
-    ];
 
     /**
      * Initialize PushHouse parser
@@ -45,7 +29,7 @@ class PushHouseParser extends BaseParser
      */
     public function __construct(?string $apiKey = null, array $options = [])
     {
-        $baseUrl = $options['base_url'] ?? config('services.push_house.base_url', 'https://api.pushhouse.com');
+        $baseUrl = $options['base_url'] ?? config('services.push_house.base_url', 'https://api.push.house/v1');
 
         // PushHouse specific options
         $pushHouseOptions = array_merge([
@@ -57,7 +41,7 @@ class PushHouseParser extends BaseParser
             'requires_auth' => !empty($apiKey) // Authentication required only if API key provided
         ], $options);
 
-        parent::__construct($apiKey, $baseUrl, $pushHouseOptions);
+        parent::__construct($baseUrl, $apiKey, $pushHouseOptions);
     }
 
     /**
@@ -69,44 +53,70 @@ class PushHouseParser extends BaseParser
      */
     public function fetchData(array $params = []): array
     {
-        $endpoint = $params['endpoint'] ?? 'campaigns';
+        $endpoint = $params['endpoint'] ?? 'ads';
+        $status = $params['status'] ?? 'active'; // По умолчанию только активные
+        $startPage = $params['start_page'] ?? 1;
+        $maxPages = $params['max_pages'] ?? 100; // Защита от бесконечного цикла
 
-        if (!isset(self::ENDPOINTS[$endpoint])) {
-            throw new ParserException("Invalid endpoint: {$endpoint}. Available: " . implode(', ', array_keys(self::ENDPOINTS)));
+        $allData = [];
+        $currentPage = $startPage;
+
+        while ($currentPage <= $maxPages) {
+            // Формируем URL с пагинацией через path: /ads/5/active
+            $url = "{$endpoint}/{$currentPage}/{$status}";
+
+            try {
+                Log::info("PushHouse: Fetching page {$currentPage}", [
+                    'url' => $url,
+                    'status' => $status
+                ]);
+
+                $response = $this->makeRequest($url);
+                $data = $response->json();
+
+                // Если ответ пустой массив - достигли конца пагинации
+                if (empty($data) || !is_array($data)) {
+                    Log::info("PushHouse: No more data on page {$currentPage}");
+                    break;
+                }
+
+                // Форматируем и добавляем данные в общий массив
+                $formattedData = $this->formatResult($data);
+                $allData = array_merge($allData, $formattedData);
+
+                Log::info("PushHouse: Retrieved " . count($data) . " items from page {$currentPage}");
+
+                $currentPage++;
+
+                // Throttling между запросами
+                if ($currentPage <= $maxPages) {
+                    usleep(500000); // 0.5 секунды задержка
+                }
+            } catch (\Exception $e) {
+                Log::error("PushHouse: Error fetching page {$currentPage}", [
+                    'error' => $e->getMessage(),
+                    'url' => $url
+                ]);
+
+                // Если ошибка на первой странице - пробрасываем исключение
+                if ($currentPage === $startPage) {
+                    throw new ParserException("Failed to fetch data from PushHouse: " . $e->getMessage());
+                }
+
+                // Для остальных страниц - просто прерываем цикл
+                break;
+            }
         }
 
-        $requestParams = array_merge($this->defaultParams, $params);
-
-        // Remove our internal params
-        unset($requestParams['endpoint']);
-
-        $response = $this->makeRequest(self::ENDPOINTS[$endpoint], $requestParams);
-        $responseData = $response->json();
-
-        if (!$responseData || !isset($responseData['data'])) {
-            throw new ParserException("Invalid response format from PushHouse API");
-        }
-
-        // Parse each item
-        $parsedItems = [];
-        foreach ($responseData['data'] as $item) {
-            $parsedItems[] = $this->parseItem($item);
-        }
-
-        Log::channel('parsers')->info("PushHouse data fetched", [
-            'endpoint' => $endpoint,
-            'items_count' => count($parsedItems)
+        Log::info("PushHouse: Total fetched items", [
+            'count' => count($allData),
+            'pages_processed' => $currentPage - $startPage
         ]);
 
-        return [
-            'data' => $parsedItems,
-            'metadata' => [
-                'endpoint' => $endpoint,
-                'fetched_at' => now()->toISOString(),
-                'parser' => $this->parserName
-            ]
-        ];
+        return $allData;
     }
+
+
 
     /**
      * Parse individual item from PushHouse API into unified format
@@ -116,232 +126,72 @@ class PushHouseParser extends BaseParser
      */
     public function parseItem(array $item): array
     {
-        // Unified format for all PushHouse items
-        $parsed = [
-            'id' => $item['id'] ?? null,
-            'type' => $this->detectItemType($item),
-            'name' => $item['name'] ?? $item['title'] ?? null,
-            'status' => $this->normalizeStatus($item['status'] ?? 'unknown'),
-            'created_at' => $this->parseDate($item['created_at'] ?? null),
-            'updated_at' => $this->parseDate($item['updated_at'] ?? null),
-            'source' => 'pushhouse',
-            'raw_data' => $item
-        ];
-
-        // Add type-specific fields
-        switch ($parsed['type']) {
-            case 'campaign':
-                $parsed = array_merge($parsed, $this->parseCampaign($item));
-                break;
-            case 'creative':
-                $parsed = array_merge($parsed, $this->parseCreative($item));
-                break;
-            case 'statistic':
-                $parsed = array_merge($parsed, $this->parseStatistic($item));
-                break;
-            case 'offer':
-                $parsed = array_merge($parsed, $this->parseOffer($item));
-                break;
-        }
-
-        return $parsed;
-    }
-
-    /**
-     * Fetch campaigns from PushHouse
-     *
-     * @param array $params Additional parameters
-     * @return array Campaign data
-     */
-    public function fetchCampaigns(array $params = []): array
-    {
-        return $this->fetchData(array_merge($params, ['endpoint' => 'campaigns']));
-    }
-
-    /**
-     * Fetch creatives from PushHouse
-     *
-     * @param array $params Additional parameters
-     * @return array Creative data
-     */
-    public function fetchCreatives(array $params = []): array
-    {
-        return $this->fetchData(array_merge($params, ['endpoint' => 'creatives']));
-    }
-
-    /**
-     * Fetch statistics from PushHouse
-     *
-     * @param array $params Additional parameters
-     * @return array Statistics data
-     */
-    public function fetchStatistics(array $params = []): array
-    {
-        return $this->fetchData(array_merge($params, ['endpoint' => 'statistics']));
-    }
-
-    /**
-     * Fetch offers from PushHouse
-     *
-     * @param array $params Additional parameters
-     * @return array Offer data
-     */
-    public function fetchOffers(array $params = []): array
-    {
-        return $this->fetchData(array_merge($params, ['endpoint' => 'offers']));
-    }
-
-    /**
-     * Get authentication headers for PushHouse API
-     *
-     * @return array
-     */
-    protected function getAuthHeaders(): array
-    {
-        $headers = [
-            'Accept' => 'application/json',
-            'Content-Type' => 'application/json',
-            'User-Agent' => 'SpyHouse-PushHouse-Parser/1.0'
-        ];
-
-        // Add API key header only if provided
-        if (!empty($this->apiKey)) {
-            $headers['X-API-Key'] = $this->apiKey;
-        }
-
-        return $headers;
-    }
-
-    /**
-     * Detect item type from raw data
-     *
-     * @param array $item
-     * @return string
-     */
-    private function detectItemType(array $item): string
-    {
-        if (isset($item['campaign_id'])) {
-            return 'creative';
-        }
-        if (isset($item['impressions']) || isset($item['clicks'])) {
-            return 'statistic';
-        }
-        if (isset($item['payout']) || isset($item['offer_url'])) {
-            return 'offer';
-        }
-        return 'campaign';
-    }
-
-    /**
-     * Normalize status values
-     *
-     * @param string $status
-     * @return string
-     */
-    private function normalizeStatus(string $status): string
-    {
-        return match (strtolower($status)) {
-            'active', 'running', 'live' => 'active',
-            'paused', 'stopped' => 'paused',
-            'pending', 'review' => 'pending',
-            'rejected', 'declined' => 'rejected',
-            'completed', 'finished' => 'completed',
-            default => 'unknown'
-        };
-    }
-
-    /**
-     * Parse date string to ISO format
-     *
-     * @param string|null $date
-     * @return string|null
-     */
-    private function parseDate(?string $date): ?string
-    {
-        if (!$date) {
-            return null;
-        }
-
-        try {
-            return \Carbon\Carbon::parse($date)->toISOString();
-        } catch (\Exception $e) {
-            Log::channel('parsers')->warning("Failed to parse date: {$date}");
-            return null;
-        }
-    }
-
-    /**
-     * Parse campaign-specific data
-     *
-     * @param array $item
-     * @return array
-     */
-    private function parseCampaign(array $item): array
-    {
         return [
-            'budget' => $item['budget'] ?? null,
-            'daily_budget' => $item['daily_budget'] ?? null,
-            'bid' => $item['bid'] ?? null,
-            'targeting' => $item['targeting'] ?? [],
-            'schedule' => $item['schedule'] ?? null
+            'res_uniq_id' => $item['id'] ?? rand(100, 1000),
+            'icon' => $item['icon'] ?? '',
+            'img' => $item['img'] ?? '',
+            'title' => $item['title'] ?? '',
+            'text' => $item['text'] ?? '',
+            'url' => $item['url'] ?? '',
+            'price_cpc' => $item['cpc'] ?? 0,
+            'mob' => (int) ($item['platform'] == 'Mob' || $item['platform'] == 'Mob+PC'),
+            'country' => strtoupper($item['country'] ?? ''),
         ];
     }
 
     /**
-     * Parse creative-specific data
+     * Get feeds using simplified API (compatible with original implementation)
      *
-     * @param array $item
-     * @return array
+     * @return array Formatted feeds array
      */
-    private function parseCreative(array $item): array
+    public function getFeeds(): array
     {
-        return [
-            'campaign_id' => $item['campaign_id'] ?? null,
-            'title' => $item['title'] ?? null,
-            'description' => $item['description'] ?? null,
-            'image_url' => $item['image_url'] ?? null,
-            'landing_url' => $item['landing_url'] ?? null,
-            'format' => $item['format'] ?? 'push'
-        ];
+        $feeds = [];
+        $offset = 0;
+        $maxPages = 100; // Защита от зацикливания
+
+        while ($offset < $maxPages) {
+            try {
+                $url = "ads/{$offset}/active";
+                $response = $this->makeRequest($url);
+                $data = $response->json();
+
+                if (empty($data)) {
+                    break;
+                }
+
+                $feeds = array_merge($feeds, $this->formatResult($data));
+                $offset++;
+
+                // Rate limiting
+                usleep(500000); // 0.5 сек
+
+            } catch (\Exception $e) {
+                Log::error("PushHouse getFeeds error on offset {$offset}: " . $e->getMessage());
+                break;
+            }
+        }
+
+        Log::info('PushHouse: Count feeds: ' . count($feeds));
+        echo 'Count feeds: ' . count($feeds) . PHP_EOL;
+
+        return $feeds;
     }
 
     /**
-     * Parse statistic-specific data
+     * Format result data from API response
      *
-     * @param array $item
-     * @return array
+     * @param array $data Raw API response data
+     * @return array Formatted feeds array
      */
-    private function parseStatistic(array $item): array
+    private function formatResult(array $data): array
     {
-        return [
-            'impressions' => $item['impressions'] ?? 0,
-            'clicks' => $item['clicks'] ?? 0,
-            'conversions' => $item['conversions'] ?? 0,
-            'spend' => $item['spend'] ?? 0,
-            'revenue' => $item['revenue'] ?? 0,
-            'ctr' => $item['ctr'] ?? 0,
-            'cvr' => $item['cvr'] ?? 0,
-            'cpc' => $item['cpc'] ?? 0,
-            'cpm' => $item['cpm'] ?? 0,
-            'date' => $item['date'] ?? null
-        ];
-    }
-
-    /**
-     * Parse offer-specific data
-     *
-     * @param array $item
-     * @return array
-     */
-    private function parseOffer(array $item): array
-    {
-        return [
-            'offer_url' => $item['offer_url'] ?? null,
-            'payout' => $item['payout'] ?? null,
-            'payout_type' => $item['payout_type'] ?? null,
-            'category' => $item['category'] ?? null,
-            'countries' => $item['countries'] ?? [],
-            'description' => $item['description'] ?? null
-        ];
+        $feeds = [];
+        foreach ($data as $feed) {
+            // Конвертируем объект в массив если нужно
+            $feedArray = is_object($feed) ? (array) $feed : $feed;
+            $feeds[] = $this->parseItem($feedArray);
+        }
+        return $feeds;
     }
 }
