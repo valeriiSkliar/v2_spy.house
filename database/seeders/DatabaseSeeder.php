@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
             CountryAndLanguageSeeder::class,
             AdvertismentNetworkSeeder::class,
             BrowserSeeder::class,
+            AdSourceSeeder::class,
 
             // Add other seeders here if needed
         ]);
