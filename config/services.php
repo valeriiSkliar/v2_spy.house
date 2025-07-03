@@ -37,4 +37,33 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | API Parsers Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for various API parsers including authentication,
+    | rate limits, and endpoint settings.
+    |
+    */
+
+    'push_house' => [
+        'api_key' => env('PUSH_HOUSE_API_KEY'),
+        'base_url' => env('PUSH_HOUSE_BASE_URL', 'https://api.push.house'),
+        'rate_limit' => env('PUSH_HOUSE_RATE_LIMIT', 1000), // requests per minute
+        'timeout' => env('PUSH_HOUSE_TIMEOUT', 45),
+        'max_retries' => env('PUSH_HOUSE_MAX_RETRIES', 3),
+        'retry_delay' => env('PUSH_HOUSE_RETRY_DELAY', 2)
+    ],
+
+    // Template for new parsers
+    'parser_template' => [
+        'api_key' => env('PARSER_API_KEY'),
+        'base_url' => env('PARSER_BASE_URL'),
+        'rate_limit' => env('PARSER_RATE_LIMIT', 60),
+        'timeout' => env('PARSER_TIMEOUT', 30),
+        'max_retries' => env('PARSER_MAX_RETRIES', 3),
+        'retry_delay' => env('PARSER_RETRY_DELAY', 1)
+    ],
+
 ];
