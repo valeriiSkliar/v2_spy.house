@@ -7,6 +7,7 @@ use App\Http\Requests\Frontend\CreativesRequest;
 use App\Http\DTOs\CreativeDTO;
 use App\Http\DTOs\CreativesFiltersDTO;
 use App\Http\DTOs\CreativesResponseDTO;
+use App\Http\DTOs\FilterOptionDTO;
 use App\Helpers\IsoCodesHelper;
 use App\Models\AdvertismentNetwork;
 use App\Models\Browser;
@@ -110,6 +111,93 @@ abstract class BaseCreativesController extends FrontendController
                 $request->all()
             );
             return response()->json($responseDTO->toApiResponse(), 500);
+        }
+    }
+
+    /**
+     * Получить опции фильтров для API
+     * 
+     * @OA\Get(
+     *     path="/api/creatives/filter-options",
+     *     operationId="getFilterOptions",
+     *     tags={"Креативы - Фильтры"},
+     *     summary="Получить опции для всех селектов фильтров",
+     *     description="Возвращает все доступные опции для фильтров с учетом текущих выбранных значений",
+     *     @OA\Parameter(
+     *         name="country",
+     *         in="query",
+     *         description="Выбранная страна",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="advertisingNetworks",
+     *         in="query",
+     *         description="Выбранные рекламные сети",
+     *         required=false,
+     *         @OA\Schema(type="array", @OA\Items(type="string"))
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Опции фильтров успешно получены",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="success"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="countries", type="array", @OA\Items(
+     *                     @OA\Property(property="value", type="string", example="US"),
+     *                     @OA\Property(property="label", type="string", example="United States"),
+     *                     @OA\Property(property="selected", type="boolean", example=false)
+     *                 )),
+     *                 @OA\Property(property="sortOptions", type="array", @OA\Items(
+     *                     @OA\Property(property="value", type="string", example="byCreationDate"),
+     *                     @OA\Property(property="label", type="string", example="По дате создания"),
+     *                     @OA\Property(property="selected", type="boolean", example=false)
+     *                 )),
+     *                 @OA\Property(property="advertisingNetworks", type="array", @OA\Items(
+     *                     @OA\Property(property="value", type="string", example="facebook"),
+     *                     @OA\Property(property="label", type="string", example="Facebook"),
+     *                     @OA\Property(property="count", type="integer", example=1500000),
+     *                     @OA\Property(property="selected", type="boolean", example=false)
+     *                 ))
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Ошибка сервера",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="error"),
+     *             @OA\Property(property="message", type="string", example="Error message")
+     *         )
+     *     )
+     * )
+     */
+    public function getFilterOptionsApi(CreativesRequest $request)
+    {
+        try {
+            // Создаем DTO из текущих фильтров
+            $filtersDTO = CreativesFiltersDTO::fromRequest($request);
+            
+            // Получаем все опции с учетом текущих фильтров
+            $options = $this->getSelectOptions($filtersDTO);
+            
+            return response()->json([
+                'status' => 'success',
+                'data' => $options,
+                'meta' => [
+                    'timestamp' => now()->toISOString(),
+                    'currentFilters' => $filtersDTO->toArray(),
+                    'hasActiveFilters' => $filtersDTO->hasActiveFilters(),
+                    'activeFiltersCount' => $filtersDTO->getActiveFiltersCount(),
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to load filter options: ' . $e->getMessage(),
+                'data' => [],
+            ], 500);
         }
     }
 
@@ -454,74 +542,194 @@ abstract class BaseCreativesController extends FrontendController
     }
 
 
-    public function getSelectOptions()
+    /**
+     * Получить все опции селектов используя FilterOptionDTO
+     */
+    public function getSelectOptions(CreativesFiltersDTO $filtersDTO = null)
+    {
+        // Если фильтры не переданы, создаем дефолтные
+        if (!$filtersDTO) {
+            $filtersDTO = CreativesFiltersDTO::fromArraySafe([]);
+        }
+
+        return [
+            'perPage' => array_map(
+                fn($option) => $option->toArray(),
+                FilterOptionDTO::perPageOptions($filtersDTO->perPage)
+            ),
+            'countries' => array_map(
+                fn($option) => $option->toArray(),
+                FilterOptionDTO::countries(
+                    IsoCodesHelper::getAllCountries(app()->getLocale()),
+                    $filtersDTO->country
+                )
+            ),
+            'sortOptions' => array_map(
+                fn($option) => $option->toArray(),
+                FilterOptionDTO::sortOptions([$filtersDTO->sortBy])
+            ),
+            'dateRanges' => array_map(
+                fn($option) => $option->toArray(),
+                FilterOptionDTO::dateRangeOptions($filtersDTO->periodDisplay)
+            ),
+            'languages' => array_map(
+                fn($option) => $option->toArray(),
+                FilterOptionDTO::languages(
+                    IsoCodesHelper::getAllLanguages(app()->getLocale()),
+                    $filtersDTO->languages
+                )
+            ),
+            'imageSizes' => array_map(
+                fn($option) => $option->toArray(),
+                FilterOptionDTO::imageSizeOptions($filtersDTO->imageSizes)
+            ),
+            'advertisingNetworks' => array_map(
+                fn($option) => $option->toArray(),
+                FilterOptionDTO::advertisingNetworksWithCount(
+                    AdvertismentNetwork::forCreativeFilters(),
+                    $filtersDTO->advertisingNetworks,
+                    $this->getNetworksCounts()
+                )
+            ),
+            'operatingSystems' => $this->getOperatingSystemsOptions($filtersDTO->operatingSystems),
+            'browsers' => $this->getBrowsersOptions($filtersDTO->browsers),
+            'devices' => $this->getDevicesOptions($filtersDTO->devices),
+        ];
+    }
+
+    /**
+     * Получить опции операционных систем
+     */
+    protected function getOperatingSystemsOptions(array $selectedOS = []): array
+    {
+        $osOptions = OperationSystem::getForSelect();
+        // Конвертируем в массив если это коллекция
+        if (is_object($osOptions) && method_exists($osOptions, 'toArray')) {
+            $osOptions = $osOptions->toArray();
+        }
+        
+        $options = [];
+        
+        foreach ($osOptions as $os) {
+            $value = is_array($os) ? ($os['value'] ?? $os['code'] ?? $os) : $os;
+            $label = is_array($os) ? ($os['label'] ?? $os['name'] ?? $value) : $os;
+            
+            $options[] = FilterOptionDTO::simple(
+                (string)$value,
+                (string)$label,
+                in_array($value, $selectedOS)
+            )->toArray();
+        }
+        
+        return $options;
+    }
+
+    /**
+     * Получить опции браузеров
+     */
+    protected function getBrowsersOptions(array $selectedBrowsers = []): array
+    {
+        $browserOptions = Browser::getBrowsersForSelect();
+        // Конвертируем в массив если это коллекция
+        if (is_object($browserOptions) && method_exists($browserOptions, 'toArray')) {
+            $browserOptions = $browserOptions->toArray();
+        }
+        
+        $options = [];
+        
+        foreach ($browserOptions as $browser) {
+            $value = is_array($browser) ? ($browser['value'] ?? $browser['code'] ?? $browser) : $browser;
+            $label = is_array($browser) ? ($browser['label'] ?? $browser['name'] ?? $value) : $browser;
+            
+            $options[] = FilterOptionDTO::simple(
+                (string)$value,
+                (string)$label,
+                in_array($value, $selectedBrowsers)
+            )->toArray();
+        }
+        
+        return $options;
+    }
+
+    /**
+     * Получить опции устройств
+     */
+    protected function getDevicesOptions(array $selectedDevices = []): array
+    {
+        $deviceOptions = DeviceType::getForSelect();
+        // Конвертируем в массив если это коллекция
+        if (is_object($deviceOptions) && method_exists($deviceOptions, 'toArray')) {
+            $deviceOptions = $deviceOptions->toArray();
+        }
+        
+        $options = [];
+        
+        foreach ($deviceOptions as $device) {
+            $value = is_array($device) ? ($device['value'] ?? $device['code'] ?? $device) : $device;
+            $label = is_array($device) ? ($device['label'] ?? $device['name'] ?? $value) : $device;
+            
+            $options[] = FilterOptionDTO::simple(
+                (string)$value,
+                (string)$label,
+                in_array($value, $selectedDevices)
+            )->toArray();
+        }
+        
+        return $options;
+    }
+
+    /**
+     * Получить количества для сетей (мок данные)
+     */
+    protected function getNetworksCounts(): array
     {
         return [
-            'perPage' => [
-                ['value' => 12, 'label' => '12'],
-                ['value' => 24, 'label' => '24'],
-                ['value' => 48, 'label' => '48'],
-                ['value' => 96, 'label' => '96'],
-            ],
-            'advertisingNetworks' => AdvertismentNetwork::forCreativeFilters(),
-            'countries' => IsoCodesHelper::getAllCountries(app()->getLocale()),
-            'sortOptions' => [
-                ['value' => 'byCreationDate', 'label' => 'По дате создания'],
-                ['value' => 'byActivity', 'label' => 'По дням активности'],
-                ['value' => 'byPopularity', 'label' => 'По популярности'],
-            ],
-            'dateRanges' => [
-                ['value' => 'today', 'label' => 'Сегодня'],
-                ['value' => 'yesterday', 'label' => 'Вчера'],
-                ['value' => 'last7', 'label' => 'За последние 7 дней'],
-                ['value' => 'last30', 'label' => 'За последние 30 дней'],
-                ['value' => 'last90', 'label' => 'За последние 90 дней'],
-                ['value' => 'thisMonth', 'label' => 'За текущий месяц'],
-                ['value' => 'lastMonth', 'label' => 'За прошлый месяц'],
-                ['value' => 'thisYear', 'label' => 'За текущий год'],
-                ['value' => 'lastYear', 'label' => 'За прошлый год'],
-            ],
-            'languages' => IsoCodesHelper::getAllLanguages(app()->getLocale()),
-            'operatingSystems' => OperationSystem::getForSelect(),
-            'browsers' => Browser::getBrowsersForSelect(),
-            'devices' => DeviceType::getForSelect(),
-            'imageSizes' => [
-                ['value' => '1x1', 'label' => '1x1 (Square)'],
-                ['value' => '16x9', 'label' => '16x9 (Landscape)'],
-                ['value' => '9x16', 'label' => '9x16 (Portrait)'],
-                ['value' => '3x2', 'label' => '3x2 (Classic)'],
-                ['value' => '2x3', 'label' => '2x3 (Portrait)'],
-                ['value' => '4x3', 'label' => '4x3 (Standard)'],
-                ['value' => '3x4', 'label' => '3x4 (Portrait)'],
-                ['value' => '21x9', 'label' => '21x9 (Ultra-wide)'],
-            ],
+            'facebook' => 1500000,
+            'google' => 2300000,
+            'tiktok' => 850000,
+            'instagram' => 1200000,
+            'youtube' => 980000,
+            'twitter' => 450000,
+            'linkedin' => 320000,
+            'snapchat' => 650000,
         ];
     }
 
     public function getPerPageOptions($perPage = 12)
     {
         return [
-            'perPageOptions' => [
-                ['value' => 12, 'label' => '12'],
-                ['value' => 24, 'label' => '24'],
-                ['value' => 48, 'label' => '48'],
-                ['value' => 96, 'label' => '96'],
-            ],
+            'perPageOptions' => array_map(
+                fn($option) => $option->toArray(),
+                FilterOptionDTO::perPageOptions($perPage)
+            ),
             'activePerPage' => $perPage,
         ];
     }
 
     public function getTabOptions($activeTab = 'push')
     {
+        $tabCounts = [
+            'push' => 1700000,
+            'inpage' => 965100,
+            'facebook' => 65100,
+            'tiktok' => 9852000,
+            'total' => 10000000
+        ];
+
+        $tabOptions = [];
+        foreach (['push', 'inpage', 'facebook', 'tiktok'] as $tab) {
+            $tabOptions[] = FilterOptionDTO::withCount(
+                $tab,
+                ucfirst($tab),
+                $tabCounts[$tab],
+                $tab === $activeTab
+            )->toArray();
+        }
+
         return [
             'availableTabs' => ['push', 'inpage', 'facebook', 'tiktok'],
-            'tabCounts' => [
-                'push' => 170000,
-                'inpage' => 965100,
-                'facebook' => 65100,
-                'tiktok' => 9852000,
-                'total' => 10000000
-            ],
+            'tabOptions' => $tabOptions,
+            'tabCounts' => $tabCounts,
             'activeTab' => $activeTab
         ];
     }

@@ -38,7 +38,7 @@ class CreativesController extends BaseCreativesController
         $detailsTranslations = $this->getDetailsTranslations();
         $cardTranslations = $this->getCardTranslations();
 
-        $selectOptions = $this->getSelectOptions();
+        $selectOptions = $this->getSelectOptions($filtersDTO);
         $tabOptions = $this->getTabOptions($activeTabFromUrl);
         $perPageOptions = $this->getPerPageOptions($defaultFilters['perPage']);
 
