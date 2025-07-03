@@ -6,6 +6,7 @@ use App\Http\Controllers\FrontendController;
 use App\Http\Requests\Frontend\CreativesRequest;
 use App\Http\DTOs\CreativeDTO;
 use App\Http\DTOs\CreativesFiltersDTO;
+use App\Http\DTOs\CreativesResponseDTO;
 use App\Helpers\IsoCodesHelper;
 use App\Models\AdvertismentNetwork;
 use App\Models\Browser;
@@ -72,44 +73,44 @@ abstract class BaseCreativesController extends FrontendController
     }
     public function apiIndex(CreativesRequest $request)
     {
-        // Создаем DTO для фильтров с автоматической валидацией и санитизацией
-        $filtersDTO = CreativesFiltersDTO::fromRequest($request);
+        try {
+            // Создаем DTO для фильтров с автоматической валидацией и санитизацией
+            $filtersDTO = CreativesFiltersDTO::fromRequest($request);
 
-        // Генерируем мок данные и преобразуем через DTO для type safety
-        $mockCreativesData = $this->generateMockCreativesData($filtersDTO->perPage);
+            // Генерируем мок данные и преобразуем через DTO для type safety
+            $mockCreativesData = $this->generateMockCreativesData($filtersDTO->perPage);
 
-        // Используем DTO для обеспечения type safety между frontend и backend
-        // Получаем компактную версию для списков (оптимизация размера ответа)
-        $creativesCollection = array_map(
-            fn($item) => CreativeDTO::fromArrayWithComputed($item, $request->user()?->id)->toCompactArray(),
-            $mockCreativesData
-        );
+            // Используем DTO для обеспечения type safety между frontend и backend
+            // Получаем компактную версию для списков (оптимизация размера ответа)
+            $creativesCollection = array_map(
+                fn($item) => CreativeDTO::fromArrayWithComputed($item, $request->user()?->id)->toCompactArray(),
+                $mockCreativesData
+            );
 
-        // Вызываем getSearchCount для консистентности
-        $totalCount = $this->getSearchCount($filtersDTO->toArray());
+            // Получаем общее количество результатов
+            $totalCount = $this->getSearchCount($filtersDTO->toArray());
 
-        return response()->json([
-            'status' => 'success',
-            'data' => [
-                'items' => $creativesCollection,
-                'pagination' => [
-                    'total' => $totalCount,
-                    'perPage' => $filtersDTO->perPage,
-                    'currentPage' => $filtersDTO->page,
-                    'lastPage' => $filtersDTO->getLastPage($totalCount),
-                    'from' => $filtersDTO->getFromNumber($totalCount),
-                    'to' => $filtersDTO->getToNumber($totalCount)
-                ],
-                'meta' => [
-                    'hasSearch' => !empty($filtersDTO->searchKeyword),
-                    'activeFiltersCount' => $filtersDTO->getActiveFiltersCount(),
-                    'hasActiveFilters' => $filtersDTO->hasActiveFilters(),
-                    'cacheKey' => $filtersDTO->getCacheKey(),
-                    'appliedFilters' => $filtersDTO->toArray(),
-                    'activeFilters' => $filtersDTO->getActiveFilters()
-                ]
-            ]
-        ]);
+            // Создаем стандартизированный ответ через DTO
+            $responseDTO = CreativesResponseDTO::success($creativesCollection, $filtersDTO, $totalCount);
+
+            return response()->json($responseDTO->toApiResponse());
+
+        } catch (\InvalidArgumentException $e) {
+            // Ошибки валидации фильтров
+            $responseDTO = CreativesResponseDTO::error(
+                'Invalid filters: ' . $e->getMessage(),
+                $request->all()
+            );
+            return response()->json($responseDTO->toApiResponse(), 422);
+
+        } catch (\Exception $e) {
+            // Общие ошибки
+            $responseDTO = CreativesResponseDTO::error(
+                'An error occurred while fetching creatives',
+                $request->all()
+            );
+            return response()->json($responseDTO->toApiResponse(), 500);
+        }
     }
 
     /**
@@ -198,42 +199,51 @@ abstract class BaseCreativesController extends FrontendController
      */
     public function validateFilters(CreativesRequest $request)
     {
-        // Получаем исходные данные для анализа
-        $originalInput = $request->all();
+        try {
+            // Получаем исходные данные для анализа
+            $originalInput = $request->all();
 
-        // Используем обработанные фильтры с URL приоритетами из CreativesRequest
-        $processedFilters = $request->getCreativesFilters();
+            // Используем обработанные фильтры с URL приоритетами из CreativesRequest
+            $processedFilters = $request->getCreativesFilters();
 
-        // Создаем DTO из обработанных фильтров (они уже имеют правильные приоритеты)
-        $filtersDTO = CreativesFiltersDTO::fromArraySafe($processedFilters);
-        $validatedFilters = $filtersDTO->toArray();
+            // Создаем DTO из обработанных фильтров (они уже имеют правильные приоритеты)
+            $filtersDTO = CreativesFiltersDTO::fromArraySafe($processedFilters);
+            $validatedFilters = $filtersDTO->toArray();
 
-        // Анализируем что было отклонено/санитизировано
-        $rejectedValues = [];
-        $sanitizedCount = 0;
+            // Анализируем что было отклонено/санитизировано
+            $rejectedValues = [];
+            $sanitizedCount = 0;
 
-        // Сравниваем исходные и валидированные значения
-        foreach ($originalInput as $key => $value) {
-            if (!isset($validatedFilters[$key]) || $validatedFilters[$key] !== $value) {
-                $valueString = is_array($value) ? json_encode($value) : (string)$value;
-                $rejectedValues[] = "{$key}: {$valueString}";
-                $sanitizedCount++;
+            // Сравниваем исходные и валидированные значения
+            foreach ($originalInput as $key => $value) {
+                if (!isset($validatedFilters[$key]) || $validatedFilters[$key] !== $value) {
+                    $valueString = is_array($value) ? json_encode($value) : (string)$value;
+                    $rejectedValues[] = "{$key}: {$valueString}";
+                    $sanitizedCount++;
+                }
             }
-        }
 
-        return response()->json([
-            'status' => 'success',
-            'filters' => $validatedFilters,
-            'validation' => [
-                'rejectedValues' => $rejectedValues,
-                'sanitizedCount' => $sanitizedCount,
-                'originalCount' => count($originalInput),
-                'validatedCount' => count($validatedFilters),
-                'hasActiveFilters' => $filtersDTO->hasActiveFilters(),
-                'activeFiltersCount' => $filtersDTO->getActiveFiltersCount(),
-                'cacheKey' => $filtersDTO->getCacheKey()
-            ]
-        ]);
+            return response()->json([
+                'status' => 'success',
+                'filters' => $validatedFilters,
+                'validation' => [
+                    'rejectedValues' => $rejectedValues,
+                    'sanitizedCount' => $sanitizedCount,
+                    'originalCount' => count($originalInput),
+                    'validatedCount' => count($validatedFilters),
+                    'hasActiveFilters' => $filtersDTO->hasActiveFilters(),
+                    'activeFiltersCount' => $filtersDTO->getActiveFiltersCount(),
+                    'cacheKey' => $filtersDTO->getCacheKey()
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation failed: ' . $e->getMessage(),
+                'filters' => $request->all()
+            ], 422);
+        }
     }
 
     /**

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Frontend\Creatives;
 
 use App\Http\Requests\Frontend\CreativesRequest;
 use App\Http\DTOs\CreativesFiltersDTO;
+use App\Http\DTOs\CreativesResponseDTO;
 
 class CreativesController extends BaseCreativesController
 {
@@ -164,23 +165,47 @@ class CreativesController extends BaseCreativesController
      */
     public function getSearchCountApi(CreativesRequest $request)
     {
-        // Создаем DTO для фильтров с автоматической валидацией и санитизацией
-        $filtersDTO = CreativesFiltersDTO::fromRequest($request);
-        $filters = $filtersDTO->toArray();
-        $count = $this->getSearchCount($filters);
+        try {
+            // Создаем DTO для фильтров с автоматической валидацией и санитизацией
+            $filtersDTO = CreativesFiltersDTO::fromRequest($request);
+            $filters = $filtersDTO->toArray();
+            $count = $this->getSearchCount($filters);
 
-        return response()->json([
-            'status' => 'success',
-            'data' => [
-                'count' => $count,
-                'filters' => $filters,
-                'filtersInfo' => [
-                    'hasActiveFilters' => $filtersDTO->hasActiveFilters(),
-                    'activeFiltersCount' => $filtersDTO->getActiveFiltersCount(),
-                    'cacheKey' => $filtersDTO->getCacheKey()
-                ],
-                'timestamp' => now()->toISOString()
-            ]
-        ]);
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'count' => $count,
+                    'filters' => $filters,
+                    'filtersInfo' => [
+                        'hasActiveFilters' => $filtersDTO->hasActiveFilters(),
+                        'activeFiltersCount' => $filtersDTO->getActiveFiltersCount(),
+                        'cacheKey' => $filtersDTO->getCacheKey()
+                    ],
+                    'timestamp' => now()->toISOString()
+                ]
+            ]);
+
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Invalid filters: ' . $e->getMessage(),
+                'data' => [
+                    'count' => 0,
+                    'filters' => $request->all(),
+                    'timestamp' => now()->toISOString()
+                ]
+            ], 422);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while calculating count',
+                'data' => [
+                    'count' => 0,
+                    'filters' => $request->all(),
+                    'timestamp' => now()->toISOString()
+                ]
+            ], 500);
+        }
     }
 }
