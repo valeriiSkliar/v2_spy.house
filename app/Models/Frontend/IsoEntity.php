@@ -31,6 +31,22 @@ class IsoEntity extends Model
     }
 
     /**
+     * Креативы, использующие данную сущность как страну
+     */
+    public function creativesAsCountry(): HasMany
+    {
+        return $this->hasMany(\App\Models\Creative::class, 'country_id');
+    }
+
+    /**
+     * Креативы, использующие данную сущность как язык
+     */
+    public function creativesAsLanguage(): HasMany
+    {
+        return $this->hasMany(\App\Models\Creative::class, 'language_id');
+    }
+
+    /**
      * Scope для фильтрации по типу сущности
      */
     public function scopeCountries(Builder $query): Builder
