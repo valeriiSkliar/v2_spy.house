@@ -18,6 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // Регистрируем команду истечения триала в планировщике
         // Будет выполняться каждый день в 00:00 через очередь
         $schedule->command('trial:expire --queue')->daily();
+
+        // Синхронизация рекламных сетей с FeedHouse API
+        // Выполняется каждое воскресенье в 02:00 через очередь
+        $schedule->command('advertisment-networks:sync --queue')->weekly();
     })
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
