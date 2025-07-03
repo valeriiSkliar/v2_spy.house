@@ -4,6 +4,10 @@ namespace Tests\Unit;
 
 use App\Enums\Frontend\AdvertisingFormat;
 use App\Enums\Frontend\AdvertisingStatus;
+use App\Enums\Frontend\BrowserType;
+use App\Enums\Frontend\DeviceType;
+use App\Enums\Frontend\OperationSystem;
+use App\Models\Browser;
 use App\Models\Creative;
 use App\Models\Frontend\IsoEntity;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -158,5 +162,124 @@ class CreativeIsoRelationshipTest extends TestCase
         $this->assertInstanceOf(IsoEntity::class, $creative->language);
         $this->assertEquals($country->id, $creative->country->id);
         $this->assertEquals($language->id, $creative->language->id);
+    }
+
+    public function test_creative_belongs_to_browser()
+    {
+        // Создаём браузер
+        $browser = Browser::create([
+            'browser' => 'Chrome',
+            'browser_type' => BrowserType::BROWSER->value,
+            'device_type' => DeviceType::DESKTOP->value,
+            'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'browser_version' => '91.0.4472.124',
+            'platform' => 'Windows',
+            'is_active' => true,
+            'is_for_filter' => true,
+        ]);
+
+        // Создаём креатив с привязкой к браузеру
+        $creative = Creative::create([
+            'format' => AdvertisingFormat::PUSH->value,
+            'status' => AdvertisingStatus::Active->value,
+            'browser_id' => $browser->id,
+            'operation_system' => OperationSystem::WINDOWS->value,
+        ]);
+
+        // Проверяем связь
+        $this->assertInstanceOf(Browser::class, $creative->browser);
+        $this->assertEquals($browser->id, $creative->browser->id);
+        $this->assertEquals('Chrome', $creative->browser->browser);
+        $this->assertEquals(OperationSystem::WINDOWS, $creative->operation_system);
+    }
+
+    public function test_browser_has_many_creatives()
+    {
+        // Создаём браузер
+        $browser = Browser::create([
+            'browser' => 'Firefox',
+            'browser_type' => BrowserType::BROWSER->value,
+            'device_type' => DeviceType::DESKTOP->value,
+            'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0',
+            'browser_version' => '89.0',
+            'platform' => 'Windows',
+            'is_active' => true,
+            'is_for_filter' => true,
+        ]);
+
+        // Создаём несколько креативов с привязкой к браузеру
+        $creative1 = Creative::create([
+            'format' => AdvertisingFormat::PUSH->value,
+            'status' => AdvertisingStatus::Active->value,
+            'browser_id' => $browser->id,
+            'operation_system' => OperationSystem::WINDOWS->value,
+        ]);
+
+        $creative2 = Creative::create([
+            'format' => AdvertisingFormat::POP->value,
+            'status' => AdvertisingStatus::Active->value,
+            'browser_id' => $browser->id,
+            'operation_system' => OperationSystem::LINUX->value,
+        ]);
+
+        // Проверяем обратную связь
+        $this->assertCount(2, $browser->creatives);
+        $this->assertTrue($browser->creatives->contains($creative1));
+        $this->assertTrue($browser->creatives->contains($creative2));
+    }
+
+    public function test_creative_with_all_targeting_data()
+    {
+        // Создаём все необходимые сущности
+        $country = IsoEntity::create([
+            'type' => 'country',
+            'iso_code_2' => 'US',
+            'iso_code_3' => 'USA',
+            'numeric_code' => '840',
+            'name' => 'United States',
+            'is_active' => true,
+        ]);
+
+        $language = IsoEntity::create([
+            'type' => 'language',
+            'iso_code_2' => 'en',
+            'iso_code_3' => 'eng',
+            'name' => 'English',
+            'is_active' => true,
+        ]);
+
+        $browser = Browser::create([
+            'browser' => 'Safari',
+            'browser_type' => BrowserType::BROWSER->value,
+            'device_type' => DeviceType::MOBILE->value,
+            'user_agent' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X)',
+            'browser_version' => '14.6',
+            'platform' => 'iOS',
+            'ismobiledevice' => true,
+            'is_active' => true,
+            'is_for_filter' => true,
+        ]);
+
+        // Создаём креатив со всеми параметрами таргетинга
+        $creative = Creative::create([
+            'format' => AdvertisingFormat::NATIVE->value,
+            'status' => AdvertisingStatus::Active->value,
+            'country_id' => $country->id,
+            'language_id' => $language->id,
+            'browser_id' => $browser->id,
+            'operation_system' => OperationSystem::IOS->value,
+        ]);
+
+        // Проверяем все связи
+        $this->assertInstanceOf(IsoEntity::class, $creative->country);
+        $this->assertInstanceOf(IsoEntity::class, $creative->language);
+        $this->assertInstanceOf(Browser::class, $creative->browser);
+        $this->assertEquals(OperationSystem::IOS, $creative->operation_system);
+
+        // Проверяем конкретные значения
+        $this->assertEquals('US', $creative->country->iso_code_2);
+        $this->assertEquals('en', $creative->language->iso_code_2);
+        $this->assertEquals('Safari', $creative->browser->browser);
+        $this->assertEquals('ios', $creative->operation_system->value);
     }
 }

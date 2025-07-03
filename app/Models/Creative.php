@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Enums\Frontend\AdvertisingFormat;
 use App\Enums\Frontend\AdvertisingStatus;
+use App\Enums\Frontend\OperationSystem;
+use App\Models\Browser;
 use App\Models\Frontend\IsoEntity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -22,6 +24,8 @@ class Creative extends Model
         'status',
         'country_id',
         'language_id',
+        'browser_id',
+        'operation_system',
     ];
 
     /**
@@ -32,6 +36,7 @@ class Creative extends Model
         return [
             'format' => AdvertisingFormat::class,
             'status' => AdvertisingStatus::class,
+            'operation_system' => OperationSystem::class,
         ];
     }
 
@@ -51,5 +56,13 @@ class Creative extends Model
     {
         return $this->belongsTo(IsoEntity::class, 'language_id')
             ->where('type', 'language');
+    }
+
+    /**
+     * Связь с браузером
+     */
+    public function browser(): BelongsTo
+    {
+        return $this->belongsTo(Browser::class, 'browser_id');
     }
 }

@@ -2,6 +2,7 @@
 
 use App\Enums\Frontend\AdvertisingFormat;
 use App\Enums\Frontend\AdvertisingStatus;
+use App\Enums\Frontend\OperationSystem;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -34,12 +35,26 @@ return new class extends Migration
                 ->onDelete('set null')
                 ->comment('Ссылка на язык из ISO справочника');
 
+            // Браузер и операционная система
+            $table->foreignId('browser_id')
+                ->nullable()
+                ->constrained('browsers')
+                ->onDelete('set null')
+                ->comment('Ссылка на браузер');
+
+            $table->enum('operation_system', OperationSystem::values())
+                ->nullable()
+                ->comment('Операционная система ');
+
             $table->timestamps();
 
             // Индексы для производительности
             $table->index(['country_id', 'language_id'], 'idx_country_language');
             $table->index(['status', 'country_id'], 'idx_status_country');
             $table->index(['format', 'language_id'], 'idx_format_language');
+            $table->index(['browser_id', 'operation_system'], 'idx_browser_os');
+            $table->index(['status', 'browser_id'], 'idx_status_browser');
+            $table->index(['format', 'operation_system'], 'idx_format_os');
         });
     }
 
