@@ -30,7 +30,7 @@ class DatabaseSeeder extends Seeder
             AdvertismentNetworkSeeder::class,
             BrowserSeeder::class,
             AdSourceSeeder::class,
-
+            CreativeSeeder::class,
             // Add other seeders here if needed
         ]);
     }

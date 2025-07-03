@@ -32,13 +32,50 @@ class CreativeFactory extends Factory
             'advertisment_network_id' => $this->faker->optional(0.7)->randomElement(
                 AdvertismentNetwork::active()->pluck('id')->toArray()
             ),
-            'is_adult' => $this->faker->boolean(20),
-            'external_id' => $this->faker->unique()->randomNumber(8),
-            'title' => $this->faker->sentence(3, true),
-            'description' => $this->faker->text(200),
-            'combined_hash' => hash('sha256', $this->faker->uuid()),
-            'landing_url' => $this->faker->optional(0.8)->url(),
-            'last_seen_at' => $this->faker->optional(0.9)->dateTimeBetween('-30 days', 'now'),
+            'external_id' => $this->faker->unique()->randomNumber(8), // 8-значный уникальный ID
+            'is_adult' => $this->faker->boolean(20), // 20% вероятность adult контента
+            'title' => $this->faker->sentence(3, true), // Короткий заголовок (до 128 символов)
+            'description' => $this->faker->text(200), // Описание (до 256 символов)
+            'combined_hash' => hash('sha256', $this->faker->uuid()), // 64-символьный хеш
+            'landing_url' => $this->faker->optional(0.8)->url(), // 80% вероятность наличия URL
+            'start_date' => $this->faker->optional(0.7)->dateTimeBetween('-60 days', 'now'), // Дата начала показа
+            'end_date' => $this->faker->optional(0.5)->dateTimeBetween('now', '+90 days'), // Дата окончания показа
+            'is_processed' => $this->faker->boolean(70), // 70% вероятность обработки
+            'has_video' => $this->faker->boolean(30), // 30% вероятность наличия видео
+            'video_url' => null, // Будет установлено в withVideo() state
+            'video_duration' => null, // Будет установлено в withVideo() state
+            'main_image_url' => $this->faker->optional(0.8)->imageUrl(640, 480, 'business'),
+            'main_image_size' => $this->faker->optional(0.8)->randomElement(['640x480', '800x600', '1024x768', '1200x900']),
+            'icon_url' => $this->faker->optional(0.6)->imageUrl(64, 64, 'business'),
+            'icon_size' => $this->faker->optional(0.6)->randomElement(['32x32', '48x48', '64x64', '96x96']),
+            'social_likes' => $this->faker->optional(0.6)->numberBetween(0, 10000), // Лайки в соц. сетях
+            'social_comments' => $this->faker->optional(0.4)->numberBetween(0, 1000), // Комментарии в соц. сетях
+            'social_shares' => $this->faker->optional(0.3)->numberBetween(0, 500), // Репосты в соц. сетях
+            'last_seen_at' => $this->faker->optional(0.9)->dateTimeBetween('-30 days', 'now'), // Последняя активность
         ];
+    }
+
+    /**
+     * Состояние для креативов с видео
+     */
+    public function withVideo(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'has_video' => true,
+            'video_url' => $this->faker->url(),
+            'video_duration' => $this->faker->randomElement(['0:15', '0:30', '1:00', '1:30', '2:00']),
+        ]);
+    }
+
+    /**
+     * Состояние для креативов без видео
+     */
+    public function withoutVideo(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'has_video' => false,
+            'video_url' => null,
+            'video_duration' => null,
+        ]);
     }
 }
