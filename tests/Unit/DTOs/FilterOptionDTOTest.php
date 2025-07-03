@@ -505,6 +505,7 @@ class FilterOptionDTOTest extends TestCase
             'selected' => true,
             'count' => 150,
             'icon' => 'test-icon',
+            'logo' => 'https://example.com/logo.png',
             'description' => 'Test description',
         ]);
 
@@ -514,8 +515,10 @@ class FilterOptionDTOTest extends TestCase
         $this->assertArrayHasKey('label', $array);
         $this->assertArrayHasKey('selected', $array);
         $this->assertArrayHasKey('count', $array);
+        $this->assertArrayHasKey('logo', $array);
         $this->assertEquals('test', $array['value']);
         $this->assertTrue($array['selected']);
+        $this->assertEquals('https://example.com/logo.png', $array['logo']);
 
         // toCompactArray
         $compact = $option->toCompactArray();
@@ -524,6 +527,8 @@ class FilterOptionDTOTest extends TestCase
         $this->assertArrayHasKey('selected', $compact);
         $this->assertArrayHasKey('count', $compact);
         $this->assertArrayHasKey('icon', $compact);
+        $this->assertArrayHasKey('logo', $compact);
+        $this->assertEquals('https://example.com/logo.png', $compact['logo']);
         // Не должно включать disabled если оно false
         $this->assertArrayNotHasKey('disabled', $compact);
 
