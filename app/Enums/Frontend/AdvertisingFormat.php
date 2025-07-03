@@ -13,4 +13,6 @@ enum AdvertisingFormat: string
     case INPAGE = 'inpage';
     case NATIVE = 'native';
     case POP = 'pop';
+    case TIKTOK = 'tiktok';
+    case FACEBOOK = 'facebook';
 }
