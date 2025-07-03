@@ -13,7 +13,9 @@ class CreativeSeeder extends Seeder
      */
     public function run(): void
     {
-        // Создаём тестовые креативы с привязкой к ISO сущностям
+        // Создаём тестовые креативы с полным набором полей:
+        // - Базовые поля (format, status, связи с ISO, браузер, ОС, рекламная сеть)
+        // - Дополнительные поля (is_adult, external_id, title, description, combined_hash, landing_url, last_seen_at)
         Creative::factory(50)->create();
     }
 }
