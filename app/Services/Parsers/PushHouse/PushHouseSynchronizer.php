@@ -102,7 +102,7 @@ class PushHouseSynchronizer
     {
         $dbIds = DB::table('creatives')
             ->join('ad_sources', 'creatives.source_id', '=', 'ad_sources.id')
-            ->where('ad_sources.name', self::SOURCE_NAME)
+            ->where('ad_sources.source_name', self::SOURCE_NAME)
             ->pluck('creatives.external_id')
             ->toArray();
 
@@ -263,7 +263,7 @@ class PushHouseSynchronizer
         foreach (array_chunk($deactivatedIds, self::BATCH_SIZE) as $batch) {
             $updated = DB::table('creatives')
                 ->join('ad_sources', 'creatives.source_id', '=', 'ad_sources.id')
-                ->where('ad_sources.name', self::SOURCE_NAME)
+                ->where('ad_sources.source_name', self::SOURCE_NAME)
                 ->whereIn('creatives.external_id', $batch)
                 ->update([
                     'status' => 'inactive',
@@ -298,7 +298,7 @@ class PushHouseSynchronizer
 
         return DB::table('creatives')
             ->join('ad_sources', 'creatives.source_id', '=', 'ad_sources.id')
-            ->where('ad_sources.name', self::SOURCE_NAME)
+            ->where('ad_sources.source_name', self::SOURCE_NAME)
             ->whereIn('creatives.external_id', $externalIds)
             ->pluck('creatives.id')
             ->toArray();
@@ -317,7 +317,7 @@ class PushHouseSynchronizer
 
         $unchangedCount = DB::table('creatives')
             ->join('ad_sources', 'creatives.source_id', '=', 'ad_sources.id')
-            ->where('ad_sources.name', self::SOURCE_NAME)
+            ->where('ad_sources.source_name', self::SOURCE_NAME)
             ->whereNotIn('creatives.external_id', $changedIds)
             ->count();
 
@@ -345,18 +345,18 @@ class PushHouseSynchronizer
     {
         $totalInDb = DB::table('creatives')
             ->join('ad_sources', 'creatives.source_id', '=', 'ad_sources.id')
-            ->where('ad_sources.name', self::SOURCE_NAME)
+            ->where('ad_sources.source_name', self::SOURCE_NAME)
             ->count();
 
         $activeInDb = DB::table('creatives')
             ->join('ad_sources', 'creatives.source_id', '=', 'ad_sources.id')
-            ->where('ad_sources.name', self::SOURCE_NAME)
+            ->where('ad_sources.source_name', self::SOURCE_NAME)
             ->where('creatives.status', 'active')
             ->count();
 
         $inactiveInDb = DB::table('creatives')
             ->join('ad_sources', 'creatives.source_id', '=', 'ad_sources.id')
-            ->where('ad_sources.name', self::SOURCE_NAME)
+            ->where('ad_sources.source_name', self::SOURCE_NAME)
             ->where('creatives.status', 'inactive')
             ->count();
 
@@ -378,7 +378,7 @@ class PushHouseSynchronizer
     {
         $deletedCount = DB::table('creatives')
             ->join('ad_sources', 'creatives.source_id', '=', 'ad_sources.id')
-            ->where('ad_sources.name', self::SOURCE_NAME)
+            ->where('ad_sources.source_name', self::SOURCE_NAME)
             ->where('creatives.status', 'inactive')
             ->where('creatives.updated_at', '<', now()->subDays($daysOld))
             ->delete();

@@ -59,8 +59,41 @@ class PushHouseCreativeDTO
             platform: self::normalizePlatformValue($data),
             isAdult: (bool) ($data['isAdult'] ?? false),
             isActive: (bool) ($data['isActive'] ?? true), // По умолчанию true для активных
-            createdAt: Carbon::parse($data['created_at'] ?? now())
+            createdAt: self::parseCreatedAt($data['created_at'] ?? null)
         );
+    }
+
+    /**
+     * Безопасный парсинг даты создания
+     *
+     * @param mixed $dateValue Значение даты от API
+     * @return Carbon Валидная дата
+     */
+    private static function parseCreatedAt($dateValue): Carbon
+    {
+        // Если значение пустое или null - используем текущую дату
+        if (empty($dateValue)) {
+            return now();
+        }
+
+        try {
+            $parsedDate = Carbon::parse($dateValue);
+
+            // Проверяем, что дата не является Unix timestamp 0 (1970-01-01)
+            if ($parsedDate->year <= 1970) {
+                return now();
+            }
+
+            // Проверяем, что дата не в будущем (более чем на год)
+            if ($parsedDate->isFuture() && $parsedDate->diffInYears(now()) > 1) {
+                return now();
+            }
+
+            return $parsedDate;
+        } catch (\Exception $e) {
+            // Если парсинг не удался - используем текущую дату
+            return now();
+        }
     }
 
     /**
