@@ -38,7 +38,7 @@ class PushHouseApiClient
      */
     public function __construct(array $config = [])
     {
-        $this->baseUrl = rtrim($config['base_url'] ?? config('services.push_house.base_url', 'https://api.push.house'), '/');
+        $this->baseUrl = rtrim($config['base_url'] ?? config('services.push_house.base_url', 'https://api.push.house/v1'), '/');
         $this->timeout = (int)($config['timeout'] ?? config('services.push_house.timeout', 45));
         $this->maxRetries = (int)($config['max_retries'] ?? config('services.push_house.max_retries', 3));
         $this->retryDelay = (int)($config['retry_delay'] ?? config('services.push_house.retry_delay', 2));
@@ -124,8 +124,8 @@ class PushHouseApiClient
      */
     public function fetchPage(int $page, string $status = 'active'): Collection
     {
-        // Push.House использует специфичную структуру URL: /v1/ads/{page}/{status}
-        $endpoint = "/v1/ads/{$page}/{$status}";
+        // Push.House использует специфичную структуру URL: /ads/{page}/{status}
+        $endpoint = "/ads/{$page}/{$status}";
         $url = $this->baseUrl . $endpoint;
 
         $response = $this->makeRequest($url);
@@ -303,7 +303,7 @@ class PushHouseApiClient
     public function testConnection(): bool
     {
         try {
-            $response = $this->makeRequest($this->baseUrl . '/v1/ads/1/active');
+            $response = $this->makeRequest($this->baseUrl . '/ads/1/active');
             return $response->successful();
         } catch (\Exception $e) {
             Log::error("PushHouse API: Connection test failed", [
