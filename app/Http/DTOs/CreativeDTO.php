@@ -322,6 +322,8 @@ class CreativeDTO implements Arrayable, Jsonable
         return [
             'id' => $this->id,
             'title' => $this->title,
+            'description' => $this->description,
+            'main_image_url' => $this->main_image_url,
             'category' => $this->category,
             'country' => $this->country,
             'icon_url' => $this->icon_url,
