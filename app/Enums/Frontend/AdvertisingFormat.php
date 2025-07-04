@@ -9,10 +9,8 @@ enum AdvertisingFormat: string
     use EnumTrait;
 
     case PUSH = 'push';
-    case ON_CLICK = 'onclick';
     case INPAGE = 'inpage';
-    case NATIVE = 'native';
-    case POP = 'pop';
+
     case TIKTOK = 'tiktok';
     case FACEBOOK = 'facebook';
 }
