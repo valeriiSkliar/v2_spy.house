@@ -19,7 +19,7 @@ return new class extends Migration
             $table->id();
 
             // Enums
-            $table->enum('format', AdvertisingFormat::values());
+            $table->enum('format', AdvertisingFormat::values())->nullable();
             $table->enum('status', AdvertisingStatus::values())
                 ->default(AdvertisingStatus::Active->value);
 
@@ -76,7 +76,7 @@ return new class extends Migration
             $table->boolean('is_adult')->default(false);
             $table->string('title', 128)->default('')->comment('Заголовок');
             $table->string('description', 256)->default('')->comment('Описание');
-            $table->char('combined_hash', 64)->unique()->index()->comment('Хеш');
+            $table->char('combined_hash', 64)->unique()->nullable()->index()->comment('Хеш');
             $table->text('landing_url', 10240)->nullable()->comment('Ссылка на лендинг');
             $table->timestamp('start_date')->nullable()->comment('Дата начала показа');
             $table->timestamp('end_date')->nullable()->comment('Дата окончания показа');
