@@ -49,7 +49,7 @@ return [
 
     'push_house' => [
         'api_key' => env('PUSH_HOUSE_API_KEY'),
-        'base_url' => env('PUSH_HOUSE_BASE_URL', 'https://api.push.house'),
+        'base_url' => env('PUSH_HOUSE_BASE_URL', 'https://api.push.house/v1'),
         'rate_limit' => env('PUSH_HOUSE_RATE_LIMIT', 1000), // requests per minute
         'timeout' => env('PUSH_HOUSE_TIMEOUT', 45),
         'max_retries' => env('PUSH_HOUSE_MAX_RETRIES', 3),
