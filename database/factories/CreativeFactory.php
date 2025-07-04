@@ -41,18 +41,35 @@ class CreativeFactory extends Factory
             'start_date' => $this->faker->optional(0.7)->dateTimeBetween('-60 days', 'now'), // Дата начала показа
             'end_date' => $this->faker->optional(0.5)->dateTimeBetween('now', '+90 days'), // Дата окончания показа
             'is_processed' => $this->faker->boolean(70), // 70% вероятность обработки
+            // media fields
             'has_video' => $this->faker->boolean(30), // 30% вероятность наличия видео
             'video_url' => null, // Будет установлено в withVideo() state
             'video_duration' => null, // Будет установлено в withVideo() state
-            'main_image_url' => $this->faker->optional(0.8)->imageUrl(640, 480, 'business'),
+            'main_image_url' => $this->getRandomImageUrl(640, 480, 'movie'),
             'main_image_size' => $this->faker->optional(0.8)->randomElement(['640x480', '800x600', '1024x768', '1200x900']),
-            'icon_url' => $this->faker->optional(0.6)->imageUrl(64, 64, 'business'),
+            'icon_url' => $this->getRandomImageUrl(64, 64, 'album'),
             'icon_size' => $this->faker->optional(0.6)->randomElement(['32x32', '48x48', '64x64', '96x96']),
+            // social fields
             'social_likes' => $this->faker->optional(0.6)->numberBetween(0, 10000), // Лайки в соц. сетях
             'social_comments' => $this->faker->optional(0.4)->numberBetween(0, 1000), // Комментарии в соц. сетях
             'social_shares' => $this->faker->optional(0.3)->numberBetween(0, 500), // Репосты в соц. сетях
             'last_seen_at' => $this->faker->optional(0.9)->dateTimeBetween('-30 days', 'now'), // Последняя активность
         ];
+    }
+
+    private function getRandomImageUrl($width, $height, $selectedType = 'random'): string
+    {
+        $imageTypes = [
+            'game' => 'https://via.assets.so/game.png?id=' . random_int(1, 50) . '&q=95&w={width}&h={height}&fit=fill',
+            'album' => 'https://via.assets.so/album.png?id=' . random_int(1, 50) . '&q=95&w={width}&h={height}&fit=fill',
+            'movie' => 'https://via.assets.so/movie.png?id=' . random_int(1, 50) . '&q=95&w={width}&h={height}&fit=fill'
+        ];
+        if ($selectedType === 'random') {
+            $selectedType = $this->faker->randomElement(array_keys($imageTypes));
+        }
+        $template = $imageTypes[$selectedType];
+
+        return str_replace(['{width}', '{height}'], [$width, $height], $template);
     }
 
     /**
