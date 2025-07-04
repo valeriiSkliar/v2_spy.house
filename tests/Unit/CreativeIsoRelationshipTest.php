@@ -58,7 +58,7 @@ class CreativeIsoRelationshipTest extends TestCase
 
         // Создаём креатив с привязкой к языку
         $creative = Creative::create([
-            'format' => AdvertisingFormat::NATIVE->value,
+            'format' => AdvertisingFormat::PUSH->value,
             'status' => AdvertisingStatus::Active->value,
             'language_id' => $language->id,
             'external_id' => 12346,
@@ -94,7 +94,7 @@ class CreativeIsoRelationshipTest extends TestCase
         ]);
 
         $creative2 = Creative::create([
-            'format' => AdvertisingFormat::POP->value,
+            'format' => AdvertisingFormat::INPAGE->value,
             'status' => AdvertisingStatus::Active->value,
             'country_id' => $country->id,
             'external_id' => 12348,
@@ -128,7 +128,7 @@ class CreativeIsoRelationshipTest extends TestCase
         ]);
 
         $creative2 = Creative::create([
-            'format' => AdvertisingFormat::NATIVE->value,
+            'format' => AdvertisingFormat::INPAGE->value,
             'status' => AdvertisingStatus::Active->value,
             'language_id' => $language->id,
             'external_id' => 12350,
@@ -234,7 +234,7 @@ class CreativeIsoRelationshipTest extends TestCase
         ]);
 
         $creative2 = Creative::create([
-            'format' => AdvertisingFormat::POP->value,
+            'format' => AdvertisingFormat::INPAGE->value,
             'status' => AdvertisingStatus::Active->value,
             'browser_id' => $browser->id,
             'operation_system' => OperationSystem::LINUX->value,
@@ -282,7 +282,7 @@ class CreativeIsoRelationshipTest extends TestCase
 
         // Создаём креатив со всеми параметрами таргетинга
         $creative = Creative::create([
-            'format' => AdvertisingFormat::NATIVE->value,
+            'format' => AdvertisingFormat::INPAGE->value,
             'status' => AdvertisingStatus::Active->value,
             'country_id' => $country->id,
             'language_id' => $language->id,
