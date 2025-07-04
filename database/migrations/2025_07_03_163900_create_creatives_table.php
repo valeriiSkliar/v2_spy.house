@@ -79,7 +79,13 @@ return new class extends Migration
             $table->text('landing_url', 10240)->nullable()->comment('Ссылка на лендинг');
             $table->timestamp('start_date')->nullable()->comment('Дата начала показа');
             $table->timestamp('end_date')->nullable()->comment('Дата окончания показа');
+            // set true if creative is processed ( by queue)
             $table->boolean('is_processed')->default(false)->comment('Флаг обработки креатива');
+            $table->timestamp('processed_at')->nullable()->comment('Дата обработки креатива');
+            $table->boolean('is_valid')->default(false)->comment('Флаг валидности креатива');
+            $table->string('validation_error')->nullable()->comment('Ошибка валидации креатива');
+            $table->string('processing_error')->nullable()->comment('Ошибка обработки креатива');
+
 
             $table->boolean('has_video')->default(false)->comment('Флаг наличия видео');
             $table->string('video_url', 1024)->nullable()->comment('Ссылка на видео');
