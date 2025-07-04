@@ -21,18 +21,22 @@ export type DateRangeValue = 'today' | 'yesterday' | 'last7' | 'last30' | 'last9
  */
 export interface Creative {
   id: CreativeId;
-  name: string;
+  // basic fields
   title: string;
   description: string;
   category: string;
   country: CountryCode;
   file_size: string;
-  // file_url: string;s
+  // media fields
   icon_url: string;
+  image_sizes?: string[];
+  main_image_size?: string;
+  main_image_url?: string;
   landing_page_url: string;
-  // preview_url?: string;
   video_url?: string;
+  duration?: string;
   has_video?: boolean;
+  // other fields
   created_at: string;
   activity_date?: string;
   advertising_networks?: string[];
@@ -40,16 +44,12 @@ export interface Creative {
   operating_systems?: string[];
   browsers?: string[];
   devices?: string[];
-  image_sizes?: string[];
-  main_image_size?: string;
-  main_image_url?: string;
   is_adult?: boolean;
-  // Поля для социальных сетей
+  // social fields
   social_likes?: number | string;
   social_comments?: number | string;
   social_shares?: number | string;
-  duration?: string;
-  // Computed свойства (добавляются на frontend)
+  // computed fields
   displayName?: string;
   isRecent?: boolean;
   isFavorite?: boolean;

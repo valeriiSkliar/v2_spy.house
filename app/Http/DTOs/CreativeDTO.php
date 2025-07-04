@@ -15,7 +15,6 @@ class CreativeDTO implements Arrayable, Jsonable
     public function __construct(
         // Основные поля (required)
         public int $id,
-        public string $name,
         public string $title,
         public string $description,
         public string $category,
@@ -61,7 +60,6 @@ class CreativeDTO implements Arrayable, Jsonable
     {
         return new self(
             id: $data['id'],
-            name: $data['name'],
             title: $data['title'],
             description: $data['description'],
             category: $data['category'],
@@ -111,12 +109,12 @@ class CreativeDTO implements Arrayable, Jsonable
     public function computeProperties(?int $userId = null): void
     {
         // displayName - комбинация name и title
-        $this->displayName = trim($this->name . ' - ' . $this->title);
+        $this->displayName = trim($this->title);
 
         // Кешируем парсинг дат
         $createdAtCarbon = Carbon::parse($this->created_at);
         $now = now();
-        
+
         // isRecent - создан за последние 7 дней
         $this->isRecent = $createdAtCarbon->isAfter($now->copy()->subDays(7));
 
@@ -127,7 +125,7 @@ class CreativeDTO implements Arrayable, Jsonable
         if ($this->activity_date) {
             $activityCarbon = Carbon::parse($this->activity_date);
             $this->last_activity_date_formatted = $activityCarbon->format('d.m.Y');
-            
+
             // is_active - активность за последние 30 дней
             $this->is_active = $activityCarbon->isAfter($now->copy()->subDays(30));
         }
@@ -162,8 +160,8 @@ class CreativeDTO implements Arrayable, Jsonable
         if ($userId && count($items) > 10) {
             $creativeIds = array_column($items, 'id');
             $favoriteIds = self::batchCheckFavorites($userId, $creativeIds);
-            
-            return array_map(function(array $item) use ($userId, $favoriteIds) {
+
+            return array_map(function (array $item) use ($userId, $favoriteIds) {
                 $dto = self::fromArrayWithComputed($item, $userId);
                 $dto->isFavorite = in_array($item['id'], $favoriteIds);
                 return $dto->toArray();
@@ -194,7 +192,7 @@ class CreativeDTO implements Arrayable, Jsonable
         $errors = [];
 
         // Обязательные поля
-        $required = ['id', 'name', 'title', 'description', 'category', 'country', 'file_size', 'icon_url', 'landing_page_url', 'created_at'];
+        $required = ['id', 'title', 'description', 'category', 'country', 'file_size', 'icon_url', 'landing_page_url', 'created_at'];
 
         foreach ($required as $field) {
             if (empty($data[$field])) {
@@ -267,7 +265,25 @@ class CreativeDTO implements Arrayable, Jsonable
      */
     public static function fromModel($model): self
     {
-        return self::fromArray($model->toArray());
+        // Используем новый метод toCreativeArray() из модели для правильного маппинга
+        return self::fromArray($model->toCreativeArray());
+    }
+
+    /**
+     * Создать коллекцию DTO из моделей Eloquent
+     */
+    public static function fromModels($models, ?int $userId = null): array
+    {
+        if (empty($models)) {
+            return [];
+        }
+
+        $items = [];
+        foreach ($models as $model) {
+            $items[] = $model->toCreativeArray();
+        }
+
+        return self::collection($items, $userId);
     }
 
     /**
@@ -278,7 +294,6 @@ class CreativeDTO implements Arrayable, Jsonable
         // Маппинг полей если API возвращает другие названия
         $mappedData = [
             'id' => $apiData['id'] ?? $apiData['creative_id'] ?? null,
-            'name' => $apiData['name'] ?? $apiData['creative_name'] ?? '',
             'title' => $apiData['title'] ?? '',
             'description' => $apiData['description'] ?? $apiData['desc'] ?? '',
             'category' => $apiData['category'] ?? $apiData['type'] ?? '',
@@ -306,7 +321,6 @@ class CreativeDTO implements Arrayable, Jsonable
     {
         return [
             'id' => $this->id,
-            'name' => $this->name,
             'title' => $this->title,
             'category' => $this->category,
             'country' => $this->country,
@@ -335,7 +349,6 @@ class CreativeDTO implements Arrayable, Jsonable
     {
         return [
             'id' => $this->id,
-            'name' => $this->name,
             'title' => $this->title,
             'description' => $this->description,
             'category' => $this->category,
