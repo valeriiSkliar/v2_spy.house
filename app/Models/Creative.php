@@ -125,7 +125,7 @@ class Creative extends Model
     {
         if ($countryCode && $countryCode !== 'default') {
             return $query->whereHas('country', function ($q) use ($countryCode) {
-                $q->where('code', $countryCode);
+                $q->where('iso_code_2', $countryCode);
             });
         }
         return $query;
@@ -138,7 +138,7 @@ class Creative extends Model
     {
         if (!empty($languageCodes)) {
             return $query->whereHas('language', function ($q) use ($languageCodes) {
-                $q->whereIn('code', $languageCodes);
+                $q->whereIn('iso_code_2', $languageCodes);
             });
         }
         return $query;
@@ -321,7 +321,7 @@ class Creative extends Model
             'title' => $this->title,
             'description' => $this->description,
             'category' => $this->format->value,
-            'country' => $this->country?->code ?? 'unknown',
+            'country' => $this->country?->iso_code_2 ?? 'unknown',
             'file_size' => $this->calculateFileSize(),
             'icon_url' => $this->icon_url ?? '',
             'landing_page_url' => $this->landing_url ?? '',
@@ -330,9 +330,9 @@ class Creative extends Model
             'created_at' => $this->created_at->format('Y-m-d'),
             'activity_date' => $this->last_seen_at?->format('Y-m-d'),
             'advertising_networks' => $this->advertismentNetwork ? [$this->advertismentNetwork->network_name] : [],
-            'languages' => $this->language ? [$this->language->code] : [],
+            'languages' => $this->language ? [$this->language->iso_code_2] : [],
             'operating_systems' => $this->operation_system ? [$this->operation_system->value] : [],
-            'browsers' => $this->browser ? [$this->browser->name] : [],
+            'browsers' => $this->browser && $this->browser->name ? [$this->browser->name] : [],
             'devices' => $this->guessDevices(),
             'image_sizes' => $this->main_image_size ? [$this->main_image_size] : [],
             'main_image_size' => $this->main_image_size,

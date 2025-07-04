@@ -401,6 +401,7 @@ const getImageUrl = (): string => {
 
 // Функция для получения текста сети
 const getNetworkText = (): string => {
+  // console.log('PROPS.CREATIVE.ADVERTISING_NETWORKS', props.creative.advertising_networks);
   if (props.creative.advertising_networks && props.creative.advertising_networks.length > 0) {
     return props.creative.advertising_networks[0];
   }

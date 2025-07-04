@@ -333,6 +333,12 @@ class CreativeDTO implements Arrayable, Jsonable
             'isRecent' => $this->isRecent,
             'isFavorite' => $this->isFavorite,
             'created_at_formatted' => $this->created_at_formatted,
+            // Добавляем поля необходимые для фронтенда
+            'advertising_networks' => $this->advertising_networks,
+            'languages' => $this->languages,
+            'browsers' => $this->browsers,
+            'devices' => $this->devices,
+            'activity_date' => $this->activity_date,
         ];
     }
 
