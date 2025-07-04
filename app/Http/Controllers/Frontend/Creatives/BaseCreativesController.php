@@ -568,7 +568,7 @@ abstract class BaseCreativesController extends FrontendController
     /**
      * Получить все опции селектов используя FilterOptionDTO
      */
-    public function getSelectOptions(CreativesFiltersDTO $filtersDTO = null)
+    public function getSelectOptions(?CreativesFiltersDTO $filtersDTO = null)
     {
         // Если фильтры не переданы, создаем дефолтные
         if (!$filtersDTO) {
