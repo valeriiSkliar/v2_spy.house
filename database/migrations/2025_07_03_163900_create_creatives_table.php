@@ -3,6 +3,7 @@
 use App\Enums\Frontend\AdvertisingFormat;
 use App\Enums\Frontend\AdvertisingStatus;
 use App\Enums\Frontend\OperationSystem;
+use App\Enums\Frontend\Platform;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -79,6 +80,12 @@ return new class extends Migration
             $table->text('landing_url', 10240)->nullable()->comment('Ссылка на лендинг');
             $table->timestamp('start_date')->nullable()->comment('Дата начала показа');
             $table->timestamp('end_date')->nullable()->comment('Дата окончания показа');
+            $table->foreignId('source_id')
+                ->nullable()
+                ->constrained('ad_sources')
+                ->onDelete('set null')
+                ->comment('Ссылка на источник креатива');
+            $table->enum('platform', Platform::values())->nullable()->comment('Платформа креатива mobile/desktop');
             // set true if creative is processed ( by queue)
             $table->boolean('is_processed')->default(false)->comment('Флаг обработки креатива');
             $table->timestamp('processed_at')->nullable()->comment('Дата обработки креатива');
@@ -99,6 +106,7 @@ return new class extends Migration
             $table->integer('social_comments')->nullable()->comment('Комментарии в соц. сетях');
             $table->integer('social_shares')->nullable()->comment('Репосты в соц. сетях');
             $table->timestamp('last_seen_at')->nullable()->comment('Дата последнего обновления');
+            $table->timestamp('external_created_at')->nullable()->comment('Дата создания в источнике');
 
             $table->softDeletes();
             $table->timestamps();

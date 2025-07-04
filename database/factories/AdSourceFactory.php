@@ -29,10 +29,6 @@ class AdSourceFactory extends Factory
             'tiktok' => 'TikTok Ads',
             'facebook' => 'Facebook Ads',
             'feed_house' => 'Feed House',
-            'google_ads' => 'Google Ads',
-            'telegram' => 'Telegram Ads',
-            'vk_ads' => 'VK Ads',
-            'yandex_direct' => 'Yandex Direct',
         ];
 
         $sourceName = $this->faker->randomElement(array_keys($sources));

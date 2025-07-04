@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Enums\Frontend\AdvertisingFormat;
 use App\Enums\Frontend\AdvertisingStatus;
 use App\Enums\Frontend\OperationSystem;
+use App\Enums\Frontend\Platform;
+use App\Models\AdSource;
 use App\Models\Browser;
 use App\Models\Frontend\IsoEntity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -37,7 +39,13 @@ class Creative extends Model
         'landing_url',
         'start_date',
         'end_date',
+        'source_id',
+        'platform',
         'is_processed',
+        'processed_at',
+        'is_valid',
+        'validation_error',
+        'processing_error',
         'has_video',
         'video_url',
         'video_duration',
@@ -49,6 +57,7 @@ class Creative extends Model
         'social_comments',
         'social_shares',
         'last_seen_at',
+        'external_created_at',
     ];
 
     /**
@@ -60,16 +69,20 @@ class Creative extends Model
             'format' => AdvertisingFormat::class,
             'status' => AdvertisingStatus::class,
             'operation_system' => OperationSystem::class,
+            'platform' => Platform::class,
             'external_id' => 'integer',
             'is_adult' => 'boolean',
             'start_date' => 'datetime',
             'end_date' => 'datetime',
             'is_processed' => 'boolean',
+            'processed_at' => 'datetime',
+            'is_valid' => 'boolean',
             'has_video' => 'boolean',
             'social_likes' => 'integer',
             'social_comments' => 'integer',
             'social_shares' => 'integer',
             'last_seen_at' => 'datetime',
+            'external_created_at' => 'datetime',
         ];
     }
 
@@ -105,6 +118,14 @@ class Creative extends Model
     public function advertismentNetwork(): BelongsTo
     {
         return $this->belongsTo(AdvertismentNetwork::class, 'advertisment_network_id');
+    }
+
+    /**
+     * Связь с источником креатива
+     */
+    public function source(): BelongsTo
+    {
+        return $this->belongsTo(AdSource::class, 'source_id');
     }
 
     /**
@@ -193,6 +214,44 @@ class Creative extends Model
     }
 
     /**
+     * Scope для фильтрации по платформе
+     */
+    public function scopeByPlatform($query, $platform)
+    {
+        if ($platform && $platform !== 'default') {
+            return $query->where('platform', $platform);
+        }
+        return $query;
+    }
+
+    /**
+     * Scope для фильтрации по источнику
+     */
+    public function scopeBySource($query, $sourceIds)
+    {
+        if (!empty($sourceIds)) {
+            return $query->whereIn('source_id', $sourceIds);
+        }
+        return $query;
+    }
+
+    /**
+     * Scope для фильтрации только валидных креативов
+     */
+    public function scopeOnlyValid($query)
+    {
+        return $query->where('is_valid', true);
+    }
+
+    /**
+     * Scope для фильтрации только обработанных креативов
+     */
+    public function scopeOnlyProcessed($query)
+    {
+        return $query->where('is_processed', true);
+    }
+
+    /**
      * Scope для поиска по ключевым словам
      */
     public function scopeBySearchKeyword($query, $keyword)
@@ -256,7 +315,7 @@ class Creative extends Model
      */
     public static function getFilteredCreatives(array $filters, int $perPage = 12)
     {
-        $query = self::with(['country', 'language', 'browser', 'advertismentNetwork'])
+        $query = self::with(['country', 'language', 'browser', 'advertismentNetwork', 'source'])
             ->byFormat($filters['activeTab'] ?? 'push')
             ->byCountry($filters['country'] ?? null)
             ->byLanguage($filters['languages'] ?? [])
@@ -329,6 +388,7 @@ class Creative extends Model
             'has_video' => $this->has_video,
             'created_at' => $this->created_at->format('Y-m-d'),
             'activity_date' => $this->last_seen_at?->format('Y-m-d'),
+            'external_created_at' => $this->external_created_at?->format('Y-m-d'),
             'advertising_networks' => $this->advertismentNetwork ? [$this->advertismentNetwork->network_display_name ?? $this->advertismentNetwork->network_name] : [],
             'languages' => $this->language ? [$this->language->iso_code_2] : [],
             'operating_systems' => $this->operation_system ? [$this->operation_system->value] : [],
@@ -337,7 +397,14 @@ class Creative extends Model
             'image_sizes' => $this->main_image_size ? [$this->main_image_size] : [],
             'main_image_size' => $this->main_image_size,
             'main_image_url' => $this->main_image_url,
+            'platform' => $this->platform?->value,
+            'source' => $this->source?->source_display_name ?? $this->source?->source_name ?? 'unknown',
             'is_adult' => $this->is_adult,
+            'is_processed' => $this->is_processed,
+            'is_valid' => $this->is_valid,
+            'processed_at' => $this->processed_at?->format('Y-m-d H:i:s'),
+            'validation_error' => $this->validation_error,
+            'processing_error' => $this->processing_error,
             'social_likes' => $this->social_likes,
             'social_comments' => $this->social_comments,
             'social_shares' => $this->social_shares,

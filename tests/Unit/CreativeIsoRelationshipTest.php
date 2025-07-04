@@ -7,6 +7,8 @@ use App\Enums\Frontend\AdvertisingStatus;
 use App\Enums\Frontend\BrowserType;
 use App\Enums\Frontend\DeviceType;
 use App\Enums\Frontend\OperationSystem;
+use App\Enums\Frontend\Platform;
+use App\Models\AdSource;
 use App\Models\Browser;
 use App\Models\Creative;
 use App\Models\Frontend\IsoEntity;
@@ -303,5 +305,133 @@ class CreativeIsoRelationshipTest extends TestCase
         $this->assertEquals('en', $creative->language->iso_code_2);
         $this->assertEquals('Safari', $creative->browser->browser);
         $this->assertEquals('ios', $creative->operation_system->value);
+    }
+
+    public function test_creative_belongs_to_ad_source()
+    {
+        // Создаём источник рекламы
+        $adSource = AdSource::create([
+            'source_name' => 'push_house',
+            'source_display_name' => 'Push House',
+        ]);
+
+        // Создаём креатив с привязкой к источнику
+        $creative = Creative::create([
+            'format' => AdvertisingFormat::PUSH->value,
+            'status' => AdvertisingStatus::Active->value,
+            'source_id' => $adSource->id,
+            'external_id' => 12356,
+            'combined_hash' => hash('sha256', 'test_creative_12356'),
+        ]);
+
+        // Проверяем связь
+        $this->assertInstanceOf(AdSource::class, $creative->source);
+        $this->assertEquals($adSource->id, $creative->source->id);
+        $this->assertEquals('push_house', $creative->source->source_name);
+        $this->assertEquals('Push House', $creative->source->source_display_name);
+    }
+
+    public function test_creative_with_platform_enum()
+    {
+        // Создаём креатив с платформой
+        $creative = Creative::create([
+            'format' => AdvertisingFormat::PUSH->value,
+            'status' => AdvertisingStatus::Active->value,
+            'platform' => Platform::MOBILE->value,
+            'external_id' => 12357,
+            'combined_hash' => hash('sha256', 'test_creative_12357'),
+        ]);
+
+        // Проверяем enum платформы
+        $this->assertInstanceOf(Platform::class, $creative->platform);
+        $this->assertEquals(Platform::MOBILE, $creative->platform);
+        $this->assertEquals('mobile', $creative->platform->value);
+    }
+
+    public function test_creative_with_new_processing_fields()
+    {
+        $now = now();
+        $externalCreatedAt = $now->copy()->subDay();
+
+        // Создаём креатив с новыми полями обработки
+        $creative = Creative::create([
+            'format' => AdvertisingFormat::PUSH->value,
+            'status' => AdvertisingStatus::Active->value,
+            'external_id' => 12358,
+            'combined_hash' => hash('sha256', 'test_creative_12358'),
+            'is_processed' => true,
+            'processed_at' => $now,
+            'is_valid' => true,
+            'validation_error' => null,
+            'processing_error' => null,
+            'external_created_at' => $externalCreatedAt,
+        ]);
+
+        // Проверяем новые поля
+        $this->assertTrue($creative->is_processed);
+        $this->assertTrue($creative->is_valid);
+        $this->assertEquals($now->toDateTimeString(), $creative->processed_at->toDateTimeString());
+        $this->assertEquals($externalCreatedAt->toDateTimeString(), $creative->external_created_at->toDateTimeString());
+        $this->assertNull($creative->validation_error);
+        $this->assertNull($creative->processing_error);
+    }
+
+    public function test_creative_with_validation_errors()
+    {
+        // Создаём креатив с ошибками валидации
+        $creative = Creative::create([
+            'format' => AdvertisingFormat::PUSH->value,
+            'status' => AdvertisingStatus::Active->value,
+            'external_id' => 12359,
+            'combined_hash' => hash('sha256', 'test_creative_12359'),
+            'is_processed' => false,
+            'is_valid' => false,
+            'validation_error' => 'Invalid image format',
+            'processing_error' => 'Failed to download image',
+        ]);
+
+        // Проверяем поля с ошибками
+        $this->assertFalse($creative->is_processed);
+        $this->assertFalse($creative->is_valid);
+        $this->assertEquals('Invalid image format', $creative->validation_error);
+        $this->assertEquals('Failed to download image', $creative->processing_error);
+    }
+
+    public function test_creative_to_array_includes_new_fields()
+    {
+        // Создаём источник рекламы
+        $adSource = AdSource::create([
+            'source_name' => 'tiktok',
+            'source_display_name' => 'TikTok Ads',
+        ]);
+
+        $now = now();
+        $externalCreatedAt = $now->copy()->subHour();
+
+        // Создаём креатив со всеми новыми полями
+        $creative = Creative::create([
+            'format' => AdvertisingFormat::TIKTOK->value,
+            'status' => AdvertisingStatus::Active->value,
+            'source_id' => $adSource->id,
+            'platform' => Platform::DESKTOP->value,
+            'external_id' => 12360,
+            'combined_hash' => hash('sha256', 'test_creative_12360'),
+            'is_processed' => true,
+            'processed_at' => $now,
+            'is_valid' => true,
+            'external_created_at' => $externalCreatedAt,
+        ]);
+
+        $array = $creative->toCreativeArray();
+
+        // Проверяем новые поля в массиве
+        $this->assertEquals('desktop', $array['platform']);
+        $this->assertEquals('TikTok Ads', $array['source']);
+        $this->assertTrue($array['is_processed']);
+        $this->assertTrue($array['is_valid']);
+        $this->assertEquals($now->format('Y-m-d H:i:s'), $array['processed_at']);
+        $this->assertEquals($externalCreatedAt->format('Y-m-d'), $array['external_created_at']);
+        $this->assertNull($array['validation_error']);
+        $this->assertNull($array['processing_error']);
     }
 }
