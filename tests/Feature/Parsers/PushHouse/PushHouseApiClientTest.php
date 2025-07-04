@@ -257,6 +257,7 @@ class PushHouseApiClientTest extends TestCase
     {
         // Настраиваем клиент с лимитом в 2 страницы
         $limitedClient = new PushHouseApiClient([
+            'base_url' => 'https://api.push.house',
             'max_pages' => 2
         ]);
 
