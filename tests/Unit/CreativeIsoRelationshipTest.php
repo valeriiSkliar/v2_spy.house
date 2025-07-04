@@ -34,6 +34,8 @@ class CreativeIsoRelationshipTest extends TestCase
             'format' => AdvertisingFormat::PUSH->value,
             'status' => AdvertisingStatus::Active->value,
             'country_id' => $country->id,
+            'external_id' => 12345,
+            'combined_hash' => hash('sha256', 'test_creative_12345'),
         ]);
 
         // Проверяем связь
@@ -59,6 +61,8 @@ class CreativeIsoRelationshipTest extends TestCase
             'format' => AdvertisingFormat::NATIVE->value,
             'status' => AdvertisingStatus::Active->value,
             'language_id' => $language->id,
+            'external_id' => 12346,
+            'combined_hash' => hash('sha256', 'test_creative_12346'),
         ]);
 
         // Проверяем связь
@@ -85,12 +89,16 @@ class CreativeIsoRelationshipTest extends TestCase
             'format' => AdvertisingFormat::PUSH->value,
             'status' => AdvertisingStatus::Active->value,
             'country_id' => $country->id,
+            'external_id' => 12347,
+            'combined_hash' => hash('sha256', 'test_creative_12347'),
         ]);
 
         $creative2 = Creative::create([
             'format' => AdvertisingFormat::POP->value,
             'status' => AdvertisingStatus::Active->value,
             'country_id' => $country->id,
+            'external_id' => 12348,
+            'combined_hash' => hash('sha256', 'test_creative_12348'),
         ]);
 
         // Проверяем обратную связь
@@ -115,12 +123,16 @@ class CreativeIsoRelationshipTest extends TestCase
             'format' => AdvertisingFormat::INPAGE->value,
             'status' => AdvertisingStatus::Active->value,
             'language_id' => $language->id,
+            'external_id' => 12349,
+            'combined_hash' => hash('sha256', 'test_creative_12349'),
         ]);
 
         $creative2 = Creative::create([
             'format' => AdvertisingFormat::NATIVE->value,
             'status' => AdvertisingStatus::Active->value,
             'language_id' => $language->id,
+            'external_id' => 12350,
+            'combined_hash' => hash('sha256', 'test_creative_12350'),
         ]);
 
         // Проверяем обратную связь
@@ -155,6 +167,8 @@ class CreativeIsoRelationshipTest extends TestCase
             'status' => AdvertisingStatus::Active->value,
             'country_id' => $country->id,
             'language_id' => $language->id,
+            'external_id' => 12351,
+            'combined_hash' => hash('sha256', 'test_creative_12351'),
         ]);
 
         // Проверяем обе связи
@@ -184,6 +198,8 @@ class CreativeIsoRelationshipTest extends TestCase
             'status' => AdvertisingStatus::Active->value,
             'browser_id' => $browser->id,
             'operation_system' => OperationSystem::WINDOWS->value,
+            'external_id' => 12352,
+            'combined_hash' => hash('sha256', 'test_creative_12352'),
         ]);
 
         // Проверяем связь
@@ -213,6 +229,8 @@ class CreativeIsoRelationshipTest extends TestCase
             'status' => AdvertisingStatus::Active->value,
             'browser_id' => $browser->id,
             'operation_system' => OperationSystem::WINDOWS->value,
+            'external_id' => 12353,
+            'combined_hash' => hash('sha256', 'test_creative_12353'),
         ]);
 
         $creative2 = Creative::create([
@@ -220,6 +238,8 @@ class CreativeIsoRelationshipTest extends TestCase
             'status' => AdvertisingStatus::Active->value,
             'browser_id' => $browser->id,
             'operation_system' => OperationSystem::LINUX->value,
+            'external_id' => 12354,
+            'combined_hash' => hash('sha256', 'test_creative_12354'),
         ]);
 
         // Проверяем обратную связь
@@ -268,6 +288,8 @@ class CreativeIsoRelationshipTest extends TestCase
             'language_id' => $language->id,
             'browser_id' => $browser->id,
             'operation_system' => OperationSystem::IOS->value,
+            'external_id' => 12355,
+            'combined_hash' => hash('sha256', 'test_creative_12355'),
         ]);
 
         // Проверяем все связи
