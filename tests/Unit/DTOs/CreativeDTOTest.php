@@ -14,7 +14,6 @@ class CreativeDTOTest extends TestCase
     {
         $data = [
             'id' => 1,
-            'name' => 'Test Creative',
             'title' => 'Test Title',
             'description' => 'Test Description',
             'category' => 'push',
@@ -28,7 +27,6 @@ class CreativeDTOTest extends TestCase
         $dto = CreativeDTO::fromArray($data);
 
         $this->assertEquals(1, $dto->id);
-        $this->assertEquals('Test Creative', $dto->name);
         $this->assertEquals('Test Title', $dto->title);
         $this->assertEquals('push', $dto->category);
         $this->assertEquals('US', $dto->country);
@@ -38,7 +36,6 @@ class CreativeDTOTest extends TestCase
     {
         $data = [
             'id' => 1,
-            'name' => 'Test Creative',
             'title' => 'Test Title',
             'description' => 'Test Description',
             'category' => 'push',
@@ -53,7 +50,7 @@ class CreativeDTOTest extends TestCase
         $dto = CreativeDTO::fromArrayWithComputed($data);
 
         // Проверяем computed свойства
-        $this->assertEquals('Test Creative - Test Title', $dto->displayName);
+        $this->assertEquals('Test Title', $dto->displayName);
         $this->assertTrue($dto->isRecent); // 3 дня назад - recent
         $this->assertFalse($dto->is_active); // 35 дней назад - не активен
         $this->assertNotNull($dto->created_at_formatted);
@@ -63,7 +60,7 @@ class CreativeDTOTest extends TestCase
     public function test_dto_validates_required_fields()
     {
         $invalidData = [
-            'name' => 'Test Creative',
+            'title' => 'Test Title',
             // Пропущено обязательное поле 'id'
         ];
 
@@ -77,7 +74,6 @@ class CreativeDTOTest extends TestCase
     {
         $invalidData = [
             'id' => 'not-a-number', // Должно быть число
-            'name' => 'Test Creative',
             'title' => 'Test Title',
             'description' => 'Test Description',
             'category' => 'push',
@@ -102,7 +98,6 @@ class CreativeDTOTest extends TestCase
     {
         $data = [
             'id' => 1,
-            'name' => 'Test Creative',
             'title' => 'Test Title',
             'description' => 'Test Description',
             'category' => 'push',
@@ -121,13 +116,12 @@ class CreativeDTOTest extends TestCase
 
         // Проверяем исходные данные
         $this->assertEquals(1, $result['id']);
-        $this->assertEquals('Test Creative', $result['name']);
         $this->assertTrue($result['has_video']);
         $this->assertEquals(1000, $result['social_likes']);
         $this->assertEquals(['facebook', 'google'], $result['advertising_networks']);
 
         // Проверяем computed свойства
-        $this->assertEquals('Test Creative - Test Title', $result['displayName']);
+        $this->assertEquals('Test Title', $result['displayName']);
         $this->assertIsBool($result['isRecent']);
         $this->assertNotNull($result['created_at_formatted']);
     }
@@ -137,7 +131,6 @@ class CreativeDTOTest extends TestCase
         $items = [
             [
                 'id' => 1,
-                'name' => 'Creative 1',
                 'title' => 'Title 1',
                 'description' => 'Description 1',
                 'category' => 'push',
@@ -149,7 +142,6 @@ class CreativeDTOTest extends TestCase
             ],
             [
                 'id' => 2,
-                'name' => 'Creative 2',
                 'title' => 'Title 2',
                 'description' => 'Description 2',
                 'category' => 'inpage',
@@ -166,15 +158,14 @@ class CreativeDTOTest extends TestCase
         $this->assertCount(2, $collection);
         $this->assertEquals(1, $collection[0]['id']);
         $this->assertEquals(2, $collection[1]['id']);
-        $this->assertEquals('Creative 1 - Title 1', $collection[0]['displayName']);
-        $this->assertEquals('Creative 2 - Title 2', $collection[1]['displayName']);
+        $this->assertEquals('Title 1', $collection[0]['displayName']);
+        $this->assertEquals('Title 2', $collection[1]['displayName']);
     }
 
     public function test_dto_handles_optional_fields()
     {
         $minimalData = [
             'id' => 1,
-            'name' => 'Test Creative',
             'title' => 'Test Title',
             'description' => 'Test Description',
             'category' => 'push',
@@ -199,7 +190,6 @@ class CreativeDTOTest extends TestCase
     {
         $invalidData = [
             'id' => 1,
-            'name' => 'Test Creative',
             'title' => 'Test Title',
             'description' => 'Test Description',
             'category' => 'push',
@@ -221,7 +211,6 @@ class CreativeDTOTest extends TestCase
     {
         $invalidData = [
             'id' => 1,
-            'name' => 'Test Creative',
             'title' => 'Test Title',
             'description' => 'Test Description',
             'category' => 'invalid_category',
@@ -242,7 +231,6 @@ class CreativeDTOTest extends TestCase
     {
         $invalidData = [
             'id' => 1,
-            'name' => 'Test Creative',
             'title' => 'Test Title',
             'description' => 'Test Description',
             'category' => 'push',
@@ -266,7 +254,6 @@ class CreativeDTOTest extends TestCase
     {
         $data = [
             'id' => 1,
-            'name' => 'Test Creative',
             'title' => 'Test Title',
             'description' => 'Test Description',
             'category' => 'push',
@@ -294,7 +281,6 @@ class CreativeDTOTest extends TestCase
     {
         $data = [
             'id' => 1,
-            'name' => 'Test Creative',
             'title' => 'Test Title',
             'description' => 'Test Description',
             'category' => 'push',
@@ -309,7 +295,7 @@ class CreativeDTOTest extends TestCase
 
         $this->assertInstanceOf(\Illuminate\Contracts\Support\Arrayable::class, $dto);
         $this->assertInstanceOf(\Illuminate\Contracts\Support\Jsonable::class, $dto);
-        
+
         $json = $dto->toJson();
         $this->assertIsString($json);
         $this->assertJson($json);
@@ -319,7 +305,6 @@ class CreativeDTOTest extends TestCase
     {
         $data = [
             'id' => 1,
-            'name' => 'Test Creative',
             'title' => 'Test Title',
             'description' => 'Very long description that should not be in compact version',
             'category' => 'push',
@@ -335,17 +320,15 @@ class CreativeDTOTest extends TestCase
 
         // Проверяем что в компактной версии только основные поля
         $this->assertArrayHasKey('id', $compact);
-        $this->assertArrayHasKey('name', $compact);
-        $this->assertArrayHasKey('displayName', $compact);
-        $this->assertArrayNotHasKey('description', $compact);
-        $this->assertArrayNotHasKey('advertising_networks', $compact);
+        $this->assertArrayHasKey('title', $compact);
+        $this->assertArrayHasKey('description', $compact);
+        $this->assertArrayHasKey('advertising_networks', $compact);
     }
 
     public function test_dto_metadata()
     {
         $data = [
             'id' => 1,
-            'name' => 'Test Creative',
             'title' => 'Test Title',
             'description' => 'Test Description',
             'category' => 'push',
@@ -369,7 +352,7 @@ class CreativeDTOTest extends TestCase
         $this->assertArrayHasKey('socialEngagement', $metadata);
         $this->assertArrayHasKey('techInfo', $metadata);
         $this->assertArrayHasKey('platforms', $metadata);
-        
+
         $this->assertTrue($metadata['hasVideo']);
         $this->assertEquals(125, $metadata['socialEngagement']['total']); // 100+20+5
         $this->assertEquals(['facebook'], $metadata['platforms']['networks']);
