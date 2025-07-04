@@ -329,7 +329,7 @@ class Creative extends Model
             'has_video' => $this->has_video,
             'created_at' => $this->created_at->format('Y-m-d'),
             'activity_date' => $this->last_seen_at?->format('Y-m-d'),
-            'advertising_networks' => $this->advertismentNetwork ? [$this->advertismentNetwork->network_name] : [],
+            'advertising_networks' => $this->advertismentNetwork ? [$this->advertismentNetwork->network_display_name ?? $this->advertismentNetwork->network_name] : [],
             'languages' => $this->language ? [$this->language->iso_code_2] : [],
             'operating_systems' => $this->operation_system ? [$this->operation_system->value] : [],
             'browsers' => $this->browser && $this->browser->name ? [$this->browser->name] : [],

@@ -29,7 +29,7 @@ class CreativeFactory extends Factory
             'language_id' => IsoEntity::where('type', 'language')->inRandomOrder()->first()?->id,
             'browser_id' => Browser::active()->forFilter()->inRandomOrder()->first()?->id,
             'operation_system' => $this->faker->randomElement(OperationSystem::cases())->value,
-            'advertisment_network_id' => $this->faker->optional(0.7)->randomElement(
+            'advertisment_network_id' => $this->faker->randomElement(
                 AdvertismentNetwork::active()->pluck('id')->toArray()
             ),
             'external_id' => $this->faker->unique()->randomNumber(8), // 8-значный уникальный ID

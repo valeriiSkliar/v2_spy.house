@@ -82,8 +82,8 @@
     </div>
     <div class="creative-item__footer">
       <div class="creative-item__info">
-        <div class="creative-item-info">
-          <span class="creative-item-info__txt">{{ getNetworkText() }}</span>
+        <div v-if="getNetworkName" class="creative-item-info">
+          <span class="creative-item-info__txt">{{ getNetworkName }}</span>
         </div>
         <div class="creative-item-info">
           <img :src="getFlagIcon()" alt="" />{{ creative.country || 'KZ' }}
@@ -405,8 +405,10 @@ const getNetworkText = (): string => {
   if (props.creative.advertising_networks && props.creative.advertising_networks.length > 0) {
     return props.creative.advertising_networks[0];
   }
-  return 'Push.house';
+  return '';
 };
+
+const getNetworkName: string = getNetworkText();
 
 // Функция для получения иконки флага
 const getFlagIcon = (): string => {
