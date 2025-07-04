@@ -71,7 +71,7 @@ class PushHouseApiClientTest extends TestCase
     public function it_can_fetch_single_page_successfully()
     {
         Http::fake([
-            'api.push.house/v1/ads/1/active' => Http::response($this->mockApiResponse, 200)
+            'https://api.push.house/v1/ads/1/active' => Http::response($this->mockApiResponse, 200)
         ]);
 
         $result = $this->apiClient->fetchPage(1, 'active');
@@ -86,7 +86,7 @@ class PushHouseApiClientTest extends TestCase
     public function it_handles_empty_page_response()
     {
         Http::fake([
-            'api.push.house/v1/ads/1/active' => Http::response([], 200)
+            'https://api.push.house/v1/ads/1/active' => Http::response([], 200)
         ]);
 
         $result = $this->apiClient->fetchPage(1, 'active');
@@ -98,7 +98,7 @@ class PushHouseApiClientTest extends TestCase
     public function it_handles_non_array_response()
     {
         Http::fake([
-            'api.push.house/v1/ads/1/active' => Http::response('invalid response', 200)
+            'https://api.push.house/v1/ads/1/active' => Http::response('invalid response', 200)
         ]);
 
         $result = $this->apiClient->fetchPage(1, 'active');
@@ -133,7 +133,7 @@ class PushHouseApiClientTest extends TestCase
         ];
 
         Http::fake([
-            'api.push.house/v1/ads/1/active' => Http::response($invalidResponse, 200)
+            'https://api.push.house/v1/ads/1/active' => Http::response($invalidResponse, 200)
         ]);
 
         $result = $this->apiClient->fetchPage(1, 'active');
@@ -146,9 +146,9 @@ class PushHouseApiClientTest extends TestCase
     public function it_can_fetch_all_creatives_with_pagination()
     {
         Http::fake([
-            'api.push.house/v1/ads/1/active' => Http::response($this->mockApiResponse, 200),
-            'api.push.house/v1/ads/2/active' => Http::response([$this->mockApiResponse[0]], 200), // Одна запись на второй странице
-            'api.push.house/v1/ads/3/active' => Http::response([], 200) // Пустая третья страница
+            'https://api.push.house/v1/ads/1/active' => Http::response($this->mockApiResponse, 200),
+            'https://api.push.house/v1/ads/2/active' => Http::response([$this->mockApiResponse[0]], 200), // Одна запись на второй странице
+            'https://api.push.house/v1/ads/3/active' => Http::response([], 200) // Пустая третья страница
         ]);
 
         $result = $this->apiClient->fetchAllCreatives('active', 1);
@@ -161,9 +161,9 @@ class PushHouseApiClientTest extends TestCase
     public function it_stops_pagination_on_empty_page()
     {
         Http::fake([
-            'api.push.house/v1/ads/1/active' => Http::response($this->mockApiResponse, 200),
-            'api.push.house/v1/ads/2/active' => Http::response([], 200), // Пустая страница
-            'api.push.house/v1/ads/3/active' => Http::response($this->mockApiResponse, 200) // Эта страница не должна быть запрошена
+            'https://api.push.house/v1/ads/1/active' => Http::response($this->mockApiResponse, 200),
+            'https://api.push.house/v1/ads/2/active' => Http::response([], 200), // Пустая страница
+            'https://api.push.house/v1/ads/3/active' => Http::response($this->mockApiResponse, 200) // Эта страница не должна быть запрошена
         ]);
 
         $result = $this->apiClient->fetchAllCreatives('active', 1);
@@ -178,7 +178,7 @@ class PushHouseApiClientTest extends TestCase
     public function it_handles_404_error_gracefully()
     {
         Http::fake([
-            'api.push.house/v1/ads/1/active' => Http::response('Not Found', 404)
+            'https://api.push.house/v1/ads/1/active' => Http::response('Not Found', 404)
         ]);
 
         $this->expectException(ParserException::class);
@@ -191,7 +191,7 @@ class PushHouseApiClientTest extends TestCase
     public function it_retries_on_server_errors()
     {
         Http::fake([
-            'api.push.house/v1/ads/1/active' => Http::sequence()
+            'https://api.push.house/v1/ads/1/active' => Http::sequence()
                 ->push('Server Error', 500)
                 ->push('Server Error', 500)
                 ->push($this->mockApiResponse, 200)
@@ -209,7 +209,7 @@ class PushHouseApiClientTest extends TestCase
     public function it_handles_rate_limiting()
     {
         Http::fake([
-            'api.push.house/v1/ads/1/active' => Http::sequence()
+            'https://api.push.house/v1/ads/1/active' => Http::sequence()
                 ->push('Rate Limited', 429, ['Retry-After' => '1'])
                 ->push($this->mockApiResponse, 200)
         ]);
@@ -224,7 +224,7 @@ class PushHouseApiClientTest extends TestCase
     public function it_fails_after_max_retries()
     {
         Http::fake([
-            'api.push.house/v1/ads/1/active' => Http::response('Server Error', 500)
+            'https://api.push.house/v1/ads/1/active' => Http::response('Server Error', 500)
         ]);
 
         $this->expectException(ParserException::class);
@@ -237,9 +237,9 @@ class PushHouseApiClientTest extends TestCase
     public function it_continues_fetching_after_page_error()
     {
         Http::fake([
-            'api.push.house/v1/ads/1/active' => Http::response($this->mockApiResponse, 200),
-            'api.push.house/v1/ads/2/active' => Http::response('Server Error', 500), // Ошибка на второй странице
-            'api.push.house/v1/ads/3/active' => Http::response($this->mockApiResponse, 200) // Эта страница не должна быть запрошена
+            'https://api.push.house/v1/ads/1/active' => Http::response($this->mockApiResponse, 200),
+            'https://api.push.house/v1/ads/2/active' => Http::response('Server Error', 500), // Ошибка на второй странице
+            'https://api.push.house/v1/ads/3/active' => Http::response($this->mockApiResponse, 200) // Эта страница не должна быть запрошена
         ]);
 
         $result = $this->apiClient->fetchAllCreatives('active', 1);
@@ -277,7 +277,7 @@ class PushHouseApiClientTest extends TestCase
     public function it_can_test_connection()
     {
         Http::fake([
-            'api.push.house/v1/ads/1/active' => Http::response($this->mockApiResponse, 200)
+            'https://api.push.house/v1/ads/1/active' => Http::response($this->mockApiResponse, 200)
         ]);
 
         $result = $this->apiClient->testConnection();
@@ -289,7 +289,7 @@ class PushHouseApiClientTest extends TestCase
     public function it_fails_connection_test_on_error()
     {
         Http::fake([
-            'api.push.house/v1/ads/1/active' => Http::response('Error', 500)
+            'https://api.push.house/v1/ads/1/active' => Http::response('Error', 500)
         ]);
 
         $result = $this->apiClient->testConnection();
@@ -318,7 +318,7 @@ class PushHouseApiClientTest extends TestCase
     public function it_handles_different_statuses()
     {
         Http::fake([
-            'api.push.house/v1/ads/1/inactive' => Http::response($this->mockApiResponse, 200)
+            'https://api.push.house/v1/ads/1/inactive' => Http::response($this->mockApiResponse, 200)
         ]);
 
         $result = $this->apiClient->fetchPage(1, 'inactive');
