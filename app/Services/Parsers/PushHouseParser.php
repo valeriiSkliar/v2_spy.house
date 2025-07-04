@@ -119,30 +119,23 @@ class PushHouseParser extends BaseParser
 
 
     /**
-     * Parse individual item from PushHouse API into unified format
+     * Parse individual item from PushHouse API
+     * Returns raw data as-is for DTO processing
      *
      * @param array $item Raw item data from API
-     * @return array Parsed item in unified format
+     * @return array Raw item data (no transformation)
      */
     public function parseItem(array $item): array
     {
-        return [
-            'res_uniq_id' => $item['id'] ?? rand(100, 1000),
-            'icon' => $item['icon'] ?? '',
-            'img' => $item['img'] ?? '',
-            'title' => $item['title'] ?? '',
-            'text' => $item['text'] ?? '',
-            'url' => $item['url'] ?? '',
-            'price_cpc' => $item['cpc'] ?? 0,
-            'mob' => (int) ($item['platform'] == 'Mob' || $item['platform'] == 'Mob+PC'),
-            'country' => strtoupper($item['country'] ?? ''),
-        ];
+        // Return raw data as-is - transformation will be handled by PushHouseCreativeDTO
+        return $item;
     }
 
     /**
      * Get feeds using simplified API (compatible with original implementation)
+     * Returns raw data for DTO processing
      *
-     * @return array Formatted feeds array
+     * @return array Raw feeds array
      */
     public function getFeeds(): array
     {
@@ -180,9 +173,10 @@ class PushHouseParser extends BaseParser
 
     /**
      * Format result data from API response
+     * Returns raw data without transformation for DTO processing
      *
      * @param array $data Raw API response data
-     * @return array Formatted feeds array
+     * @return array Raw feeds array
      */
     private function formatResult(array $data): array
     {
@@ -190,7 +184,8 @@ class PushHouseParser extends BaseParser
         foreach ($data as $feed) {
             // Конвертируем объект в массив если нужно
             $feedArray = is_object($feed) ? (array) $feed : $feed;
-            $feeds[] = $this->parseItem($feedArray);
+            // No transformation - return raw data for DTO processing
+            $feeds[] = $feedArray;
         }
         return $feeds;
     }

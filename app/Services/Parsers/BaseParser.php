@@ -342,12 +342,16 @@ abstract class BaseParser
     abstract public function fetchData(array $params = []): array;
 
     /**
-     * Abstract method to parse individual item into unified format
+     * Parse individual item into unified format
+     * Override this method if transformation is needed
      *
      * @param array $item Raw item data
-     * @return array Parsed item data
+     * @return array Parsed item data (default: returns raw data)
      */
-    abstract public function parseItem(array $item): array;
+    public function parseItem(array $item): array
+    {
+        return $item;
+    }
 
     /**
      * Get parser configuration
