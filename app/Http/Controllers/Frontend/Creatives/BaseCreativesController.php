@@ -11,20 +11,42 @@ use App\Http\DTOs\FilterOptionDTO;
 use App\Helpers\IsoCodesHelper;
 use App\Models\AdvertismentNetwork;
 use App\Models\Browser;
+use App\Models\Creative;
 use App\Enums\Frontend\DeviceType;
 use App\Enums\Frontend\OperationSystem;
+use App\Enums\Frontend\AdvertisingFormat;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 abstract class BaseCreativesController extends FrontendController
 {
     /**
      * Получить количество креативов на основе фильтров
-     * Должен быть переопределен в дочерних классах
+     * Теперь использует реальные данные из БД
      */
-    abstract protected function getSearchCount($filters = []);
+    protected function getSearchCount($filters = [])
+    {
+        return Creative::getFilteredCount($filters);
+    }
+
+    /**
+     * Получить креативы из базы данных с фильтрами
+     */
+    protected function getCreativesFromDatabase(array $filters, int $perPage = 12): array
+    {
+        $paginatedCreatives = Creative::getFilteredCreatives($filters, $perPage);
+
+        $creativesData = [];
+        foreach ($paginatedCreatives->items() as $creative) {
+            $creativesData[] = $creative->toCreativeArray();
+        }
+
+        return $creativesData;
+    }
 
     /**
      * Генерация мок данных для тестирования DTO
+     * @deprecated Используется только для тестирования, в продакшене использовать getCreativesFromDatabase
      */
     protected function generateMockCreativesData(int $count): array
     {
@@ -72,30 +94,30 @@ abstract class BaseCreativesController extends FrontendController
 
         return $mockCreatives;
     }
+
     public function apiIndex(CreativesRequest $request)
     {
         try {
             // Создаем DTO для фильтров с автоматической валидацией и санитизацией
             $filtersDTO = CreativesFiltersDTO::fromRequest($request);
 
-            // Генерируем мок данные и преобразуем через DTO для type safety
-            $mockCreativesData = $this->generateMockCreativesData($filtersDTO->perPage);
+            // Получаем реальные данные из БД вместо мок-данных
+            $creativesData = $this->getCreativesFromDatabase($filtersDTO->toArray(), $filtersDTO->perPage);
 
             // Используем DTO для обеспечения type safety между frontend и backend
             // Получаем компактную версию для списков (оптимизация размера ответа)
             $creativesCollection = array_map(
                 fn($item) => CreativeDTO::fromArrayWithComputed($item, $request->user()?->id)->toCompactArray(),
-                $mockCreativesData
+                $creativesData
             );
 
-            // Получаем общее количество результатов
+            // Получаем общее количество результатов из БД
             $totalCount = $this->getSearchCount($filtersDTO->toArray());
 
             // Создаем стандартизированный ответ через DTO
             $responseDTO = CreativesResponseDTO::success($creativesCollection, $filtersDTO, $totalCount);
 
             return response()->json($responseDTO->toApiResponse());
-
         } catch (\InvalidArgumentException $e) {
             // Ошибки валидации фильтров
             $responseDTO = CreativesResponseDTO::error(
@@ -103,11 +125,10 @@ abstract class BaseCreativesController extends FrontendController
                 $request->all()
             );
             return response()->json($responseDTO->toApiResponse(), 422);
-
         } catch (\Exception $e) {
             // Общие ошибки
             $responseDTO = CreativesResponseDTO::error(
-                'An error occurred while fetching creatives',
+                'An error occurred while fetching creatives: ' . $e->getMessage(),
                 $request->all()
             );
             return response()->json($responseDTO->toApiResponse(), 500);
@@ -177,10 +198,10 @@ abstract class BaseCreativesController extends FrontendController
         try {
             // Создаем DTO из текущих фильтров
             $filtersDTO = CreativesFiltersDTO::fromRequest($request);
-            
+
             // Получаем все опции с учетом текущих фильтров
             $options = $this->getSelectOptions($filtersDTO);
-            
+
             return response()->json([
                 'status' => 'success',
                 'data' => $options,
@@ -191,7 +212,6 @@ abstract class BaseCreativesController extends FrontendController
                     'activeFiltersCount' => $filtersDTO->getActiveFiltersCount(),
                 ]
             ]);
-            
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
@@ -324,7 +344,6 @@ abstract class BaseCreativesController extends FrontendController
                     'cacheKey' => $filtersDTO->getCacheKey()
                 ]
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
@@ -499,6 +518,7 @@ abstract class BaseCreativesController extends FrontendController
             $this->getCardTranslations()
         );
     }
+
     protected function getDefaultFilters(): array
     {
         return [
@@ -527,20 +547,23 @@ abstract class BaseCreativesController extends FrontendController
         return array_merge($this->getDefaultFilters(), $filters);
     }
 
+    /**
+     * Получить дефолтные вкладки из enum AdvertisingFormat
+     */
     protected function getDefaultTabs(): array
     {
+        $formatCounts = Creative::getFormatCounts();
+
         return [
-            'availableTabs' => ['push', 'inpage', 'facebook', 'tiktok'],
-            'tabCounts' => [
-                'push' => 1700000,
-                'inpage' => 965100,
-                'facebook' => 65100,
-                'tiktok' => 9852000,
-                'total' => 10000000
-            ]
+            'availableTabs' => [
+                AdvertisingFormat::PUSH->value,
+                AdvertisingFormat::INPAGE->value,
+                AdvertisingFormat::FACEBOOK->value,
+                AdvertisingFormat::TIKTOK->value
+            ],
+            'tabCounts' => $formatCounts
         ];
     }
-
 
     /**
      * Получить все опции селектов используя FilterOptionDTO
@@ -607,20 +630,20 @@ abstract class BaseCreativesController extends FrontendController
         if (is_object($osOptions) && method_exists($osOptions, 'toArray')) {
             $osOptions = $osOptions->toArray();
         }
-        
+
         $options = [];
-        
+
         foreach ($osOptions as $os) {
             $value = is_array($os) ? ($os['value'] ?? $os['code'] ?? $os) : $os;
             $label = is_array($os) ? ($os['label'] ?? $os['name'] ?? $value) : $os;
-            
+
             $options[] = FilterOptionDTO::simple(
                 (string)$value,
                 (string)$label,
                 in_array($value, $selectedOS)
             )->toArray();
         }
-        
+
         return $options;
     }
 
@@ -634,20 +657,20 @@ abstract class BaseCreativesController extends FrontendController
         if (is_object($browserOptions) && method_exists($browserOptions, 'toArray')) {
             $browserOptions = $browserOptions->toArray();
         }
-        
+
         $options = [];
-        
+
         foreach ($browserOptions as $browser) {
             $value = is_array($browser) ? ($browser['value'] ?? $browser['code'] ?? $browser) : $browser;
             $label = is_array($browser) ? ($browser['label'] ?? $browser['name'] ?? $value) : $browser;
-            
+
             $options[] = FilterOptionDTO::simple(
                 (string)$value,
                 (string)$label,
                 in_array($value, $selectedBrowsers)
             )->toArray();
         }
-        
+
         return $options;
     }
 
@@ -661,38 +684,45 @@ abstract class BaseCreativesController extends FrontendController
         if (is_object($deviceOptions) && method_exists($deviceOptions, 'toArray')) {
             $deviceOptions = $deviceOptions->toArray();
         }
-        
+
         $options = [];
-        
+
         foreach ($deviceOptions as $device) {
             $value = is_array($device) ? ($device['value'] ?? $device['code'] ?? $device) : $device;
             $label = is_array($device) ? ($device['label'] ?? $device['name'] ?? $value) : $device;
-            
+
             $options[] = FilterOptionDTO::simple(
                 (string)$value,
                 (string)$label,
                 in_array($value, $selectedDevices)
             )->toArray();
         }
-        
+
         return $options;
     }
 
     /**
-     * Получить количества для сетей (мок данные)
+     * Получить количества для сетей из БД с кешированием
      */
     protected function getNetworksCounts(): array
     {
-        return [
-            'facebook' => 1500000,
-            'google' => 2300000,
-            'tiktok' => 850000,
-            'instagram' => 1200000,
-            'youtube' => 980000,
-            'twitter' => 450000,
-            'linkedin' => 320000,
-            'snapchat' => 650000,
-        ];
+        return Cache::remember('creative_networks_counts', 60 * 10, function () {
+            $counts = Creative::join('advertisment_networks', 'creatives.advertisment_network_id', '=', 'advertisment_networks.id')
+                ->selectRaw('advertisment_networks.network_name, COUNT(*) as count')
+                ->groupBy('advertisment_networks.network_name')
+                ->pluck('count', 'network_name')
+                ->toArray();
+
+            // Добавляем значения по умолчанию для сетей без креативов
+            $defaultNetworks = ['facebook', 'google', 'tiktok', 'instagram', 'youtube', 'twitter', 'linkedin', 'snapchat'];
+            foreach ($defaultNetworks as $network) {
+                if (!isset($counts[$network])) {
+                    $counts[$network] = 0;
+                }
+            }
+
+            return $counts;
+        });
     }
 
     public function getPerPageOptions($perPage = 12)
@@ -706,35 +736,31 @@ abstract class BaseCreativesController extends FrontendController
         ];
     }
 
+    /**
+     * Получить опции для вкладок из enum AdvertisingFormat
+     */
     public function getTabOptions($activeTab = 'push')
     {
-        $tabCounts = [
-            'push' => 1700000,
-            'inpage' => 965100,
-            'facebook' => 65100,
-            'tiktok' => 9852000,
-            'total' => 10000000
-        ];
+        $formatCounts = Creative::getFormatCounts();
 
         $tabOptions = [];
-        foreach (['push', 'inpage', 'facebook', 'tiktok'] as $tab) {
+        foreach (AdvertisingFormat::cases() as $format) {
+            $formatValue = $format->value;
             $tabOptions[] = FilterOptionDTO::withCount(
-                $tab,
-                ucfirst($tab),
-                $tabCounts[$tab],
-                $tab === $activeTab
+                $formatValue,
+                ucfirst($formatValue),
+                $formatCounts[$formatValue] ?? 0,
+                $formatValue === $activeTab
             )->toArray();
         }
 
         return [
-            'availableTabs' => ['push', 'inpage', 'facebook', 'tiktok'],
+            'availableTabs' => array_map(fn($format) => $format->value, AdvertisingFormat::cases()),
             'tabOptions' => $tabOptions,
-            'tabCounts' => $tabCounts,
+            'tabCounts' => $formatCounts,
             'activeTab' => $activeTab
         ];
     }
-
-
 
     /**
      * Получить количество избранных креативов для текущего пользователя
