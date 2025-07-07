@@ -911,6 +911,9 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     if (!tabs.availableTabs.includes(tabValue) || tabs.activeTab === tabValue) {
       return;
     }
+
+    // Немедленно устанавливаем состояние загрузки для мгновенного отклика UI
+    creativesComposable.setIsLoading(true);
   
     // Если события отключены, обновляем состояние но не эмитируем
     if (isTabEventsDisabled.value) {

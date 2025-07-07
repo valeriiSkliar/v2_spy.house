@@ -373,6 +373,7 @@ export interface UseCreativesReturn {
   searchCount: Readonly<Ref<number>>;
   
   // Actions
+  setIsLoading: (isLoading: boolean) => void;
   loadCreatives: (page?: number) => Promise<void>;
   refreshCreatives: () => Promise<void>;
   loadNextPage: () => Promise<void>;

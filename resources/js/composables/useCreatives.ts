@@ -5,14 +5,14 @@
 
 import { creativesService } from '@/services/CreativesService';
 import type {
-    Creative,
-    CreativesFilters,
-    FilterState,
-    Pagination,
-    ProcessedCreativesData,
-    RequestMeta,
-    TabValue,
-    UseCreativesReturn
+  Creative,
+  CreativesFilters,
+  FilterState,
+  Pagination,
+  ProcessedCreativesData,
+  RequestMeta,
+  TabValue,
+  UseCreativesReturn
 } from '@/types/creatives.d';
 import { CREATIVES_CONSTANTS } from '@/types/creatives.d';
 import { computed, ref, shallowRef } from 'vue';
@@ -139,6 +139,14 @@ export function useCreatives(): UseCreativesReturn {
   // ============================================================================
   
   /**
+   * Устанавливает состояние загрузки извне.
+   * Необходимо для синхронного UI/UX.
+   */
+  function setIsLoading(loading: boolean): void {
+    isLoading.value = loading;
+  }
+
+  /**
    * Загружает креативы с указанными фильтрами
    */
   async function loadCreativesWithFilters(filters: CreativesFilters): Promise<void> {
@@ -153,7 +161,7 @@ export function useCreatives(): UseCreativesReturn {
     
     try {
       error.value = null;
-      isLoading.value = true;
+      setIsLoading(true);
       
       // Если изменились фильтры (не страница), очищаем данные для UX
       if (creativesData.value && hasFiltersChanged(filters, lastRequestSignature.value)) {
@@ -180,6 +188,7 @@ export function useCreatives(): UseCreativesReturn {
       
     } finally {
       isLoading.value = false;
+      setIsLoading(false);
     }
   }
   
@@ -410,6 +419,7 @@ export function useCreatives(): UseCreativesReturn {
     clearCreatives,
     loadSearchCount,
     setSearchCount,
+    setIsLoading, 
     // cancelRequests,
     // clearError,
     
