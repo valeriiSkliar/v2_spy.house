@@ -6,9 +6,45 @@ use App\Http\DTOs\CreativesFiltersDTO;
 use Tests\TestCase;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Jsonable;
+use App\Models\Frontend\IsoEntity;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 
 class CreativesFiltersDTOTest extends TestCase
 {
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Очищаем кеш перед каждым тестом
+        Cache::flush();
+
+        // Создаем основные страны для тестов
+        $basicCountries = [
+            ['iso_code_2' => 'US', 'iso_code_3' => 'USA', 'numeric_code' => '840', 'name' => 'United States'],
+            ['iso_code_2' => 'GB', 'iso_code_3' => 'GBR', 'numeric_code' => '826', 'name' => 'United Kingdom'],
+            ['iso_code_2' => 'DE', 'iso_code_3' => 'DEU', 'numeric_code' => '276', 'name' => 'Germany'],
+            ['iso_code_2' => 'FR', 'iso_code_3' => 'FRA', 'numeric_code' => '250', 'name' => 'France'],
+            ['iso_code_2' => 'CA', 'iso_code_3' => 'CAN', 'numeric_code' => '124', 'name' => 'Canada'],
+            ['iso_code_2' => 'AU', 'iso_code_3' => 'AUS', 'numeric_code' => '036', 'name' => 'Australia'],
+            ['iso_code_2' => 'RU', 'iso_code_3' => 'RUS', 'numeric_code' => '643', 'name' => 'Russia'],
+            ['iso_code_2' => 'UA', 'iso_code_3' => 'UKR', 'numeric_code' => '804', 'name' => 'Ukraine'],
+        ];
+
+        foreach ($basicCountries as $country) {
+            IsoEntity::create([
+                'type' => 'country',
+                'iso_code_2' => $country['iso_code_2'],
+                'iso_code_3' => $country['iso_code_3'],
+                'numeric_code' => $country['numeric_code'],
+                'name' => $country['name'],
+                'is_active' => true,
+            ]);
+        }
+    }
+
     public function test_dto_can_be_created_with_defaults()
     {
         $dto = new CreativesFiltersDTO();
@@ -78,7 +114,7 @@ class CreativesFiltersDTOTest extends TestCase
 
         $this->assertNotEmpty($errors);
         $this->assertContains('searchKeyword must be less than 255 characters', $errors);
-        $this->assertContains('Invalid country code', $errors);
+        $this->assertContains('Invalid country: INVALID_COUNTRY', $errors);
         $this->assertContains('page must be between 1 and 10000', $errors);
         $this->assertContains('perPage must be between 6 and 100', $errors);
         $this->assertContains('Invalid activeTab value', $errors);
@@ -141,8 +177,11 @@ class CreativesFiltersDTOTest extends TestCase
 
         foreach ($testCases as $testCase) {
             $dto = CreativesFiltersDTO::fromArraySafe($testCase);
-            $this->assertEquals($testCase['expected'], $dto->onlyAdult, 
-                "Failed for input: " . json_encode($testCase['onlyAdult']));
+            $this->assertEquals(
+                $testCase['expected'],
+                $dto->onlyAdult,
+                "Failed for input: " . json_encode($testCase['onlyAdult'])
+            );
         }
     }
 
@@ -186,7 +225,7 @@ class CreativesFiltersDTOTest extends TestCase
     public function test_dto_validates_country_codes()
     {
         $validCountries = ['default', 'US', 'GB', 'DE', 'FR', 'CA', 'AU', 'RU', 'UA'];
-        
+
         foreach ($validCountries as $country) {
             $dto = CreativesFiltersDTO::fromArraySafe(['country' => $country]);
             $this->assertEquals($country, $dto->country);
@@ -199,7 +238,7 @@ class CreativesFiltersDTOTest extends TestCase
     public function test_dto_validates_active_tabs()
     {
         $validTabs = ['push', 'inpage', 'facebook', 'tiktok'];
-        
+
         foreach ($validTabs as $tab) {
             $dto = CreativesFiltersDTO::fromArraySafe(['activeTab' => $tab]);
             $this->assertEquals($tab, $dto->activeTab);
@@ -212,7 +251,7 @@ class CreativesFiltersDTOTest extends TestCase
     public function test_dto_validates_per_page_values()
     {
         $validPerPage = [6, 12, 24, 48, 96];
-        
+
         foreach ($validPerPage as $perPage) {
             $dto = CreativesFiltersDTO::fromArraySafe(['perPage' => $perPage]);
             $this->assertEquals($perPage, $dto->perPage);
@@ -229,8 +268,11 @@ class CreativesFiltersDTOTest extends TestCase
 
         foreach ($testCases as [$input, $expected]) {
             $dto = CreativesFiltersDTO::fromArraySafe(['perPage' => $input]);
-            $this->assertEquals($expected, $dto->perPage, 
-                "Failed for input {$input}, expected {$expected}");
+            $this->assertEquals(
+                $expected,
+                $dto->perPage,
+                "Failed for input {$input}, expected {$expected}"
+            );
         }
     }
 
@@ -252,7 +294,7 @@ class CreativesFiltersDTOTest extends TestCase
         $this->assertTrue($result['onlyAdult']);
         $this->assertEquals(2, $result['page']);
         $this->assertEquals(['facebook'], $result['advertisingNetworks']);
-        
+
         // Проверяем что все поля присутствуют
         $this->assertArrayHasKey('dateCreation', $result);
         $this->assertArrayHasKey('sortBy', $result);
@@ -272,7 +314,7 @@ class CreativesFiltersDTOTest extends TestCase
             'country' => 'US',
             'onlyAdult' => true,
         ]);
-        
+
         $this->assertTrue($dto->hasActiveFilters());
         $this->assertEquals(3, $dto->getActiveFiltersCount());
 
@@ -283,7 +325,7 @@ class CreativesFiltersDTOTest extends TestCase
             'activeTab' => 'facebook',
             'isDetailedVisible' => true,
         ]);
-        
+
         $this->assertFalse($dto->hasActiveFilters());
         $this->assertEquals(0, $dto->getActiveFiltersCount());
     }
@@ -440,5 +482,127 @@ class CreativesFiltersDTOTest extends TestCase
         $this->assertEquals(1, $defaults['page']);
         $this->assertEquals(12, $defaults['perPage']);
         $this->assertEquals([], $defaults['advertisingNetworks']);
+    }
+
+    /** @test */
+    public function it_validates_countries_from_database()
+    {
+        // Создаем тестовую страну в базе данных
+        $testCountry = IsoEntity::create([
+            'type' => 'country',
+            'iso_code_2' => 'TE',
+            'iso_code_3' => 'TES',
+            'numeric_code' => '999',
+            'name' => 'Test Country',
+            'is_active' => true,
+        ]);
+
+        // Проверяем, что специальное значение 'default' валидно
+        $dto = CreativesFiltersDTO::fromArraySafe(['country' => 'default']);
+        $this->assertEquals('default', $dto->country);
+
+        // Проверяем, что созданная в базе страна валидна
+        $dto = CreativesFiltersDTO::fromArraySafe(['country' => 'TE']);
+        $this->assertEquals('TE', $dto->country);
+
+        // Проверяем, что несуществующая страна возвращается к default в safe режиме
+        $dto = CreativesFiltersDTO::fromArraySafe(['country' => 'XX']);
+        $this->assertEquals('default', $dto->country);
+    }
+
+    /** @test */
+    public function it_throws_exception_for_invalid_country_in_strict_mode()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid country: XX');
+
+        CreativesFiltersDTO::fromArray(['country' => 'XX']);
+    }
+
+    /** @test */
+    public function it_caches_valid_countries()
+    {
+        // Создаем тестовую страну
+        IsoEntity::create([
+            'type' => 'country',
+            'iso_code_2' => 'TE',
+            'iso_code_3' => 'TES',
+            'numeric_code' => '999',
+            'name' => 'Test Country',
+            'is_active' => true,
+        ]);
+
+        // Первый вызов должен создать кеш
+        $dto1 = CreativesFiltersDTO::fromArraySafe(['country' => 'TE']);
+        $this->assertEquals('TE', $dto1->country);
+
+        // Проверяем, что кеш создался
+        $this->assertTrue(Cache::has('creatives_filters.valid_countries'));
+
+        // Второй вызов должен использовать кеш
+        $dto2 = CreativesFiltersDTO::fromArraySafe(['country' => 'TE']);
+        $this->assertEquals('TE', $dto2->country);
+    }
+
+    /** @test */
+    public function it_clears_cache_when_iso_entity_changes()
+    {
+        // Создаем страну и проверяем кеширование
+        $country = IsoEntity::create([
+            'type' => 'country',
+            'iso_code_2' => 'TE',
+            'iso_code_3' => 'TES',
+            'numeric_code' => '999',
+            'name' => 'Test Country',
+            'is_active' => true,
+        ]);
+
+        // Создаем кеш
+        CreativesFiltersDTO::fromArraySafe(['country' => 'TE']);
+        $this->assertTrue(Cache::has('creatives_filters.valid_countries'));
+
+        // Обновляем страну - это должно очистить кеш
+        $country->update(['name' => 'Updated Test Country']);
+        $this->assertFalse(Cache::has('creatives_filters.valid_countries'));
+    }
+
+    /** @test */
+    public function it_ignores_inactive_countries()
+    {
+        // Создаем неактивную страну
+        IsoEntity::create([
+            'type' => 'country',
+            'iso_code_2' => 'IN',
+            'iso_code_3' => 'INA',
+            'numeric_code' => '998',
+            'name' => 'Inactive Country',
+            'is_active' => false,
+        ]);
+
+        // Неактивная страна не должна быть валидной
+        $dto = CreativesFiltersDTO::fromArraySafe(['country' => 'IN']);
+        $this->assertEquals('default', $dto->country);
+    }
+
+    /** @test */
+    public function it_handles_case_insensitive_country_codes()
+    {
+        // Создаем тестовую страну
+        IsoEntity::create([
+            'type' => 'country',
+            'iso_code_2' => 'TE',
+            'iso_code_3' => 'TES',
+            'numeric_code' => '999',
+            'name' => 'Test Country',
+            'is_active' => true,
+        ]);
+
+        // Проверяем, что нижний регистр работает
+        $dto = CreativesFiltersDTO::fromArraySafe(['country' => 'te']);
+        $this->assertEquals('te', $dto->country);
+
+        // Проверяем, что смешанный регистр работает
+        $dto = CreativesFiltersDTO::fromArraySafe(['country' => 'Te']);
+        $this->assertEquals('Te', $dto->country);
     }
 }

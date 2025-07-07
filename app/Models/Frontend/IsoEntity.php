@@ -345,6 +345,11 @@ class IsoEntity extends Model
             Cache::forget("iso_entities.country_map.{$lang}");
             Cache::forget("iso_entities.language_map.{$lang}");
         }
+
+        // Очищаем кеш валидных стран в CreativesFiltersDTO
+        if (class_exists('\App\Http\DTOs\CreativesFiltersDTO')) {
+            \App\Http\DTOs\CreativesFiltersDTO::clearCountriesCache();
+        }
     }
 
     /**

@@ -4,6 +4,8 @@ namespace App\Http\DTOs;
 
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Jsonable;
+use App\Models\Frontend\IsoEntity;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * DTO для фильтров креативов
@@ -119,9 +121,9 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
             $errors[] = 'searchKeyword must be less than 255 characters';
         }
 
-        // Валидация country
+        // Валидация country - используем новую логику
         if (isset($data['country']) && !self::isValidCountry($data['country'])) {
-            $errors[] = 'Invalid country code';
+            $errors[] = "Invalid country: {$data['country']}";
         }
 
         // Валидация dateCreation
@@ -313,8 +315,6 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
 
     private static function validateCountry(string $value, bool $safe = false): string
     {
-        $validCountries = ['default', 'US', 'GB', 'DE', 'FR', 'CA', 'AU', 'RU', 'UA', 'IT', 'ES', 'NL', 'SE', 'NO', 'DK', 'FI', 'PL', 'CZ', 'SK', 'HU', 'RO', 'BG', 'HR', 'SI', 'EE', 'LV', 'LT'];
-
         if (self::isValidCountry($value)) {
             return $value;
         }
@@ -328,8 +328,27 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
 
     private static function isValidCountry(string $value): bool
     {
-        $validCountries = ['default', 'US', 'GB', 'DE', 'FR', 'CA', 'AU', 'RU', 'UA', 'IT', 'ES', 'NL', 'SE', 'NO', 'DK', 'FI', 'PL', 'CZ', 'SK', 'HU', 'RO', 'BG', 'HR', 'SI', 'EE', 'LV', 'LT'];
-        return in_array($value, $validCountries);
+        // Кешируем список валидных кодов стран на 1 час
+        $validCountries = Cache::remember('creatives_filters.valid_countries', 3600, function () {
+            // Специальные значения, которые всегда разрешены
+            $specialValues = ['default'];
+
+            // Получаем активные страны из базы данных
+            $countriesFromDb = IsoEntity::countries()
+                ->active()
+                ->pluck('iso_code_2')
+                ->map(function ($code) {
+                    return strtoupper($code);
+                })
+                ->toArray();
+
+            return array_merge($specialValues, $countriesFromDb);
+        });
+
+        // Приводим к верхнему регистру для сравнения, кроме специальных значений
+        $normalizedValue = ($value === 'default') ? $value : strtoupper($value);
+
+        return in_array($normalizedValue, $validCountries);
     }
 
     private static function validateDateOption(string $value, bool $safe = false): string
@@ -443,6 +462,15 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
     {
         $validTabs = ['push', 'inpage', 'facebook', 'tiktok'];
         return in_array($value, $validTabs);
+    }
+
+    /**
+     * Очистить кеш валидных стран
+     * Вызывается при изменении данных в IsoEntity
+     */
+    public static function clearCountriesCache(): void
+    {
+        Cache::forget('creatives_filters.valid_countries');
     }
 
     /**
