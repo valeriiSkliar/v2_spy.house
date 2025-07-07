@@ -9,7 +9,7 @@
   >
     <div class="creative-item__head">
       <div class="creative-item__icon thumb thumb-with-controls-small mr-2">
-        <img :src="creative.icon_url" alt="" />
+        <img :src="creative.icon_url || creative.main_image_url" alt="" />
         <div class="thumb-controls">
           <a
             href="#"
