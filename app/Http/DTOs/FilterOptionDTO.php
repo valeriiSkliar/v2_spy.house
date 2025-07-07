@@ -143,9 +143,21 @@ class FilterOptionDTO implements Arrayable, Jsonable
         // Добавляем опцию "Все страны"
         $options[] = self::simple('default', 'Все страны', $selectedCountry === 'default');
 
-        foreach ($countries as $code => $name) {
-            // Обрабатываем случай когда $name может быть массивом
-            $label = is_array($name) ? ($name['name'] ?? $name['label'] ?? $code) : $name;
+        foreach ($countries as $country) {
+            if (is_array($country)) {
+                // Новый формат: массив с value/label/code
+                $code = $country['value'] ?? $country['code'] ?? $country['iso_code_2'] ?? '';
+                $label = $country['label'] ?? $country['name'] ?? $code;
+            } else {
+                // Старый формат: ключ => значение
+                $code = is_string($country) ? $country : '';
+                $label = is_string($country) ? $country : '';
+            }
+
+            if (empty($code)) {
+                continue; // Пропускаем пустые коды
+            }
+
             $options[] = self::simple($code, (string)$label, $selectedCountry === $code);
         }
 
@@ -159,9 +171,21 @@ class FilterOptionDTO implements Arrayable, Jsonable
     {
         $options = [];
 
-        foreach ($languages as $code => $name) {
-            // Обрабатываем случай когда $name может быть массивом
-            $label = is_array($name) ? ($name['name'] ?? $name['label'] ?? $code) : $name;
+        foreach ($languages as $language) {
+            if (is_array($language)) {
+                // Новый формат: массив с value/label/code
+                $code = $language['value'] ?? $language['code'] ?? $language['iso_code_2'] ?? '';
+                $label = $language['label'] ?? $language['name'] ?? $code;
+            } else {
+                // Старый формат: ключ => значение
+                $code = is_string($language) ? $language : '';
+                $label = is_string($language) ? $language : '';
+            }
+
+            if (empty($code)) {
+                continue; // Пропускаем пустые коды
+            }
+
             $options[] = self::simple($code, (string)$label, in_array($code, $selectedLanguages));
         }
 
