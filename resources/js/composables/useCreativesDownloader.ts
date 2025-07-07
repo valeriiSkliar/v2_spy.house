@@ -41,7 +41,8 @@ export function useCreativesDownloader() {
       if (url) {
         return url;
       }
-      console.warn(`Запрошенный тип ${type} недоступен для креатива ${creative.id}, используем автоматический выбор`);
+      // Если запрошенный тип недоступен, возвращаем null (не fallback)
+      return null;
     }
     
     // Автоматический выбор по приоритету
@@ -71,13 +72,25 @@ export function useCreativesDownloader() {
    * @param type - тип изображения для добавления в имя файла
    */
   function generateFileName(creative: Creative, url: string, type: CreativeImageType = 'auto'): string {
-    // Получаем расширение из URL
-    const urlObj = new URL(url);
-    const pathname = urlObj.pathname;
+    let extension = 'jpg'; // По умолчанию
     
-    // Проверяем есть ли точка в пути и извлекаем расширение
-    const hasExtension = pathname.includes('.') && pathname.lastIndexOf('.') > pathname.lastIndexOf('/');
-    const extension = hasExtension ? pathname.split('.').pop() || 'jpg' : 'jpg';
+    try {
+      // Пытаемся парсить как полный URL
+      const urlObj = new URL(url);
+      const pathname = urlObj.pathname;
+      
+      // Проверяем есть ли точка в пути и извлекаем расширение
+      const hasExtension = pathname.includes('.') && pathname.lastIndexOf('.') > pathname.lastIndexOf('/');
+      if (hasExtension) {
+        extension = pathname.split('.').pop() || 'jpg';
+      }
+    } catch {
+      // Если не получается парсить как URL, пытаемся извлечь расширение из строки
+      const dotIndex = url.lastIndexOf('.');
+      if (dotIndex > 0 && dotIndex < url.length - 1) {
+        extension = url.substring(dotIndex + 1);
+      }
+    }
     
     // Очищаем title от недопустимых символов для имени файла
     const cleanTitle = creative.title
@@ -192,7 +205,9 @@ export function useCreativesDownloader() {
       // Освобождаем память через небольшую задержку
       // Задержка нужна для того чтобы браузер успел инициировать скачивание
       setTimeout(() => {
-        window.URL.revokeObjectURL(blobUrl);
+        if (typeof window !== 'undefined' && window.URL && window.URL.revokeObjectURL) {
+          window.URL.revokeObjectURL(blobUrl);
+        }
       }, 100);
       
       console.log(`✅ Файл ${filename} успешно скачан через blob`);
@@ -226,7 +241,6 @@ export function useCreativesDownloader() {
         link.href = url;
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
-        link.download = filename;
         link.style.display = 'none';
         
         document.body.appendChild(link);

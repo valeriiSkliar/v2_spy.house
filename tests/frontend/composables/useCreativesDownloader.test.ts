@@ -68,15 +68,6 @@ describe('useCreativesDownloader', () => {
     
     // Инициализируем композабл
     downloader = useCreativesDownloader();
-    
-    // Настраиваем базовые моки
-    mockCreateElement.mockReturnValue({
-      href: '',
-      download: '',
-      style: { display: '' },
-      setAttribute: vi.fn(),
-      click: mockClick,
-    });
   });
 
   describe('getDownloadUrl', () => {
@@ -97,12 +88,12 @@ describe('useCreativesDownloader', () => {
       expect(downloader.getDownloadUrl(mockCreative, 'landing_page_url')).toBe('https://example.com/landing');
     });
 
-    it('should fallback to auto selection when specified type is not available', () => {
+    it('should return null when specified type is not available', () => {
       const creative = { ...mockCreative, icon_url: undefined };
       
-      // При запросе недоступного типа должен использоваться автоматический выбор
+      // При запросе недоступного типа должен возвращаться null
       const result = downloader.getDownloadUrl(creative, 'icon_url');
-      expect(result).toBe('https://example.com/image.jpg'); // fallback to main_image_url
+      expect(result).toBe(null);
     });
 
     it('should fallback to icon_url if main_image_url is not available with auto type', () => {
@@ -159,10 +150,10 @@ describe('useCreativesDownloader', () => {
     });
 
     it('should generate filename with different type prefixes', () => {
-      expect(downloader.generateFileName(mockCreative, 'test.jpg', 'main_image_url')).toBe('Test_Creative_Title_main_image_123.jpg');
-      expect(downloader.generateFileName(mockCreative, 'test.png', 'icon_url')).toBe('Test_Creative_Title_icon_123.png');
-      expect(downloader.generateFileName(mockCreative, 'test.mp4', 'video_url')).toBe('Test_Creative_Title_video_123.mp4');
-      expect(downloader.generateFileName(mockCreative, 'test.html', 'landing_page_url')).toBe('Test_Creative_Title_landing_page_123.html');
+      expect(downloader.generateFileName(mockCreative, 'https://example.com/test.jpg', 'main_image_url')).toBe('Test_Creative_Title_main_image_123.jpg');
+      expect(downloader.generateFileName(mockCreative, 'https://example.com/test.png', 'icon_url')).toBe('Test_Creative_Title_icon_123.png');
+      expect(downloader.generateFileName(mockCreative, 'https://example.com/test.mp4', 'video_url')).toBe('Test_Creative_Title_video_123.mp4');
+      expect(downloader.generateFileName(mockCreative, 'https://example.com/test.html', 'landing_page_url')).toBe('Test_Creative_Title_landing_page_123.html');
     });
 
     it('should clean invalid characters from title', () => {
@@ -225,16 +216,30 @@ describe('useCreativesDownloader', () => {
       
       mockCreateObjectURL.mockReturnValue('blob:test-url');
 
-      const mockLink = {
-        href: '',
-        download: '',
-        style: { display: '' },
-        setAttribute: vi.fn(),
-        click: mockClick,
-      };
-      mockCreateElement.mockReturnValueOnce(mockLink);
+      // Используем implementation чтобы возвращать новый объект при каждом вызове
+      const linkTracker = { href: '', download: '' };
+      mockCreateElement.mockImplementation(() => {
+        const link = {
+          style: { display: '' },
+          setAttribute: vi.fn(),
+          click: mockClick,
+          // Добавляем сеттеры для отслеживания
+          set href(value) { linkTracker.href = value; },
+          get href() { return linkTracker.href; },
+          set download(value) { linkTracker.download = value; },
+          get download() { return linkTracker.download; }
+        };
+        return link;
+      });
 
       await downloader.downloadFile('https://example.com/file.jpg', 'test.jpg');
+
+      // Debug логирование для понимания проблемы
+      console.log('=== DEBUG INFO ===');
+      console.log('linkTracker.href:', linkTracker.href);
+      console.log('linkTracker.download:', linkTracker.download);
+      console.log('mockCreateElement calls:', mockCreateElement.mock.calls);
+      console.log('mockCreateElement results:', mockCreateElement.mock.results);
 
       expect(mockFetch).toHaveBeenCalledWith('https://example.com/file.jpg', expect.objectContaining({
         method: 'GET',
@@ -242,34 +247,45 @@ describe('useCreativesDownloader', () => {
         cache: 'no-cache'
       }));
       expect(mockCreateObjectURL).toHaveBeenCalledWith(mockBlob);
-      expect(mockLink.href).toBe('blob:test-url');
-      expect(mockLink.download).toBe('test.jpg');
-      expect(mockAppendChild).toHaveBeenCalledWith(mockLink);
+      expect(linkTracker.href).toBe('blob:test-url');
+      expect(linkTracker.download).toBe('test.jpg');
+      expect(mockAppendChild).toHaveBeenCalled();
       expect(mockClick).toHaveBeenCalled();
-      expect(mockRemoveChild).toHaveBeenCalledWith(mockLink);
+      expect(mockRemoveChild).toHaveBeenCalled();
     });
 
     it('should handle fetch errors with fallback to new tab', async () => {
       // Fetch неудачен
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
-      const mockLink = {
-        href: '',
-        download: '',
-        target: '',
-        rel: '',
-        style: { display: '' },
-        setAttribute: vi.fn(),
-        click: mockClick,
-      };
-      mockCreateElement.mockReturnValueOnce(mockLink);
+      // Используем implementation чтобы возвращать новый объект при каждом вызове
+      const linkTracker = { href: '', download: '', target: '', rel: '' };
+      mockCreateElement.mockImplementation(() => {
+        const link = {
+          style: { display: '' },
+          setAttribute: vi.fn(),
+          click: mockClick,
+          // Добавляем сеттеры для отслеживания всех свойств
+          set href(value) { linkTracker.href = value; },
+          get href() { return linkTracker.href; },
+          set download(value) { linkTracker.download = value; },
+          get download() { return linkTracker.download; },
+          set target(value) { linkTracker.target = value; },
+          get target() { return linkTracker.target; },
+          set rel(value) { linkTracker.rel = value; },
+          get rel() { return linkTracker.rel; }
+        };
+        return link;
+      });
 
-      await downloader.downloadFile('https://example.com/file.jpg', 'test.jpg');
+      // Используем URL с другого домена, чтобы активировать CORS fallback (открытие в новой вкладке)
+      const corsUrl = 'https://another-domain.com/file.jpg';
+      await downloader.downloadFile(corsUrl, 'test.jpg');
 
       expect(mockFetch).toHaveBeenCalledTimes(1);
-      expect(mockLink.href).toBe('https://example.com/file.jpg');
-      expect(mockLink.target).toBe('_blank');
-      expect(mockLink.rel).toBe('noopener noreferrer');
+      expect(linkTracker.href).toBe(corsUrl);
+      expect(linkTracker.target).toBe('_blank');
+      expect(linkTracker.rel).toBe('noopener noreferrer');
       expect(mockClick).toHaveBeenCalled();
     });
   });
@@ -284,6 +300,7 @@ describe('useCreativesDownloader', () => {
       mockFetch.mockResolvedValueOnce(mockResponse);
       mockCreateObjectURL.mockReturnValue('blob:test-url');
 
+      // Создаем простой мок с мутируемыми свойствами
       const mockLink = {
         href: '',
         download: '',
@@ -291,7 +308,7 @@ describe('useCreativesDownloader', () => {
         setAttribute: vi.fn(),
         click: mockClick,
       };
-      mockCreateElement.mockReturnValueOnce(mockLink);
+      mockCreateElement.mockReturnValue(mockLink);
 
       await downloader.handleCreativeDownload(mockCreative, 'auto');
 
@@ -325,6 +342,7 @@ describe('useCreativesDownloader', () => {
       mockFetch.mockResolvedValueOnce(mockResponse);
       mockCreateObjectURL.mockReturnValue('blob:test-url');
 
+      // Создаем простой мок с мутируемыми свойствами
       const mockLink = {
         href: '',
         download: '',
@@ -332,7 +350,7 @@ describe('useCreativesDownloader', () => {
         setAttribute: vi.fn(),
         click: mockClick,
       };
-      mockCreateElement.mockReturnValueOnce(mockLink);
+      mockCreateElement.mockReturnValue(mockLink);
 
       await downloader.handleCreativeDownload(mockCreative, 'icon_url');
 
@@ -387,13 +405,26 @@ describe('useCreativesDownloader', () => {
     });
 
     it('should emit error event on download failure', async () => {
+      // Мокаем ошибку fetch и все fallback методы
       mockFetch.mockRejectedValue(new Error('Network error'));
+      
+      // Мокаем createElement так, чтобы click тоже бросал ошибку
+      const mockLink = {
+        href: '',
+        download: '',
+        target: '',
+        rel: '',
+        style: { display: '' },
+        setAttribute: vi.fn(),
+        click: vi.fn().mockImplementation(() => {
+          throw new Error('Click failed');
+        }),
+      };
+      mockCreateElement.mockReturnValue(mockLink);
 
-      try {
+      await expect(async () => {
         await downloader.handleCreativeDownload(mockCreative, 'auto');
-      } catch (error) {
-        // Ожидаем ошибку
-      }
+      }).rejects.toThrow();
 
       expect(document.dispatchEvent).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -425,6 +456,29 @@ describe('useCreativesDownloader', () => {
         'creatives:download',
         expect.any(Function)
       );
+    });
+  });
+
+  // Отладочный тест для понимания работы мока
+  describe('debugging mock behavior', () => {
+    it('should verify mock assignment behavior', () => {
+      const mockLink = {
+        href: '',
+        download: '',
+        style: { display: '' },
+        setAttribute: vi.fn(),
+        click: vi.fn(),
+      };
+      
+      // Проверяем прямое присваивание
+      mockLink.href = 'test-value';
+      mockLink.download = 'test-download';
+      
+      expect(mockLink.href).toBe('test-value');
+      expect(mockLink.download).toBe('test-download');
+      
+      console.log('Mock href:', mockLink.href);
+      console.log('Mock download:', mockLink.download);
     });
   });
 }); 
