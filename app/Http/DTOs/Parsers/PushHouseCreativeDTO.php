@@ -5,6 +5,7 @@ namespace App\Http\DTOs\Parsers;
 use App\Enums\Frontend\AdvertisingFormat;
 use App\Enums\Frontend\AdvertisingStatus;
 use App\Enums\Frontend\Platform;
+use App\Models\AdvertismentNetwork;
 use App\Services\Parsers\CreativePlatformNormalizer;
 use App\Services\Parsers\CountryCodeNormalizer;
 use App\Services\Parsers\SourceNormalizer;
@@ -136,6 +137,7 @@ class PushHouseCreativeDTO
             'platform' => $this->platform->value,
             'is_adult' => $this->isAdult,
             'external_created_at' => $this->createdAt,
+            'advertisment_network_id' => AdvertismentNetwork::where('network_name', 'pushhouse')->first()?->id,
 
             // Нормализованные foreign key поля
             'source_id' => SourceNormalizer::normalizeSourceName($this->source),
@@ -144,14 +146,67 @@ class PushHouseCreativeDTO
             // Преобразование boolean в enum для статуса
             'status' => $this->isActive ? AdvertisingStatus::Active : AdvertisingStatus::Inactive,
 
-            // Обязательные поля БД с значениями по умолчанию
-            'format' => AdvertisingFormat::PUSH, // Push.House всегда push формат
+            // Определение формата на основе изображений
+            'format' => $this->determineAdvertisingFormat(),
             'combined_hash' => $this->generateCombinedHash(),
 
             // Стандартные временные метки
             'created_at' => now(),
             'updated_at' => now(),
         ];
+    }
+
+    /**
+     * Определяет формат рекламы на основе наличия изображений
+     *
+     * @return AdvertisingFormat Формат рекламы (PUSH или INPAGE)
+     */
+    private function determineAdvertisingFormat(): AdvertisingFormat
+    {
+        $hasIconImage = $this->hasValidImageUrl($this->iconUrl);
+        $hasMainImage = $this->hasValidImageUrl($this->imageUrl);
+
+        // Оба изображения (icon + img с именами файлов) → PUSH
+        if ($hasIconImage && $hasMainImage) {
+            return AdvertisingFormat::PUSH;
+        }
+
+        // Только main image (img) без icon → PUSH
+        if (!$hasIconImage && $hasMainImage) {
+            return AdvertisingFormat::PUSH;
+        }
+
+        // Только icon с именем файла → INPAGE
+        if ($hasIconImage && !$hasMainImage) {
+            return AdvertisingFormat::INPAGE;
+        }
+
+        // Fallback на PUSH (не должно происходить для валидных креативов)
+        return AdvertisingFormat::PUSH;
+    }
+
+    /**
+     * Проверяет, содержит ли URL валидное изображение
+     *
+     * @param string $imageUrl URL изображения
+     * @return bool true если URL содержит имя файла изображения
+     */
+    private function hasValidImageUrl(string $imageUrl): bool
+    {
+        if (empty($imageUrl)) {
+            return false;
+        }
+
+        // Проверяем, что URL не заканчивается на "/" (нет имени файла)
+        if (str_ends_with($imageUrl, '/')) {
+            return false;
+        }
+
+        // Извлекаем имя файла из URL
+        $filename = basename($imageUrl);
+
+        // Проверяем, что есть имя файла и оно содержит точку (расширение)
+        return !empty($filename) && str_contains($filename, '.');
     }
 
     /**
@@ -179,7 +234,16 @@ class PushHouseCreativeDTO
      */
     public function isValid(): bool
     {
-        return !empty($this->externalId)
-            && !empty($this->countryCode);
+        // Базовая валидация
+        if (empty($this->externalId) || empty($this->countryCode)) {
+            return false;
+        }
+
+        // Проверяем наличие хотя бы одного валидного изображения
+        $hasIconImage = $this->hasValidImageUrl($this->iconUrl);
+        $hasMainImage = $this->hasValidImageUrl($this->imageUrl);
+
+        // Если нет ни одного изображения с именем файла - креатив невалиден
+        return $hasIconImage || $hasMainImage;
     }
 }

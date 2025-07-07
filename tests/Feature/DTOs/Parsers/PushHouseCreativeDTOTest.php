@@ -7,6 +7,7 @@ use App\Enums\Frontend\AdvertisingStatus;
 use App\Enums\Frontend\Platform;
 use App\Http\DTOs\Parsers\PushHouseCreativeDTO;
 use App\Models\AdSource;
+use App\Models\AdvertismentNetwork;
 use App\Models\Frontend\IsoEntity;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -35,6 +36,16 @@ class PushHouseCreativeDTOTest extends TestCase
         AdSource::create([
             'source_name' => 'push_house',
             'source_display_name' => 'Push House',
+        ]);
+
+        // Создаем рекламную сеть pushhouse
+        AdvertismentNetwork::create([
+            'network_name' => 'pushhouse',
+            'network_display_name' => 'Push House',
+            'description' => 'Push House advertising network for testing',
+            'traffic_type_description' => 'push',
+            'network_url' => 'https://push.house',
+            'is_active' => true,
         ]);
     }
 
@@ -244,24 +255,27 @@ class PushHouseCreativeDTOTest extends TestCase
      */
     public function test_validates_dto_data(): void
     {
-        // Валидные данные
+        // Валидные данные (с изображением)
         $validData = [
             'id' => 123,
-            'country' => 'US'
+            'country' => 'US',
+            'icon' => 'https://example.com/icon.png' // Добавляем валидное изображение
         ];
         $validDto = PushHouseCreativeDTO::fromApiResponse($validData);
         $this->assertTrue($validDto->isValid());
 
         // Невалидные данные - нет external_id
         $invalidData1 = [
-            'country' => 'US'
+            'country' => 'US',
+            'icon' => 'https://example.com/icon.png'
         ];
         $invalidDto1 = PushHouseCreativeDTO::fromApiResponse($invalidData1);
         $this->assertFalse($invalidDto1->isValid());
 
         // Невалидные данные - нет country
         $invalidData2 = [
-            'id' => 123
+            'id' => 123,
+            'icon' => 'https://example.com/icon.png'
         ];
         $invalidDto2 = PushHouseCreativeDTO::fromApiResponse($invalidData2);
         $this->assertFalse($invalidDto2->isValid());
@@ -273,6 +287,15 @@ class PushHouseCreativeDTOTest extends TestCase
         ];
         $invalidDto3 = PushHouseCreativeDTO::fromApiResponse($invalidData3);
         $this->assertFalse($invalidDto3->isValid());
+
+        // Невалидные данные - нет изображений
+        $invalidData4 = [
+            'id' => 123,
+            'country' => 'US'
+            // Нет изображений
+        ];
+        $invalidDto4 = PushHouseCreativeDTO::fromApiResponse($invalidData4);
+        $this->assertFalse($invalidDto4->isValid());
     }
 
     /**
@@ -347,5 +370,137 @@ class PushHouseCreativeDTOTest extends TestCase
         $this->assertNotNull($country);
         $this->assertEquals('CA', $country->iso_code_2);
         $this->assertEquals('country', $country->type);
+    }
+
+    /**
+     * Тест определения формата креатива на основе изображений
+     */
+    public function test_determines_advertising_format_based_on_images(): void
+    {
+        // Тест PUSH формата (оба изображения присутствуют)
+        $pushData = [
+            'id' => 1395508,
+            'title' => 'Test Push Creative',
+            'text' => 'Test Description',
+            'icon' => 'https://s3.push.house/push.house-camps/100778/686b6454abb47.png',
+            'img' => 'https://s3.push.house/push.house-camps/100778/686b6454a812e.png',
+            'country' => 'US'
+        ];
+
+        $pushDto = PushHouseCreativeDTO::fromApiResponse($pushData);
+        $pushDatabaseData = $pushDto->toDatabase();
+
+        $this->assertEquals(AdvertisingFormat::PUSH, $pushDatabaseData['format']);
+        $this->assertTrue($pushDto->isValid());
+
+        // Тест INPAGE формата (только icon присутствует)
+        $inpageData = [
+            'id' => 1395482,
+            'title' => 'Test Inpage Creative',
+            'text' => 'Test Description',
+            'icon' => 'https://s3.push.house/push.house-camps/102659/686b2495da589.png',
+            'img' => 'https://s3.push.house/push.house-camps/102659/', // Нет имени файла
+            'country' => 'US'
+        ];
+
+        $inpageDto = PushHouseCreativeDTO::fromApiResponse($inpageData);
+        $inpageDatabaseData = $inpageDto->toDatabase();
+
+        $this->assertEquals(AdvertisingFormat::INPAGE, $inpageDatabaseData['format']);
+        $this->assertTrue($inpageDto->isValid());
+
+        // Тест невалидного креатива (нет изображений с именами файлов)
+        $invalidData = [
+            'id' => 1395509,
+            'title' => '',
+            'text' => '',
+            'icon' => 'https://s3.push.house/push.house-camps/28718/', // Нет имени файла
+            'img' => 'https://s3.push.house/push.house-camps/28718/', // Нет имени файла
+            'country' => 'US'
+        ];
+
+        $invalidDto = PushHouseCreativeDTO::fromApiResponse($invalidData);
+
+        $this->assertFalse($invalidDto->isValid(), 'Креатив без изображений должен быть невалидным');
+    }
+
+    /**
+     * Тест валидации URL изображений
+     */
+    public function test_image_url_validation(): void
+    {
+        $testCases = [
+            // Валидные изображения
+            [['icon' => 'https://example.com/image.png'], true, 'Valid PNG image'],
+            [['icon' => 'https://example.com/image.jpg'], true, 'Valid JPG image'],
+            [['img' => 'https://s3.push.house/camps/123/abc123.gif'], true, 'Valid GIF image'],
+
+            // Невалидные изображения
+            [['icon' => 'https://example.com/'], false, 'URL ending with slash'],
+            [['icon' => 'https://example.com/path/'], false, 'Path ending with slash'],
+            [['icon' => 'https://example.com/filename'], false, 'No file extension'],
+            [['icon' => ''], false, 'Empty URL'],
+        ];
+
+        foreach ($testCases as [$imageData, $expectedValid, $description]) {
+            $data = array_merge([
+                'id' => 123,
+                'country' => 'US',
+                'icon' => '',
+                'img' => ''
+            ], $imageData);
+
+            $dto = PushHouseCreativeDTO::fromApiResponse($data);
+
+            $this->assertEquals(
+                $expectedValid,
+                $dto->isValid(),
+                "Failed for case: {$description}"
+            );
+        }
+    }
+
+    /**
+     * Тест граничных случаев определения формата
+     */
+    public function test_format_determination_edge_cases(): void
+    {
+        // Только img без icon → должен быть PUSH с fallback логикой
+        $onlyImgData = [
+            'id' => 123,
+            'country' => 'US',
+            'icon' => '', // Пустой
+            'img' => 'https://example.com/image.png'
+        ];
+
+        $onlyImgDto = PushHouseCreativeDTO::fromApiResponse($onlyImgData);
+        $onlyImgDatabaseData = $onlyImgDto->toDatabase();
+
+        $this->assertEquals(AdvertisingFormat::PUSH, $onlyImgDatabaseData['format']);
+        $this->assertTrue($onlyImgDto->isValid());
+
+        // Оба URL пустые
+        $noImagesData = [
+            'id' => 124,
+            'country' => 'US',
+            'icon' => '',
+            'img' => ''
+        ];
+
+        $noImagesDto = PushHouseCreativeDTO::fromApiResponse($noImagesData);
+
+        $this->assertFalse($noImagesDto->isValid());
+
+        // Оба URL заканчиваются слешем
+        $slashEndingData = [
+            'id' => 125,
+            'country' => 'US',
+            'icon' => 'https://example.com/path/',
+            'img' => 'https://example.com/other/'
+        ];
+
+        $slashEndingDto = PushHouseCreativeDTO::fromApiResponse($slashEndingData);
+
+        $this->assertFalse($slashEndingDto->isValid());
     }
 }
