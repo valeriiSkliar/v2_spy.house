@@ -51,7 +51,7 @@
           <a
             href="#"
             class="btn-icon _black"
-            @click.prevent="handleDownload"
+            @click.prevent="() => handleDownload('icon_url')"
             :class="{ disabled: isCreativesLoading }"
           >
             <span class="icon-download2 remore_margin"></span>
@@ -65,7 +65,7 @@
         <a
           href="#"
           class="btn-icon _black"
-          @click.prevent="handleDownload"
+          @click.prevent="() => handleDownload('main_image_url')"
           :class="{ disabled: isCreativesLoading }"
         >
           <span class="icon-download2 remore_margin"></span>
@@ -217,7 +217,7 @@ const handleFavoriteClick = (): void => {
   );
 };
 
-const handleDownload = (): void => {
+const handleDownload = (type: 'icon_url' | 'main_image_url'): void => {
   // Блокируем скачивание во время загрузки списка
   if (isCreativesLoading.value) {
     console.warn(`Скачивание креатива ${props.creative.id} заблокировано: идет загрузка списка`);
@@ -231,6 +231,7 @@ const handleDownload = (): void => {
     new CustomEvent('creatives:download', {
       detail: {
         creative: props.creative,
+        type,
       },
     })
   );

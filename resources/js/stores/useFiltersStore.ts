@@ -41,6 +41,7 @@
 // НЕ УДАЛЯТЬ через tree-shaking в production сборке!
 
 import { useCreatives } from '@/composables/useCreatives';
+import { useCreativesDownloader } from '@/composables/useCreativesDownloader';
 import { useCreativesUrlSync } from '@/composables/useCreativesUrlSync';
 import { useFiltersSynchronization } from '@/composables/useFiltersSynchronization';
 import {
@@ -195,6 +196,9 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     urlSync,              // URL синхронизация
     creativesComposable   // API и данные креативов
   );
+  
+  // 4️⃣ Централизованная обработка скачивания креативов
+  const downloader = useCreativesDownloader();
 
   // ============================================================================
   // WATCHERS - ЦЕНТРАЛИЗОВАННАЯ СИНХРОНИЗАЦИЯ
@@ -351,7 +355,7 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   // ============================================================================
   
   /**
-   * Настраивает слушатели событий избранного и деталей
+   * Настраивает слушатели событий избранного, деталей и скачивания
    * Обрабатывает события от карточек креативов
    */
   function setupEventListeners(): void {
@@ -404,12 +408,18 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     document.addEventListener('creatives:toggle-favorite', handleFavoriteToggle as unknown as EventListener);
     document.addEventListener('creatives:show-details', handleShowDetails as unknown as EventListener);
     
+    // Инициализируем обработчик скачивания креативов через композабл
+    const downloadCleanup = downloader.setupDownloadEventListener();
+    
+    // Сохраняем функцию очистки для использования в cleanupEventListeners
+    (cleanupEventListeners as any).downloadCleanup = downloadCleanup;
+    
     // Логирование для production отладки
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('store:event-listeners-setup', {
         detail: { 
           store: 'CreativesFiltersStore',
-          listeners: ['toggle-favorite', 'show-details'],
+          listeners: ['toggle-favorite', 'show-details', 'download'],
           timestamp: Date.now()
         }
       }));
@@ -429,6 +439,11 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   function cleanupEventListeners(): void {
     document.removeEventListener('creatives:toggle-favorite', () => {});
     document.removeEventListener('creatives:show-details', () => {});
+    
+    // Очищаем обработчик скачивания если он был инициализирован
+    if ((cleanupEventListeners as any).downloadCleanup) {
+      (cleanupEventListeners as any).downloadCleanup();
+    }
     
     // Логирование для production отладки
     if (typeof window !== 'undefined') {
@@ -1478,6 +1493,7 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     creativesComposable,        // useCreatives композабл
     urlSync,                    // useCreativesUrlSync композабл  
     filtersSync,                // useFiltersSynchronization композабл
+    downloader,                 // useCreativesDownloader композабл
     
     // ========================================
     // МЕТОДЫ ОЧИСТКИ

@@ -170,16 +170,6 @@ watch(
   newLength => {
     if (newLength > 0) {
       hidePlaceholderManually('CreativesListComponent');
-      // Скрываем placeholder только когда есть данные
-      // const readyEvent = new CustomEvent('vue-component-ready', {
-      //   detail: {
-      //     component: 'CreativesListComponent',
-      //     hasData: true,
-      //     activeTab: currentTab.value,
-      //   },
-      // });
-      // document.dispatchEvent(readyEvent);
-
       console.log('🎯 Креативы загружены, placeholder скрыт', {
         creativesCount: newLength,
         currentTab: currentTab.value,
