@@ -14,6 +14,7 @@ vi.mock('@/composables/useCreatives', () => ({
       pagination: ref({ currentPage: 1, lastPage: 1 }),
       meta: ref({}),
       isLoading: ref(false),
+      setIsLoading: vi.fn(),
       error: ref(null),
       loadCreativesWithFilters: vi.fn(),
       loadNextPage: vi.fn(),
