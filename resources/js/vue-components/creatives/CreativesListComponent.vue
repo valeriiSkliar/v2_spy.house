@@ -1,12 +1,10 @@
 <template>
   <div class="creatives-list">
-    <!-- Состояние загрузки -->
     <!-- <div v-if="isLoading && !hasCreatives" class="creatives-list__loading">
       <div class="loading-spinner"></div>
       <p>{{ translations.loading || 'Загрузка креативов...' }}</p>
     </div> -->
 
-    <!-- Состояние ошибки -->
     <div v-if="error && !hasCreatives" class="creatives-list__error">
       <p>{{ translations.error || 'Ошибка загрузки креативов' }}</p>
       <button @click="handleRetry" class="btn btn-secondary">
@@ -14,15 +12,12 @@
       </button>
     </div>
 
-    <!-- Пустое состояние -->
     <!-- <div v-if="!hasCreatives && !isLoading" class="creatives-list__empty">
       <p>{{ translations.noData || 'Креативы не найдены' }}</p>
     </div> -->
 
-    <!-- Список креативов -->
     <div v-else class="creatives-list__items">
       <template v-for="creative in creatives" :key="creative.id">
-        <!-- Push компонент -->
         <PushCreativeCard
           v-if="currentTab === 'push'"
           :creative="creative"
@@ -35,7 +30,6 @@
           @open-in-new-tab="handleOpenInNewTab"
         />
 
-        <!-- InPage компонент -->
         <InpageCreativeCard
           v-else-if="currentTab === 'inpage'"
           :creative="creative"
@@ -47,7 +41,6 @@
           @show-details="handleShowDetails"
         />
 
-        <!-- Facebook/TikTok компонент (пока используется универсальная разметка) -->
         <SocialCreativeCard
           v-else-if="currentTab === 'facebook' || currentTab === 'tiktok'"
           :active-tab="currentTab"
@@ -59,18 +52,6 @@
           @download="handleDownload"
           @show-details="handleShowDetails"
         />
-
-        <!-- Универсальная карточка для остальных типов -->
-        <!-- <UniversalCreativeCard 
-          v-else 
-          :creative="creative" 
-          :card-type="currentTab"
-          :is-favorite="store.isFavoriteCreative(creative.id)"
-          :is-favorite-loading="store.isFavoritesLoading"
-          @toggle-favorite="handleToggleFavorite"
-          @download="handleDownload"
-          @show-details="handleShowDetails"
-        /> -->
       </template>
     </div>
     <CreativeDetailsComponent :showSimilarCreatives="true" :translations="detailsTranslations" />
