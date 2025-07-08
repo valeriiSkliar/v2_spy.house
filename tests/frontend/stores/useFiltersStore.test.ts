@@ -1,5 +1,5 @@
 import { createPinia, setActivePinia } from 'pinia';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { computed, nextTick, ref } from 'vue';
 import { useCreativesFiltersStore } from '../../../resources/js/stores/useFiltersStore';
 
@@ -2510,7 +2510,7 @@ describe('useCreativesFiltersStore - Управление избранным', (
   });
 
   it('refreshFavoritesCount при уже выполняющемся запросе (защита от дублирования)', async () => {
-    let resolveFirstRequest: (value: any) => void;
+    let resolveFirstRequest!: (value: any) => void;
     const firstRequest = new Promise(resolve => {
       resolveFirstRequest = resolve;
     });
@@ -2825,9 +2825,9 @@ describe('useCreativesFiltersStore - Управление избранным', (
   });
 
   it('состояние isFavoritesLoading во время операций', async () => {
-    let resolveRefresh: Function;
-    let resolveAdd: Function;
-    let resolveRemove: Function;
+    let resolveRefresh!: (value: any) => void;
+    let resolveAdd!: (value: any) => void;
+    let resolveRemove!: (value: any) => void;
 
     const refreshPromise = new Promise(resolve => { resolveRefresh = resolve; });
     const addPromise = new Promise(resolve => { resolveAdd = resolve; });
@@ -2895,7 +2895,7 @@ describe('useCreativesFiltersStore - Управление избранным', (
   });
 
   it('защита от параллельных операций избранного', async () => {
-    let resolveFirst: Function;
+    let resolveFirst!: (value: any) => void;
     const firstPromise = new Promise(resolve => { resolveFirst = resolve; });
 
     ((window as any).axios.post as any).mockReturnValue(firstPromise);
@@ -2949,5 +2949,466 @@ describe('useCreativesFiltersStore - Управление избранным', (
     // Счетчик должен установиться из API ответа
     expect(store.favoritesCount).toBe(0);
     expect(store.favoritesItems).not.toContain(123);
+  });
+});
+
+describe('useCreativesFiltersStore - Автоматическое скрытие деталей креатива', () => {
+  let store: ReturnType<typeof useCreativesFiltersStore>;
+  let eventDispatchSpy: any;
+
+  beforeEach(async () => {
+    const pinia = createPinia();
+    setActivePinia(pinia);
+    vi.clearAllMocks();
+    
+    store = useCreativesFiltersStore();
+    
+    // Мокаем document.dispatchEvent для отслеживания событий
+    eventDispatchSpy = vi.spyOn(document, 'dispatchEvent').mockImplementation(() => true);
+    
+    // Мокаем console.log для отслеживания логирования
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    
+    // Инициализируем store для активации watchers
+    await store.initializeFilters();
+    
+    // Симулируем что детали креатива показаны
+    const mockCreative = { 
+      id: 123, 
+      title: 'Test Creative',
+      preview_url: 'test.jpg',
+      is_favorite: false 
+    };
+    store.selectedCreative = mockCreative;
+    store.isDetailsVisible = true;
+    
+    // Очищаем mock calls после инициализации
+    eventDispatchSpy.mockClear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('скрывает детали при изменении поискового запроса', async () => {
+    // Проверяем что детали изначально видны
+    expect(store.isDetailsVisible).toBe(true);
+    expect(store.selectedCreative).not.toBeNull();
+
+    // Изменяем поисковый запрос
+    store.updateFilter('searchKeyword', 'new search query');
+    
+    // Ждем срабатывания watcher
+    await nextTick();
+
+    // Проверяем что детали скрыты
+    expect(store.isDetailsVisible).toBe(false);
+    expect(store.selectedCreative).toBeNull();
+
+    // Проверяем что событие скрытия деталей было эмитировано
+    expect(eventDispatchSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'creatives:details-hidden',
+        detail: expect.objectContaining({
+          reason: 'filters-changed',
+          timestamp: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
+        })
+      })
+    );
+  });
+
+  it('скрывает детали при изменении страны', async () => {
+    expect(store.isDetailsVisible).toBe(true);
+
+    store.updateFilter('country', 'US');
+    await nextTick();
+
+    expect(store.isDetailsVisible).toBe(false);
+    expect(store.selectedCreative).toBeNull();
+    expect(eventDispatchSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'creatives:details-hidden'
+      })
+    );
+  });
+
+  it('скрывает детали при изменении даты создания', async () => {
+    expect(store.isDetailsVisible).toBe(true);
+
+    store.updateFilter('dateCreation', 'last_week');
+    await nextTick();
+
+    expect(store.isDetailsVisible).toBe(false);
+    expect(store.selectedCreative).toBeNull();
+    expect(eventDispatchSpy).toHaveBeenCalled();
+  });
+
+  it('скрывает детали при изменении сортировки', async () => {
+    expect(store.isDetailsVisible).toBe(true);
+
+    store.updateFilter('sortBy', 'popular');
+    await nextTick();
+
+    expect(store.isDetailsVisible).toBe(false);
+    expect(store.selectedCreative).toBeNull();
+    expect(eventDispatchSpy).toHaveBeenCalled();
+  });
+
+  it('скрывает детали при изменении периода отображения', async () => {
+    expect(store.isDetailsVisible).toBe(true);
+
+    store.updateFilter('periodDisplay', 'monthly');
+    await nextTick();
+
+    expect(store.isDetailsVisible).toBe(false);
+    expect(store.selectedCreative).toBeNull();
+    expect(eventDispatchSpy).toHaveBeenCalled();
+  });
+
+  it('скрывает детали при изменении adult фильтра', async () => {
+    expect(store.isDetailsVisible).toBe(true);
+
+    store.updateFilter('onlyAdult', true);
+    await nextTick();
+
+    expect(store.isDetailsVisible).toBe(false);
+    expect(store.selectedCreative).toBeNull();
+    expect(eventDispatchSpy).toHaveBeenCalled();
+  });
+
+  it('скрывает детали при изменении количества элементов на странице', async () => {
+    expect(store.isDetailsVisible).toBe(true);
+
+    store.updateFilter('perPage', 24);
+    await nextTick();
+
+    expect(store.isDetailsVisible).toBe(false);
+    expect(store.selectedCreative).toBeNull();
+    expect(eventDispatchSpy).toHaveBeenCalled();
+  });
+
+  it('скрывает детали при изменении массивов фильтров - advertisingNetworks', async () => {
+    expect(store.isDetailsVisible).toBe(true);
+
+    store.updateFilter('advertisingNetworks', ['google', 'facebook']);
+    await nextTick();
+
+    expect(store.isDetailsVisible).toBe(false);
+    expect(store.selectedCreative).toBeNull();
+    expect(eventDispatchSpy).toHaveBeenCalled();
+  });
+
+  it('скрывает детали при изменении массивов фильтров - languages', async () => {
+    expect(store.isDetailsVisible).toBe(true);
+
+    store.updateFilter('languages', ['en', 'ru']);
+    await nextTick();
+
+    expect(store.isDetailsVisible).toBe(false);
+    expect(store.selectedCreative).toBeNull();
+    expect(eventDispatchSpy).toHaveBeenCalled();
+  });
+
+  it('скрывает детали при изменении массивов фильтров - operatingSystems', async () => {
+    expect(store.isDetailsVisible).toBe(true);
+
+    store.updateFilter('operatingSystems', ['windows', 'macos']);
+    await nextTick();
+
+    expect(store.isDetailsVisible).toBe(false);
+    expect(store.selectedCreative).toBeNull();
+    expect(eventDispatchSpy).toHaveBeenCalled();
+  });
+
+  it('скрывает детали при изменении массивов фильтров - browsers', async () => {
+    expect(store.isDetailsVisible).toBe(true);
+
+    store.updateFilter('browsers', ['chrome', 'firefox']);
+    await nextTick();
+
+    expect(store.isDetailsVisible).toBe(false);
+    expect(store.selectedCreative).toBeNull();
+    expect(eventDispatchSpy).toHaveBeenCalled();
+  });
+
+  it('скрывает детали при изменении массивов фильтров - devices', async () => {
+    expect(store.isDetailsVisible).toBe(true);
+
+    store.updateFilter('devices', ['mobile', 'desktop']);
+    await nextTick();
+
+    expect(store.isDetailsVisible).toBe(false);
+    expect(store.selectedCreative).toBeNull();
+    expect(eventDispatchSpy).toHaveBeenCalled();
+  });
+
+  it('скрывает детали при изменении массивов фильтров - imageSizes', async () => {
+    expect(store.isDetailsVisible).toBe(true);
+
+    store.updateFilter('imageSizes', ['large', 'medium']);
+    await nextTick();
+
+    expect(store.isDetailsVisible).toBe(false);
+    expect(store.selectedCreative).toBeNull();
+    expect(eventDispatchSpy).toHaveBeenCalled();
+  });
+
+  it('скрывает детали при переключении активной вкладки', async () => {
+    expect(store.isDetailsVisible).toBe(true);
+
+    // Отключаем события табов чтобы избежать их влияния на тест
+    store.setTabEventEmissionEnabled(false);
+    
+    store.setActiveTab('facebook');
+    await nextTick();
+
+    expect(store.isDetailsVisible).toBe(false);
+    expect(store.selectedCreative).toBeNull();
+    expect(eventDispatchSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'creatives:details-hidden'
+      })
+    );
+  });
+
+  it('скрывает детали при изменении текущей страницы пагинации', async () => {
+    expect(store.isDetailsVisible).toBe(true);
+
+    // Мокаем изменение текущей страницы в pagination
+    creativesMock.pagination.value = { 
+      currentPage: 2, 
+      lastPage: 5, 
+      total: 100, 
+      perPage: 12, 
+      from: 13, 
+      to: 24 
+    };
+    
+    await nextTick();
+
+    expect(store.isDetailsVisible).toBe(false);
+    expect(store.selectedCreative).toBeNull();
+    expect(eventDispatchSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'creatives:details-hidden'
+      })
+    );
+  });
+
+  it('НЕ скрывает детали при первоначальной инициализации Store', async () => {
+    // Создаем новый store для проверки инициализации
+    const newStore = useCreativesFiltersStore();
+    const newEventSpy = vi.spyOn(document, 'dispatchEvent').mockImplementation(() => true);
+    
+    // Симулируем что детали показаны ДО инициализации
+    const mockCreative = { 
+      id: 456, 
+      title: 'Another Creative',
+      preview_url: 'another.jpg',
+      is_favorite: false 
+    };
+    newStore.selectedCreative = mockCreative;
+    newStore.isDetailsVisible = true;
+
+    // Инициализируем store (это не должно скрыть детали)
+    await newStore.initializeFilters();
+    await nextTick();
+
+    // Детали должны остаться видными
+    expect(newStore.isDetailsVisible).toBe(true);
+    expect(newStore.selectedCreative).toStrictEqual(mockCreative);
+    
+    // Событие скрытия НЕ должно было быть эмитировано
+    expect(newEventSpy).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'creatives:details-hidden'
+      })
+    );
+
+    newEventSpy.mockRestore();
+  });
+
+  it('НЕ скрывает детали если они уже скрыты', async () => {
+    // Сначала скрываем детали
+    store.selectedCreative = null;
+    store.isDetailsVisible = false;
+    
+    // Очищаем предыдущие вызовы
+    eventDispatchSpy.mockClear();
+
+    // Изменяем фильтр
+    store.updateFilter('searchKeyword', 'another search');
+    await nextTick();
+
+    // Состояние должно остаться скрытым
+    expect(store.isDetailsVisible).toBe(false);
+    expect(store.selectedCreative).toBeNull();
+    
+    // Событие скрытия НЕ должно быть эмитировано
+    expect(eventDispatchSpy).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'creatives:details-hidden'
+      })
+    );
+  });
+
+  it('НЕ скрывает детали при установке одинакового значения фильтра', async () => {
+    expect(store.isDetailsVisible).toBe(true);
+
+    // Устанавливаем текущее значение снова
+    const currentValue = store.filters.searchKeyword;
+    store.updateFilter('searchKeyword', currentValue);
+    await nextTick();
+
+    // Детали должны остаться видными
+    expect(store.isDetailsVisible).toBe(true);
+    expect(store.selectedCreative).not.toBeNull();
+    
+    // Событие скрытия НЕ должно быть эмитировано
+    expect(eventDispatchSpy).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'creatives:details-hidden'
+      })
+    );
+  });
+
+  it('НЕ скрывает детали при изменении isDetailedVisible (внутреннее состояние)', async () => {
+    expect(store.isDetailsVisible).toBe(true);
+
+    // Изменяем isDetailedVisible - это внутреннее состояние UI, не влияющее на загрузку данных
+    store.toggleDetailedFilters();
+    await nextTick();
+
+    // Детали должны остаться видными
+    expect(store.isDetailsVisible).toBe(true);
+    expect(store.selectedCreative).not.toBeNull();
+    
+    // Событие скрытия НЕ должно быть эмитировано
+    expect(eventDispatchSpy).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'creatives:details-hidden'
+      })
+    );
+  });
+
+  it('НЕ скрывает детали при изменении savedSettings (внутреннее состояние)', async () => {
+    expect(store.isDetailsVisible).toBe(true);
+
+    // Изменяем savedSettings - это внутреннее состояние, не влияющее на загрузку данных
+    store.updateFilter('savedSettings', ['setting1', 'setting2']);
+    await nextTick();
+
+    // Детали должны остаться видными
+    expect(store.isDetailsVisible).toBe(true);
+    expect(store.selectedCreative).not.toBeNull();
+    
+    // Событие скрытия НЕ должно быть эмитировано
+    expect(eventDispatchSpy).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'creatives:details-hidden'
+      })
+    );
+  });
+
+  it('работает корректно с отпечатком состояния - множественные изменения', async () => {
+    expect(store.isDetailsVisible).toBe(true);
+
+    // Делаем несколько изменений одновременно
+    store.updateFilter('searchKeyword', 'complex search');
+    store.updateFilter('country', 'RU');
+    store.updateFilter('onlyAdult', true);
+    store.updateFilter('languages', ['en', 'ru', 'fr']);
+    
+    await nextTick();
+
+    // Детали должны быть скрыты один раз
+    expect(store.isDetailsVisible).toBe(false);
+    expect(store.selectedCreative).toBeNull();
+    
+    // Событие должно быть эмитировано только один раз
+    expect(eventDispatchSpy).toHaveBeenCalledTimes(1);
+    expect(eventDispatchSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'creatives:details-hidden',
+        detail: expect.objectContaining({
+          reason: 'filters-changed'
+        })
+      })
+    );
+  });
+
+  it('отпечаток состояния включает все отслеживаемые параметры', async () => {
+    // Симулируем изменение каждого отслеживаемого параметра по очереди
+    const trackedChanges = [
+      () => store.updateFilter('searchKeyword', 'test1'),
+      () => store.updateFilter('country', 'US'),
+      () => store.updateFilter('dateCreation', 'last_week'),
+      () => store.updateFilter('sortBy', 'popular'),
+      () => store.updateFilter('periodDisplay', 'monthly'),
+      () => store.updateFilter('advertisingNetworks', ['google']),
+      () => store.updateFilter('languages', ['en']),
+      () => store.updateFilter('operatingSystems', ['windows']),
+      () => store.updateFilter('browsers', ['chrome']),
+      () => store.updateFilter('devices', ['mobile']),
+      () => store.updateFilter('imageSizes', ['large']),
+      () => store.updateFilter('onlyAdult', true),
+      () => store.updateFilter('perPage', 24),
+      () => {
+        store.setTabEventEmissionEnabled(false);
+        store.setActiveTab('facebook');
+      },
+      () => {
+        creativesMock.pagination.value = { 
+          currentPage: 3, 
+          lastPage: 5, 
+          total: 100, 
+          perPage: 12, 
+          from: 25, 
+          to: 36 
+        };
+      }
+    ];
+
+    for (let i = 0; i < trackedChanges.length; i++) {
+      // Восстанавливаем детали для каждого теста
+      const mockCreative = { 
+        id: 100 + i, 
+        title: `Test Creative ${i}`,
+        preview_url: `test${i}.jpg`,
+        is_favorite: false 
+      };
+      store.selectedCreative = mockCreative;
+      store.isDetailsVisible = true;
+      eventDispatchSpy.mockClear();
+
+      // Применяем изменение
+      trackedChanges[i]();
+      await nextTick();
+
+      // Проверяем что детали скрыты
+      expect(store.isDetailsVisible).toBe(false);
+      expect(store.selectedCreative).toBeNull();
+      expect(eventDispatchSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'creatives:details-hidden'
+        })
+      );
+    }
+  });
+
+  it('логирует информацию при автоматическом скрытии деталей', async () => {
+    const consoleSpy = vi.spyOn(console, 'log');
+    
+    expect(store.isDetailsVisible).toBe(true);
+
+    store.updateFilter('searchKeyword', 'test logging');
+    await nextTick();
+
+    expect(store.isDetailsVisible).toBe(false);
+    expect(consoleSpy).toHaveBeenCalledWith(
+      '🎯 Детали креатива автоматически скрыты из-за изменения фильтров/пагинации/вкладок'
+    );
+
+    consoleSpy.mockRestore();
   });
 });

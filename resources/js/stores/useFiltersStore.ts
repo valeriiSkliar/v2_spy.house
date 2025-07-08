@@ -348,6 +348,56 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
       // Загружаем креативы с debounce
       loadCreativesDebounced();
     });
+    
+    // Watcher 4: Отдельный watcher для скрытия деталей при изменении фильтров/пагинации/вкладок
+    // Отслеживает только значимые изменения, исключая внутренние состояния деталей
+    let previousFiltersState: string | null = null;
+    
+    watchEffect(() => {
+      if (!isInitialized.value) return;
+      
+      // Создаем отпечаток состояния только для значимых изменений
+      const currentFiltersState = JSON.stringify({
+        searchKeyword: filters.searchKeyword,
+        country: filters.country,
+        dateCreation: filters.dateCreation,
+        sortBy: filters.sortBy,
+        periodDisplay: filters.periodDisplay,
+        advertisingNetworks: filters.advertisingNetworks,
+        languages: filters.languages,
+        operatingSystems: filters.operatingSystems,
+        browsers: filters.browsers,
+        devices: filters.devices,
+        imageSizes: filters.imageSizes,
+        onlyAdult: filters.onlyAdult,
+        perPage: filters.perPage,
+        activeTab: tabs.activeTab,
+        // Добавляем текущую страницу для отслеживания смены страниц
+        currentPage: pagination.value.currentPage
+      });
+      
+      // Проверяем, действительно ли изменились фильтры
+      if (previousFiltersState !== null && previousFiltersState !== currentFiltersState) {
+        // Скрываем детали только при реальном изменении фильтров/пагинации/вкладок
+        if (isDetailsVisible.value) {
+          selectedCreative.value = null;
+          isDetailsVisible.value = false;
+          
+          // Эмитируем событие скрытия деталей
+          document.dispatchEvent(new CustomEvent('creatives:details-hidden', {
+            detail: {
+              reason: 'filters-changed',
+              timestamp: new Date().toISOString()
+            }
+          }));
+          
+          console.log('🎯 Детали креатива автоматически скрыты из-за изменения фильтров/пагинации/вкладок');
+        }
+      }
+      
+      // Обновляем предыдущее состояние
+      previousFiltersState = currentFiltersState;
+    });
   }
 
   // ============================================================================
@@ -945,6 +995,9 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   
   /**
    * Установка активной вкладки
+   * 
+   * Примечание: Скрытие деталей при смене вкладки обрабатывается автоматически
+   * через watcher, который отслеживает изменения activeTab
    */
   function setActiveTab(tabValue: TabValue): void {
     // Проверяем валидность вкладки и отличие от текущей
@@ -1032,6 +1085,9 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
    * - Преобразование фильтров Store → API формат
    * - Синхронизацию page с URL параметрами  
    * - Загрузку данных через API композабл
+   * 
+   * Примечание: Скрытие деталей при смене страницы обрабатывается автоматически
+   * через watcher, который отслеживает изменения perPage в фильтрах
    */
   async function loadCreatives(page: number = 1): Promise<void> {
     // Логирование для production отладки
