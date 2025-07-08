@@ -50,7 +50,7 @@ class CreativesFiltersDTOTest extends TestCase
         $dto = new CreativesFiltersDTO();
 
         $this->assertEquals('', $dto->searchKeyword);
-        $this->assertEquals('default', $dto->country);
+        $this->assertEquals([], $dto->countries);
         $this->assertEquals('default', $dto->dateCreation);
         $this->assertEquals('default', $dto->sortBy);
         $this->assertEquals('default', $dto->periodDisplay);
@@ -67,7 +67,7 @@ class CreativesFiltersDTOTest extends TestCase
     {
         $data = [
             'searchKeyword' => 'test search',
-            'country' => 'US',
+            'countries' => ['US', 'GB'],
             'dateCreation' => 'last7',
             'sortBy' => 'byCreationDate',
             'periodDisplay' => 'last30',
@@ -87,7 +87,7 @@ class CreativesFiltersDTOTest extends TestCase
         $dto = CreativesFiltersDTO::fromArray($data);
 
         $this->assertEquals('test search', $dto->searchKeyword);
-        $this->assertEquals('US', $dto->country);
+        $this->assertEquals(['US', 'GB'], $dto->countries);
         $this->assertEquals('last7', $dto->dateCreation);
         $this->assertEquals('byCreationDate', $dto->sortBy);
         $this->assertEquals('last30', $dto->periodDisplay);
@@ -104,7 +104,7 @@ class CreativesFiltersDTOTest extends TestCase
     {
         $invalidData = [
             'searchKeyword' => str_repeat('a', 300), // Слишком длинная строка
-            'country' => 'INVALID_COUNTRY',
+            'countries' => ['INVALID_COUNTRY'],
             'page' => 0, // Меньше минимума
             'perPage' => 200, // Больше максимума
             'activeTab' => 'invalid_tab',
@@ -114,7 +114,7 @@ class CreativesFiltersDTOTest extends TestCase
 
         $this->assertNotEmpty($errors);
         $this->assertContains('searchKeyword must be less than 255 characters', $errors);
-        $this->assertContains('Invalid country: INVALID_COUNTRY', $errors);
+        $this->assertContains('Invalid country in countries array: INVALID_COUNTRY', $errors);
         $this->assertContains('page must be between 1 and 10000', $errors);
         $this->assertContains('perPage must be between 6 and 100', $errors);
         $this->assertContains('Invalid activeTab value', $errors);
@@ -154,7 +154,7 @@ class CreativesFiltersDTOTest extends TestCase
     {
         $data = [
             'searchKeyword' => '  <script>test</script>  ',
-            'country' => 'US',
+            'countries' => ['US'],
         ];
 
         $dto = CreativesFiltersDTO::fromArraySafe($data);
@@ -201,7 +201,7 @@ class CreativesFiltersDTOTest extends TestCase
     public function test_dto_handles_invalid_values_safely()
     {
         $invalidData = [
-            'country' => 'INVALID_COUNTRY',
+            'countries' => ['INVALID_COUNTRY'],
             'dateCreation' => 'invalid_date',
             'sortBy' => 'invalid_sort',
             'periodDisplay' => 'invalid_period',
@@ -213,7 +213,7 @@ class CreativesFiltersDTOTest extends TestCase
         $dto = CreativesFiltersDTO::fromArraySafe($invalidData);
 
         // Должны использоваться дефолтные значения
-        $this->assertEquals('default', $dto->country);
+        $this->assertEquals([], $dto->countries); // Невалидные страны отфильтровываются
         $this->assertEquals('default', $dto->dateCreation);
         $this->assertEquals('default', $dto->sortBy);
         $this->assertEquals('default', $dto->periodDisplay);
@@ -227,12 +227,12 @@ class CreativesFiltersDTOTest extends TestCase
         $validCountries = ['default', 'US', 'GB', 'DE', 'FR', 'CA', 'AU', 'RU', 'UA'];
 
         foreach ($validCountries as $country) {
-            $dto = CreativesFiltersDTO::fromArraySafe(['country' => $country]);
-            $this->assertEquals($country, $dto->country);
+            $dto = CreativesFiltersDTO::fromArraySafe(['countries' => [$country]]);
+            $this->assertEquals([$country], $dto->countries);
         }
 
-        $dto = CreativesFiltersDTO::fromArraySafe(['country' => 'INVALID']);
-        $this->assertEquals('default', $dto->country);
+        $dto = CreativesFiltersDTO::fromArraySafe(['countries' => ['INVALID']]);
+        $this->assertEquals([], $dto->countries); // Невалидные отфильтровываются
     }
 
     public function test_dto_validates_active_tabs()
@@ -280,7 +280,7 @@ class CreativesFiltersDTOTest extends TestCase
     {
         $data = [
             'searchKeyword' => 'test',
-            'country' => 'US',
+            'countries' => ['US'],
             'onlyAdult' => true,
             'page' => 2,
             'advertisingNetworks' => ['facebook'],
@@ -290,7 +290,7 @@ class CreativesFiltersDTOTest extends TestCase
         $result = $dto->toArray();
 
         $this->assertEquals('test', $result['searchKeyword']);
-        $this->assertEquals('US', $result['country']);
+        $this->assertEquals(['US'], $result['countries']);
         $this->assertTrue($result['onlyAdult']);
         $this->assertEquals(2, $result['page']);
         $this->assertEquals(['facebook'], $result['advertisingNetworks']);
@@ -311,7 +311,7 @@ class CreativesFiltersDTOTest extends TestCase
         // С активными фильтрами
         $dto = CreativesFiltersDTO::fromArraySafe([
             'searchKeyword' => 'test',
-            'country' => 'US',
+            'countries' => ['US'],
             'onlyAdult' => true,
         ]);
 
@@ -334,7 +334,7 @@ class CreativesFiltersDTOTest extends TestCase
     {
         $dto = CreativesFiltersDTO::fromArraySafe([
             'searchKeyword' => 'test',
-            'country' => 'US',
+            'countries' => ['US'],
             'onlyAdult' => true,
             'page' => 2, // Не активный фильтр
             'activeTab' => 'facebook', // Не активный фильтр
@@ -344,7 +344,7 @@ class CreativesFiltersDTOTest extends TestCase
 
         $this->assertCount(3, $activeFilters);
         $this->assertEquals('test', $activeFilters['searchKeyword']);
-        $this->assertEquals('US', $activeFilters['country']);
+        $this->assertEquals(['US'], $activeFilters['countries']);
         $this->assertTrue($activeFilters['onlyAdult']);
         $this->assertArrayNotHasKey('page', $activeFilters);
         $this->assertArrayNotHasKey('activeTab', $activeFilters);
@@ -354,7 +354,7 @@ class CreativesFiltersDTOTest extends TestCase
     {
         $dto = CreativesFiltersDTO::fromArraySafe([
             'searchKeyword' => 'test',
-            'country' => 'US',
+            'countries' => ['US'],
             'onlyAdult' => true,
             'page' => 2,
         ]);
@@ -365,7 +365,7 @@ class CreativesFiltersDTOTest extends TestCase
 
         $this->assertFalse($resetDto->hasActiveFilters());
         $this->assertEquals('', $resetDto->searchKeyword);
-        $this->assertEquals('default', $resetDto->country);
+        $this->assertEquals([], $resetDto->countries);
         $this->assertFalse($resetDto->onlyAdult);
         $this->assertEquals(1, $resetDto->page);
     }
@@ -463,7 +463,7 @@ class CreativesFiltersDTOTest extends TestCase
         $this->expectExceptionMessage('Validation failed');
 
         CreativesFiltersDTO::fromArray([
-            'country' => 'INVALID_COUNTRY',
+            'countries' => ['INVALID_COUNTRY'],
         ]);
     }
 
@@ -473,12 +473,12 @@ class CreativesFiltersDTOTest extends TestCase
 
         $this->assertIsArray($defaults);
         $this->assertArrayHasKey('searchKeyword', $defaults);
-        $this->assertArrayHasKey('country', $defaults);
+        $this->assertArrayHasKey('countries', $defaults);
         $this->assertArrayHasKey('page', $defaults);
         $this->assertArrayHasKey('advertisingNetworks', $defaults);
 
         $this->assertEquals('', $defaults['searchKeyword']);
-        $this->assertEquals('default', $defaults['country']);
+        $this->assertEquals([], $defaults['countries']);
         $this->assertEquals(1, $defaults['page']);
         $this->assertEquals(12, $defaults['perPage']);
         $this->assertEquals([], $defaults['advertisingNetworks']);
@@ -498,25 +498,25 @@ class CreativesFiltersDTOTest extends TestCase
         ]);
 
         // Проверяем, что специальное значение 'default' валидно
-        $dto = CreativesFiltersDTO::fromArraySafe(['country' => 'default']);
-        $this->assertEquals('default', $dto->country);
+        $dto = CreativesFiltersDTO::fromArraySafe(['countries' => ['default']]);
+        $this->assertEquals(['default'], $dto->countries);
 
         // Проверяем, что созданная в базе страна валидна
-        $dto = CreativesFiltersDTO::fromArraySafe(['country' => 'TE']);
-        $this->assertEquals('TE', $dto->country);
+        $dto = CreativesFiltersDTO::fromArraySafe(['countries' => ['TE']]);
+        $this->assertEquals(['TE'], $dto->countries);
 
-        // Проверяем, что несуществующая страна возвращается к default в safe режиме
-        $dto = CreativesFiltersDTO::fromArraySafe(['country' => 'XX']);
-        $this->assertEquals('default', $dto->country);
+        // Проверяем, что несуществующая страна отфильтровывается в safe режиме
+        $dto = CreativesFiltersDTO::fromArraySafe(['countries' => ['XX']]);
+        $this->assertEquals([], $dto->countries);
     }
 
     /** @test */
     public function it_throws_exception_for_invalid_country_in_strict_mode()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Invalid country: XX');
+        $this->expectExceptionMessage('Invalid country in countries array: XX');
 
-        CreativesFiltersDTO::fromArray(['country' => 'XX']);
+        CreativesFiltersDTO::fromArray(['countries' => ['XX']]);
     }
 
     /** @test */
@@ -533,15 +533,15 @@ class CreativesFiltersDTOTest extends TestCase
         ]);
 
         // Первый вызов должен создать кеш
-        $dto1 = CreativesFiltersDTO::fromArraySafe(['country' => 'TE']);
-        $this->assertEquals('TE', $dto1->country);
+        $dto1 = CreativesFiltersDTO::fromArraySafe(['countries' => ['TE']]);
+        $this->assertEquals(['TE'], $dto1->countries);
 
         // Проверяем, что кеш создался
         $this->assertTrue(Cache::has('creatives_filters.valid_countries'));
 
         // Второй вызов должен использовать кеш
-        $dto2 = CreativesFiltersDTO::fromArraySafe(['country' => 'TE']);
-        $this->assertEquals('TE', $dto2->country);
+        $dto2 = CreativesFiltersDTO::fromArraySafe(['countries' => ['TE']]);
+        $this->assertEquals(['TE'], $dto2->countries);
     }
 
     /** @test */
@@ -558,7 +558,7 @@ class CreativesFiltersDTOTest extends TestCase
         ]);
 
         // Создаем кеш
-        CreativesFiltersDTO::fromArraySafe(['country' => 'TE']);
+        CreativesFiltersDTO::fromArraySafe(['countries' => ['TE']]);
         $this->assertTrue(Cache::has('creatives_filters.valid_countries'));
 
         // Обновляем страну - это должно очистить кеш
@@ -580,8 +580,8 @@ class CreativesFiltersDTOTest extends TestCase
         ]);
 
         // Неактивная страна не должна быть валидной
-        $dto = CreativesFiltersDTO::fromArraySafe(['country' => 'IN']);
-        $this->assertEquals('default', $dto->country);
+        $dto = CreativesFiltersDTO::fromArraySafe(['countries' => ['IN']]);
+        $this->assertEquals([], $dto->countries); // Отфильтровывается
     }
 
     /** @test */
@@ -598,11 +598,11 @@ class CreativesFiltersDTOTest extends TestCase
         ]);
 
         // Проверяем, что нижний регистр работает
-        $dto = CreativesFiltersDTO::fromArraySafe(['country' => 'te']);
-        $this->assertEquals('te', $dto->country);
+        $dto = CreativesFiltersDTO::fromArraySafe(['countries' => ['te']]);
+        $this->assertEquals(['te'], $dto->countries);
 
         // Проверяем, что смешанный регистр работает
-        $dto = CreativesFiltersDTO::fromArraySafe(['country' => 'Te']);
-        $this->assertEquals('Te', $dto->country);
+        $dto = CreativesFiltersDTO::fromArraySafe(['countries' => ['Te']]);
+        $this->assertEquals(['Te'], $dto->countries);
     }
 }
