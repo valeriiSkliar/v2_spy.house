@@ -51,6 +51,7 @@ class CreativeDTO implements Arrayable, Jsonable
         public ?string $created_at_formatted = null,
         public ?string $last_activity_date_formatted = null,
         public ?bool $is_active = null,
+        public ?string $platform = null,
     ) {}
 
     /**
@@ -90,6 +91,7 @@ class CreativeDTO implements Arrayable, Jsonable
             created_at_formatted: $data['created_at_formatted'] ?? null,
             last_activity_date_formatted: $data['last_activity_date_formatted'] ?? null,
             is_active: $data['is_active'] ?? null,
+            platform: $data['platform'] ?? null,
         );
     }
 
@@ -332,6 +334,7 @@ class CreativeDTO implements Arrayable, Jsonable
             'displayName' => $this->displayName,
             'isRecent' => $this->isRecent,
             'isFavorite' => $this->isFavorite,
+            'platform' => $this->platform,
             'created_at_formatted' => $this->created_at_formatted,
             // Добавляем поля необходимые для фронтенда
             'advertising_networks' => $this->advertising_networks,
@@ -387,6 +390,7 @@ class CreativeDTO implements Arrayable, Jsonable
             'created_at_formatted' => $this->created_at_formatted,
             'last_activity_date_formatted' => $this->last_activity_date_formatted,
             'is_active' => $this->is_active,
+            'platform' => $this->platform,
         ];
     }
 

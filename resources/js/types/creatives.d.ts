@@ -53,6 +53,7 @@ export interface Creative {
   operating_systems?: string[];
   browsers?: string[];
   devices?: string[];
+  platform?: string;
   is_adult?: boolean;
   // social fields
   social_likes?: number | string;

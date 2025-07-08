@@ -351,13 +351,10 @@ const getFlagIcon = (): string => {
 
 // Функция для получения CSS класса иконки устройства
 const getDeviceIconClass = (): string => {
-  if (props.creative.devices && props.creative.devices.length > 0) {
-    const device = props.creative.devices[0].toLowerCase();
-    if (device.includes('mobile') || device.includes('android') || device.includes('ios')) {
-      return 'icon-mobile';
-    }
-    if (device.includes('tablet')) {
-      return 'icon-tablet';
+  if (props.creative.platform) {
+    const device = props.creative.platform.toLowerCase();
+    if (device.includes('mobile')) {
+      return 'icon-phone';
     }
   }
   return 'icon-pc';
@@ -365,19 +362,12 @@ const getDeviceIconClass = (): string => {
 
 // Функция для получения текста устройства
 const getDeviceText = (): string => {
-  if (props.creative.devices && props.creative.devices.length > 0) {
-    const device = props.creative.devices[0];
-    if (
-      device.toLowerCase().includes('mobile') ||
-      device.toLowerCase().includes('android') ||
-      device.toLowerCase().includes('ios')
-    ) {
-      return 'Mobile';
+  if (props.creative.platform) {
+    const device = props.creative.platform.toLowerCase();
+    if (device.toLowerCase().includes('mobile')) {
+      return 'Mob';
     }
-    if (device.toLowerCase().includes('tablet')) {
-      return 'Tablet';
-    }
-    return device;
+    return 'PC';
   }
   return 'PC';
 };

@@ -110,11 +110,6 @@ class PushHouseCreativeDTO
             return CreativePlatformNormalizer::normalizePlatform($data['platform'], 'push_house');
         }
 
-        // Старый формат парсера (mob: 1/0)
-        if (isset($data['mob'])) {
-            return $data['mob'] ? Platform::MOBILE : Platform::DESKTOP;
-        }
-
         // Fallback
         return Platform::MOBILE;
     }
