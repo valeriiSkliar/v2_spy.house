@@ -255,7 +255,7 @@ class FilterOptionDTO implements Arrayable, Jsonable
      */
     public static function perPageOptions(int $selectedPerPage = 12): array
     {
-        $perPageValues = [6, 12, 24, 48, 96];
+        $perPageValues = [12, 24, 48, 96];
 
         $options = [];
         foreach ($perPageValues as $value) {
