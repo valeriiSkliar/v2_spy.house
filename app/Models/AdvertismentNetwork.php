@@ -144,6 +144,38 @@ class AdvertismentNetwork extends Model
     //     return $this->hasOne(Source::class, 'name', 'network_name');
     // }
 
+    /**
+     * Креативы, связанные с данной рекламной сетью
+     */
+    public function creatives(): HasMany
+    {
+        return $this->hasMany(\App\Models\Creative::class, 'advertisment_network_id');
+    }
+
+    /**
+     * Активные креативы, связанные с данной рекламной сетью
+     */
+    public function activeCreatives(): HasMany
+    {
+        return $this->creatives()->where('status', \App\Enums\Frontend\AdvertisingStatus::Active);
+    }
+
+    /**
+     * Получить количество креативов для данной сети
+     */
+    public function getCreativesCountAttribute(): int
+    {
+        return $this->creatives()->count();
+    }
+
+    /**
+     * Получить количество активных креативов для данной сети
+     */
+    public function getActiveCreativesCountAttribute(): int
+    {
+        return $this->activeCreatives()->count();
+    }
+
     // public function isInParser(): bool
     // {
     //     $source = Source::where('is_active', true)->first();

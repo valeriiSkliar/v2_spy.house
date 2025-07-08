@@ -1,46 +1,50 @@
-@import 'mixins.scss';
-@import 'fonts.scss';
-@import 'css/lib/bootstrap.css';
-@import 'css/lib/bootstrap-select.css';
-@import 'lib/bootstrap-select-overwrite.scss';
-@import 'css/lib/select2.min.css';
-@import 'lib/select2-overwrite.scss';
-@import 'css/lib/daterangepicker.css';
-@import 'lib/daterangepicker-overwrite.scss';
-@import 'lib/dataTables.scss';
-@import 'lib/popover.scss';
-@import 'css/lib/swiper-bundle.min.css';
-@import 'default.scss';
-@import 'modals.scss';
-@import 'forms.scss';
-@import 'buttons.scss';
-@import 'tables.scss';
-@import 'wrapper.scss';
-@import 'leftSide.scss';
-@import 'rightSide.scss';
-@import 'header.scss';
-@import 'footer.scss';
+@import "mixins.scss";
+@import "fonts.scss";
+@import "lib/bootstrap.css";
+@import "lib/bootstrap-select.css";
+@import "lib/bootstrap-select-overwrite.scss";
+@import "lib/select2.min.css";
+@import "lib/select2-overwrite.scss";
+@import "lib/daterangepicker.css";
+@import "lib/daterangepicker-overwrite.scss";
+@import "lib/dataTables.scss";
+@import "lib/popover.scss";
+@import "lib/swiper-bundle.min.css";
+@import "default.scss";
+@import "modals.scss";
+@import "forms.scss";
+@import "buttons.scss";
+@import "tables.scss";
+@import "wrapper.scss";
+@import "leftSide.scss";
+@import "rightSide.scss";
+@import "header.scss";
+@import "footer.scss";
 
-@import 'blocks/search.scss';
-@import 'blocks/addsList.scss';
-@import 'blocks/pagination.scss';
-@import 'blocks/faqAnswerList.scss';
-@import 'blocks/offerFilter.scss';
-@import 'blocks/offerTable.scss';
-@import 'blocks/breadCrumbs.scss';
-@import 'blocks/video.scss';
 
-@import 'pages/index.scss';
 
-@import 'pages/tizerPage.scss';
-@import 'pages/faqPage.scss';
-@import 'pages/profilePage.scss';
-@import 'pages/servicePage.scss';
-@import 'pages/confPage.scss';
-@import 'pages/singleOffer.scss';
-@import 'pages/404.scss';
-@import 'pages/blogPage.scss';
-@import 'pages/sBlogPage.scss';
 
-@import 'pages/blogSite.scss';
-@import 'pages/creatives.scss';
+@import "blocks/search.scss";
+@import "blocks/addsList.scss";
+@import "blocks/pagination.scss";
+@import "blocks/faqAnswerList.scss";
+@import "blocks/offerFilter.scss";
+@import "blocks/offerTable.scss";
+@import "blocks/breadCrumbs.scss";
+@import "blocks/video.scss";
+
+
+@import "pages/index.scss";
+
+@import "pages/tizerPage.scss";
+@import "pages/faqPage.scss";
+@import "pages/profilePage.scss";
+@import "pages/servicePage.scss";
+@import "pages/confPage.scss";
+@import "pages/singleOffer.scss";
+@import "pages/404.scss";
+@import "pages/blogPage.scss";
+@import "pages/sBlogPage.scss";
+
+@import "pages/blogSite.scss";
+@import "pages/creatives.scss";

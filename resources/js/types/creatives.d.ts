@@ -5,8 +5,16 @@
  * Базовые типы
  */
 export type CreativeId = number;
-export type CountryCode = string;
-export type LanguageCode = string;
+export type CountryCode = {
+  code: string;
+  name: string;
+  iso_code_3: string;
+};
+export type LanguageCode = {
+  code: string;
+  name: string;
+  iso_code_3: string;
+};
 export type TabValue = 'push' | 'inpage' | 'facebook' | 'tiktok';
 export type SortValue = 'creation' | 'activity' | 'popularity' | 'byCreationDate' | 'byActivity' | 'byPopularity' | 'default';
 /**
@@ -17,32 +25,60 @@ export type SortValue = 'creation' | 'activity' | 'popularity' | 'byCreationDate
 export type DateRangeValue = 'today' | 'yesterday' | 'last7' | 'last30' | 'last90' | 'thisMonth' | 'lastMonth' | 'thisYear' | 'lastYear' | 'default' | string;
 
 /**
+ * Информация о размере файла
+ */
+export interface FileSizeInfo {
+  type: 'main_image' | 'icon';
+  label: string;
+  raw_size: string;
+  formatted_size: string;
+  bytes: number;
+}
+
+/**
  * Основная модель креатива
  */
 export interface Creative {
   id: CreativeId;
-  name: string;
+  // basic fields
+  title: string;
+  description: string;
   category: string;
-  country: CountryCode;
-  file_url: string;
-  preview_url?: string;
+  country: CountryCode | null;
+  file_size?: string;
+  // media fields
+  icon_url: string;
+  icon_size?: string;
+  main_image_size?: string;
+  main_image_url?: string;
+  file_sizes_detailed?: FileSizeInfo[];
+  landing_url: string;
+  video_url?: string;
+  duration?: string;
+  has_video?: boolean;
+  // other fields
   created_at: string;
+  last_seen_at: string;
   activity_date?: string;
+  activity_title?: string;
   advertising_networks?: string[];
-  languages?: LanguageCode[];
+  language?: LanguageCode | null;
   operating_systems?: string[];
   browsers?: string[];
   devices?: string[];
-  image_sizes?: string[];
+  platform?: string;
   is_adult?: boolean;
-  // Поля для социальных сетей
+  // social fields
   social_likes?: number | string;
   social_comments?: number | string;
   social_shares?: number | string;
-  // Computed свойства (добавляются на frontend)
+  // computed fields
   displayName?: string;
   isRecent?: boolean;
   isFavorite?: boolean;
+  created_at_formatted?: string;
+  last_activity_date_formatted?: string;
+  is_active: boolean;
 }
 
 /**
@@ -50,12 +86,12 @@ export interface Creative {
  */
 export interface CreativesFilters {
   searchKeyword?: string;
-  country?: CountryCode;
+  countries?: string[];
   dateCreation?: DateRangeValue;
   sortBy?: SortValue;
   periodDisplay?: DateRangeValue;
   advertisingNetworks?: string[];
-  languages?: LanguageCode[];
+  languages?: string[];
   operatingSystems?: string[];
   browsers?: string[];
   devices?: string[];
@@ -72,7 +108,7 @@ export interface CreativesFilters {
 export interface FilterState {
   isDetailedVisible: boolean;
   searchKeyword: string;
-  country: string;
+  countries: string[];
   dateCreation: string;
   sortBy: string;
   periodDisplay: string;
@@ -231,7 +267,7 @@ export interface TabOptions {
  */
 export interface UrlSyncParams {
   cr_searchKeyword?: string;
-  cr_country?: string;
+  cr_countries?: string;
   cr_dateCreation?: string;
   cr_sortBy?: string;
   cr_periodDisplay?: string;
@@ -281,6 +317,7 @@ export const CREATIVES_CONSTANTS = {
   MIN_PAGE_SIZE: 6,
   MAX_PAGE_SIZE: 100,
   MAX_SEARCH_LENGTH: 255,
+  MIN_SEARCH_LENGTH: 3,  // Минимальная длина поискового запроса
   DEBOUNCE_DELAY: 300,
   URL_PREFIX: 'cr',
   CACHE_TTL: {
@@ -295,7 +332,7 @@ export const CREATIVES_CONSTANTS = {
 export const DEFAULT_FILTERS: FilterState = {
   isDetailedVisible: false,
   searchKeyword: '',
-  country: 'default',
+  countries: [],
   dateCreation: 'default',
   sortBy: 'default',
   periodDisplay: 'default',
@@ -320,7 +357,7 @@ export const DEFAULT_TABS: TabsState = {
  * Утилитарные типы
  */
 export type FilterKey = keyof FilterState;
-export type MultiSelectFilterKey = 'advertisingNetworks' | 'languages' | 'operatingSystems' | 'browsers' | 'devices' | 'imageSizes';
+export type MultiSelectFilterKey = 'countries' | 'advertisingNetworks' | 'languages' | 'operatingSystems' | 'browsers' | 'devices' | 'imageSizes';
 export type SimpleFilterKey = Exclude<FilterKey, MultiSelectFilterKey | 'isDetailedVisible' | 'savedSettings'>;
 
 /**
@@ -357,14 +394,18 @@ export interface UseCreativesReturn {
   meta: Readonly<Ref<RequestMeta>>;
   isLoading: Readonly<Ref<boolean>>;
   error: Readonly<Ref<string | null>>;
+  searchCount: Readonly<Ref<number>>;
   
   // Actions
+  setIsLoading: (isLoading: boolean) => void;
   loadCreatives: (page?: number) => Promise<void>;
   refreshCreatives: () => Promise<void>;
   loadNextPage: () => Promise<void>;
   clearCreatives: () => void;
   mapFiltersToCreativesFilters: (filters: FilterState, activeTab: TabValue, page: number) => CreativesFilters;
   loadCreativesWithFilters: (filters: CreativesFilters) => Promise<void>;
+  loadSearchCount: (filters: CreativesFilters) => Promise<void>;
+  setSearchCount: (count: number) => void;
 }
 
 export interface UseFiltersReturn {

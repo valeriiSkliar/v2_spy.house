@@ -1,10 +1,22 @@
 <template>
-  <div class="creative-item">
+  <div
+    v-if="!isCreativesLoading"
+    class="creative-item"
+    :class="{
+      'creative-item--loading': isCreativesLoading,
+      'creative-item--disabled': isAnyLoading,
+    }"
+  >
     <div class="creative-item__head">
       <div class="creative-item__icon thumb thumb-with-controls-small mr-2">
-        <img :src="creative.preview_url || creative.file_url || '/img/th-2.jpg'" alt="" />
+        <img :src="creative.icon_url || creative.main_image_url" alt="" />
         <div class="thumb-controls">
-          <a href="#" class="btn-icon _black">
+          <a
+            href="#"
+            class="btn-icon _black"
+            @click.prevent="() => handleDownload(creative.icon_url)"
+            :class="{ disabled: isCreativesLoading }"
+          >
             <span class="icon-download2 remore_margin"></span>
           </a>
         </div>
@@ -16,23 +28,33 @@
         <div class="text-with-copy">
           <div class="text-with-copy__btn">
             <!-- Заглушка для copy-button компонента -->
-            <button class="btn-icon _copy" type="button">
-              <span class="icon-copy"></span>
+            <button
+              class="btn copy-btn _flex _dark"
+              type="button"
+              @click="handleCopyTitle"
+              :disabled="isCreativesLoading"
+            >
+              <span class="icon-copy">{{ translations.copyButton.value }}</span>
             </button>
           </div>
           <div class="creative-item__title">
-            {{ creative.name || '⚡ What are the pensions the increase? 💰' }}
+            {{ creative.title }}
           </div>
         </div>
         <div class="text-with-copy">
           <div class="text-with-copy__btn">
             <!-- Заглушка для copy-button компонента -->
-            <button class="btn-icon _copy" type="button">
-              <span class="icon-copy"></span>
+            <button
+              class="btn copy-btn _flex _dark"
+              type="button"
+              @click="handleCopyDescription"
+              :disabled="isCreativesLoading"
+            >
+              <span class="icon-copy">{{ translations.copyButton.value }}</span>
             </button>
           </div>
           <div class="creative-item__desc">
-            {{ creative.category || 'How much did Kazakhstanis begin to receive' }}
+            {{ creative.description }}
           </div>
         </div>
       </div>
@@ -44,7 +66,7 @@
         </div>
         <div class="creative-item-info">
           <img :src="getFlagIcon()" alt="" />
-          {{ creative.country || 'KZ' }}
+          {{ creative.country?.code }}
         </div>
         <div class="creative-item-info">
           <div :class="getDeviceIconClass()"></div>
@@ -52,38 +74,231 @@
         </div>
       </div>
       <div class="creative-item__btns">
-        <button class="btn-icon btn-favorite">
-          <span class="icon-favorite-empty remore_margin"></span>
+        <button
+          class="btn-icon btn-favorite"
+          :class="{
+            active: isFavorite,
+            loading: props.isFavoriteLoading,
+          }"
+          @click="handleFavoriteClick"
+          :disabled="isAnyLoading"
+        >
+          <span :class="getFavoriteIconClass() + ' remore_margin'"></span>
         </button>
-        <button class="btn-icon _dark js-show-details">
+        <button
+          class="btn-icon _dark js-show-details"
+          @click="handleShowDetails(props.creative.id)"
+          :disabled="isCreativesLoading"
+        >
           <span class="icon-info remore_margin"></span>
         </button>
       </div>
     </div>
   </div>
+  <div v-else class="similar-creatives">
+    <div class="similar-creative-empty _inpage">
+      <img :src="empty" alt="empty" />
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
+import { useCreativesFiltersStore } from '@/stores/useFiltersStore';
 import type { Creative } from '@/types/creatives.d';
+import empty from '@img/empty.svg';
+import { computed, onMounted } from 'vue';
+
+// Импорты новой системы переводов
+import {
+  createReactiveTranslations,
+  mergePropsTranslations,
+  useTranslations,
+} from '@/composables/useTranslations';
+
+const store = useCreativesFiltersStore();
+
+// Новая система переводов
+const { waitForReady } = useTranslations();
+
+// Создание reactive переводов для карточки
+const translations = createReactiveTranslations(
+  {
+    copyButton: 'copyButton',
+  },
+  {
+    copyButton: 'Copy',
+  }
+);
 
 const props = defineProps<{
   creative: Creative;
+  isFavorite?: boolean;
+  isFavoriteLoading?: boolean;
+  translations?: Record<string, string>;
+  handleOpenInNewTab: (url: string) => void;
+  handleDownload: (url: string) => void;
+  handleShowDetails: (id: number) => void;
 }>();
 
-// Функция для формирования текста активности
-const getActiveText = (): string => {
-  if (props.creative.activity_date) {
-    const activityDate = new Date(props.creative.activity_date);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - activityDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+const emit = defineEmits<{
+  'toggle-favorite': [creativeId: number, isFavorite: boolean];
+}>();
 
-    if (diffDays === 1) {
-      return `Active ${diffDays} day`;
-    }
-    return `Active ${diffDays} days`;
+// Защита от race condition при инициализации
+onMounted(async () => {
+  // Мержим переводы из props с Store для обратной совместимости
+  mergePropsTranslations(props.translations, store.setTranslations);
+
+  // Ждем готовности переводов
+  await waitForReady();
+});
+
+// Computed для избранного
+const isFavorite = computed((): boolean => {
+  return props.isFavorite ?? props.creative.isFavorite ?? false;
+});
+
+// Computed для глобального состояния загрузки креативов
+const isCreativesLoading = computed((): boolean => {
+  return store.isLoading;
+});
+
+// Computed для объединенного состояния загрузки (блокирует все операции)
+const isAnyLoading = computed((): boolean => {
+  return isCreativesLoading.value || props.isFavoriteLoading || false;
+});
+
+// Функция для обработки клика по избранному
+const handleFavoriteClick = (): void => {
+  // Блокируем повторные клики если уже идет обработка для этого креатива или загружается список
+  if (isAnyLoading.value) {
+    console.warn(
+      `Операция с избранным для креатива ${props.creative.id} заблокирована: идет загрузка`
+    );
+    return;
   }
-  return 'Active 3 days';
+
+  emit('toggle-favorite', props.creative.id, isFavorite.value);
+
+  // Эмитируем DOM событие для Store
+  document.dispatchEvent(
+    new CustomEvent('creatives:toggle-favorite', {
+      detail: {
+        creativeId: props.creative.id,
+        isFavorite: isFavorite.value,
+      },
+    })
+  );
+};
+
+// Функция для обработки клика по кнопке копирования названия
+const handleCopyTitle = async (): Promise<void> => {
+  // Блокируем копирование во время загрузки списка
+  if (isCreativesLoading.value) {
+    console.warn(
+      `Копирование названия креатива ${props.creative.id} заблокировано: идет загрузка списка`
+    );
+    return;
+  }
+
+  const title = props.creative.title;
+
+  try {
+    await navigator.clipboard.writeText(title);
+
+    // Эмитируем событие успешного копирования
+    document.dispatchEvent(
+      new CustomEvent('creatives:copy-success', {
+        detail: {
+          text: title,
+          type: 'title',
+          creativeId: props.creative.id,
+        },
+      })
+    );
+  } catch (error) {
+    console.error('Ошибка копирования названия:', error);
+
+    // Fallback для старых браузеров
+    const textarea = document.createElement('textarea');
+    textarea.value = title;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+
+    document.dispatchEvent(
+      new CustomEvent('creatives:copy-success', {
+        detail: {
+          text: title,
+          type: 'title',
+          creativeId: props.creative.id,
+          fallback: true,
+        },
+      })
+    );
+  }
+};
+
+// Функция для обработки клика по кнопке копирования описания
+const handleCopyDescription = async (): Promise<void> => {
+  // Блокируем копирование во время загрузки списка
+  if (isCreativesLoading.value) {
+    console.warn(
+      `Копирование описания креатива ${props.creative.id} заблокировано: идет загрузка списка`
+    );
+    return;
+  }
+
+  const description = props.creative.description;
+
+  try {
+    await navigator.clipboard.writeText(description);
+
+    // Эмитируем событие успешного копирования
+    document.dispatchEvent(
+      new CustomEvent('creatives:copy-success', {
+        detail: {
+          text: description,
+          type: 'description',
+          creativeId: props.creative.id,
+        },
+      })
+    );
+  } catch (error) {
+    console.error('Ошибка копирования описания:', error);
+
+    // Fallback для старых браузеров
+    const textarea = document.createElement('textarea');
+    textarea.value = description;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+
+    document.dispatchEvent(
+      new CustomEvent('creatives:copy-success', {
+        detail: {
+          text: description,
+          type: 'description',
+          creativeId: props.creative.id,
+          fallback: true,
+        },
+      })
+    );
+  }
+};
+
+// Функция для получения CSS класса иконки избранного
+const getFavoriteIconClass = (): string => {
+  return isFavorite.value ? 'icon-favorite' : 'icon-favorite-empty';
+};
+
+// Функция для формирования текста активности
+import { getActiveDaysText } from '@/utils/getActiveDaysText';
+
+const getActiveText = (): string => {
+  return getActiveDaysText(props.creative.activity_date, 'Active 3 days');
 };
 
 // Функция для получения текста сети
@@ -96,18 +311,15 @@ const getNetworkText = (): string => {
 
 // Функция для получения иконки флага
 const getFlagIcon = (): string => {
-  return `/img/flags/${props.creative.country || 'KZ'}.svg`;
+  return `/img/flags/${props.creative.country?.code}.svg`;
 };
 
 // Функция для получения CSS класса иконки устройства
 const getDeviceIconClass = (): string => {
-  if (props.creative.devices && props.creative.devices.length > 0) {
-    const device = props.creative.devices[0].toLowerCase();
-    if (device.includes('mobile') || device.includes('android') || device.includes('ios')) {
-      return 'icon-mobile';
-    }
-    if (device.includes('tablet')) {
-      return 'icon-tablet';
+  if (props.creative.platform) {
+    const device = props.creative.platform.toLowerCase();
+    if (device.includes('mobile')) {
+      return 'icon-phone';
     }
   }
   return 'icon-pc';
@@ -115,19 +327,12 @@ const getDeviceIconClass = (): string => {
 
 // Функция для получения текста устройства
 const getDeviceText = (): string => {
-  if (props.creative.devices && props.creative.devices.length > 0) {
-    const device = props.creative.devices[0];
-    if (
-      device.toLowerCase().includes('mobile') ||
-      device.toLowerCase().includes('android') ||
-      device.toLowerCase().includes('ios')
-    ) {
-      return 'Mobile';
+  if (props.creative.platform) {
+    const device = props.creative.platform.toLowerCase();
+    if (device.toLowerCase().includes('mobile')) {
+      return 'Mob';
     }
-    if (device.toLowerCase().includes('tablet')) {
-      return 'Tablet';
-    }
-    return device;
+    return 'PC';
   }
   return 'PC';
 };

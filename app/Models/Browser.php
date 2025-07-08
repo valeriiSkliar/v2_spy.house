@@ -7,6 +7,7 @@ use App\Enums\Frontend\DeviceType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Cache;
 
 class Browser extends Model
@@ -46,6 +47,14 @@ class Browser extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * Креативы, использующие данный браузер
+     */
+    public function creatives(): HasMany
+    {
+        return $this->hasMany(\App\Models\Creative::class, 'browser_id');
+    }
 
     /**
      * Получить все возможные типы браузеров

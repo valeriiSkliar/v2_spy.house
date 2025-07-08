@@ -4,6 +4,7 @@
 import type { FilterState, TabValue, UrlSyncParams } from '@/types/creatives.d';
 import { CREATIVES_CONSTANTS, isValidTabValue } from '@/types/creatives.d';
 import { useUrlSearchParams } from '@vueuse/core';
+import debounce from 'lodash.debounce';
 import { computed, nextTick, ref, type Ref } from 'vue';
 
 /**
@@ -49,7 +50,7 @@ export function useCreativesUrlSync(): UseCreativesUrlSyncReturn {
    */
   const FILTER_URL_MAPPING = {
     searchKeyword: 'cr_searchKeyword',
-    country: 'cr_country', 
+    countries: 'cr_countries', 
     dateCreation: 'cr_dateCreation',
     sortBy: 'cr_sortBy',
     periodDisplay: 'cr_periodDisplay',
@@ -71,7 +72,7 @@ export function useCreativesUrlSync(): UseCreativesUrlSyncReturn {
    */
   const getFieldType = (key: keyof FilterState): 'string' | 'boolean' | 'array' | 'number' => {
     const arrayFields: (keyof FilterState)[] = [
-      'advertisingNetworks', 'languages', 'operatingSystems', 
+      'countries', 'advertisingNetworks', 'languages', 'operatingSystems', 
       'browsers', 'devices', 'imageSizes'
     ];
     
@@ -247,15 +248,13 @@ export function useCreativesUrlSync(): UseCreativesUrlSyncReturn {
   /**
    * Отключает синхронизацию
    */
-  const disableSync = (): void => {
-    isEnabled.value = false;
-  };
+  // const disableSync = (): void => {
+  //   isEnabled.value = false;
+  // };
 
   // Автоматическое включение синхронизации через небольшую задержку
   // Это позволяет компонентам инициализироваться до начала синхронизации
-  setTimeout(() => {
-    enableSync();
-  }, 100);
+  debounce(enableSync, 100);
 
   return {
     // Состояние

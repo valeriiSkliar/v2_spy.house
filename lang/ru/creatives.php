@@ -3,7 +3,7 @@
 return [
     'title' => 'Креативы',
     'favorites' => 'Избранное',
-    'advertisements' => ' <span>:count</span> объявление| <span>:count</span> объявления| <span>:count</span> объявлений',
+    'advertisements' => 'объявление | объявления | объявлений',
 
     // Переводы для Vue компонентов
     'loading' => 'Загрузка...',
@@ -15,10 +15,34 @@ return [
     'page' => 'Страница',
     'of' => 'из',
     'perPage' => 'На странице',
-    'filter' => 'Фильтр',
     'reset' => 'Сбросить',
     'country' => 'Страна',
+    'countries' => 'Страны',
     'search' => 'Поиск',
+
+    // Плоские ключи для фильтров (совместимость с фронтенд системой переводов)
+    'searchKeyword' => 'Поиск по ключевым словам',
+    'dateCreation' => 'Дата создания',
+    'sortBy' => 'Сортировка',
+    'periodDisplay' => 'Период отображения',
+    'onlyAdult' => 'Только для взрослых',
+    'isDetailedVisible' => 'Подробный фильтр',
+    'advertisingNetworks' => 'Рекламные сети',
+    'languages' => 'Языки',
+    'operatingSystems' => 'Операционные системы',
+    'browsers' => 'Браузеры',
+    'devices' => 'Устройства',
+    'imageSizes' => 'Размеры изображений',
+    'savedSettings' => 'Сохраненные настройки',
+    'savePresetButton' => 'Сохранить настройки',
+    'resetButton' => 'Сбросить',
+    'customDateLabel' => 'Пользовательская дата',
+    'copyButton' => 'Копировать',
+    'likes' => 'Лайков',
+    'comments' => 'Комментарии',
+    'shared' => 'Поделились',
+    'active' => 'Активно:',
+    'was_active' => 'Было активно:',
 
     // Переводы для вкладок
     'tabs' => [
@@ -38,6 +62,7 @@ return [
         'text' => 'Текст',
         'description' => 'Описание',
         'download' => 'Скачать',
+        'open-tab' => 'Открыть в новой вкладке',
         'redirects-details' => 'Редиректы',
         'translate' => 'Перевести',
         'open-in-tab' => 'Открыть в новой вкладке',
@@ -46,6 +71,20 @@ return [
         'add-to-favorites' => 'Добавить в избранное',
         'show-all-text' => 'Показать все',
         'hide-text' => 'Скрыть',
+        'copy' => 'Копировать',
+        'copied' => 'Скопировано',
+        'share' => 'Поделиться',
+        'preview' => 'Предпросмотр',
+        'information' => 'Информация',
+        'stats' => 'Статистика',
+        'close' => 'Закрыть',
+        'advertising-networks' => 'Рекламные сети',
+        'country' => 'Страна',
+        'countries' => 'Страны',
+        'language' => 'Язык',
+        'first-display-date' => 'Дата первого показа',
+        'last-display-date' => 'Дата последнего показа',
+        'status' => 'Статус',
         'similar-creatives' => [
             'title' => 'Похожие креативы',
             'load-more' => 'Загрузить больше',
@@ -105,5 +144,27 @@ return [
             'all' => 'Все страны',
             'placeholder' => 'Страна',
         ],
+    ],
+
+    // Переводы состояний
+    'states' => [
+        'loading' => 'Загрузка...',
+        'error' => 'Ошибка',
+        'empty' => 'Нет данных',
+        'success' => 'Успешно',
+        'processing' => 'Обработка...',
+    ],
+
+    // Переводы действий
+    'actions' => [
+        'retry' => 'Повторить',
+        'refresh' => 'Обновить',
+        'load_more' => 'Загрузить еще',
+        'save' => 'Сохранить',
+        'cancel' => 'Отмена',
+        'edit' => 'Редактировать',
+        'delete' => 'Удалить',
+        'add' => 'Добавить',
+        'remove' => 'Удалить',
     ],
 ];

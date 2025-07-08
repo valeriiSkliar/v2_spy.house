@@ -1,16 +1,18 @@
 // composables/useCreatives.ts
 // Композабл для управления креативами
+//
+// ВАЖНО: Содержит побочные эффекты (ref, computed), не удалять через tree-shaking!
 
 import { creativesService } from '@/services/CreativesService';
 import type {
-  Creative,
-  CreativesFilters,
-  FilterState,
-  Pagination,
-  ProcessedCreativesData,
-  RequestMeta,
-  TabValue,
-  UseCreativesReturn
+    Creative,
+    CreativesFilters,
+    FilterState,
+    Pagination,
+    ProcessedCreativesData,
+    RequestMeta,
+    TabValue,
+    UseCreativesReturn
 } from '@/types/creatives.d';
 import { CREATIVES_CONSTANTS } from '@/types/creatives.d';
 import { computed, ref, shallowRef } from 'vue';
@@ -30,6 +32,9 @@ export function useCreatives(): UseCreativesReturn {
   // Состояние загрузки и ошибок
   const isLoading = ref(false);
   const error = ref<string | null>(null);
+  
+  // Количество найденных креативов
+  const searchCount = ref<number>(0);
   
   // Кэш последнего запроса для предотвращения дубликатов
   const lastRequestSignature = ref<string>('');
@@ -64,10 +69,10 @@ export function useCreatives(): UseCreativesReturn {
     };
   });
   
-  // Вспомогательные computed
-  const hasCreatives = computed((): boolean => creatives.value.length > 0);
-  const hasError = computed((): boolean => error.value !== null);
-  const hasSearch = computed((): boolean => meta.value.hasSearch);
+  // Вспомогательные computed (commented out - unused)
+  // const hasCreatives = computed((): boolean => creatives.value.length > 0);
+  // const hasError = computed((): boolean => error.value !== null);
+  // const hasSearch = computed((): boolean => meta.value.hasSearch);
   
   // Состояние пагинации
   const canLoadMore = computed((): boolean => {
@@ -75,8 +80,8 @@ export function useCreatives(): UseCreativesReturn {
     return pag.currentPage < pag.lastPage;
   });
   
-  const isFirstPage = computed((): boolean => pagination.value.currentPage === 1);
-  const isLastPage = computed((): boolean => pagination.value.currentPage === pagination.value.lastPage);
+  // const isFirstPage = computed((): boolean => pagination.value.currentPage === 1);
+  // const isLastPage = computed((): boolean => pagination.value.currentPage === pagination.value.lastPage);
 
   // ============================================================================
   // УТИЛИТАРНЫЕ ФУНКЦИИ
@@ -92,7 +97,7 @@ export function useCreatives(): UseCreativesReturn {
   ): CreativesFilters {
     return {
       searchKeyword: filters.searchKeyword || undefined,
-      country: filters.country !== 'default' ? filters.country : undefined,
+      countries: filters.countries.length > 0 ? filters.countries : undefined,
       dateCreation: filters.dateCreation !== 'default' ? filters.dateCreation : undefined,
       sortBy: filters.sortBy !== 'default' ? (filters.sortBy as any) : 'creation',
       periodDisplay: filters.periodDisplay !== 'default' ? filters.periodDisplay : undefined,
@@ -134,6 +139,14 @@ export function useCreatives(): UseCreativesReturn {
   // ============================================================================
   
   /**
+   * Устанавливает состояние загрузки извне.
+   * Необходимо для синхронного UI/UX.
+   */
+  function setIsLoading(loading: boolean): void {
+    isLoading.value = loading;
+  }
+
+  /**
    * Загружает креативы с указанными фильтрами
    */
   async function loadCreativesWithFilters(filters: CreativesFilters): Promise<void> {
@@ -148,7 +161,7 @@ export function useCreatives(): UseCreativesReturn {
     
     try {
       error.value = null;
-      isLoading.value = true;
+      setIsLoading(true);
       
       // Если изменились фильтры (не страница), очищаем данные для UX
       if (creativesData.value && hasFiltersChanged(filters, lastRequestSignature.value)) {
@@ -157,6 +170,11 @@ export function useCreatives(): UseCreativesReturn {
       
       const data = await creativesService.loadCreatives(filters);
       creativesData.value = data;
+      
+      // Автоматически обновляем searchCount из pagination.total
+      if (data?.pagination?.total !== undefined) {
+        searchCount.value = data.pagination.total;
+      }
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Неизвестная ошибка';
@@ -170,6 +188,7 @@ export function useCreatives(): UseCreativesReturn {
       
     } finally {
       isLoading.value = false;
+      setIsLoading(false);
     }
   }
   
@@ -211,12 +230,52 @@ export function useCreatives(): UseCreativesReturn {
   /**
    * Загружает конкретную страницу
    */
-  async function loadPage(page: number): Promise<void> {
-    if (page < 1 || page > pagination.value.lastPage || isLoading.value) return;
-    
-    await loadCreatives(page);
-  }
+  // async function loadPage(page: number): Promise<void> {
+  //   if (page < 1 || page > pagination.value.lastPage || isLoading.value) return;
+  //   
+  //   await loadCreatives(page);
+  // }
   
+  /**
+   * Загружает только количество креативов без полного списка
+   * Используется для быстрого обновления счетчика при изменении фильтров
+   */
+  async function loadSearchCount(filters: CreativesFilters): Promise<void> {
+    try {
+      // Формируем URL для API запроса
+      const params = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          if (Array.isArray(value)) {
+            if (value.length > 0) {
+              params.append(key, value.join(','));
+            }
+          } else {
+            params.append(key, String(value));
+          }
+        }
+      });
+
+      // Запрос к API для получения только количества
+      const response = await window.axios.get(`/api/creatives/search-count?${params.toString()}`);
+      
+      if (response.data?.status === 'success' && response.data?.data?.count !== undefined) {
+        searchCount.value = response.data.data.count;
+      }
+
+    } catch (error) {
+      console.error('❌ Ошибка загрузки количества креативов:', error);
+      // Не сбрасываем счетчик при ошибке, оставляем предыдущее значение
+    }
+  }
+
+  /**
+   * Устанавливает количество найденных креативов
+   */
+  function setSearchCount(count: number): void {
+    searchCount.value = count;
+  }
+
   /**
    * Очищает данные креативов
    */
@@ -224,23 +283,24 @@ export function useCreatives(): UseCreativesReturn {
     creativesData.value = null;
     error.value = null;
     isLoading.value = false;
+    searchCount.value = 0;
     lastRequestSignature.value = '';
   }
   
   /**
    * Отменяет все активные запросы
    */
-  function cancelRequests(): void {
-    creativesService.cancelAllRequests();
-    isLoading.value = false;
-  }
+  // function cancelRequests(): void {
+  //   creativesService.cancelAllRequests();
+  //   isLoading.value = false;
+  // }
   
   /**
    * Сбрасывает состояние ошибки
    */
-  function clearError(): void {
-    error.value = null;
-  }
+  // function clearError(): void {
+  //   error.value = null;
+  // }
 
   // ============================================================================
   // МЕТОДЫ ДЛЯ РАБОТЫ С ОТДЕЛЬНЫМИ КРЕАТИВАМИ
@@ -249,20 +309,20 @@ export function useCreatives(): UseCreativesReturn {
   /**
    * Находит креатив по ID
    */
-  function findCreativeById(id: number): Creative | undefined {
-    return creatives.value.find(creative => creative.id === id);
-  }
+  // function findCreativeById(id: number): Creative | undefined {
+  //   return creatives.value.find(creative => creative.id === id);
+  // }
   
   /**
    * Добавляет креатив в избранное (заглушка)
    */
-  function toggleFavorite(creativeId: number): void {
-    const creative = findCreativeById(creativeId);
-    if (creative) {
-      creative.isFavorite = !creative.isFavorite;
-      // TODO: Отправить изменение на сервер
-    }
-  }
+  // function toggleFavorite(creativeId: number): void {
+  //   const creative = findCreativeById(creativeId);
+  //   if (creative) {
+  //     creative.isFavorite = !creative.isFavorite;
+  //     // TODO: Отправить изменение на сервер
+  //   }
+  // }
   
   /**
    * Фильтрует креативы по критерию
@@ -274,23 +334,23 @@ export function useCreatives(): UseCreativesReturn {
   /**
    * Получает креативы для взрослых
    */
-  function getAdultCreatives(): Creative[] {
-    return filterCreatives(creative => creative.is_adult === true);
-  }
+  // function getAdultCreatives(): Creative[] {
+  //   return filterCreatives(creative => creative.is_adult === true);
+  // }
   
   /**
    * Получает недавние креативы
    */
-  function getRecentCreatives(): Creative[] {
-    return filterCreatives(creative => creative.isRecent === true);
-  }
+  // function getRecentCreatives(): Creative[] {
+  //   return filterCreatives(creative => creative.isRecent === true);
+  // }
   
   /**
    * Получает избранные креативы
    */
-  function getFavoriteCreatives(): Creative[] {
-    return filterCreatives(creative => creative.isFavorite === true);
-  }
+  // function getFavoriteCreatives(): Creative[] {
+  //   return filterCreatives(creative => creative.isFavorite === true);
+  // }
 
   // ============================================================================
   // СТАТИСТИКА И УТИЛИТЫ
@@ -299,35 +359,35 @@ export function useCreatives(): UseCreativesReturn {
   /**
    * Получает статистику креативов
    */
-  function getCreativesStats() {
-    const total = creatives.value.length;
-    const adult = getAdultCreatives().length;
-    const recent = getRecentCreatives().length;
-    const favorites = getFavoriteCreatives().length;
-    
-    return {
-      total,
-      adult,
-      recent,
-      favorites,
-      adultPercentage: total > 0 ? Math.round((adult / total) * 100) : 0,
-      recentPercentage: total > 0 ? Math.round((recent / total) * 100) : 0,
-    };
-  }
+  // function getCreativesStats() {
+  //   const total = creatives.value.length;
+  //   const adult = getAdultCreatives().length;
+  //   const recent = getRecentCreatives().length;
+  //   const favorites = getFavoriteCreatives().length;
+  //   
+  //   return {
+  //     total,
+  //     adult,
+  //     recent,
+  //     favorites,
+  //     adultPercentage: total > 0 ? Math.round((adult / total) * 100) : 0,
+  //     recentPercentage: total > 0 ? Math.round((recent / total) * 100) : 0,
+  //   };
+  // }
   
   /**
    * Проверяет состояние загрузки от сервиса
    */
-  function isServiceLoading(): boolean {
-    return creativesService.isLoading();
-  }
+  // function isServiceLoading(): boolean {
+  //   return creativesService.isLoading();
+  // }
   
   /**
    * Получает информацию о кэше сервиса
    */
-  function getCacheInfo() {
-    return creativesService.getCacheStats();
-  }
+  // function getCacheInfo() {
+  //   return creativesService.getCacheStats();
+  // }
 
   // ============================================================================
   // ВОЗВРАЩАЕМЫЙ ОБЪЕКТ
@@ -340,6 +400,7 @@ export function useCreatives(): UseCreativesReturn {
     meta: computed(() => meta.value),
     isLoading: computed(() => isLoading.value),
     error: computed(() => error.value),
+    searchCount: computed(() => searchCount.value),
     
     // Вспомогательные computed
     // hasCreatives: computed(() => hasCreatives.value),
@@ -356,6 +417,9 @@ export function useCreatives(): UseCreativesReturn {
     loadNextPage,
     // loadPage,
     clearCreatives,
+    loadSearchCount,
+    setSearchCount,
+    setIsLoading, 
     // cancelRequests,
     // clearError,
     

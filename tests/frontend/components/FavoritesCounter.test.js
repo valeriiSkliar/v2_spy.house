@@ -27,6 +27,15 @@ describe('FavoritesCounter', () => {
     // Инициализируем store
     store = useCreativesFiltersStore();
 
+    // Мокируем window.axios
+    if (!window.axios) {
+      window.axios = {
+        get: vi.fn(),
+        post: vi.fn(),
+        delete: vi.fn(),
+      };
+    }
+
     // Сбрасываем моки
     vi.clearAllMocks();
 
@@ -41,6 +50,9 @@ describe('FavoritesCounter', () => {
   });
 
   it('отображает начальное значение счетчика', () => {
+    // Устанавливаем значение в Store (компонент берет данные из Store)
+    store.setFavoritesCount(42);
+
     wrapper = mount(FavoritesCounter, {
       global: {
         plugins: [pinia],
@@ -57,6 +69,9 @@ describe('FavoritesCounter', () => {
     const translations = {
       favoritesCountTooltip: 'Тестовый tooltip: 25',
     };
+
+    // Устанавливаем значение в Store
+    store.setFavoritesCount(25);
 
     wrapper = mount(FavoritesCounter, {
       global: {
@@ -108,6 +123,9 @@ describe('FavoritesCounter', () => {
   });
 
   it('показывает состояние загрузки', async () => {
+    // Устанавливаем начальное значение в Store
+    store.setFavoritesCount(30);
+
     // Мокируем медленный API ответ
     let resolvePromise;
     const apiPromise = new Promise(resolve => {
@@ -126,22 +144,16 @@ describe('FavoritesCounter', () => {
       },
     });
 
-    // Кликаем по счетчику
-    wrapper.find('.favorites-counter').trigger('click');
-
-    // Сразу после клика должен показаться loader
+    // Устанавливаем состояние загрузки в Store (новая логика)
+    store.isFavoritesLoading = true;
     await wrapper.vm.$nextTick();
+
+    // Проверяем состояние загрузки
     expect(wrapper.find('.favorites-counter--loading').exists()).toBe(true);
-    expect(wrapper.find('.favorites-counter__loader').exists()).toBe(true);
+    expect(wrapper.vm.isLoading).toBe(true);
 
-    // Резолвим Promise и ждем обновления
-    resolvePromise({
-      data: { data: { count: 60 } },
-    });
-    await apiPromise;
-
-    // Даем дополнительное время на обновление состояния
-    await new Promise(resolve => setTimeout(resolve, 0));
+    // Сбрасываем состояние загрузки в Store
+    store.isFavoritesLoading = false;
     await wrapper.vm.$nextTick();
 
     // Loader должен исчезнуть
@@ -179,6 +191,9 @@ describe('FavoritesCounter', () => {
   });
 
   it('синхронизируется с Store', async () => {
+    // Устанавливаем начальное значение в Store
+    store.setFavoritesCount(30);
+
     wrapper = mount(FavoritesCounter, {
       global: {
         plugins: [pinia],
@@ -214,7 +229,10 @@ describe('FavoritesCounter', () => {
     expect(wrapper.find('.favorites-counter--animated').exists()).toBe(false);
   });
 
-  it('форматирует большие числа', () => {
+  it('форматирует большие числа', async () => {
+    // Устанавливаем значение в Store
+    store.setFavoritesCount(1500);
+
     wrapper = mount(FavoritesCounter, {
       global: {
         plugins: [pinia],
@@ -224,7 +242,16 @@ describe('FavoritesCounter', () => {
       },
     });
 
-    // Проверяем что отображается исходное число (форматирование пока не используется в отображении)
-    expect(wrapper.find('.favorites-counter__value').text()).toBe('1500');
+    // Проверяем что компонент корректно форматирует большие числа
+    expect(wrapper.find('.favorites-counter__value').text()).toBe('1.5k');
+
+    // Дополнительно проверяем другие форматы
+    store.setFavoritesCount(999);
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find('.favorites-counter__value').text()).toBe('999');
+
+    store.setFavoritesCount(1000000);
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find('.favorites-counter__value').text()).toBe('1.0m');
   });
 });

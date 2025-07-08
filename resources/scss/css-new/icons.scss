@@ -23,6 +23,15 @@
   display: block;
   vertical-align: middle;
 }
+.icon-quote:before {
+  content: "\e94c";
+}
+.icon-txt-dot:before {
+  content: "\e94d";
+}
+.icon-arrow-up-right:before {
+  content: "\e94e";
+}
 .icon-home:before {
   content: "\e94a";
 }

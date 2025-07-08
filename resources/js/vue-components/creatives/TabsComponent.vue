@@ -78,28 +78,8 @@ function handleTabClick(tabValue: string): void {
     console.log('Tab clicked:', tabValue);
 
     // Устанавливаем новую активную вкладку через store
-    // Это автоматически триггерит URL синхронизацию и загрузку креативов
+    // Это автоматически триггерит URL синхронизацию и загрузку креативов через Store watchers
     store.setActiveTab(tabValue);
-
-    // Эмитим событие для компонентов, которые не используют новую систему (обратная совместимость)
-    const event = new CustomEvent('tabs:changed', {
-      detail: {
-        activeTab: tabValue,
-        previousTab: store.tabs.activeTab,
-        tabOption: store.tabOptions.find(t => t.value === tabValue),
-      },
-    });
-    document.dispatchEvent(event);
-
-    // Также эмитим новое событие для полной совместимости
-    const creativesEvent = new CustomEvent('creatives:tab-changed', {
-      detail: {
-        currentTab: tabValue,
-        previousTab: store.tabs.activeTab,
-        source: 'user',
-      },
-    });
-    document.dispatchEvent(creativesEvent);
   }
 }
 

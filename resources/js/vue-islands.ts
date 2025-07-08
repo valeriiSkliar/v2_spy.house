@@ -47,12 +47,14 @@ const componentMap: Record<string, () => Promise<{ default: Component }>> = {
     'CreativesFiltersComponent': () => import('./vue-components/creatives/FiltersComponent.vue'),
     'CreativesTabsComponent': () => import('./vue-components/creatives/TabsComponent.vue'),
     'CreativesListComponent': () => import('./vue-components/creatives/CreativesListComponent.vue'),
+    'CreativeDetailsComponent': () => import('./vue-components/creatives/CreativeDetailsComponent.vue'),
     
     // UI компоненты
     'PaginationComponent': () => import('./vue-components/ui/PaginationComponent.vue'),
     'FavoritesCounter': () => import('./vue-components/ui/FavoritesCounter.vue'),
     'BaseSelect': () => import('./vue-components/ui/BaseSelect.vue'),
     'PerPageSelect': () => import('./vue-components/creatives/PerPageSelect.vue'),
+    'SearchCountComponent': () => import('./vue-components/creatives/SearchCountComponent.vue'),
     
     // Добавьте здесь новые компоненты по мере создания
 };
@@ -192,10 +194,15 @@ export function initVueIslands(): void {
                 // Глобальные свойства для всех компонентов
                 app.config.globalProperties.$http = axios;
                 
-                // Скрываем placeholder сразу при начале монтирования
-                const placeholder = element.querySelector('[data-vue-placeholder]') as HTMLElement;
-                if (placeholder) {
-                    placeholder.style.display = 'none';
+                // Проверяем наличие атрибута ручного управления placeholder
+                const manualPlaceholderControl = element.hasAttribute('data-vue-placeholder-manual');
+                
+                // Скрываем placeholder сразу при начале монтирования (если не ручное управление)
+                if (!manualPlaceholderControl) {
+                    const placeholder = element.querySelector('[data-vue-placeholder]') as HTMLElement;
+                    if (placeholder) {
+                        placeholder.style.display = 'none';
+                    }
                 }
                 
                 // Создаем контейнер для Vue компонента
@@ -249,10 +256,15 @@ document.addEventListener('blog:content-updated', (event: Event) => {
  * Управление placeholder'ами компонентов
  */
 function hidePlaceholder(element: HTMLElement): void {
-    const placeholder = element.querySelector('[data-vue-placeholder]') as HTMLElement;
-    if (placeholder) {
-        // Удаляем placeholder полностью (он уже скрыт при монтировании)
-        placeholder.remove();
+    // Проверяем наличие ручного управления placeholder
+    const manualPlaceholderControl = element.hasAttribute('data-vue-placeholder-manual');
+    
+    if (!manualPlaceholderControl) {
+        const placeholder = element.querySelector('[data-vue-placeholder]') as HTMLElement;
+        if (placeholder) {
+            // Удаляем placeholder полностью (он уже скрыт при монтировании)
+            placeholder.remove();
+        }
     }
     
     // Помечаем контейнер как готовый
@@ -272,4 +284,29 @@ document.addEventListener('vue-component-ready', (event: Event) => {
     if (componentElement) {
         hidePlaceholder(componentElement);
     }
-}); 
+});
+
+/**
+ * Экспортируемая функция для ручного управления placeholder
+ */
+export function hidePlaceholderManually(componentName: string): void {
+    const componentElement = document.querySelector(`[data-vue-component="${componentName}"][data-vue-placeholder-manual]`) as HTMLElement;
+    
+    if (componentElement) {
+        const placeholder = componentElement.querySelector('[data-vue-placeholder]') as HTMLElement;
+        if (placeholder) {
+            placeholder.style.display = 'none';
+            placeholder.remove();
+        }
+        
+        // Помечаем контейнер как готовый
+        componentElement.classList.add('vue-component-ready');
+        
+        console.log(`Placeholder для компонента ${componentName} скрыт вручную`);
+    } else {
+        console.warn(`Компонент ${componentName} с ручным управлением placeholder не найден`);
+    }
+}
+
+// Добавляем функцию в глобальную область видимости
+window.hidePlaceholderManually = hidePlaceholderManually; 

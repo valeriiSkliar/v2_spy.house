@@ -1,182 +1,108 @@
-@extends('layouts.main')
+@extends('layouts.body')
 
-@section('page-content')
-<h1>Pages</h1>
-<!-- <ul class="menu-demo">
-    <li><a href="creatives_push.html">Creatives Push</a></li>
-    <li><a href="creatives_inpage.html">Creatives InPage</a></li>
-    <li><a href="creatives_fb.html">Creatives Facebook/TikTok</a></li>
-    <li><a href="services_1.html">Services 1</a></li>
-    <li><a href="services_2.html">Services 2</a></li>
-    <li><a href="landings_1.html">Landings 1</a></li>
-    <li><a href="landings_2.html">Landings 2</a></li>
-    <li><a href="profile_1.html">Profile </a></li>
-    <li><a href="profile_change-password.html">Profile - Change password</a></li>
-    <li><a href="notifications.html">Notifications</a></li>
-    <li><a href="tariffs.html">Tariffs</a></li>
-    <li><a href="tariffs_pay.html">Tariffs - Pay</a></li>
-    <li><a data-toggle="modal" data-target="#modal-subscription-activated">Subscription activated</a></li>
-    <li><a href="finances.html">Finances</a></li>
-    <li><a data-toggle="modal" data-target="#modal-contacts">Contacts</a></li>
-    <li><a href="blog.html">Blog</a></li>
-    <li><a href="blog_single.html">Blog Single</a></li>
-    <li><a href="api.html">API</a></li>
-</ul> -->
-
-<div style="background: #243035; padding: 10px 10px 5px; border-radius: 10px; margin-bottom: 20px; margin-top: 20px;">
-    <div class="row">
-        <div class="col-auto mb-2">
-            <x-tariff-link>Free</x-tariff-link>
-        </div>
-        <div class="col-auto mb-2">
-            <x-tariff-link type="start">Start</x-tariff-link>
-        </div>
-        <div class="col-auto mb-2">
-            <x-tariff-link type="basic">Basic</x-tariff-link>
-        </div>
-        <div class="col-auto mb-2">
-            <x-tariff-link type="premium">Premium</x-tariff-link>
-        </div>
-        <div class="col-auto mb-2">
-            <x-tariff-link type="enterprise">Enterprise</x-tariff-link>
-        </div>
-    </div>
-</div>
-
-<h2 class="mb-10">Base select</h2>
-<div class="section mb-20">
-
-    <x-frontend.language-selector />
-</div>
-
-
-<h2 class="mb-10">Multi select</h2>
-<div class="section mb-20">
-    <div class="row">
-        <div class="col-12 col-md-6 mb-10">
-            <div class="filter-section">
-                <div class="multi-select" disabled="false">
-                    <div class="is-empty multi-select__tags"><span class="multi-select__placeholder">Select OS</span>
+@section('content')
+<div class="wrapper _page pt-0">
+    <header class="header _home">
+        <div class="container" data-aos-delay="200" data-aos="fade-down">
+            <div class="header__burger">
+                <button class="btn-icon _dark js-menu">
+                    <span class="menu-burger"><span></span><span></span><span></span><span></span></span>
+                </button>
+            </div>
+            <div class="header__left">
+                <a href="/" class="header__logo"><img src="img/logo.svg?v=2" alt=""></a>
+            </div>
+            <nav class="header__nav">
+                <ul>
+                    <li><a href="#">Features</a></li>
+                    <li><a href="#">Prices</a></li>
+                    <li><a href="#">Reviews</a></li>
+                    <li><a href="#">Blog</a></li>
+                </ul>
+            </nav>
+            <div class="header__right">
+                <div class="header__contacts">
+                    <a data-toggle="modal" data-target="#modal-contacts" class="link">Contacts</a>
+                </div>
+                <div class="header__lang">
+                    <div class="lang-menu">
+                        <div class="base-select">
+                            <div class="base-select__trigger">
+                                <span class="base-select__value"><img src="img/flags/US.svg" alt="">Eng</span>
+                                <span class="base-select__arrow"></span>
+                            </div>
+                            <ul class="base-select__dropdown" style="display: none;">
+                                <li class="base-select__option is-selected"><img src="img/flags/US.svg" alt="">Eng</li>
+                                <li class="base-select__option"><img src="img/flags/UA.svg" alt="">Uk</li>
+                                <li class="base-select__option"><img src="img/flags/ES.svg" alt="">Esp</li>
+                            </ul>
+                        </div>
                     </div>
-                    <div class="multi-select__dropdown" style="display: none;">
-                        <div class="multi-select__search"><input type="text" placeholder="Search"
-                                class="multi-select__search-input"></div>
-                        <ul class="multi-select__options">
-                            <li class="">
-                                <!----> android
-                            </li>
-                            <li class="">
-                                <!----> blackberry
-                            </li>
-                            <li class="">
-                                <!----> bot
-                            </li>
-                            <li class="">
-                                <!----> chromeos
-                            </li>
-                            <li class="">
-                                <!----> ios
-                            </li>
-                            <li class="">
-                                <!----> kindle
-                            </li>
-                            <li class="">
-                                <!----> linux
-                            </li>
-                            <li class="">
-                                <!----> macosx
-                            </li>
-                            <li class="">
-                                <!----> other
-                            </li>
-                            <li class="">
-                                <!----> playstation
-                            </li>
-                            <li class="">
-                                <!----> unknown
-                            </li>
-                            <li class="">
-                                <!----> webos
-                            </li>
-                            <li class="">
-                                <!----> windows
-                            </li>
-                            <li class="">
-                                <!----> windowsphone
-                            </li>
-                            <li class="">
-                                <!----> xbox
-                            </li>
-                        </ul>
-                    </div><span class="multi-select__arrow"></span>
+                </div>
+                <div class="header__login">
+                    <a href="#" class="btn _flex _orange font-16 font-weight-bold">Login</a>
+                </div>
+                <div class="header__login-mobile">
+                    <a href="#" class="btn-icon _dark"><span class="icon-login font-20"></span></a>
+                </div>
+                <!-- User Login
+                <div class="user-preview">
+                    <a href="#" class="user-preview__trigger">
+                        <div class="user-preview__avatar thumb"><span>LV</span></div>
+                        <div class="user-preview__name">Lysenko V.</div>
+                    </a>
+                </div>
+                -->
+            </div>
+        </div>
+    </header>
+    <section class="offer">
+        <div class="offer__bg">
+            <video autoplay muted playsinline preload="auto" loop>
+                <source src="img/main/1.mp4" type="video/mp4">
+            </video>
+        </div>
+        <div class="container" data-aos-delay="600" data-aos="fade-up">
+            <div class="row flex-row-reverse _offset30">
+                <div class="col-12 col-md-5 align-self-end">
+                    <div class="offer-phone">
+                        <div class="offer-phone__content">
+                            <video autoplay muted playsinline preload="auto" loop>
+                                <source src="img/main/screen.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-7">
+                    <div class="offer__content">
+                        <h1 class="offer__title">All competitors creatives are here</h1>
+                        <script>
+                            let points = [
+                                '<span style="color: rgba(117, 175, 229, 0.70);">Facebook Ads</span>',
+                                '<span style="color: rgba(233, 68, 90, 0.90);">TikTok Ads</span>',
+                                '<span style="color: rgba(182, 229, 117, 0.70);">Push Ads</span>',
+                                '<span style="color: rgba(229, 188, 117, 0.70);">In-Page Ads</span>',
+                            ];
+                        </script>
+                        <div class="offer__desc">Spy House — advertising spy service for popular advertising formats
+                            <br><span id="typeit"></span>
+                        </div>
+                        <div class="offer__row">
+                            <div class="offer__btn">
+                                <a href="#" class="btn _flex _green _large min-170">Get started</a>
+                            </div>
+                            <div class="offer__winner">
+                                <div class="best-affiliate">
+                                    <img src="img/main/winner-2021.svg" alt="">
+                                    <div class="best-affiliate__title">Best Affiliate Spy Tool</div>
+                                    <div class="best-affiliate__desc">Conversion club awards 2021</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-12 col-md-6 mb-10">
-            <div class="filter-section">
-                <div class="multi-select" disabled="false">
-                    <div class="multi-select__tags">
-                        <span class="multi-select__tag">webos <button type="button" class="multi-select__remove"> ×
-                            </button></span>
-                        <span class="multi-select__tag">windowsphone <button type="button" class="multi-select__remove">
-                                × </button></span>
-                        <span class="multi-select__tag">xbox <button type="button" class="multi-select__remove"> ×
-                            </button></span>
-                    </div>
-                    <div class="multi-select__dropdown" style="display: none;">
-                        <div class="multi-select__search"><input type="text" placeholder="Search"
-                                class="multi-select__search-input"></div>
-                        <ul class="multi-select__options">
-                            <li class="">
-                                <!----> android
-                            </li>
-                            <li class="">
-                                <!----> blackberry
-                            </li>
-                            <li class="">
-                                <!----> bot
-                            </li>
-                            <li class="">
-                                <!----> chromeos
-                            </li>
-                            <li class="">
-                                <!----> ios
-                            </li>
-                            <li class="">
-                                <!----> kindle
-                            </li>
-                            <li class="">
-                                <!----> linux
-                            </li>
-                            <li class="">
-                                <!----> macosx
-                            </li>
-                            <li class="">
-                                <!----> other
-                            </li>
-                            <li class="">
-                                <!----> playstation
-                            </li>
-                            <li class="">
-                                <!----> unknown
-                            </li>
-                            <li class="selected">
-                                <!----> webos
-                            </li>
-                            <li class="">
-                                <!----> windows
-                            </li>
-                            <li class="selected">
-                                <!----> windowsphone
-                            </li>
-                            <li class="selected">
-                                <!----> xbox
-                            </li>
-                        </ul>
-                    </div><span class="multi-select__arrow"></span>
-                </div>
-            </div>
-        </div>
-    </div>
+    </section>
 </div>
 @endsection

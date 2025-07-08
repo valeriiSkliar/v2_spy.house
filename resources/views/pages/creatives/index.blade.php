@@ -15,7 +15,7 @@
                 <div class="col-12 col-md-auto mb-15">
                     <a href="#" class="btn justify-content-start _flex w-100 _medium _gray">
                         <span class="icon-favorite-empty font-16 mr-2"></span>
-                        Favorites
+                        {{ __('creatives.favorites') }}
                         <x-creatives.vue.favorites-counter :initialCount="43" :translations="[
                                 'favoritesCountTooltip' => 'Количество избранных креативов. Нажмите для обновления.'
                             ]" />
@@ -34,26 +34,37 @@
     </div>
     {{-- @dd($selectOptions) --}}
 
+    {{-- DEBUG: Проверим что передается в filtersTranslations --}}
+    {{-- @dump($filtersTranslations) --}}
+
     <x-creatives.vue.filters :filters="$filters" :selectOptions="$selectOptions"
         :filtersTranslations="$filtersTranslations" :tabOptions="$tabOptions" />
 
+    {{-- Search count component - Vue островок --}}
+    <x-creatives.vue.search-count :initialCount="$searchCount" />
+
     {{-- Компонент списка креативов с новой системой композаблов --}}
 
-    <x-creatives.vue.list :listTranslations="$listTranslations" :perPage="12" :activeTab="$activeTab" />
+    <x-creatives.vue.list :listTranslations="$listTranslations" :perPage="12" :activeTab="$activeTab"
+        :detailsTranslations="$detailsTranslations ?? []" :showSimilarCreatives="false"
+        :cardTranslations="$cardTranslations ?? []" />
+
 
     {{-- Компонент пагинации --}}
-    <x-creatives.vue.pagination :translations="$listTranslations" :showInfo="true" :maxVisiblePages="5"
+    <x-creatives.vue.pagination :translations="$listTranslations" :showInfo="false" :maxVisiblePages="5"
         :alwaysShowFirstLast="true" />
 
+</div>
 
-    {{-- Подключение скрипта Vue островков --}}
-    @vite(['resources/js/vue-islands.ts'])
 
-    {{--
-    Пример конфигурации Vue Islands (опционально):
+{{-- Подключение скрипта Vue островков --}}
+@vite(['resources/js/vue-islands.ts'])
 
-    <script type="module">
-        import { configureVueIslands } from '@/vue-islands';
+{{--
+Пример конфигурации Vue Islands (опционально):
+
+<script type="module">
+    import { configureVueIslands } from '@/vue-islands';
     
     // Development конфигурация (по умолчанию)
     configureVueIslands({
@@ -68,8 +79,7 @@
         cleanupDelay: 500,           // Быстрая очистка
         preservePropsInDev: false,   // Очищать даже в dev
     });
-    </script>
-    --}}
+</script>
+--}}
 
-</div>
 @endsection

@@ -1,4 +1,3 @@
-
 ## Local Development Setup
 
 ### Prerequisites
@@ -31,9 +30,9 @@ sudo systemctl status rabbitmq-server
 
 The application provides commands to manage RabbitMQ queues defined in `config/queue.php`:
 
-*   `php artisan queues:list`: List declared queues and their message counts.
-*   `php artisan queues:create`: Declare all configured queues and exchanges.
-*   `php artisan queues:delete`: Delete all configured queues.
+- `php artisan queues:list`: List declared queues and their message counts.
+- `php artisan queues:create`: Declare all configured queues and exchanges.
+- `php artisan queues:delete`: Delete all configured queues.
 
 ### Working with Queues Locally
 
@@ -54,17 +53,65 @@ php artisan queue:work rabbitmq --queue=collect-ads
 ```
 
 Additional queue worker options:
+
 - `--tries=3`: Number of times to attempt a job before marking it as failed
 - `--timeout=60`: Number of seconds a job can run before timing out
 - `--sleep=3`: Number of seconds to wait when no job is available
 - `--max-jobs=1000`: Number of jobs to process before stopping
 
 Example with options:
+
 ```bash
 php artisan queue:work rabbitmq --queue=mail --tries=3 --timeout=60 --sleep=3 --max-jobs=1000
 ```
 
 To monitor queue status and messages, access the RabbitMQ management interface at http://localhost:15672 (default credentials: guest/guest)
+
+## Advertisement Networks Synchronization
+
+The application includes a system for synchronizing advertisement networks from external FeedHouse API. This system detects new networks and logs them for administrator review.
+
+### Commands
+
+The following commands are available for managing advertisement networks synchronization:
+
+```bash
+# Check available advertisement networks commands
+php artisan list | grep advertisment
+
+# Run synchronization manually (synchronous execution)
+php artisan advertisment-networks:sync
+
+# Run synchronization through background queue (recommended for production)
+php artisan advertisment-networks:sync --queue
+
+# Check scheduled tasks including weekly synchronization
+php artisan schedule:list
+```
+
+### Automated Synchronization
+
+The system is configured to automatically synchronize advertisement networks:
+
+- **Frequency**: Every Sunday at 00:00 UTC
+- **Method**: Background queue processing
+- **Behavior**: Only logs new networks (does not auto-create database records)
+
+### How It Works
+
+1. **Fetches Data**: Connects to FeedHouse API to retrieve current network list
+2. **Compares**: Checks against existing networks in the database
+3. **Logs New Networks**: Records information about newly detected networks in application logs
+4. **Admin Notification**: Logs require administrator review and manual approval
+
+### Log Messages
+
+When new networks are detected, the system generates:
+
+- **INFO**: "NEW ADVERTISEMENT NETWORKS DETECTED! Administrator notification required."
+- **WARNING**: "ADMIN ACTION REQUIRED: New advertisement networks need manual review and approval."
+
+These logs include detailed information about detected networks (names, codes, metadata) for administrator review.
 
 ## Notification System
 
@@ -73,21 +120,25 @@ The application includes a comprehensive notification system that provides a uni
 ### Core Components
 
 1. **NotificationType Enum** (`app/Enums/Frontend/NotificationType.php`):
+
    - Defines all possible notification types in the system
    - Each notification type has a unique string value
    - Used for type-safety and standardization
 
 2. **NotificationType Model** (`app/Models/NotificationType.php`):
+
    - Database representation of notification types
    - Stores metadata for each notification type (name, description, default channels, etc.)
    - Configurable per notification type (user-configurable flag, default channels)
 
 3. **BaseNotification Class** (`app/Notifications/BaseNotification.php`):
+
    - Abstract base class for all notifications
    - Handles channel resolution, data formatting, and type information
    - Provides default implementations that can be overridden
 
 4. **HasNotificationType Trait** (`app/Traits/HasNotificationType.php`):
+
    - Associates notifications with their types
    - Provides utility methods for working with notification types
    - Manages channel resolution based on user preferences
@@ -230,6 +281,7 @@ NotificationDispatcher::sendToEmails(
 ### How Notifications are Displayed
 
 1. **Database Notifications**:
+
    - Stored in the `notifications` table
    - Accessible via `$user->notifications` relation
    - Displayed in the user's notification center (`/notifications` route)
@@ -244,11 +296,13 @@ NotificationDispatcher::sendToEmails(
 Users can configure their notification preferences:
 
 1. **Enable/Disable Notifications**:
+
    ```php
    $user->setNotificationEnabled(NotificationType::YOUR_NOTIFICATION_TYPE, true|false);
    ```
 
 2. **Configure Notification Channels**:
+
    ```php
    $user->setNotificationChannels(NotificationType::YOUR_NOTIFICATION_TYPE, ['mail', 'database']);
    ```

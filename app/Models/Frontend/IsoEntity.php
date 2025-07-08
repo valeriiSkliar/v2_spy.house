@@ -31,6 +31,22 @@ class IsoEntity extends Model
     }
 
     /**
+     * Креативы, использующие данную сущность как страну
+     */
+    public function creativesAsCountry(): HasMany
+    {
+        return $this->hasMany(\App\Models\Creative::class, 'country_id');
+    }
+
+    /**
+     * Креативы, использующие данную сущность как язык
+     */
+    public function creativesAsLanguage(): HasMany
+    {
+        return $this->hasMany(\App\Models\Creative::class, 'language_id');
+    }
+
+    /**
      * Scope для фильтрации по типу сущности
      */
     public function scopeCountries(Builder $query): Builder
@@ -328,6 +344,11 @@ class IsoEntity extends Model
             Cache::forget("iso_entities.popular_countries.{$lang}");
             Cache::forget("iso_entities.country_map.{$lang}");
             Cache::forget("iso_entities.language_map.{$lang}");
+        }
+
+        // Очищаем кеш валидных стран в CreativesFiltersDTO
+        if (class_exists('\App\Http\DTOs\CreativesFiltersDTO')) {
+            \App\Http\DTOs\CreativesFiltersDTO::clearCountriesCache();
         }
     }
 

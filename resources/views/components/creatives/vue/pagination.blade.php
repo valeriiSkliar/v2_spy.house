@@ -10,7 +10,7 @@
         "showInfo": {{ json_encode($showInfo) }},
         "maxVisiblePages": {{ $maxVisiblePages }},
         "alwaysShowFirstLast": {{ json_encode($alwaysShowFirstLast) }}
-    }'>
+    }' data-vue-placeholder-manual>
 
     <!-- Placeholder для пагинации -->
     <div class="pagination-placeholder" data-vue-placeholder>

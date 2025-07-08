@@ -119,11 +119,11 @@ class CreativesPerformanceTest extends TestCase
     {
         $startTime = microtime(true);
 
-        // Получаем ID существующих сетей для корректного тестирования
-        $networkIds = AdvertismentNetwork::pluck('id')->take(4)->toArray();
+        // Получаем network_name существующих сетей для корректного тестирования
+        $networkNames = AdvertismentNetwork::pluck('network_name')->take(4)->toArray();
 
         $commaSeparatedData = [
-            'cr_advertisingNetworks' => implode(',', $networkIds),
+            'cr_advertisingNetworks' => implode(',', $networkNames),
             'cr_languages' => 'en,ru',  // Используем только созданные языки
             'cr_operatingSystems' => 'Windows,MacOS,Linux,Android,iOS',
             'cr_browsers' => 'Chrome,Firefox,Safari',
@@ -279,8 +279,8 @@ class CreativesPerformanceTest extends TestCase
      */
     private function getLargeFilterDataset(): array
     {
-        // Получаем ID существующих сетей (не более лимита)
-        $networkIds = AdvertismentNetwork::pluck('id')->take(3)->toArray();
+        // Получаем network_name существующих сетей (не более лимита)
+        $networkNames = AdvertismentNetwork::pluck('network_name')->take(3)->toArray();
 
         return [
             'searchKeyword' => 'performance test keyword',
@@ -290,7 +290,7 @@ class CreativesPerformanceTest extends TestCase
             'periodDisplay' => 'last7',
             'onlyAdult' => true,
             'activeTab' => 'push',
-            'advertisingNetworks' => array_slice($networkIds, 0, 3),  // Не более 3 сетей
+            'advertisingNetworks' => array_slice($networkNames, 0, 3),  // Не более 3 сетей
             'languages' => ['en'],  // Только 1 язык
             'operatingSystems' => ['Windows', 'MacOS'],  // Не более 2
             'browsers' => ['Chrome', 'Firefox'],  // Не более 2
@@ -306,13 +306,13 @@ class CreativesPerformanceTest extends TestCase
      */
     private function getStandardFilterDataset(): array
     {
-        // Получаем ID первой сети
-        $networkId = AdvertismentNetwork::first()?->id;
+        // Получаем network_name первой сети
+        $networkName = AdvertismentNetwork::first()?->network_name;
 
         return [
             'searchKeyword' => 'test',
             'country' => 'US',
-            'advertisingNetworks' => $networkId ? [$networkId] : [],
+            'advertisingNetworks' => $networkName ? [$networkName] : [],
             'page' => 1,
             'perPage' => 12
         ];
@@ -323,16 +323,16 @@ class CreativesPerformanceTest extends TestCase
      */
     private function getUrlSyncDataset(): array
     {
-        // Получаем ID существующих сетей
-        $networkIds = AdvertismentNetwork::pluck('id')->take(2)->toArray();
+        // Получаем network_name существующих сетей
+        $networkNames = AdvertismentNetwork::pluck('network_name')->take(2)->toArray();
 
         return [
             'searchKeyword' => 'old-keyword',
             'cr_searchKeyword' => 'test-keyword',
             'country' => 'US',  // Используем валидные коды стран
             'cr_country' => 'US',
-            'advertisingNetworks' => [$networkIds[0] ?? 1],
-            'cr_advertisingNetworks' => implode(',', $networkIds)
+            'advertisingNetworks' => [$networkNames[0] ?? 'push'],
+            'cr_advertisingNetworks' => implode(',', $networkNames)
         ];
     }
 
@@ -343,15 +343,15 @@ class CreativesPerformanceTest extends TestCase
     {
         srand($seed);
 
-        // Получаем доступные ID сетей
-        $networkIds = AdvertismentNetwork::pluck('id')->toArray();
-        $selectedNetworkId = $networkIds[rand(0, count($networkIds) - 1)] ?? 1;
+        // Получаем доступные network_name сетей
+        $networkNames = AdvertismentNetwork::pluck('network_name')->toArray();
+        $selectedNetworkName = $networkNames[rand(0, count($networkNames) - 1)] ?? 'push';
 
         return [
             'searchKeyword' => 'keyword_' . $seed,
             'country' => 'US',  // Используем только валидные коды стран
             'sortBy' => ['creation', 'activity', 'popularity'][rand(0, 2)],
-            'advertisingNetworks' => [$selectedNetworkId],
+            'advertisingNetworks' => [$selectedNetworkName],
             'operatingSystems' => [['Windows', 'MacOS', 'Android'][rand(0, 2)]],
             'browsers' => [['Chrome', 'Firefox', 'Safari'][rand(0, 2)]],
             'devices' => [['Desktop', 'Mobile'][rand(0, 1)]],
@@ -365,13 +365,13 @@ class CreativesPerformanceTest extends TestCase
      */
     private function getMaliciousDataset(): array
     {
-        // Получаем ID первой сети для корректного тестирования
-        $networkId = AdvertismentNetwork::first()?->id ?? 1;
+        // Получаем network_name первой сети для корректного тестирования
+        $networkName = AdvertismentNetwork::first()?->network_name ?? 'push';
 
         return [
             'searchKeyword' => '<script>alert("xss")</script>',
             'country' => 'US',  // Используем валидный код страны
-            'advertisingNetworks' => [$networkId],  // Используем валидный ID
+            'advertisingNetworks' => [$networkName],  // Используем валидный network_name
             'languages' => ['en'],  // Используем только валидные языки
             'cr_searchKeyword' => '"><script>alert(1)</script>'
         ];
@@ -382,12 +382,12 @@ class CreativesPerformanceTest extends TestCase
      */
     private function getExtraLargeFilterDataset(): array
     {
-        // Получаем ID существующих сетей (не более 4 для соблюдения лимитов)
-        $networkIds = AdvertismentNetwork::pluck('id')->take(4)->toArray();
+        // Получаем network_name существующих сетей (не более 4 для соблюдения лимитов)
+        $networkNames = AdvertismentNetwork::pluck('network_name')->take(4)->toArray();
 
         return [
             'searchKeyword' => str_repeat('test ', 20),  // Уменьшили размер
-            'advertisingNetworks' => array_slice($networkIds, 0, 4),  // Не более 4 сетей
+            'advertisingNetworks' => array_slice($networkNames, 0, 4),  // Не более 4 сетей
             'languages' => ['en', 'ru'],  // Только валидные языки, не более 2
             'operatingSystems' => ['Windows', 'MacOS', 'Android'],  // Не более 3
             'browsers' => ['Chrome', 'Firefox', 'Safari'],

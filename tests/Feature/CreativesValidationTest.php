@@ -27,7 +27,7 @@ class CreativesValidationTest extends TestCase
             'Accept' => 'application/json',
         ])->get('/api/creatives/filters/validate?' . http_build_query([
             'searchKeyword' => 'test search',
-            'country' => 'US',
+            'countries' => ['US'],
             'sortBy' => 'creation',
             'onlyAdult' => false,
             'page' => 1,
@@ -40,7 +40,7 @@ class CreativesValidationTest extends TestCase
                 'status',
                 'filters' => [
                     'searchKeyword',
-                    'country',
+                    'countries',
                     'sortBy',
                     'onlyAdult',
                     'page',

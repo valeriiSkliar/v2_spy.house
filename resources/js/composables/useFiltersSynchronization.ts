@@ -4,7 +4,7 @@
 import type { UseCreativesUrlSyncReturn } from '@/composables/useCreativesUrlSync';
 import type { FilterState, TabsState, UseCreativesReturn } from '@/types/creatives.d';
 import { CREATIVES_CONSTANTS } from '@/types/creatives.d';
-import { nextTick, Ref, ref, watchEffect } from 'vue';
+import { nextTick, Ref, ref } from 'vue';
 
 /**
  * Результат композабла синхронизации фильтров
@@ -21,6 +21,8 @@ export interface UseFiltersSynchronizationReturn {
 /**
  * Композабл для синхронизации фильтров
  * Связывает воедино URL, Store состояние и загрузку креативов
+ * 
+ * ВАЖНО: Содержит побочные эффекты (watchers), не удалять через tree-shaking!
  */
 export function useFiltersSynchronization(
   filters: FilterState,
@@ -201,39 +203,24 @@ export function useFiltersSynchronization(
     }
   }, CREATIVES_CONSTANTS.DEBOUNCE_DELAY / 2); // Более быстрая реакция на URL изменения
   
-  /**
-   * Загружает креативы с debounce
-   */
-  const loadCreativesDebounced = debounce(async (): Promise<void> => {
-    if (!isEnabled.value) return;
-    
-    try {
-      const creativesFilters = creativesComposable.mapFiltersToCreativesFilters(
-        filters, 
-        tabs.activeTab, 
-        1 // Всегда загружаем первую страницу при изменении фильтров
-      );
-      
-      logSync('Loading creatives', creativesFilters);
-      
-      await creativesComposable.loadCreativesWithFilters(creativesFilters);
-      
-    } catch (error) {
-      console.error('Ошибка загрузки креативов в FilterSync:', error);
-    }
-  }, CREATIVES_CONSTANTS.DEBOUNCE_DELAY);
+  // ============================================================================
+  // ЗАГРУЗКА КРЕАТИВОВ УДАЛЕНА - ТЕПЕРЬ В STORE
+  // ============================================================================
+  
+  // Загрузка креативов перенесена в Store через собственную debounced функцию
 
   // ============================================================================
   // МЕТОДЫ УПРАВЛЕНИЯ
   // ============================================================================
   
   /**
-   * Инициализирует синхронизацию
+   * Инициализирует синхронизацию (только базовые настройки)
+   * Watchers теперь настраиваются в Store
    */
   async function initialize(): Promise<void> {
     if (isInitialized.value) return;
     
-    logSync('Initializing');
+    logSync('Initializing as stateless utility');
     
     // Проверяем есть ли параметры в URL
     const hasUrlParams = urlSync.hasUrlParams();
@@ -246,25 +233,22 @@ export function useFiltersSynchronization(
     
     await nextTick();
     
-    // Настраиваем watchers
-    setupWatchers();
-    
-    // Включаем синхронизацию
+    // Включаем синхронизацию (теперь используется Store watchers)
     enable();
     
     // Сброс счетчиков каждую секунду
     setInterval(resetSyncCounters, 1000);
     
-    // Если в URL есть параметры или активные фильтры, загружаем креативы
-    if (hasUrlParams || hasActiveFilters()) {
-      await loadCreativesDebounced();
+    // Синхронизируем текущее состояние с URL
+    // Загрузка креативов теперь происходит через Store watchers
+    if (hasUrlParams) {
+      // URL содержит параметры - они уже загружены выше
     } else {
-      // Иначе синхронизируем текущее состояние с URL
       syncToUrl();
     }
     
     isInitialized.value = true;
-    logSync('Initialized');
+    logSync('Initialized as stateless utility');
   }
   
   /**
@@ -297,83 +281,24 @@ export function useFiltersSynchronization(
   /**
    * Проверяет есть ли активные фильтры
    */
-  function hasActiveFilters(): boolean {
-    return Object.entries(filters).some(([key, value]) => {
-      if (['isDetailedVisible', 'savedSettings'].includes(key)) return false;
-      
-      if (Array.isArray(value)) return value.length > 0;
-      if (typeof value === 'boolean') return value;
-      if (typeof value === 'string') return value !== '' && value !== 'default';
-      
-      return false;
-    });
-  }
+  // function hasActiveFilters(): boolean {
+  //   return Object.entries(filters).some(([key, value]) => {
+  //     if (['isDetailedVisible', 'savedSettings'].includes(key)) return false;
+  //     
+  //     if (Array.isArray(value)) return value.length > 0;
+  //     if (typeof value === 'boolean') return value;
+  //     if (typeof value === 'string') return value !== '' && value !== 'default';
+  //     
+  //     return false;
+  //   });
+  // }
 
   // ============================================================================
-  // WATCHERS
+  // WATCHERS УДАЛЕНЫ - ТЕПЕРЬ В STORE
   // ============================================================================
   
-  /**
-   * Настраивает watchers для автоматической синхронизации
-   */
-  function setupWatchers(): void {
-    // Watcher для синхронизации Store -> URL
-    watchEffect(() => {
-      if (!isEnabled.value || !isInitialized.value) return;
-      
-      // Отслеживаем изменения фильтров (исключая isDetailedVisible)
-      const filtersToWatch = { ...filters };
-      delete (filtersToWatch as any).isDetailedVisible;
-      delete (filtersToWatch as any).savedSettings;
-      
-      // Отслеживаем активную вкладку
-      const activeTab = tabs.activeTab;
-      
-      // Синхронизируем в URL
-      syncToUrl();
-    });
-    
-    // Watcher для синхронизации URL -> Store  
-    watchEffect(() => {
-      if (!isEnabled.value || !isInitialized.value) return;
-      
-      // Отслеживаем изменения URL состояния
-      const urlState = urlSync.state.value;
-      
-      // Синхронизируем из URL
-      if (Object.keys(urlState).length > 0) {
-        syncFromUrl();
-      }
-    });
-    
-    // Watcher для автоматической загрузки креативов
-    watchEffect(() => {
-      if (!isEnabled.value || !isInitialized.value) return;
-      
-      // Отслеживаем изменения значимых фильтров
-      const watchedFilters = {
-        searchKeyword: filters.searchKeyword,
-        country: filters.country,
-        dateCreation: filters.dateCreation,
-        sortBy: filters.sortBy,
-        periodDisplay: filters.periodDisplay,
-        advertisingNetworks: [...filters.advertisingNetworks],
-        languages: [...filters.languages],
-        operatingSystems: [...filters.operatingSystems],
-        browsers: [...filters.browsers],
-        devices: [...filters.devices],
-        imageSizes: [...filters.imageSizes],
-        onlyAdult: filters.onlyAdult,
-        perPage: filters.perPage,
-        activeTab: tabs.activeTab
-      };
-      
-      // Загружаем креативы
-      loadCreativesDebounced();
-    });
-    
-    logSync('Watchers setup complete');
-  }
+  // Все watchers перенесены в Store для централизованного управления
+  // Этот композабл теперь предоставляет только утилитарные функции
 
   // ============================================================================
   // ВОЗВРАЩАЕМЫЙ ОБЪЕКТ
