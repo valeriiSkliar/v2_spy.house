@@ -232,7 +232,8 @@ import {
   mergePropsTranslations,
   useTranslations,
 } from '@/composables/useTranslations';
-import type { FilterState, SelectOptions, TabOptions } from '@/types/creatives';
+import type { FilterState, SelectOptions, TabOptions } from '@/types/creatives.d';
+import { CREATIVES_CONSTANTS } from '@/types/creatives.d';
 import debounce from 'lodash.debounce';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { useCreativesFiltersStore } from '../../stores/useFiltersStore';
@@ -330,10 +331,16 @@ const isComponentReady = ref(false);
 
 /**
  * Обработчик ввода в поле поиска с debounce
+ * Поиск срабатывает только при длине запроса >= MIN_SEARCH_LENGTH символов
  */
 const debouncedUpdateSearch = debounce((value: string) => {
-  store.updateFilter('searchKeyword', value);
-}, 300);
+  // Проверяем минимальную длину поискового запроса
+  if (value.length >= CREATIVES_CONSTANTS.MIN_SEARCH_LENGTH || value.length === 0) {
+    store.updateFilter('searchKeyword', value);
+  }
+  // Если длина меньше MIN_SEARCH_LENGTH символов и больше 0 - ничего не делаем
+  // Это предотвращает ненужные API запросы
+}, CREATIVES_CONSTANTS.DEBOUNCE_DELAY);
 
 /**
  * Обработчик изменения поля поиска
@@ -342,7 +349,10 @@ function handleSearchInput(event: Event): void {
   const target = event.target as HTMLInputElement;
   const value = target.value;
 
+  // Всегда обновляем локальное состояние для отображения
   localSearchKeyword.value = value;
+
+  // Вызываем debounced функцию которая сама проверит длину
   debouncedUpdateSearch(value);
 }
 

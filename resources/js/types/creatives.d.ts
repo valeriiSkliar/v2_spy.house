@@ -317,6 +317,7 @@ export const CREATIVES_CONSTANTS = {
   MIN_PAGE_SIZE: 6,
   MAX_PAGE_SIZE: 100,
   MAX_SEARCH_LENGTH: 255,
+  MIN_SEARCH_LENGTH: 3,  // Минимальная длина поискового запроса
   DEBOUNCE_DELAY: 300,
   URL_PREFIX: 'cr',
   CACHE_TTL: {
