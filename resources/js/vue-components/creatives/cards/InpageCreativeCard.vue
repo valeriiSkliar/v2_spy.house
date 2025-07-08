@@ -22,7 +22,7 @@
         </div>
       </div>
       <div class="creative-item__txt">
-        <div class="creative-item__active icon-dot">
+        <div class="creative-item__active" :class="{ 'icon-dot': isActive }">
           {{ getActiveText() }}
         </div>
         <div class="text-with-copy">
@@ -151,6 +151,11 @@ onMounted(async () => {
 
   // Ждем готовности переводов
   await waitForReady();
+});
+
+// Computed для определения активности (заглушка)
+const isActive = computed((): boolean => {
+  return props.creative.is_active;
 });
 
 // Computed для избранного
@@ -295,10 +300,9 @@ const getFavoriteIconClass = (): string => {
 };
 
 // Функция для формирования текста активности
-import { getActiveDaysText } from '@/utils/getActiveDaysText';
 
 const getActiveText = (): string => {
-  return getActiveDaysText(props.creative.activity_date, 'Active 3 days');
+  return props.creative?.activity_title ?? '';
 };
 
 // Функция для получения текста сети
