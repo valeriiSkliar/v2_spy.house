@@ -48,13 +48,14 @@ import { useCreativesTabOpener } from '@/composables/useCreativesTabOpener';
 import { useCreativesUrlSync } from '@/composables/useCreativesUrlSync';
 import { useFiltersSynchronization } from '@/composables/useFiltersSynchronization';
 import {
-  CREATIVES_CONSTANTS,
-  type Creative,
-  type FilterOption,
-  type FilterState,
-  type TabOption,
-  type TabsState,
-  type TabValue
+    CREATIVES_CONSTANTS,
+    type Creative,
+    type FavoritesSyncData,
+    type FilterOption,
+    type FilterState,
+    type TabOption,
+    type TabsState,
+    type TabValue
 } from '@/types/creatives.d';
 import merge from 'deepmerge';
 import debounce from 'lodash.debounce';
@@ -1278,8 +1279,27 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
       });
       document.dispatchEvent(event);
       
-    } catch (error) {
-      // Откатываем оптимистичное обновление при ошибке
+    } catch (error: any) {
+      // Проверяем, является ли это ошибкой синхронизации (409 - уже в избранном)
+      if (error.response?.status === 409 && error.response?.data?.code === 'ALREADY_IN_FAVORITES') {
+        // Синхронизируем состояние с сервером
+        const syncData: FavoritesSyncData = error.response.data.data;
+
+        // Обновляем локальное состояние
+        updateCreativeInList(syncData.creativeId, {
+          isFavorite: syncData.isFavorite
+        });
+
+        // Обновляем общий счетчик
+        favoritesCount.value = syncData.totalFavorites;
+
+        // Показываем пользователю информативное сообщение
+        showMessage('Креатив уже в избранном', 'info');
+
+        return; // Выходим, не показывая ошибку
+      }
+
+      // Откатываем оптимистичное обновление при других ошибках
       const index = favoritesItems.value.indexOf(creativeId);
       if (index > -1) {
         favoritesItems.value.splice(index, 1);
@@ -1289,6 +1309,7 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
       }
       
       console.error('Ошибка при добавлении в избранное:', error);
+      showMessage('Ошибка при добавлении в избранное', 'error');
       throw error;
     } finally {
       // Очищаем состояние загрузки для конкретного креатива и глобально
@@ -1340,8 +1361,27 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
       });
       document.dispatchEvent(event);
       
-    } catch (error) {
-      // Откатываем оптимистичное обновление при ошибке
+    } catch (error: any) {
+      // Проверяем, является ли это ошибкой синхронизации (404 - не в избранном)
+      if (error.response?.status === 404 && error.response?.data?.code === 'NOT_IN_FAVORITES') {
+        // Синхронизируем состояние с сервером
+        const syncData: FavoritesSyncData = error.response.data.data;
+
+        // Обновляем локальное состояние
+        updateCreativeInList(syncData.creativeId, {
+          isFavorite: syncData.isFavorite
+        });
+
+        // Обновляем общий счетчик
+        favoritesCount.value = syncData.totalFavorites;
+
+        // Показываем пользователю информативное сообщение
+        showMessage('Креатив не найден в избранном', 'info');
+
+        return; // Выходим, не показывая ошибку
+      }
+
+      // Откатываем оптимистичное обновление при других ошибках
       if (!favoritesItems.value.includes(creativeId)) {
         favoritesItems.value.push(creativeId);
         if (favoritesCount.value !== undefined) {
@@ -1350,6 +1390,7 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
       }
       
       console.error('Ошибка при удалении из избранного:', error);
+      showMessage('Ошибка при удалении из избранного', 'error');
       throw error;
     } finally {
       // Очищаем состояние загрузки для конкретного креатива и глобально
@@ -1364,6 +1405,80 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
    */
   function setFavoritesCount(count: number): void {
     favoritesCount.value = count;
+  }
+
+  /**
+   * Обновление креатива в локальном состоянии
+   * Используется для синхронизации данных с сервером
+   */
+  function updateCreativeInList(creativeId: number, updates: Partial<Creative>): void {
+    // Обновляем в основном списке креативов
+    const creative = creatives.value.find((c: Creative) => c.id === creativeId);
+    if (creative) {
+      Object.assign(creative, updates);
+    }
+
+    // Обновляем в выбранном креативе для деталей, если это он
+    if (selectedCreative.value && selectedCreative.value.id === creativeId) {
+      Object.assign(selectedCreative.value, updates);
+    }
+
+    // Обновляем состояние избранного в локальном массиве
+    if ('isFavorite' in updates) {
+      const isInFavorites = favoritesItems.value.includes(creativeId);
+      
+      if (updates.isFavorite && !isInFavorites) {
+        favoritesItems.value.push(creativeId);
+      } else if (!updates.isFavorite && isInFavorites) {
+        const index = favoritesItems.value.indexOf(creativeId);
+        if (index > -1) {
+          favoritesItems.value.splice(index, 1);
+        }
+      }
+    }
+  }
+
+  /**
+   * Синхронизация статуса избранного с сервером
+   * Загружает актуальный статус креатива и обновляет локальное состояние
+   */
+  async function syncFavoriteStatus(creativeId: number): Promise<FavoritesSyncData> {
+    try {
+      const response = await window.axios.get(`/api/creatives/${creativeId}/favorite/status`);
+      const data: FavoritesSyncData = response.data.data;
+
+      // Обновляем локальное состояние креатива
+      updateCreativeInList(data.creativeId, {
+        isFavorite: data.isFavorite
+      });
+
+      // Обновляем общий счетчик
+      favoritesCount.value = data.totalFavorites;
+
+      return data;
+    } catch (error) {
+      console.error('Ошибка синхронизации статуса избранного:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Показать сообщение пользователю
+   * В будущем может быть заменено на toast/notification систему
+   */
+  function showMessage(message: string, type: 'info' | 'error' | 'success' = 'info'): void {
+    // Временная реализация через console
+    // В будущем можно заменить на toast/notification
+    console.log(`[${type.toUpperCase()}] ${message}`);
+    
+    // Эмитируем событие для возможной обработки в UI
+    document.dispatchEvent(new CustomEvent('creatives:user-message', {
+      detail: {
+        message,
+        type,
+        timestamp: new Date().toISOString()
+      }
+    }));
   }
 
   // ============================================================================
@@ -1494,6 +1609,9 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     refreshFavoritesCount,      // Обновление счетчика с сервера
     addToFavorites,             // Добавление в избранное
     removeFromFavorites,        // Удаление из избранного
+    updateCreativeInList,       // Обновление креатива в локальном состоянии
+    syncFavoriteStatus,         // Синхронизация статуса избранного с сервером
+    showMessage,                // Показ сообщений пользователю
     
     // ========================================
     // ПРЯМОЙ ДОСТУП К КОМПОЗАБЛАМ (для отладки)

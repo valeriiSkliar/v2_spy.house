@@ -225,6 +225,31 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(RefreshToken::class);
     }
 
+    /**
+     * Get the user's favorite creatives.
+     */
+    public function favoriteCreatives()
+    {
+        return $this->belongsToMany(Creative::class, 'favorites')
+            ->withTimestamps();
+    }
+
+    /**
+     * Check if a creative is in user's favorites
+     */
+    public function hasFavoriteCreative(int $creativeId): bool
+    {
+        return $this->favoriteCreatives()->where('creative_id', $creativeId)->exists();
+    }
+
+    /**
+     * Get count of user's favorite creatives
+     */
+    public function getFavoritesCount(): int
+    {
+        return $this->favoriteCreatives()->count();
+    }
+
     public function getRatingForService(int $serviceId): ?int
     {
         $rating = $this->ratings()->where('service_id', $serviceId)->first();

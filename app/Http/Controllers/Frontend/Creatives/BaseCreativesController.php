@@ -795,20 +795,31 @@ abstract class BaseCreativesController extends FrontendController
      */
     public function getFavoritesCount(Request $request)
     {
-        // TODO: Реализовать получение реального количества избранного
-        // $user = $request->user();
-        // $count = $user->favoriteCreatives()->count();
+        try {
+            $user = $request->user();
 
-        // Мок данные для тестирования
-        $mockCount = rand(20, 100);
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
 
-        return response()->json([
-            'status' => 'success',
-            'data' => [
-                'count' => $mockCount,
-                'lastUpdated' => now()->toISOString()
-            ]
-        ]);
+            $count = $user->getFavoritesCount();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'count' => $count,
+                    'lastUpdated' => now()->toISOString()
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to get favorites count: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -860,23 +871,65 @@ abstract class BaseCreativesController extends FrontendController
      */
     public function addToFavorites(Request $request, $id)
     {
-        // TODO: Реализовать добавление в избранное
-        // $user = $request->user();
-        // $creative = Creative::findOrFail($id);
-        // $user->favoriteCreatives()->attach($creative->id);
+        try {
+            $user = $request->user();
 
-        // Мок данные для тестирования
-        $mockTotalCount = rand(40, 100);
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
 
-        return response()->json([
-            'status' => 'success',
-            'data' => [
-                'creativeId' => (int)$id,
-                'isFavorite' => true,
-                'totalFavorites' => $mockTotalCount,
-                'addedAt' => now()->toISOString()
-            ]
-        ]);
+            $creativeId = (int)$id;
+
+            // Проверяем, существует ли креатив
+            $creative = Creative::findOrFail($creativeId);
+
+            // Проверяем, не добавлен ли уже в избранное
+            if ($user->hasFavoriteCreative($creativeId)) {
+                // Получаем информацию о том, когда был добавлен
+                $existingFavorite = \App\Models\Favorite::where('user_id', $user->id)
+                    ->where('creative_id', $creativeId)
+                    ->first();
+
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Creative already in favorites',
+                    'code' => 'ALREADY_IN_FAVORITES',
+                    'data' => [
+                        'creativeId' => $creativeId,
+                        'isFavorite' => true,
+                        'totalFavorites' => $user->getFavoritesCount(),
+                        'addedAt' => $existingFavorite ? $existingFavorite->created_at->toISOString() : null,
+                        'shouldSync' => true // Подсказка фронтенду обновить состояние
+                    ]
+                ], 409);
+            }
+
+            // Добавляем в избранное
+            $favorite = \App\Models\Favorite::addToFavorites($user->id, $creativeId);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'creativeId' => $creativeId,
+                    'isFavorite' => true,
+                    'totalFavorites' => $user->getFavoritesCount(),
+                    'addedAt' => $favorite->created_at->toISOString()
+                ]
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Creative not found'
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to add creative to favorites: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -920,21 +973,160 @@ abstract class BaseCreativesController extends FrontendController
      */
     public function removeFromFavorites(Request $request, $id)
     {
-        // TODO: Реализовать удаление из избранного
-        // $user = $request->user();
-        // $user->favoriteCreatives()->detach($id);
+        try {
+            $user = $request->user();
 
-        // Мок данные для тестирования
-        $mockTotalCount = rand(20, 80);
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
 
-        return response()->json([
-            'status' => 'success',
-            'data' => [
-                'creativeId' => (int)$id,
-                'isFavorite' => false,
-                'totalFavorites' => $mockTotalCount,
-                'removedAt' => now()->toISOString()
-            ]
-        ]);
+            $creativeId = (int)$id;
+
+            // Проверяем, есть ли креатив в избранном
+            if (!$user->hasFavoriteCreative($creativeId)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Creative not found in favorites',
+                    'code' => 'NOT_IN_FAVORITES',
+                    'data' => [
+                        'creativeId' => $creativeId,
+                        'isFavorite' => false,
+                        'totalFavorites' => $user->getFavoritesCount(),
+                        'shouldSync' => true // Подсказка фронтенду обновить состояние
+                    ]
+                ], 404);
+            }
+
+            // Удаляем из избранного
+            $removed = \App\Models\Favorite::removeFromFavorites($user->id, $creativeId);
+
+            if ($removed) {
+                return response()->json([
+                    'status' => 'success',
+                    'data' => [
+                        'creativeId' => $creativeId,
+                        'isFavorite' => false,
+                        'totalFavorites' => $user->getFavoritesCount(),
+                        'removedAt' => now()->toISOString()
+                    ]
+                ]);
+            }
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to remove creative from favorites'
+            ], 500);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to remove creative from favorites: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Helper method to check if creative is in user's favorites
+     * Used internally by other controller methods
+     */
+    protected function checkIsFavorite(int $creativeId, Request $request): bool
+    {
+        $user = $request->user();
+
+        // Если пользователь не аутентифицирован, возвращаем false
+        if (!$user) {
+            return false;
+        }
+
+        return $user->hasFavoriteCreative($creativeId);
+    }
+
+    /**
+     * Проверить статус избранного для конкретного креатива
+     * 
+     * @OA\Get(
+     *     path="/api/creatives/{id}/favorite/status",
+     *     operationId="checkFavoriteStatus",
+     *     tags={"Креативы - Избранное"},
+     *     summary="Проверить статус избранного",
+     *     description="Возвращает актуальный статус избранного для конкретного креатива",
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID креатива",
+     *         required=true,
+     *         @OA\Schema(type="integer", minimum=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Статус избранного успешно получен",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="success"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="creativeId", type="integer", example=123),
+     *                 @OA\Property(property="isFavorite", type="boolean", example=true),
+     *                 @OA\Property(property="totalFavorites", type="integer", example=42),
+     *                 @OA\Property(property="addedAt", type="string", format="date-time", nullable=true)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Креатив не найден"
+     *     )
+     * )
+     */
+    public function getFavoriteStatus(Request $request, $id)
+    {
+        try {
+            $user = $request->user();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+
+            $creativeId = (int)$id;
+
+            // Проверяем, существует ли креатив
+            $creative = Creative::find($creativeId);
+            if (!$creative) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Creative not found'
+                ], 404);
+            }
+
+            $isFavorite = $user->hasFavoriteCreative($creativeId);
+            $addedAt = null;
+
+            if ($isFavorite) {
+                $favorite = \App\Models\Favorite::where('user_id', $user->id)
+                    ->where('creative_id', $creativeId)
+                    ->first();
+                $addedAt = $favorite ? $favorite->created_at->toISOString() : null;
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'creativeId' => $creativeId,
+                    'isFavorite' => $isFavorite,
+                    'totalFavorites' => $user->getFavoritesCount(),
+                    'addedAt' => $addedAt,
+                    'checkedAt' => now()->toISOString()
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to check favorite status: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

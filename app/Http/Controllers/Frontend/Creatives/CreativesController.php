@@ -47,6 +47,12 @@ class CreativesController extends BaseCreativesController
         // Получаем реальное количество из БД
         $searchCount = $this->getSearchCount($validatedFilters);
 
+        // Получаем количество избранных креативов для текущего пользователя
+        $favoritesCount = 0;
+        if ($request->user()) {
+            $favoritesCount = $request->user()->getFavoritesCount();
+        }
+
         return view('pages.creatives.index', [
             'activeTab' => $activeTabFromUrl,
             'perPage' => $perPageOptions,
@@ -66,6 +72,7 @@ class CreativesController extends BaseCreativesController
             'detailsTranslations' => $detailsTranslations,
             'cardTranslations' => $cardTranslations,
             'searchCount' => $searchCount,
+            'favoritesCount' => $favoritesCount,
         ]);
     }
 
@@ -286,8 +293,8 @@ class CreativesController extends BaseCreativesController
                 'platform' => $creative->platform?->value,
                 'operation_system' => $creative->operation_system?->value,
 
-                // TODO: Реализовать проверку избранного для пользователя
-                'is_favorite' => false, // Пока заглушка
+                // Проверка избранного для аутентифицированного пользователя
+                'is_favorite' => $this->checkIsFavorite($creative->id, request()),
                 'is_active' => $creative->is_active, // Теперь работает через accessor
 
                 // Дополнительные вычисляемые поля

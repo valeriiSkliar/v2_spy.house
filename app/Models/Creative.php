@@ -129,6 +129,31 @@ class Creative extends Model
     }
 
     /**
+     * Get users who favorited this creative.
+     */
+    public function favoritedByUsers()
+    {
+        return $this->belongsToMany(User::class, 'favorites')
+            ->withTimestamps();
+    }
+
+    /**
+     * Check if creative is favorited by specific user
+     */
+    public function isFavoritedBy(int $userId): bool
+    {
+        return $this->favoritedByUsers()->where('user_id', $userId)->exists();
+    }
+
+    /**
+     * Get count of users who favorited this creative
+     */
+    public function getFavoritesCount(): int
+    {
+        return $this->favoritedByUsers()->count();
+    }
+
+    /**
      * Scope для фильтрации по формату рекламы
      */
     public function scopeByFormat($query, $format)

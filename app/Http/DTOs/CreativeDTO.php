@@ -157,9 +157,9 @@ class CreativeDTO implements Arrayable, Jsonable
      */
     private function checkIfFavorite(int $userId): bool
     {
-        // TODO: Реализовать проверку избранного через модель
-        // Пример: return UserFavorite::where('user_id', $userId)->where('creative_id', $this->id)->exists();
-        return false; // Заглушка
+        return \App\Models\Favorite::where('user_id', $userId)
+            ->where('creative_id', $this->id)
+            ->exists();
     }
 
 
@@ -195,9 +195,10 @@ class CreativeDTO implements Arrayable, Jsonable
      */
     private static function batchCheckFavorites(int $userId, array $creativeIds): array
     {
-        // TODO: Реализовать батчевую проверку избранного
-        // Пример: return UserFavorite::where('user_id', $userId)->whereIn('creative_id', $creativeIds)->pluck('creative_id')->toArray();
-        return []; // Заглушка
+        return \App\Models\Favorite::where('user_id', $userId)
+            ->whereIn('creative_id', $creativeIds)
+            ->pluck('creative_id')
+            ->toArray();
     }
 
     /**

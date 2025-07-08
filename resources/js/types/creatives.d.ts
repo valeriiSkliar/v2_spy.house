@@ -134,6 +134,37 @@ export interface FavoritesState {
 }
 
 /**
+ * Данные синхронизации избранного от API
+ */
+export interface FavoritesSyncData {
+  creativeId: CreativeId;
+  isFavorite: boolean;
+  totalFavorites: number;
+  addedAt?: string;
+  removedAt?: string;
+  checkedAt?: string;
+  shouldSync?: boolean;
+}
+
+/**
+ * API ответ при ошибке синхронизации избранного
+ */
+export interface FavoritesSyncErrorResponse {
+  status: 'error';
+  message: string;
+  code: 'ALREADY_IN_FAVORITES' | 'NOT_IN_FAVORITES';
+  data: FavoritesSyncData;
+}
+
+/**
+ * API ответ статуса избранного
+ */
+export interface FavoritesStatusResponse {
+  status: 'success';
+  data: FavoritesSyncData;
+}
+
+/**
  * Состояние вкладок
  */
 export interface TabsState {
