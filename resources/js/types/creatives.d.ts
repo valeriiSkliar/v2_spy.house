@@ -10,7 +10,11 @@ export type CountryCode = {
   name: string;
   iso_code_3: string;
 };
-export type LanguageCode = string;
+export type LanguageCode = {
+  code: string;
+  name: string;
+  iso_code_3: string;
+};
 export type TabValue = 'push' | 'inpage' | 'facebook' | 'tiktok';
 export type SortValue = 'creation' | 'activity' | 'popularity' | 'byCreationDate' | 'byActivity' | 'byPopularity' | 'default';
 /**
@@ -42,9 +46,10 @@ export interface Creative {
   has_video?: boolean;
   // other fields
   created_at: string;
+  last_seen_at: string;
   activity_date?: string;
   advertising_networks?: string[];
-  languages?: LanguageCode[];
+  language?: LanguageCode | null;
   operating_systems?: string[];
   browsers?: string[];
   devices?: string[];
@@ -59,7 +64,7 @@ export interface Creative {
   isFavorite?: boolean;
   created_at_formatted?: string;
   last_activity_date_formatted?: string;
-  is_active?: boolean;
+  is_active: boolean;
 }
 
 /**

@@ -222,12 +222,12 @@
                 {{ selectedCreative?.country?.name }}
               </div>
             </div>
-            <div class="details-table__row">
+            <div v-if="selectedCreative?.language" class="details-table__row">
               <div class="details-table__col">
                 {{ translations.language.value }}
               </div>
               <div class="details-table__col">
-                {{ selectedCreative?.languages?.join(', ') }}
+                {{ selectedCreative?.language?.name }}
               </div>
             </div>
             <div class="details-table__row">
@@ -235,15 +235,15 @@
                 {{ translations.firstDisplayDate.value }}
               </div>
               <div class="details-table__col">
-                {{ selectedCreative?.created_at_formatted }}
+                {{ selectedCreative?.created_at }}
               </div>
             </div>
-            <div class="details-table__row">
+            <div v-if="selectedCreative?.last_seen_at" class="details-table__row">
               <div class="details-table__col">
                 {{ translations.lastDisplayDate.value }}
               </div>
               <div class="details-table__col">
-                {{ selectedCreative?.last_activity_date_formatted }}
+                {{ selectedCreative?.last_seen_at }}
               </div>
             </div>
             <div class="details-table__row">

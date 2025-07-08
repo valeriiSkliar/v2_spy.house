@@ -439,4 +439,13 @@ class Creative extends Model
 
         return $devices;
     }
+
+    /**
+     * Accessor для поля is_active
+     * Вычисляет активность на основе статуса креатива
+     */
+    public function getIsActiveAttribute(): bool
+    {
+        return $this->status === AdvertisingStatus::Active;
+    }
 }

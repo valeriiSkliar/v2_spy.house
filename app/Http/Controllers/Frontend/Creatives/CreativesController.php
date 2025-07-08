@@ -216,8 +216,7 @@ class CreativesController extends BaseCreativesController
                 'title' => $creative->title,
                 'description' => $creative->description,
                 'format' => $creative->format?->value ?? 'unknown',
-                'status' => $creative->status?->value ?? 'unknown',
-                'is_adult' => $creative->is_adult,
+                // 'is_adult' => $creative->is_adult,
                 'has_video' => $creative->has_video,
                 'video_url' => $creative->video_url,
                 'video_duration' => $creative->video_duration,
@@ -226,7 +225,7 @@ class CreativesController extends BaseCreativesController
                 'icon_url' => $creative->icon_url,
                 'icon_size' => $creative->icon_size,
                 'landing_url' => $creative->landing_url,
-                'external_id' => $creative->external_id,
+                // 'external_id' => $creative->external_id,
 
                 // Социальная статистика
                 'social_likes' => $creative->social_likes ?? 0,
@@ -234,18 +233,18 @@ class CreativesController extends BaseCreativesController
                 'social_shares' => $creative->social_shares ?? 0,
 
                 // Даты
-                'created_at' => $creative->created_at?->format('Y-m-d H:i:s'),
-                'last_seen_at' => $creative->last_seen_at?->format('Y-m-d H:i:s'),
-                'external_created_at' => $creative->external_created_at?->format('Y-m-d H:i:s'),
-                'start_date' => $creative->start_date?->format('Y-m-d H:i:s'),
-                'end_date' => $creative->end_date?->format('Y-m-d H:i:s'),
+                'created_at' => $creative->created_at?->format('Y-m-d'),
+                'last_seen_at' => $creative->last_seen_at?->format('Y-m-d'),
+                // 'external_created_at' => $creative->external_created_at?->format('Y-m-d H:i:s'),
+                'start_date' => $creative->start_date?->format('Y-m-d'),
+                'end_date' => $creative->end_date?->format('Y-m-d'),
 
                 // Метаданные обработки
-                'is_processed' => $creative->is_processed,
-                'processed_at' => $creative->processed_at?->format('Y-m-d H:i:s'),
-                'is_valid' => $creative->is_valid,
-                'validation_error' => $creative->validation_error,
-                'processing_error' => $creative->processing_error,
+                // 'is_processed' => $creative->is_processed,
+                // 'processed_at' => $creative->processed_at?->format('Y-m-d H:i:s'),
+                // 'is_valid' => $creative->is_valid,
+                // 'validation_error' => $creative->validation_error,
+                // 'processing_error' => $creative->processing_error,
 
                 // Связанные сущности
                 'country' => $creative->country ? [
@@ -279,16 +278,17 @@ class CreativesController extends BaseCreativesController
                     'is_tablet' => $creative->browser->istablet,
                 ] : null,
 
-                'source' => $creative->source ? [
-                    'name' => $creative->source->source_name,
-                    'display_name' => $creative->source->source_display_name,
-                ] : null,
+                // 'source' => $creative->source ? [
+                //     'name' => $creative->source->source_name,
+                //     'display_name' => $creative->source->source_display_name,
+                // ] : null,
 
                 'platform' => $creative->platform?->value,
                 'operation_system' => $creative->operation_system?->value,
 
                 // TODO: Реализовать проверку избранного для пользователя
                 'is_favorite' => false, // Пока заглушка
+                'is_active' => $creative->is_active, // Теперь работает через accessor
 
                 // Дополнительные вычисляемые поля
                 'file_size' => $creative->calculateFileSize(),
