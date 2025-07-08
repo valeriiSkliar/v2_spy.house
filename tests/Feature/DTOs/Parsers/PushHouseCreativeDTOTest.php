@@ -100,7 +100,7 @@ class PushHouseCreativeDTOTest extends TestCase
             'url' => 'https://legacy.com/landing',
             'price_cpc' => 0.05,
             'country' => 'us',
-            'mob' => 1, // Старый формат: 1 = mobile, 0 = desktop
+            'platform' => 'mobile', // Новый формат платформы
             'isAdult' => true,
             'isActive' => false
         ];
@@ -115,7 +115,7 @@ class PushHouseCreativeDTOTest extends TestCase
         $this->assertEquals('https://legacy.com/landing', $dto->targetUrl);
         $this->assertEquals(0.05, $dto->cpc);
         $this->assertEquals('US', $dto->countryCode); // Должен быть приведен к верхнему регистру
-        $this->assertEquals(Platform::MOBILE, $dto->platform); // mob: 1 -> MOBILE
+        $this->assertEquals(Platform::MOBILE, $dto->platform); // platform: mobile -> MOBILE
         $this->assertTrue($dto->isAdult);
         $this->assertFalse($dto->isActive);
     }
@@ -153,10 +153,6 @@ class PushHouseCreativeDTOTest extends TestCase
             [['platform' => 'Mob'], Platform::MOBILE],
             [['platform' => 'Desktop'], Platform::DESKTOP],
             [['platform' => 'mobile'], Platform::MOBILE],
-
-            // Старый формат парсера
-            [['mob' => 1], Platform::MOBILE],
-            [['mob' => 0], Platform::DESKTOP],
 
             // Fallback
             [[], Platform::MOBILE],
