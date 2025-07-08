@@ -24,6 +24,7 @@ Route::prefix('api/creatives')
 
         // API для избранного
         Route::get('/favorites/count', [CreativesController::class, 'getFavoritesCount'])->name('favorites.count');
+        Route::get('/{id}/favorite/status', [CreativesController::class, 'getFavoriteStatus'])->name('favorites.status');
         Route::post('/{id}/favorite', [CreativesController::class, 'addToFavorites'])->name('favorites.add');
         Route::delete('/{id}/favorite', [CreativesController::class, 'removeFromFavorites'])->name('favorites.remove');
     });
