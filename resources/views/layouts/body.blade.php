@@ -18,8 +18,24 @@ use Illuminate\Support\Facades\Auth;
 
     <title>{{ config('app.name', 'Laravel') }}</title>
 
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+
     <!-- Scripts -->
-    @vite(['resources/js/app.js', 'resources/scss/app.scss'])
+    @vite([
+    'resources/scss/app.scss',
+    'resources/js/pages/mainPage/aos.js',
+    'resources/js/pages/mainPage/ResizeSensor.js',
+    'resources/js/pages/mainPage/jquery.sticky-sidebar.min.js',
+    'resources/js/pages/mainPage/jquery.star-rating-svg.js',
+    'resources/js/pages/mainPage/typeit.min.js',
+    'resources/js/pages/mainPage/mqscroller.min.js',
+    'resources/js/pages/mainPage/main.js',
+    'resources/js/pages/mainPage/home.js',
+    ])
 
     <!-- Frontend Translations -->
     <x-frontend-translations />
@@ -27,6 +43,12 @@ use Illuminate\Support\Facades\Auth;
 
 <body>
     @yield('content')
+
+    <!-- External CDN Dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick.min.js"></script>
 </body>
 
 </html>

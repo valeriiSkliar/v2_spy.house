@@ -104,5 +104,713 @@
             </div>
         </div>
     </section>
+    <section class="features">
+        <div class="container">
+            <div class="row align-items-end _offset30">
+                <div class="col-12 col-md-6">
+                    <div class="title-label" data-aos-delay="200" data-aos="fade-up">Features</div>
+                    <h2 class="title" data-aos-delay="200" data-aos="fade-up">Find effective ads</h2>
+                </div>
+                <div class="col-12 col-md-6 pb-2">
+                    <div class="section-desc icon-txt-dot mb-30" data-aos-delay="200" data-aos="fade-up">If you want to
+                        save time - Use Spy.house analytics and launch profitable campaigns based on the successful
+                        experience of competitors</div>
+                </div>
+            </div>
+            <div class="features__list row _offset20">
+                <div class="col-12 col-lg-7 d-flex" data-aos-delay="200" data-aos="fade-up">
+                    <div class="feature-item _bg">
+                        <h3>185+ countries of the world</h3>
+                        <p>We collect creatives from almost all over the world and constantly increase this number. Rest
+                            assured, no one will go unnoticed</p>
+                    </div>
+                </div>
+                <div class="col-12 col-md-7 col-lg-5 d-flex" data-aos-delay="200" data-aos="fade-up">
+                    <div class="feature-item">
+                        <h3>12M daily creatives</h3>
+                        <p>All your competitors' creatives can be found with us and save money and time</p>
+                    </div>
+                </div>
+                <div class="col-12 col-md-5 col-lg-4 d-flex" data-aos-delay="200" data-aos="fade-up">
+                    <div class="feature-item">
+                        <h3>100% positive</h3>
+                        <p>All users are satisfied with our service</p>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-8 d-flex" data-aos-delay="200" data-aos="fade-up">
+                    <div class="feature-item">
+                        <h3>16+ different filters to find the right ads</h3>
+                        <p>Advanced search and filtering settings allow you to find exactly the creatives you need for
+                            effective work</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="creatives">
+        <div class="container">
+            <h2 class="title text-center" data-aos-delay="200" data-aos="fade-up">Creatives from all popular verticals
+            </h2>
+            <div class="after-title text-center" data-aos-delay="200" data-aos="fade-up">You will definitely find
+                creatives in your vertical</div>
+        </div>
+        <div class="creatives-content-marquee" data-aos-delay="200" data-aos="fade-up">
+            <div class="creatives-marquee mqscroller">
+                <div class="creatives-item _width mqs-item">
+                    <div class="creative-item">
+                        <div class="creative-item__head">
+                            <div class="creative-item__txt">
+                                <div class="creative-item__active icon-dot">Active: 3 day</div>
+                                <div class="text-with-copy">
+                                    <div class="text-with-copy__btn">
+                                        <button class="btn copy-btn _flex _dark js-copy"><span
+                                                class="icon-copy"></span>Copy<span
+                                                class="copy-btn__copied">Copied</span></button>
+                                    </div>
+                                    <div class="creative-item__title">⚡ What are the pensions the increase? 💰</div>
+                                </div>
+                                <div class="text-with-copy">
+                                    <div class="text-with-copy__btn">
+                                        <button class="btn copy-btn _flex _dark js-copy"><span
+                                                class="icon-copy"></span>Copy<span
+                                                class="copy-btn__copied">Copied</span></button>
+                                    </div>
+                                    <div class="creative-item__desc">How much did Kazakhstanis begin to receive</div>
+                                </div>
+                            </div>
+                            <div class="creative-item__icon thumb thumb-with-controls-small">
+                                <img src="img/th-2.jpg" alt="">
+                                <div class="thumb-controls">
+                                    <a href="#" class="btn-icon _black"><span class="icon-download2"></span></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="creative-item__image thumb thumb-with-controls">
+                            <img src="img/th-3.jpg" alt="">
+                            <div class="thumb-controls">
+                                <a href="#" class="btn-icon _black"><span class="icon-download2"></span></a>
+                                <a href="#" class="btn-icon _black"><span class="icon-new-tab"></span></a>
+                            </div>
+                        </div>
+                        <div class="creative-item__footer">
+                            <div class="creative-item__info">
+                                <div class="creative-item-info"><span class="creative-item-info__txt">Push.house</span>
+                                </div>
+                                <div class="creative-item-info"><img src="img/flags/KZ.svg" alt="">KZ</div>
+                                <div class="creative-item-info">
+                                    <div class="icon-pc"></div>PC
+                                </div>
+                            </div>
+                            <div class="creative-item__btns">
+                                <button class="btn-icon btn-favorite"><span class="icon-favorite-empty"></span></button>
+                                <button class="btn-icon _dark js-show-details"><span class="icon-info"></span></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="creative-item">
+                        <div class="creative-item__head">
+                            <div class="creative-item__icon thumb thumb-with-controls-small mr-2">
+                                <img src="img/th-2.jpg" alt="">
+                                <div class="thumb-controls">
+                                    <a href="#" class="btn-icon _black"><span class="icon-download2"></span></a>
+                                </div>
+                            </div>
+                            <div class="creative-item__txt">
+                                <div class="creative-item__active icon-dot">Active: 3 day</div>
+                                <div class="text-with-copy">
+                                    <div class="text-with-copy__btn">
+                                        <button class="btn copy-btn _flex _dark js-copy"><span
+                                                class="icon-copy"></span>Copy<span
+                                                class="copy-btn__copied">Copied</span></button>
+                                    </div>
+                                    <div class="creative-item__title">⚡ What are the pensions the increase? 💰</div>
+                                </div>
+                                <div class="text-with-copy">
+                                    <div class="text-with-copy__btn">
+                                        <button class="btn copy-btn _flex _dark js-copy"><span
+                                                class="icon-copy"></span>Copy<span
+                                                class="copy-btn__copied">Copied</span></button>
+                                    </div>
+                                    <div class="creative-item__desc">How much did Kazakhstanis begin to receive</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="creative-item__footer">
+                            <div class="creative-item__info">
+                                <div class="creative-item-info"><span class="creative-item-info__txt">Push.house</span>
+                                </div>
+                                <div class="creative-item-info"><img src="img/flags/KZ.svg" alt="">KZ</div>
+                                <div class="creative-item-info">
+                                    <div class="icon-pc"></div>PC
+                                </div>
+                            </div>
+                            <div class="creative-item__btns">
+                                <button class="btn-icon btn-favorite "><span
+                                        class="icon-favorite-empty"></span></button>
+                                <button class="btn-icon _dark js-show-details"><span class="icon-info"></span></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="creatives-item mqs-item">
+                    <div class="creative-item _facebook">
+                        <div class="creative-video">
+                            <div class="thumb">
+                                <img src="img/facebook-2.jpg" alt="" class="thumb-blur">
+                                <img src="img/facebook-2.jpg" alt="" class="thumb-contain">
+                            </div>
+                            <span class="icon-play"></span>
+                            <div class="creative-video__time">00:45</div>
+                            <div class="creative-video__content" data-video="img/video-3.mp4"> </div>
+                        </div>
+                        <div class="creative-item__row">
+                            <div class="creative-item__icon thumb"><img src="img/icon-1.jpg" alt=""></div>
+                            <div class="creative-item__title">Casino Slots</div>
+                            <div class="creative-item__platform"><img src="img/facebook.svg" alt=""></div>
+                        </div>
+                        <div class="creative-item__row">
+                            <div class="creative-item__desc font-roboto">Play Crown Casino online and claim up to 100%
+                                bonus on your deposit and claim up to 100% bonus on your deposit</div>
+                            <div class="creative-item__copy">
+                                <button class="btn-icon js-copy _border-gray">
+                                    <span class="icon-copy"></span>
+                                    <span class="icon-check d-none"></span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="creative-item__social">
+                            <div class="creative-item__social-item"><strong>285</strong> <span>Like</span></div>
+                            <div class="creative-item__social-item"><strong>2</strong> <span>Comments</span></div>
+                            <div class="creative-item__social-item"><strong>7</strong> <span>Shared</span></div>
+                        </div>
+                        <div class="creative-item__footer">
+                            <div class="creative-item__info">
+                                <div class="creative-status icon-dot font-roboto">Active: 3 day</div>
+                            </div>
+                            <div class="creative-item__btns">
+                                <div class="creative-item-info"><img src="img/flags/KZ.svg" alt=""></div>
+                                <button class="btn-icon btn-favorite"><span class="icon-favorite-empty"></span></button>
+                                <button class="btn-icon _dark js-show-details"><span class="icon-info"></span></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="creatives-item mqs-item">
+                    <div class="creative-item _facebook">
+                        <div class="creative-video">
+                            <div class="thumb thumb-with-controls">
+                                <img src="img/facebook-1.jpg" alt="">
+                                <div class="thumb-controls">
+                                    <a href="#" class="btn-icon _black"><span class="icon-download2"></span></a>
+                                    <a href="#" class="btn-icon _black"><span class="icon-new-tab"></span></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="creative-item__row">
+                            <div class="creative-item__icon thumb"><img src="img/icon-1.jpg" alt=""></div>
+                            <div class="creative-item__title">Casino Slots</div>
+                            <div class="creative-item__platform"><img src="img/facebook.svg" alt=""></div>
+                        </div>
+                        <div class="creative-item__row">
+                            <div class="creative-item__desc font-roboto">Play Crown Casino online and claim up to 100%
+                                bonus on your deposit and claim up to 100% bonus on your deposit</div>
+                            <div class="creative-item__copy">
+                                <button class="btn-icon js-copy _border-gray">
+                                    <span class="icon-copy"></span>
+                                    <span class="icon-check d-none"></span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="creative-item__social">
+                            <div class="creative-item__social-item"><strong>285</strong> <span>Like</span></div>
+                            <div class="creative-item__social-item"><strong>2</strong> <span>Comments</span></div>
+                            <div class="creative-item__social-item"><strong>7</strong> <span>Shared</span></div>
+                        </div>
+                        <div class="creative-item__footer">
+                            <div class="creative-item__info">
+                                <div class="creative-status icon-dot font-roboto">Active: 3 day</div>
+                            </div>
+                            <div class="creative-item__btns">
+                                <div class="creative-item-info"><img src="img/flags/KZ.svg" alt=""></div>
+                                <button class="btn-icon btn-favorite"><span class="icon-favorite-empty"></span></button>
+                                <button class="btn-icon _dark js-show-details"><span class="icon-info"></span></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="creatives-tags-marquee mqscroller">
+                <div class="creatives-tags-item mqs-item">E-commerce</div>
+                <div class="creatives-tags-item mqs-item">Gambling</div>
+                <div class="creatives-tags-item mqs-item">Dropshipping & CoD</div>
+                <div class="creatives-tags-item mqs-item">Nutra</div>
+                <div class="creatives-tags-item mqs-item">Swipstakes</div>
+                <div class="creatives-tags-item mqs-item">Apps</div>
+            </div>
+        </div>
+        <div class="container">
+            <div class="text-center" data-aos-delay="200" data-aos="fade-up">
+                <a href="#" class="btn _flex _green _large min-170">Get started</a>
+            </div>
+        </div>
+    </section>
+    <section class="prices">
+        <div class="container">
+            <div class="row align-items-end _offset30">
+                <div class="col-12 col-md-7 mb-md-4">
+                    <div class="title-label _white" data-aos-delay="200" data-aos="fade-up">Prices</div>
+                    <h2 class="title" data-aos-delay="200" data-aos="fade-up">Big investment for <br>little money</h2>
+                </div>
+                <div class="col-12 col-md-5 pb-2">
+                    <div class="section-desc icon-txt-dot mb-20" data-aos-delay="200" data-aos="fade-up">Expand your
+                        capabilities with a Pro plan with an annual subscription</div>
+                    <div class="prices__tubs row justify-content-end mb-30 pt-4 pt-md-5" data-aos-delay="200"
+                        data-aos="fade-up">
+                        <div class="col-6 col-md-auto">
+                            <button class="btn _flex _medium w-100 active" data-tub="month" data-group="pay">For a
+                                Month</button>
+                        </div>
+                        <div class="col-6 col-md-auto">
+                            <button class="btn _flex _medium w-100" data-tub="year" data-group="pay">For a year <span
+                                    class="btn__count">-25%</span></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="prices-list" data-aos-delay="200" data-aos="fade-up">
+                <div class="prices-list__item">
+                    <div class="price-item">
+                        <div class="price-item__tariff _start">Start</div>
+                        <div class="active" data-tub="month" data-group="pay">
+                            <div class="price-item__price">Free</div>
+                            <div class="price-item__term">per month</div>
+                        </div>
+                        <div data-tub="year" data-group="pay">
+                            <div class="price-item__price">Free</div>
+                            <div class="price-item__term">per year</div>
+                        </div>
+                        <div class="price-item__info">
+                            <p><strong>10</strong> creative downloads</p>
+                            <p><strong>6</strong> API requests</p>
+                        </div>
+                        <div class="price-item__btn">
+                            <a href="#" class="btn _flex _border-green2 _large min-170">Detailed</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="prices-list__item">
+                    <div class="price-item">
+                        <div class="price-item__tariff _basic">Basic</div>
+                        <div class="active" data-tub="month" data-group="pay">
+                            <div class="price-item__price">$30</div>
+                            <div class="price-item__term">per month</div>
+                        </div>
+                        <div data-tub="year" data-group="pay">
+                            <div class="price-item__price">$320</div>
+                            <div class="price-item__term">per year</div>
+                        </div>
+                        <div class="price-item__info">
+                            <p><strong>Unlimited</strong> creative downloads</p>
+                            <p><strong>20</strong> API requests</p>
+                        </div>
+                        <div class="price-item__btn">
+                            <a href="#" class="btn _flex _border-green2 _large min-170">Detailed</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="prices-list__item">
+                    <div class="price-item">
+                        <div class="price-item__tariff _premium">Premium</div>
+                        <div class="active" data-tub="month" data-group="pay">
+                            <div class="price-item__price">$100</div>
+                            <div class="price-item__term">per month</div>
+                        </div>
+                        <div data-tub="year" data-group="pay">
+                            <div class="price-item__price">$1020</div>
+                            <div class="price-item__term">per year</div>
+                        </div>
+                        <div class="price-item__info">
+                            <p><strong>Unlimited</strong> creative downloads</p>
+                            <p><strong>Unlimited</strong> API requests</p>
+                        </div>
+                        <div class="price-item__btn">
+                            <a href="#" class="btn _flex _border-green2 _large min-170">Detailed</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="prices-list__item">
+                    <div class="price-item">
+                        <div class="price-item__tariff _enterprise">Enterprise</div>
+                        <div class="active" data-tub="month" data-group="pay">
+                            <div class="price-item__price">$299</div>
+                            <div class="price-item__term">per month</div>
+                        </div>
+                        <div data-tub="year" data-group="pay">
+                            <div class="price-item__price">$2990</div>
+                            <div class="price-item__term">per year</div>
+                        </div>
+                        <div class="price-item__info">
+                            <p><strong>Unlimited</strong> creative downloads</p>
+                            <p><strong>Unlimited</strong> API requests</p>
+                        </div>
+                        <div class="price-item__btn">
+                            <a href="#" class="btn _flex _border-green2 _large min-170">Detailed</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="reviews">
+        <div class="container">
+            <div class="row align-items-end _offset30">
+                <div class="col-12 col-md-8 pb-2">
+                    <div class="title-label" data-aos-delay="200" data-aos="fade-up">Reviews</div>
+                    <h2 class="title" data-aos-delay="200" data-aos="fade-up">What media buyers say about us</h2>
+                </div>
+                <div class="col-12 col-md-4 d-none d-md-flex justify-content-end mb-30" data-aos-delay="200"
+                    data-aos="fade-up">
+                    <a data-toggle="modal" data-target="#add-review" class="btn _flex _border-green _large min-170">Add
+                        a review</a>
+                </div>
+            </div>
+            <div class="reviews-slider" data-aos-delay="200" data-aos="fade-up">
+                <div class="review">
+                    <div class="review__head">
+                        <div class="review__avatar thumb"><img
+                                src="https://ui-avatars.com/api/?length=1&amp;name=Alexey&amp;background=2B373D&amp;color=ffffff&amp;bold=true"
+                                alt="" class="avatar"></div>
+                        <div class="review__author">
+                            <div class="review__name">Alexey</div>
+                            <div class="review__role">Media buyer</div>
+                            <div class="review__rating" data-rating="5"></div>
+                        </div>
+                    </div>
+                    <div class="review__txt">
+                        <div class="review__txt-in">
+                            Настоящие арбитражники знают, что CPA-маркетинг - это способ зарядить свой кошелек, и
+                            CPA.House точно знает, как это делать. Они дают тебе доступ к бомбовым офферам, которые ты
+                            можешь продвигать. Я лично выбрал несколько адалт-офферов, и мне удалось заработать мои
+                            первые деньги.
+                        </div>
+                    </div>
+                </div>
+                <div class="review">
+                    <div class="review__head">
+                        <div class="review__avatar thumb"><img src="img/th-2.jpg" alt=""></div>
+                        <div class="review__author">
+                            <div class="review__name">Marya</div>
+                            <div class="review__role">Media buyer</div>
+                            <div class="review__rating" data-rating="5"></div>
+                        </div>
+                    </div>
+                    <div class="review__txt">
+                        <div class="review__txt-in">
+                            Настоящие арбитражники знают, что CPA-маркетинг -
+                        </div>
+                    </div>
+                </div>
+                <div class="review">
+                    <div class="review__head">
+                        <div class="review__avatar thumb"><img
+                                src="https://ui-avatars.com/api/?length=1&amp;name=Ivan&amp;background=2B373D&amp;color=ffffff&amp;bold=true"
+                                alt="" class="avatar"></div>
+                        <div class="review__author">
+                            <div class="review__name">Ivan</div>
+                            <div class="review__role">CPA Marketer</div>
+                            <div class="review__rating" data-rating="5"></div>
+                        </div>
+                    </div>
+                    <div class="review__txt">
+                        <div class="review__txt-in">
+                            Настоящие арбитражники знают, что CPA-маркетинг - это способ зарядить свой кошелек, и
+                            CPA.House точно знает, как это делать. Они дают тебе доступ к бомбовым офферам, которые ты
+                            можешь продвигать. Я лично выбрал несколько адалт-офферов, и мне удалось заработать мои
+                            первые деньги.
+                        </div>
+                    </div>
+                </div>
+                <div class="review">
+                    <div class="review__head">
+                        <div class="review__avatar thumb"><img
+                                src="https://ui-avatars.com/api/?length=1&amp;name=Test&amp;background=2B373D&amp;color=ffffff&amp;bold=true"
+                                alt="" class="avatar"></div>
+                        <div class="review__author">
+                            <div class="review__name">Test</div>
+                            <div class="review__role">Test</div>
+                            <div class="review__rating" data-rating="3"></div>
+                        </div>
+                    </div>
+                    <div class="review__txt">
+                        <div class="review__txt-in">
+                            Настоящие арбитражники знают, что CPA-маркетинг - это способ зарядить свой кошелек, и
+                            CPA.House точно знает, как это делать. Они дают тебе доступ к бомбовым офферам, которые ты
+                            можешь продвигать. Я лично выбрал несколько адалт-офферов, и мне удалось заработать мои
+                            первые деньги.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="d-md-none text-center pt-5" data-aos-delay="200" data-aos="fade-up">
+                <a data-toggle="modal" data-target="#add-review" class="btn _flex _border-green _large min-170">Add a
+                    review</a>
+            </div>
+        </div>
+    </section>
+    <section class="download-creatives">
+        <div class="container">
+            <div class="download-creatives__content" data-aos-delay="200" data-aos="fade-up">
+                <div class="download-creatives__val">25<span>%</span> <span class="blick"></span></div>
+                <h2 class="title">Download your competitors <br>creatives with a 25% discount</h2>
+                <a href="#" class="btn _flex _green _large min-170">Get started</a>
+                <div class="download-creatives-figure">
+                    <div class="download-creatives-figure__content">Download</div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="blog-home">
+        <div class="container">
+            <div class="row align-items-end _offset30">
+                <div class="col-12 col-md-8 pb-md-2">
+                    <div class="title-label" data-aos-delay="200" data-aos="fade-up">Blog</div>
+                    <h2 class="title" data-aos-delay="200" data-aos="fade-up">New cases in the blog</h2>
+                </div>
+                <div class="col-12 col-md-4 d-none d-md-flex justify-content-end mb-30" data-aos-delay="200"
+                    data-aos="fade-up">
+                    <a href="#" class="btn _flex _border-green _large min-170">Go to blog <span
+                            class="icon-arrow-up-right ml-2 font-24 pr-0"></span></a>
+                </div>
+            </div>
+            <div class="blog-home__list" data-aos-delay="200" data-aos="fade-up">
+                <div class="blog-home-slider">
+                    <div class="article">
+                        <a href="#" class="article__thumb thumb"><img
+                                src="https://pay2.house/uploads/blogs/22/1750016896_f8d9796622f5702bc071.jpg"
+                                alt=""></a>
+                        <div class="article__info">
+                            <div class="article-info">
+                                <div class="article-info__item icon-date">11.05.25</div>
+                                <a href="#" class="article-info__item icon-comment1">23</a>
+                                <div class="article-info__item icon-view">12 356</div>
+                                <div class="article-info__item icon-rating">4.5</div>
+                            </div>
+                        </div>
+                        <a href="#" class="article__title">Anti-case: How I lost $650 </a>
+                        <div class="article__desc">CPA market leaders shared what changes occurred in the arbitrage
+                            business in 2021, how they carried out automation in their teams CPA market leaders shared
+                            what changes occurred in the arbitrage business in 2021, how they carried out automation in
+                            their teams </div>
+                        <div class="article__bottom">
+                            <div class="article__cat">
+                                <div class="cat-links">
+                                    <a href="#" style="color:#694FCD;">Arbitrage</a>
+                                    <a href="#" style="color:#4F98CD;">Case</a>
+                                </div>
+                            </div>
+                            <div class="article__link">
+                                <a href="#" class="btn _flex _green _medium">Read <span
+                                        class="icon-next font-16 ml-2"></span></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="article">
+                        <a href="#" class="article__thumb thumb"><img
+                                src="https://pay2.house/uploads/blogs/15/1749580599_b6328abb1386fb97feec.jpg"
+                                alt=""></a>
+                        <div class="article__info">
+                            <div class="article-info">
+                                <div class="article-info__item icon-date">11.05.25</div>
+                                <a href="#" class="article-info__item icon-comment1">23</a>
+                                <div class="article-info__item icon-view">12 356</div>
+                                <div class="article-info__item icon-rating">4.5</div>
+                            </div>
+                        </div>
+                        <a href="#" class="article__title">Anti-case: How I lost $650 in a P2E game in 1 click</a>
+                        <div class="article__desc">CPA market leaders shared what changes occurred in the arbitrage
+                            business in 2021, how they carried out automation in their teams CPA market leaders shared
+                            what changes occurred in the arbitrage business in 2021, how they carried out automation in
+                            their teams </div>
+                        <div class="article__bottom">
+                            <div class="article__cat">
+                                <div class="cat-links">
+                                    <a href="#" style="color:#694FCD;">Arbitrage</a>
+                                    <a href="#" style="color:#4F98CD;">Case</a>
+                                </div>
+                            </div>
+                            <div class="article__link">
+                                <a href="#" class="btn _flex _green _medium">Read <span
+                                        class="icon-next font-16 ml-2"></span></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="article">
+                        <a href="#" class="article__thumb thumb"><img
+                                src="https://pay2.house/uploads/blogs/9/1749029045_b5f7f8b32b0f4ba1e93f.jpg" alt=""></a>
+                        <div class="article__info">
+                            <div class="article-info">
+                                <div class="article-info__item icon-date">11.05.25</div>
+                                <a href="#" class="article-info__item icon-comment1">23</a>
+                                <div class="article-info__item icon-view">12 356</div>
+                                <div class="article-info__item icon-rating">4.5</div>
+                            </div>
+                        </div>
+                        <a href="#" class="article__title">Anti-case: How I lost $650 in a P2E game in 1 click</a>
+                        <div class="article__desc">CPA market leaders shared what changes occurred in the arbitrage
+                            business in 2021, how they carried out automation in their teams CPA market leaders shared
+                            what changes occurred in the arbitrage business in 2021, how they carried out automation in
+                            their teams </div>
+                        <div class="article__bottom">
+                            <div class="article__cat">
+                                <div class="cat-links">
+                                    <a href="#" style="color:#694FCD;">Arbitrage</a>
+                                    <a href="#" style="color:#4F98CD;">Case</a>
+                                </div>
+                            </div>
+                            <div class="article__link">
+                                <a href="#" class="btn _flex _green _medium">Read <span
+                                        class="icon-next font-16 ml-2"></span></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="article">
+                        <a href="#" class="article__thumb thumb"><img
+                                src="https://pay2.house/uploads/blogs/9/1749029045_b5f7f8b32b0f4ba1e93f.jpg" alt=""></a>
+                        <div class="article__info">
+                            <div class="article-info">
+                                <div class="article-info__item icon-date">11.05.25</div>
+                                <a href="#" class="article-info__item icon-comment1">23</a>
+                                <div class="article-info__item icon-view">12 356</div>
+                                <div class="article-info__item icon-rating">4.5</div>
+                            </div>
+                        </div>
+                        <a href="#" class="article__title">Anti-case: How I lost $650 in a P2E game in 1 click</a>
+                        <div class="article__desc">CPA market leaders shared what changes occurred in the arbitrage
+                            business in 2021, how they carried out automation in their teams CPA market leaders shared
+                            what changes occurred in the arbitrage business in 2021, how they carried out automation in
+                            their teams </div>
+                        <div class="article__bottom">
+                            <div class="article__cat">
+                                <div class="cat-links">
+                                    <a href="#" style="color:#694FCD;">Arbitrage</a>
+                                    <a href="#" style="color:#4F98CD;">Case</a>
+                                </div>
+                            </div>
+                            <div class="article__link">
+                                <a href="#" class="btn _flex _green _medium">Read <span
+                                        class="icon-next font-16 ml-2"></span></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="d-md-none text-center pt-5" data-aos-delay="200" data-aos="fade-up">
+                <a href="#" class="btn _flex _border-green _large min-170">Go to blog <span
+                        class="icon-arrow-up-right ml-2 font-24 pr-0"></span></a>
+            </div>
+        </div>
+    </section>
+    <footer class="footer">
+        <div class="container">
+            <div class="footer__content">
+                <div class="footer__left">
+                    <div class="footer__logo"><img src="img/logo.svg" alt="" width="167" height="43"></div>
+                    <div class="footer__copy">© 2012 - 2022 Spy.House</div>
+                    <div class="footer__lang">
+                        <div class="lang-menu">
+                            <div class="base-select">
+                                <div class="base-select__trigger">
+                                    <span class="base-select__value"><img src="img/flags/US.svg" alt="">Eng</span>
+                                    <span class="base-select__arrow"></span>
+                                </div>
+                                <ul class="base-select__dropdown" style="display: none;">
+                                    <li class="base-select__option is-selected"><img src="img/flags/US.svg" alt="">Eng
+                                    </li>
+                                    <li class="base-select__option"><img src="img/flags/UA.svg" alt="">Uk</li>
+                                    <li class="base-select__option"><img src="img/flags/ES.svg" alt="">Esp</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer__center">
+                    <div class="footer-nav _mob-two-col">
+                        <p>Creatives Spy</p>
+                        <ul>
+                            <li><a href="#">Push</a></li>
+                            <li><a href="#">In-page</a></li>
+                            <li><a href="#">Facebook</a></li>
+                            <li><a href="#">Tik Tok</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-nav">
+                        <p>Useful</p>
+                        <ul>
+                            <li><a href="#">Offers</a></li>
+                            <li><a href="#">Services</a></li>
+                            <li><a href="#">Affiliate program</a></li>
+                            <li><a href="#">Blog</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-nav">
+                        <p>Other</p>
+                        <ul>
+                            <li><a href="#">Advertising</a></li>
+                            <li><a href="#">Privacy Policy</a></li>
+                            <li><a href="#">User Agreement</a></li>
+                            <li><a href="#">FAQ</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="footer__right">
+                    <div class="footer__telegram">
+                        <a href="#" target="_blank" class="telegram-link">
+                            <span class="icon-telegram2"></span>
+                            <span class="telegram-link__label">Telegram</span>
+                            <span class="telegram-link__nickname">@spyhouse_help</span>
+                        </a>
+                    </div>
+                    <div class="footer__chat">
+                        <a href="#" target="_blank" class="btn _flex _medium _blue min-200 w-100"><span
+                                class="icon-chat font-16 mr-2"></span>Telegram chat</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <aside class="aside _home ">
+        <div class="aside__content">
+            <div class="aside__btn">
+                <div class="aside__lang">
+                    <div class="lang-menu mb-10">
+                        <div class="base-select">
+                            <div class="base-select__trigger">
+                                <span class="base-select__value"><img src="img/flags/US.svg" alt="">Eng</span>
+                                <span class="base-select__arrow"></span>
+                            </div>
+                            <ul class="base-select__dropdown" style="display: none;">
+                                <li class="base-select__option is-selected"><img src="img/flags/US.svg" alt="">Eng</li>
+                                <li class="base-select__option"><img src="img/flags/UA.svg" alt="">Uk</li>
+                                <li class="base-select__option"><img src="img/flags/ES.svg" alt="">Esp</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <a href="#" class="btn _flex w-100 mb-10 _dark">Login</a>
+                <a href="#" class="btn _flex w-100 mb-10 _green">Registration</a>
+            </div>
+            <nav class="aside-menu">
+                <ul>
+                    <li><a href="#"><span class="aside-menu__txt">Features</span></a></li>
+                    <li><a href="#"><span class="aside-menu__txt">Prices</span></a></li>
+                    <li><a href="#"><span class="aside-menu__txt">Reviews</span></a></li>
+                    <li><a href="#"><span class="aside-menu__txt">Blog</span></a></li>
+                </ul>
+            </nav>
+            <div class="aside__contacts">
+                <a data-toggle="modal" data-target="#modal-contacts" class="link">Contacts</a>
+            </div>
+        </div>
+    </aside>
 </div>
 @endsection
