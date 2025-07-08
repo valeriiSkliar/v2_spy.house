@@ -42,16 +42,17 @@
 
 import { useCreatives } from '@/composables/useCreatives';
 import { useCreativesDownloader } from '@/composables/useCreativesDownloader';
+import { useCreativesTabOpener } from '@/composables/useCreativesTabOpener';
 import { useCreativesUrlSync } from '@/composables/useCreativesUrlSync';
 import { useFiltersSynchronization } from '@/composables/useFiltersSynchronization';
 import {
-  CREATIVES_CONSTANTS,
-  type Creative,
-  type FilterOption,
-  type FilterState,
-  type TabOption,
-  type TabsState,
-  type TabValue
+    CREATIVES_CONSTANTS,
+    type Creative,
+    type FilterOption,
+    type FilterState,
+    type TabOption,
+    type TabsState,
+    type TabValue
 } from '@/types/creatives.d';
 import merge from 'deepmerge';
 import debounce from 'lodash.debounce';
@@ -199,6 +200,9 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   
   // 4️⃣ Централизованная обработка скачивания креативов
   const downloader = useCreativesDownloader();
+
+  // 5️⃣ Централизованная обработка открытия в новых вкладках
+  const tabOpener = useCreativesTabOpener();
 
   // ============================================================================
   // WATCHERS - ЦЕНТРАЛИЗОВАННАЯ СИНХРОНИЗАЦИЯ
@@ -411,15 +415,19 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     // Инициализируем обработчик скачивания креативов через композабл
     const downloadCleanup = downloader.setupDownloadEventListener();
     
-    // Сохраняем функцию очистки для использования в cleanupEventListeners
+    // Инициализируем обработчик открытия в новых вкладках через композабл
+    const tabOpenerCleanup = tabOpener.initializeTabOpener();
+    
+    // Сохраняем функции очистки для использования в cleanupEventListeners
     (cleanupEventListeners as any).downloadCleanup = downloadCleanup;
+    (cleanupEventListeners as any).tabOpenerCleanup = tabOpenerCleanup;
     
     // Логирование для production отладки
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('store:event-listeners-setup', {
         detail: { 
           store: 'CreativesFiltersStore',
-          listeners: ['toggle-favorite', 'show-details', 'download'],
+          listeners: ['toggle-favorite', 'show-details', 'download', 'open-in-new-tab'],
           timestamp: Date.now()
         }
       }));
@@ -443,6 +451,11 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     // Очищаем обработчик скачивания если он был инициализирован
     if ((cleanupEventListeners as any).downloadCleanup) {
       (cleanupEventListeners as any).downloadCleanup();
+    }
+    
+    // Очищаем обработчик открытия в новых вкладках если он был инициализирован
+    if ((cleanupEventListeners as any).tabOpenerCleanup) {
+      (cleanupEventListeners as any).tabOpenerCleanup();
     }
     
     // Логирование для production отладки
@@ -1494,6 +1507,7 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     urlSync,                    // useCreativesUrlSync композабл  
     filtersSync,                // useFiltersSynchronization композабл
     downloader,                 // useCreativesDownloader композабл
+    tabOpener,                  // useCreativesTabOpener композабл
     
     // ========================================
     // МЕТОДЫ ОЧИСТКИ

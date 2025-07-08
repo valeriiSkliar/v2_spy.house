@@ -24,10 +24,10 @@
           :is-favorite="store.isFavoriteCreative(creative.id)"
           :is-favorite-loading="store.isFavoriteLoading(creative.id)"
           :translations="cardTranslations"
+          :handle-open-in-new-tab="handleOpenInNewTab"
           @toggle-favorite="handleToggleFavorite"
-          @download="handleDownload"
+          :handle-download="handleDownload"
           @show-details="handleShowDetails"
-          @open-in-new-tab="handleOpenInNewTab"
         />
 
         <InpageCreativeCard
@@ -36,8 +36,9 @@
           :is-favorite="store.isFavoriteCreative(creative.id)"
           :is-favorite-loading="store.isFavoriteLoading(creative.id)"
           :translations="cardTranslations"
+          :handle-open-in-new-tab="handleOpenInNewTab"
           @toggle-favorite="handleToggleFavorite"
-          @download="handleDownload"
+          :handle-download="handleDownload"
           @show-details="handleShowDetails"
         />
 
@@ -48,8 +49,9 @@
           :is-favorite="store.isFavoriteCreative(creative.id)"
           :is-favorite-loading="store.isFavoriteLoading(creative.id)"
           :translations="cardTranslations"
+          :handle-open-in-new-tab="handleOpenInNewTab"
           @toggle-favorite="handleToggleFavorite"
-          @download="handleDownload"
+          :handle-download="handleDownload"
           @show-details="handleShowDetails"
         />
       </template>
@@ -149,9 +151,15 @@ function handleToggleFavorite(creativeId: number, isFavorite: boolean): void {
   // Основная логика обрабатывается в Store через DOM события
 }
 
-function handleDownload(creative: Creative): void {
-  console.log(`Карточка эмитировала download:`, creative);
-  // Основная логика обрабатывается в Store через DOM события
+function handleDownload(url: string): void {
+  console.log(`Карточка эмитировала download:`, url);
+  document.dispatchEvent(
+    new CustomEvent('creatives:download', {
+      detail: {
+        url,
+      },
+    })
+  );
 }
 
 function handleShowDetails(creative: Creative): void {
@@ -159,10 +167,22 @@ function handleShowDetails(creative: Creative): void {
   // Основная логика обрабатывается в Store через DOM события
 }
 
-function handleOpenInNewTab(creative: Creative): void {
-  console.log(`Карточка эмитировала open-in-new-tab:`, creative);
-  // Основная логика обрабатывается в Store через DOM события
-}
+const handleOpenInNewTab = (url: string): void => {
+  // Блокируем открытие в новой вкладке во время загрузки списка
+  if (isLoading.value) {
+    console.warn(`Открытие креатива в новой вкладке заблокировано: идет загрузка списка`);
+    return;
+  }
+
+  // Эмитируем DOM событие для централизованной обработки
+  document.dispatchEvent(
+    new CustomEvent('creatives:open-in-new-tab', {
+      detail: {
+        url: url,
+      },
+    })
+  );
+};
 
 // Watcher для скрытия placeholder когда данные загружены
 watch(

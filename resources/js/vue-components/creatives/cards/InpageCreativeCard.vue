@@ -14,7 +14,7 @@
           <a
             href="#"
             class="btn-icon _black"
-            @click.prevent="() => handleDownload('icon_url')"
+            @click.prevent="() => handleDownload(creative.icon_url)"
             :class="{ disabled: isCreativesLoading }"
           >
             <span class="icon-download2 remore_margin"></span>
@@ -135,11 +135,12 @@ const props = defineProps<{
   isFavorite?: boolean;
   isFavoriteLoading?: boolean;
   translations?: Record<string, string>;
+  handleOpenInNewTab: (url: string) => void;
+  handleDownload: (url: string) => void;
 }>();
 
 const emit = defineEmits<{
   'toggle-favorite': [creativeId: number, isFavorite: boolean];
-  download: [creative: Creative];
   'show-details': [creative: Creative];
 }>();
 
@@ -189,28 +190,6 @@ const handleFavoriteClick = (): void => {
     })
   );
 };
-
-// Функция для обработки клика по кнопке скачивания
-const handleDownload = (type: 'icon_url' | 'main_image_url'): void => {
-  // Блокируем скачивание во время загрузки списка
-  if (isCreativesLoading.value) {
-    console.warn(`Скачивание креатива ${props.creative.id} заблокировано: идет загрузка списка`);
-    return;
-  }
-
-  emit('download', props.creative);
-
-  // Эмитируем DOM событие для Store
-  document.dispatchEvent(
-    new CustomEvent('creatives:download', {
-      detail: {
-        creative: props.creative,
-        type,
-      },
-    })
-  );
-};
-
 // Функция для обработки клика по кнопке показа деталей
 const handleShowDetails = (): void => {
   // Блокируем просмотр деталей во время загрузки списка

@@ -51,7 +51,7 @@
           <a
             href="#"
             class="btn-icon _black"
-            @click.prevent="() => handleDownload('icon_url')"
+            @click.prevent="() => handleDownload(getIconUrl())"
             :class="{ disabled: isCreativesLoading }"
           >
             <span class="icon-download2 remore_margin"></span>
@@ -65,7 +65,7 @@
         <a
           href="#"
           class="btn-icon _black"
-          @click.prevent="() => handleDownload('main_image_url')"
+          @click.prevent="() => handleDownload(getImageUrl())"
           :class="{ disabled: isCreativesLoading }"
         >
           <span class="icon-download2 remore_margin"></span>
@@ -73,7 +73,7 @@
         <a
           href="#"
           class="btn-icon _black"
-          @click.prevent="handleOpenInNewTab"
+          @click.prevent="() => handleOpenInNewTab(getImageUrl())"
           :class="{ disabled: isCreativesLoading }"
         >
           <span class="icon-new-tab remore_margin"></span>
@@ -155,11 +155,12 @@ const props = defineProps<{
   isFavorite?: boolean;
   isFavoriteLoading?: boolean;
   translations?: Record<string, string>;
+  handleOpenInNewTab: (url: string) => void;
+  handleDownload: (url: string) => void;
 }>();
 
 const emit = defineEmits<{
   'toggle-favorite': [creativeId: number, isFavorite: boolean];
-  download: [creative: Creative];
   'show-details': [creative: Creative];
   'open-in-new-tab': [creative: Creative];
 }>();
@@ -217,26 +218,6 @@ const handleFavoriteClick = (): void => {
   );
 };
 
-const handleDownload = (type: 'icon_url' | 'main_image_url'): void => {
-  // Блокируем скачивание во время загрузки списка
-  if (isCreativesLoading.value) {
-    console.warn(`Скачивание креатива ${props.creative.id} заблокировано: идет загрузка списка`);
-    return;
-  }
-
-  emit('download', props.creative);
-
-  // Эмитируем DOM событие для Store
-  document.dispatchEvent(
-    new CustomEvent('creatives:download', {
-      detail: {
-        creative: props.creative,
-        type,
-      },
-    })
-  );
-};
-
 const handleShowDetails = (): void => {
   // Блокируем просмотр деталей во время загрузки списка
   if (isCreativesLoading.value) {
@@ -256,33 +237,6 @@ const handleShowDetails = (): void => {
       },
     })
   );
-};
-
-const handleOpenInNewTab = (): void => {
-  // Блокируем открытие в новой вкладке во время загрузки списка
-  if (isCreativesLoading.value) {
-    console.warn(
-      `Открытие креатива ${props.creative.id} в новой вкладке заблокировано: идет загрузка списка`
-    );
-    return;
-  }
-
-  emit('open-in-new-tab', props.creative);
-
-  // Эмитируем DOM событие для возможной обработки в Store
-  document.dispatchEvent(
-    new CustomEvent('creatives:open-in-new-tab', {
-      detail: {
-        creative: props.creative,
-      },
-    })
-  );
-
-  // Базовая реализация - открытие файла/превью в новой вкладке
-  const url = props.creative.main_image_url;
-  if (url) {
-    window.open(url, '_blank');
-  }
 };
 
 // Функция для обработки клика по кнопке копирования названия

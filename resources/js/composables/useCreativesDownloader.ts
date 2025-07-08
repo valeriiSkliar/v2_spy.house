@@ -71,39 +71,36 @@ export function useCreativesDownloader() {
    * @param url - URL файла для определения расширения
    * @param type - тип изображения для добавления в имя файла
    */
-  function generateFileName(creative: Creative, url: string, type: CreativeImageType = 'auto'): string {
+  function generateFileName(url: string): string {
     let extension = 'jpg'; // По умолчанию
     
-    try {
-      // Пытаемся парсить как полный URL
-      const urlObj = new URL(url);
-      const pathname = urlObj.pathname;
-      
-      // Проверяем есть ли точка в пути и извлекаем расширение
-      const hasExtension = pathname.includes('.') && pathname.lastIndexOf('.') > pathname.lastIndexOf('/');
-      if (hasExtension) {
-        extension = pathname.split('.').pop() || 'jpg';
+    // Генерируем случайный хеш для уникальности имени файла
+    const generateRandomHash = (): string => {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let hash = '';
+      for (let i = 0; i < 8; i++) {
+        hash += chars.charAt(Math.floor(Math.random() * chars.length));
       }
-    } catch {
-      // Если не получается парсить как URL, пытаемся извлечь расширение из строки
-      const dotIndex = url.lastIndexOf('.');
-      if (dotIndex > 0 && dotIndex < url.length - 1) {
-        extension = url.substring(dotIndex + 1);
+      return hash;
+    };
+    
+    // Получаем расширение из URL
+    const urlParts = url.split('.');
+    if (urlParts.length > 1) {
+      const lastPart = urlParts[urlParts.length - 1].split('?')[0]; // Убираем query параметры
+      const possibleExtension = lastPart.toLowerCase();
+      
+      // Проверяем валидность расширения
+      const validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'mp4', 'webm', 'avi', 'mov', 'mkv'];
+      if (validExtensions.includes(possibleExtension)) {
+        extension = possibleExtension;
       }
     }
     
-    // Очищаем title от недопустимых символов для имени файла
-    const cleanTitle = creative.title
-      .replace(/[<>:"/\\|?*]/g, '') // Удаляем недопустимые символы
-      .replace(/\s+/g, '_') // Заменяем пробелы на подчеркивания
-      .substring(0, 50) // Ограничиваем длину
-      .trim();
+    // Генерируем случайный хеш для уникальности
+    const randomHash = generateRandomHash();
     
-    // Формируем префикс на основе типа изображения
-    const typePrefix = type !== 'auto' ? `_${type.replace('_url', '')}` : '';
-    
-    // Формируем имя файла: title[_type]_id.extension
-    return `${cleanTitle}${typePrefix}_${creative.id}.${extension}`;
+    return `${randomHash}.${extension}`;
   }
   
   /**
@@ -258,46 +255,33 @@ export function useCreativesDownloader() {
   
   /**
    * Главный обработчик скачивания креатива
-   * @param creative - данные креатива
-   * @param type - тип изображения для скачивания
+   * @param url - URL для скачивания
    */
-  async function handleCreativeDownload(creative: Creative, type: CreativeImageType = 'auto'): Promise<void> {
-    if (!creative) {
-      throw new Error('Креатив не найден');
-    }
+  async function handleCreativeDownload(url: string): Promise<void> {
     
     // Получаем URL для скачивания с учетом типа
-    const downloadUrl = getDownloadUrl(creative, type);
+    const downloadUrl = url;
     
     if (!downloadUrl) {
-      const typeInfo = type !== 'auto' ? ` (тип: ${type})` : '';
-      throw new Error(`URL для скачивания не найден в данных креатива${typeInfo}`);
+      throw new Error(`URL для скачивания не найден`);
     }
     
     // Генерируем имя файла с учетом типа
-    const filename = generateFileName(creative, downloadUrl, type);
-    
-    // Определяем тип контента
-    const contentType = getContentType(downloadUrl);
+    const filename = generateFileName(downloadUrl);
     
     console.log(`🔽 Начинаем скачивание креатива:`, {
-      creativeId: creative.id,
-      title: creative.title,
-      type,
+      url,
       downloadUrl,
       filename,
-      contentType
     });
     
     try {
       // Эмитируем событие начала скачивания
       document.dispatchEvent(new CustomEvent('creatives:download-started', {
         detail: {
-          creative,
-          type,
+          url,
           downloadUrl,
           filename,
-          contentType,
           timestamp: new Date().toISOString()
         }
       }));
@@ -308,30 +292,26 @@ export function useCreativesDownloader() {
       // Эмитируем событие успешного скачивания
       document.dispatchEvent(new CustomEvent('creatives:download-success', {
         detail: {
-          creative,
-          type,
+          url,
           downloadUrl,
           filename,
-          contentType,
           timestamp: new Date().toISOString()
         }
       }));
       
-      console.log(`✅ Скачивание креатива ${creative.id} (${type}) завершено успешно`);
+      console.log(`✅ Скачивание креатива завершено успешно`);
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       
-      console.error(`❌ Ошибка скачивания креатива ${creative.id} (${type}):`, error);
+      console.error(`❌ Ошибка скачивания креатива:`, error);
       
       // Эмитируем событие ошибки скачивания
       document.dispatchEvent(new CustomEvent('creatives:download-error', {
         detail: {
-          creative,
-          type,
+          url,
           downloadUrl,
           filename,
-          contentType,
           error: errorMessage,
           timestamp: new Date().toISOString()
         }
@@ -347,10 +327,10 @@ export function useCreativesDownloader() {
    */
   function setupDownloadEventListener(): () => void {
     const handleDownloadEvent = async (event: CustomEvent) => {
-      const { creative, type = 'auto' } = event.detail;
+      const { url } = event.detail;
       
       try {
-        await handleCreativeDownload(creative, type);
+        await handleCreativeDownload(url);
       } catch (error) {
         console.error('Ошибка в обработчике события скачивания:', error);
         // Ошибка уже эмитирована в handleCreativeDownload
@@ -377,7 +357,6 @@ export function useCreativesDownloader() {
     // Утилитарные методы (для использования в других местах)
     getDownloadUrl,
     generateFileName,
-    getContentType,
     downloadFile,
     
     // Вспомогательные методы для диагностики
