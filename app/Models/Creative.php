@@ -185,7 +185,7 @@ class Creative extends Model
     {
         if (!empty($browserIds)) {
             return $query->whereHas('browser', function ($q) use ($browserIds) {
-                $q->whereIn('name', $browserIds);
+                $q->whereIn('browser', $browserIds);
             });
         }
         return $query;
