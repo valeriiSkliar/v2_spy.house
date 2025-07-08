@@ -197,7 +197,7 @@ const handleFavoriteClick = (): void => {
 };
 
 // Функция для обработки клика по кнопке копирования названия
-const handleCopyTitle = async (): Promise<void> => {
+const handleCopyTitle = (): void => {
   // Блокируем копирование во время загрузки списка
   if (isCreativesLoading.value) {
     console.warn(
@@ -206,47 +206,20 @@ const handleCopyTitle = async (): Promise<void> => {
     return;
   }
 
-  const title = props.creative.title;
-
-  try {
-    await navigator.clipboard.writeText(title);
-
-    // Эмитируем событие успешного копирования
-    document.dispatchEvent(
-      new CustomEvent('creatives:copy-success', {
-        detail: {
-          text: title,
-          type: 'title',
-          creativeId: props.creative.id,
-        },
-      })
-    );
-  } catch (error) {
-    console.error('Ошибка копирования названия:', error);
-
-    // Fallback для старых браузеров
-    const textarea = document.createElement('textarea');
-    textarea.value = title;
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textarea);
-
-    document.dispatchEvent(
-      new CustomEvent('creatives:copy-success', {
-        detail: {
-          text: title,
-          type: 'title',
-          creativeId: props.creative.id,
-          fallback: true,
-        },
-      })
-    );
-  }
+  // Эмитируем событие для централизованной обработки копирования
+  document.dispatchEvent(
+    new CustomEvent('creatives:copy-text', {
+      detail: {
+        text: props.creative.title,
+        type: 'title',
+        creativeId: props.creative.id,
+      },
+    })
+  );
 };
 
 // Функция для обработки клика по кнопке копирования описания
-const handleCopyDescription = async (): Promise<void> => {
+const handleCopyDescription = (): void => {
   // Блокируем копирование во время загрузки списка
   if (isCreativesLoading.value) {
     console.warn(
@@ -255,43 +228,16 @@ const handleCopyDescription = async (): Promise<void> => {
     return;
   }
 
-  const description = props.creative.description;
-
-  try {
-    await navigator.clipboard.writeText(description);
-
-    // Эмитируем событие успешного копирования
-    document.dispatchEvent(
-      new CustomEvent('creatives:copy-success', {
-        detail: {
-          text: description,
-          type: 'description',
-          creativeId: props.creative.id,
-        },
-      })
-    );
-  } catch (error) {
-    console.error('Ошибка копирования описания:', error);
-
-    // Fallback для старых браузеров
-    const textarea = document.createElement('textarea');
-    textarea.value = description;
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textarea);
-
-    document.dispatchEvent(
-      new CustomEvent('creatives:copy-success', {
-        detail: {
-          text: description,
-          type: 'description',
-          creativeId: props.creative.id,
-          fallback: true,
-        },
-      })
-    );
-  }
+  // Эмитируем событие для централизованной обработки копирования
+  document.dispatchEvent(
+    new CustomEvent('creatives:copy-text', {
+      detail: {
+        text: props.creative.description,
+        type: 'description',
+        creativeId: props.creative.id,
+      },
+    })
+  );
 };
 
 // Функция для получения CSS класса иконки избранного

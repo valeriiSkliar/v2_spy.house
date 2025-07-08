@@ -155,7 +155,7 @@
                 <span class="txt-gray">{{ translations.titleField.value }}</span>
               </div>
               <div class="col-auto">
-                <button class="btn copy-btn _flex _dark js-copy">
+                <button class="btn copy-btn _flex _dark js-copy" @click="handleCopyTitle">
                   <span class="icon-copy"></span>
                   {{ translations.copy.value }}
                   <span class="copy-btn__copied">{{ translations.copied.value }}</span>
@@ -172,7 +172,7 @@
                 <span class="txt-gray">{{ translations.description.value }}</span>
               </div>
               <div class="col-auto">
-                <button class="btn copy-btn _flex _dark js-copy">
+                <button class="btn copy-btn _flex _dark js-copy" @click="handleCopyDescription">
                   <span class="icon-copy"></span>
                   {{ translations.copy.value }}
                   <span class="copy-btn__copied">{{ translations.copied.value }}</span>
@@ -523,5 +523,49 @@ async function handleFavoriteClick(): Promise<void> {
   } catch (error) {
     console.error('Ошибка обработки избранного в деталях:', error);
   }
+}
+
+/**
+ * Обработчик копирования заголовка креатива
+ * Использует централизованную событийную систему
+ */
+function handleCopyTitle(): void {
+  if (!selectedCreative.value?.title) {
+    console.warn('Заголовок креатива недоступен для копирования');
+    return;
+  }
+
+  // Эмитируем событие для централизованной обработки
+  document.dispatchEvent(
+    new CustomEvent('creatives:copy-text', {
+      detail: {
+        text: selectedCreative.value.title,
+        type: 'title',
+        creativeId: selectedCreative.value.id,
+      },
+    })
+  );
+}
+
+/**
+ * Обработчик копирования описания креатива
+ * Использует централизованную событийную систему
+ */
+function handleCopyDescription(): void {
+  if (!selectedCreative.value?.description) {
+    console.warn('Описание креатива недоступно для копирования');
+    return;
+  }
+
+  // Эмитируем событие для централизованной обработки
+  document.dispatchEvent(
+    new CustomEvent('creatives:copy-text', {
+      detail: {
+        text: selectedCreative.value.description,
+        type: 'description',
+        creativeId: selectedCreative.value.id,
+      },
+    })
+  );
 }
 </script>
