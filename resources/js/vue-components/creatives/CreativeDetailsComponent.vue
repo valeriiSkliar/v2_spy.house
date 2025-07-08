@@ -27,7 +27,10 @@
               </button>
             </div>
             <div class="col-auto">
-              <button class="btn-icon _dark" @click="store.hideCreativeDetails">
+              <button
+                class="btn-icon _dark"
+                @click="store.detailsManager.handleHideCreativeDetails"
+              >
                 <span class="icon-x font-18"></span>
               </button>
             </div>
@@ -423,33 +426,14 @@ const translations = createReactiveTranslations(
 
 // Объединяем переводы из props со store (для обратной совместимости)
 onMounted(async () => {
-  console.log('CreativeDetailsComponent: Initializing translations...');
-  console.log('Props translations:', props.translations);
-  console.log('Props translations keys:', Object.keys(props.translations));
-
-  // Проверяем содержимое переводов
-  Object.entries(props.translations).forEach(([key, value]) => {
-    console.log(`Translation "${key}": "${value}"`);
-  });
-
   // Мержим переводы из props с Store для обратной совместимости
   if (Object.keys(props.translations).length > 0) {
-    console.log('🔄 Merging props translations with store...');
     mergePropsTranslations(props.translations, store.setTranslations);
-    console.log('✅ Props translations merged successfully');
   } else {
     console.warn('⚠️ No translations in props! Props are empty.');
   }
-
-  console.log('Store isTranslationsReady after merge:', store.isTranslationsReady);
-
   // Ждем готовности переводов для предотвращения race condition
   await waitForReady();
-
-  console.log('Translations ready! Testing translations:');
-  console.log('- details.title:', t('details.title'));
-  console.log('- details.download:', t('details.download'));
-  console.log('- details.copy:', t('details.copy'));
 });
 
 // Computed свойства

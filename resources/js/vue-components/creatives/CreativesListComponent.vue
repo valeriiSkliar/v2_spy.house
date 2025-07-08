@@ -27,7 +27,7 @@
           :handle-open-in-new-tab="handleOpenInNewTab"
           @toggle-favorite="handleToggleFavorite"
           :handle-download="handleDownload"
-          @show-details="handleShowDetails"
+          :handle-show-details="handleShowDetails"
         />
 
         <InpageCreativeCard
@@ -39,7 +39,7 @@
           :handle-open-in-new-tab="handleOpenInNewTab"
           @toggle-favorite="handleToggleFavorite"
           :handle-download="handleDownload"
-          @show-details="handleShowDetails"
+          :handle-show-details="handleShowDetails"
         />
 
         <SocialCreativeCard
@@ -52,7 +52,7 @@
           :handle-open-in-new-tab="handleOpenInNewTab"
           @toggle-favorite="handleToggleFavorite"
           :handle-download="handleDownload"
-          @show-details="handleShowDetails"
+          :handle-show-details="handleShowDetails"
         />
       </template>
     </div>
@@ -162,9 +162,27 @@ function handleDownload(url: string): void {
   );
 }
 
-function handleShowDetails(creative: Creative): void {
-  console.log(`Карточка эмитировала show-details:`, creative);
+function handleShowDetails(id: number): void {
+  console.log(`Карточка эмитировала show-details:`, id);
+
+  // Находим креатив по ID в текущем списке
+  const creative = creatives.value.find((c: Creative) => c.id === id);
+
+  if (!creative) {
+    console.warn(`Креатив с ID ${id} не найден в списке для показа деталей`);
+    return;
+  }
+
   // Основная логика обрабатывается в Store через DOM события
+  // Передаем полные данные креатива вместо только ID
+  document.dispatchEvent(
+    new CustomEvent('creatives:show-details', {
+      detail: {
+        creative,
+        id,
+      },
+    })
+  );
 }
 
 const handleOpenInNewTab = (url: string): void => {

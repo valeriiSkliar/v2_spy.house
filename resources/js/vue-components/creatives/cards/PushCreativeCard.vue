@@ -107,7 +107,7 @@
         </button>
         <button
           class="btn-icon _dark js-show-details"
-          @click="handleShowDetails"
+          @click="handleShowDetails(props.creative.id)"
           :disabled="isCreativesLoading"
         >
           <span class="icon-info remore_margin"></span>
@@ -157,11 +157,11 @@ const props = defineProps<{
   translations?: Record<string, string>;
   handleOpenInNewTab: (url: string) => void;
   handleDownload: (url: string) => void;
+  handleShowDetails: (id: number) => void;
 }>();
 
 const emit = defineEmits<{
   'toggle-favorite': [creativeId: number, isFavorite: boolean];
-  'show-details': [creative: Creative];
   'open-in-new-tab': [creative: Creative];
 }>();
 
@@ -213,27 +213,6 @@ const handleFavoriteClick = (): void => {
       detail: {
         creativeId: props.creative.id,
         isFavorite: isFavorite.value,
-      },
-    })
-  );
-};
-
-const handleShowDetails = (): void => {
-  // Блокируем просмотр деталей во время загрузки списка
-  if (isCreativesLoading.value) {
-    console.warn(
-      `Просмотр деталей креатива ${props.creative.id} заблокирован: идет загрузка списка`
-    );
-    return;
-  }
-
-  emit('show-details', props.creative);
-
-  // Эмитируем DOM событие для Store
-  document.dispatchEvent(
-    new CustomEvent('creatives:show-details', {
-      detail: {
-        creative: props.creative,
       },
     })
   );

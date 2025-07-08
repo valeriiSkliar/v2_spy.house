@@ -93,7 +93,11 @@
         >
           <span :class="getFavoriteIconClass()"></span>
         </button>
-        <button class="btn-icon _dark" @click="handleShowDetails" :disabled="isCreativesLoading">
+        <button
+          class="btn-icon _dark"
+          @click="handleShowDetails(props.creative.id)"
+          :disabled="isCreativesLoading"
+        >
           <span class="icon-info"></span>
         </button>
       </div>
@@ -150,6 +154,9 @@ const props = defineProps<{
   isFavorite?: boolean;
   isFavoriteLoading?: boolean;
   translations?: Record<string, string>;
+  handleOpenInNewTab: (url: string) => void;
+  handleDownload: (url: string) => void;
+  handleShowDetails: (id: number) => void;
 }>();
 
 const emit = defineEmits<{
@@ -237,27 +244,6 @@ const handleFavoriteClick = (): void => {
   );
 };
 
-const handleShowDetails = (): void => {
-  // Блокируем просмотр деталей во время загрузки списка
-  if (isCreativesLoading.value) {
-    console.warn(
-      `Просмотр деталей креатива ${props.creative.id} заблокирован: идет загрузка списка`
-    );
-    return;
-  }
-
-  emit('show-details', props.creative);
-
-  // Эмитируем DOM событие для Store
-  document.dispatchEvent(
-    new CustomEvent('creatives:show-details', {
-      detail: {
-        creative: props.creative,
-      },
-    })
-  );
-};
-
 // Функция для обработки клика по кнопке копирования описания
 const handleCopyDescription = async (): Promise<void> => {
   // Блокируем копирование во время загрузки списка
@@ -322,11 +308,6 @@ const getFlagIcon = (): string => {
 // Функция для получения CSS класса иконки избранного
 const getFavoriteIconClass = (): string => {
   return isFavorite.value ? 'icon-favorite' : 'icon-favorite-empty';
-};
-
-// Совместимость с предыдущей версией (deprecated)
-const showDetails = () => {
-  handleShowDetails();
 };
 </script>
 

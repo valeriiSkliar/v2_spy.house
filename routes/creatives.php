@@ -18,6 +18,9 @@ Route::prefix('api/creatives')
         Route::get('/search-count', [CreativesController::class, 'getSearchCountApi'])->name('searchCount');
         Route::get('/', [CreativesController::class, 'apiIndex'])->name('index');
 
+        // API для деталей креативов
+        Route::get('/{id}/details', [CreativesController::class, 'getCreativeDetails'])->name('details');
+
         // API для избранного
         Route::get('/favorites/count', [CreativesController::class, 'getFavoritesCount'])->name('favorites.count');
         Route::post('/{id}/favorite', [CreativesController::class, 'addToFavorites'])->name('favorites.add');
