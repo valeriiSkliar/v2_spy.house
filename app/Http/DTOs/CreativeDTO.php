@@ -52,6 +52,7 @@ class CreativeDTO implements Arrayable, Jsonable
         public ?string $last_activity_date_formatted = null,
         public ?bool $is_active = null,
         public ?string $platform = null,
+        public ?string $activity_title = null,
     ) {}
 
     /**
@@ -59,12 +60,23 @@ class CreativeDTO implements Arrayable, Jsonable
      */
     public static function fromArray(array $data): self
     {
+        // Обработка поля country для обратной совместимости
+        $country = $data['country'] ?? null;
+        if (is_string($country)) {
+            // Если передана строка (старый формат), преобразуем в массив
+            $country = [
+                'code' => $country,
+                'name' => $country,
+                'iso_code_3' => null
+            ];
+        }
+
         return new self(
             id: $data['id'],
             title: $data['title'],
             description: $data['description'],
             category: $data['category'],
-            country: $data['country'] ?? null,
+            country: $country,
             file_size: $data['file_size'],
             icon_url: $data['icon_url'],
             landing_url: $data['landing_url'],
@@ -92,6 +104,7 @@ class CreativeDTO implements Arrayable, Jsonable
             last_activity_date_formatted: $data['last_activity_date_formatted'] ?? null,
             is_active: $data['is_active'] ?? null,
             platform: $data['platform'] ?? null,
+            activity_title: $data['activity_title'] ?? null,
         );
     }
 
@@ -128,8 +141,15 @@ class CreativeDTO implements Arrayable, Jsonable
             $activityCarbon = Carbon::parse($this->activity_date);
             $this->last_activity_date_formatted = $activityCarbon->format('d.m.Y');
 
-            // is_active - активность за последние 30 дней
-            $this->is_active = $activityCarbon->isAfter($now->copy()->subDays(30));
+            // is_active - активность за последние 30 дней (только если не задано значение из модели)
+            if ($this->is_active === null) {
+                $this->is_active = $activityCarbon->isAfter($now->copy()->subDays(30));
+            }
+        }
+
+        // activity_title - локализованный заголовок активности (только если не задано значение из модели)
+        if ($this->activity_title === null && $this->is_active !== null) {
+            $this->activity_title = $this->is_active ? __('creatives.active') : __('creatives.was_active');
         }
 
         // isFavorite - требует userId для проверки
@@ -342,6 +362,7 @@ class CreativeDTO implements Arrayable, Jsonable
             'browsers' => $this->browsers,
             'devices' => $this->devices,
             'activity_date' => $this->activity_date,
+            'activity_title' => $this->activity_title,
         ];
     }
 
@@ -391,6 +412,7 @@ class CreativeDTO implements Arrayable, Jsonable
             'last_activity_date_formatted' => $this->last_activity_date_formatted,
             'is_active' => $this->is_active,
             'platform' => $this->platform,
+            'activity_title' => $this->activity_title,
         ];
     }
 

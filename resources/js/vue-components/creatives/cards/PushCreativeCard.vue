@@ -176,8 +176,7 @@ onMounted(async () => {
 
 // Computed для определения активности (заглушка)
 const isActive = computed((): boolean => {
-  // Логика будет добавлена позже
-  return true;
+  return props.creative.is_active;
 });
 
 // Computed для избранного
@@ -317,10 +316,9 @@ const handleCopyDescription = async (): Promise<void> => {
 };
 
 // Функция для формирования текста активности
-import { getActiveDaysText } from '@/utils/getActiveDaysText';
 
 const getActiveText = (): string => {
-  return getActiveDaysText(props.creative.activity_date, 'Active 3 days');
+  return props.creative?.activity_title ?? '';
 };
 
 // Функция для получения URL иконки

@@ -418,7 +418,14 @@ class Creative extends Model
             'social_comments' => $this->social_comments,
             'social_shares' => $this->social_shares,
             'duration' => $this->video_duration,
+            'is_active' => $this->is_active,
+            'activity_title' => $this->getCardActivityTitle(),
         ];
+    }
+
+    private function getCardActivityTitle(): string
+    {
+        return $this->is_active ? __('creatives.active') : __('creatives.was_active');
     }
 
     /**

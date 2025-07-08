@@ -48,6 +48,7 @@ export interface Creative {
   created_at: string;
   last_seen_at: string;
   activity_date?: string;
+  activity_title?: string;
   advertising_networks?: string[];
   language?: LanguageCode | null;
   operating_systems?: string[];

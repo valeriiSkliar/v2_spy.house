@@ -29,7 +29,7 @@ class CreativeDTOTest extends TestCase
         $this->assertEquals(1, $dto->id);
         $this->assertEquals('Test Title', $dto->title);
         $this->assertEquals('push', $dto->category);
-        $this->assertEquals('US', $dto->country);
+        $this->assertEquals(['code' => 'US', 'name' => 'US', 'iso_code_3' => null], $dto->country);
     }
 
     public function test_dto_computes_properties_correctly()
