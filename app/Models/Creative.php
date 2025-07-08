@@ -390,7 +390,8 @@ class Creative extends Model
                 'name' => $this->country->name,
                 'iso_code_3' => $this->country->iso_code_3,
             ] : null,
-            'file_size' => $this->calculateFileSize(),
+            'file_size' => $this->getFormattedFileSize(),
+            'file_sizes_detailed' => $this->calculateFileSize(),
             'icon_url' => $this->icon_url ?? '',
             'landing_url' => $this->landing_url ?? '',
             'video_url' => $this->video_url,
@@ -403,8 +404,6 @@ class Creative extends Model
             'operating_systems' => $this->operation_system ? [$this->operation_system->value] : [],
             'browsers' => $this->browser && $this->browser->browser ? [$this->browser->browser] : [],
             'devices' => $this->guessDevices(),
-            'image_sizes' => $this->main_image_size ? [$this->main_image_size] : [],
-            'main_image_size' => $this->main_image_size,
             'main_image_url' => $this->main_image_url,
             'platform' => $this->platform?->value,
             'source' => $this->source?->source_display_name ?? $this->source?->source_name ?? 'unknown',
@@ -429,12 +428,137 @@ class Creative extends Model
     }
 
     /**
-     * Вычислить размер файла (заглушка)
+     * Получить структурированную информацию о размерах файлов
      */
-    public function calculateFileSize(): string
+    public function calculateFileSize(): array
     {
-        // TODO: Реализовать реальный расчет размера файла
-        return rand(100, 5000) . 'KB';
+        $fileSizes = [];
+
+        // Добавляем размер главного изображения
+        if ($this->main_image_size) {
+            $fileSizes[] = [
+                'type' => 'main_image',
+                'label' => 'Main Image',
+                'raw_size' => $this->main_image_size,
+                'formatted_size' => $this->formatFileSize($this->main_image_size),
+                'bytes' => $this->parseFormattedSizeToBytes($this->formatFileSize($this->main_image_size))
+            ];
+        }
+
+        // Добавляем размер иконки
+        if ($this->icon_size) {
+            $fileSizes[] = [
+                'type' => 'icon',
+                'label' => 'Icon',
+                'raw_size' => $this->icon_size,
+                'formatted_size' => $this->formatFileSize($this->icon_size),
+                'bytes' => $this->parseFormattedSizeToBytes($this->formatFileSize($this->icon_size))
+            ];
+        }
+
+        return $fileSizes;
+    }
+
+    /**
+     * Получить общий размер файла в читаемом формате (для обратной совместимости)
+     */
+    public function getFormattedFileSize(): string
+    {
+        $fileSizes = $this->calculateFileSize();
+
+        if (empty($fileSizes)) {
+            return 'N/A';
+        }
+
+        // Возвращаем наибольший размер для обратной совместимости
+        return $this->selectMainFileSize(array_column($fileSizes, 'formatted_size'));
+    }
+
+    /**
+     * Форматировать размер файла в читаемый формат
+     */
+    private function formatFileSize($size): string
+    {
+        // Если уже в правильном формате (например "150KB", "2.5MB")
+        if (preg_match('/^\d+(\.\d+)?\s*(B|KB|MB|GB)$/i', $size)) {
+            return strtoupper($size);
+        }
+
+        // Если размер в байтах (число)
+        if (is_numeric($size)) {
+            return $this->formatBytesToReadable((int)$size);
+        }
+
+        // Если размер в формате "1024x768" (размер изображения), 
+        // пытаемся оценить размер файла
+        if (preg_match('/^(\d+)x(\d+)$/', $size, $matches)) {
+            $width = (int)$matches[1];
+            $height = (int)$matches[2];
+            $estimatedBytes = $width * $height * 3; // Примерная оценка для RGB
+            return $this->formatBytesToReadable($estimatedBytes);
+        }
+
+        // Возвращаем как есть если не можем распознать формат
+        return $size;
+    }
+
+    /**
+     * Преобразовать байты в читаемый формат
+     */
+    private function formatBytesToReadable(int $bytes): string
+    {
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $power = $bytes > 0 ? floor(log($bytes, 1024)) : 0;
+        $power = min($power, count($units) - 1);
+
+        $size = $bytes / pow(1024, $power);
+
+        if ($power == 0) {
+            return $bytes . ' B';
+        }
+
+        return round($size, 1) . ' ' . $units[$power];
+    }
+
+    /**
+     * Выбрать основной размер файла из массива размеров
+     */
+    private function selectMainFileSize(array $sizes): string
+    {
+        if (count($sizes) === 1) {
+            return $sizes[0];
+        }
+
+        // Если несколько размеров, возвращаем наибольший
+        $maxSize = 0;
+        $maxSizeFormatted = $sizes[0];
+
+        foreach ($sizes as $sizeFormatted) {
+            $bytes = $this->parseFormattedSizeToBytes($sizeFormatted);
+            if ($bytes > $maxSize) {
+                $maxSize = $bytes;
+                $maxSizeFormatted = $sizeFormatted;
+            }
+        }
+
+        return $maxSizeFormatted;
+    }
+
+    /**
+     * Преобразовать форматированный размер обратно в байты для сравнения
+     */
+    private function parseFormattedSizeToBytes(string $formattedSize): int
+    {
+        if (preg_match('/^([\d.]+)\s*(B|KB|MB|GB|TB)$/i', $formattedSize, $matches)) {
+            $size = (float)$matches[1];
+            $unit = strtoupper($matches[2]);
+
+            $multipliers = ['B' => 1, 'KB' => 1024, 'MB' => 1024 ** 2, 'GB' => 1024 ** 3, 'TB' => 1024 ** 4];
+
+            return (int)($size * ($multipliers[$unit] ?? 1));
+        }
+
+        return 0;
     }
 
     /**

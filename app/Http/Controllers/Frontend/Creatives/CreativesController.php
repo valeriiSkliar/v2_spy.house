@@ -291,7 +291,7 @@ class CreativesController extends BaseCreativesController
                 'is_active' => $creative->is_active, // Теперь работает через accessor
 
                 // Дополнительные вычисляемые поля
-                'file_size' => $creative->calculateFileSize(),
+                'file_sizes_detailed' => $creative->calculateFileSize(),
                 'devices' => $creative->guessDevices(),
                 'combined_hash' => $creative->combined_hash,
 

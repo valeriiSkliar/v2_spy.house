@@ -51,7 +51,7 @@
             <div class="col-6">
               <p class="font-16 mb-15">
                 <span class="font-weight-600">{{ translations.icon.value }}</span>
-                {{ selectedCreative?.file_size }}
+                {{ iconSize }}
               </p>
               <div class="mb-10">
                 <a href="#" class="btn _flex _medium _green w-100"
@@ -118,7 +118,7 @@
         <div v-if="activeTab === 'push'" class="creative-details__group">
           <p class="font-16 mb-15">
             <span class="font-weight-600">{{ translations.image.value }}</span>
-            {{ selectedCreative?.main_image_size }}
+            {{ mainImageSize }}
           </p>
           <div class="thumb thumb-image mb-15">
             <img :src="selectedCreative?.main_image_url" :alt="selectedCreative?.title" />
@@ -439,6 +439,59 @@ onMounted(async () => {
 // Computed свойства
 const selectedCreative = computed((): Creative | null => store.currentCreativeDetails);
 const activeTab = computed(() => store.tabs.activeTab);
+
+// Computed свойства для размеров файлов из новой структуры file_sizes_detailed
+const iconSize = computed((): string => {
+  // Используем новую структуру file_sizes_detailed если доступна
+  if (
+    selectedCreative.value?.file_sizes_detailed &&
+    Array.isArray(selectedCreative.value.file_sizes_detailed)
+  ) {
+    const iconFile = selectedCreative.value.file_sizes_detailed.find(file => file.type === 'icon');
+    if (iconFile?.formatted_size) {
+      return iconFile.formatted_size;
+    }
+  }
+
+  // Fallback к старым полям для обратной совместимости
+  if (selectedCreative.value?.icon_size) {
+    return selectedCreative.value.icon_size;
+  }
+
+  // Fallback к общему размеру файла
+  if (selectedCreative.value?.file_size && typeof selectedCreative.value.file_size === 'string') {
+    return selectedCreative.value.file_size;
+  }
+
+  return 'N/A';
+});
+
+const mainImageSize = computed((): string => {
+  // Используем новую структуру file_sizes_detailed если доступна
+  if (
+    selectedCreative.value?.file_sizes_detailed &&
+    Array.isArray(selectedCreative.value.file_sizes_detailed)
+  ) {
+    const mainImageFile = selectedCreative.value.file_sizes_detailed.find(
+      file => file.type === 'main_image'
+    );
+    if (mainImageFile?.formatted_size) {
+      return mainImageFile.formatted_size;
+    }
+  }
+
+  // Fallback к старым полям для обратной совместимости
+  if (selectedCreative.value?.main_image_size) {
+    return selectedCreative.value.main_image_size;
+  }
+
+  // Fallback к общему размеру файла
+  if (selectedCreative.value?.file_size && typeof selectedCreative.value.file_size === 'string') {
+    return selectedCreative.value.file_size;
+  }
+
+  return 'N/A';
+});
 
 // Избранное
 const isFavorite = computed((): boolean => {

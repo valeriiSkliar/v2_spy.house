@@ -25,6 +25,17 @@ export type SortValue = 'creation' | 'activity' | 'popularity' | 'byCreationDate
 export type DateRangeValue = 'today' | 'yesterday' | 'last7' | 'last30' | 'last90' | 'thisMonth' | 'lastMonth' | 'thisYear' | 'lastYear' | 'default' | string;
 
 /**
+ * Информация о размере файла
+ */
+export interface FileSizeInfo {
+  type: 'main_image' | 'icon';
+  label: string;
+  raw_size: string;
+  formatted_size: string;
+  bytes: number;
+}
+
+/**
  * Основная модель креатива
  */
 export interface Creative {
@@ -34,12 +45,13 @@ export interface Creative {
   description: string;
   category: string;
   country: CountryCode | null;
-  file_size: string;
+  file_size?: string;
   // media fields
   icon_url: string;
-  image_sizes?: string[];
+  icon_size?: string;
   main_image_size?: string;
   main_image_url?: string;
+  file_sizes_detailed?: FileSizeInfo[];
   landing_url: string;
   video_url?: string;
   duration?: string;

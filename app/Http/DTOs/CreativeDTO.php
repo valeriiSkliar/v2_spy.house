@@ -19,7 +19,6 @@ class CreativeDTO implements Arrayable, Jsonable
         public string $description,
         public string $category,
         public array|null $country,
-        public string $file_size,
         public string $icon_url,
         public string $landing_url,
         public string $created_at,
@@ -33,8 +32,6 @@ class CreativeDTO implements Arrayable, Jsonable
         public ?array $operating_systems = null,
         public ?array $browsers = null,
         public ?array $devices = null,
-        public ?array $image_sizes = null,
-        public ?string $main_image_size = null,
         public ?string $main_image_url = null,
         public ?bool $is_adult = false,
 
@@ -53,6 +50,7 @@ class CreativeDTO implements Arrayable, Jsonable
         public ?bool $is_active = null,
         public ?string $platform = null,
         public ?string $activity_title = null,
+        public ?array $file_sizes_detailed = null,
     ) {}
 
     /**
@@ -77,7 +75,6 @@ class CreativeDTO implements Arrayable, Jsonable
             description: $data['description'],
             category: $data['category'],
             country: $country,
-            file_size: $data['file_size'],
             icon_url: $data['icon_url'],
             landing_url: $data['landing_url'],
             created_at: $data['created_at'],
@@ -89,8 +86,6 @@ class CreativeDTO implements Arrayable, Jsonable
             operating_systems: $data['operating_systems'] ?? null,
             browsers: $data['browsers'] ?? null,
             devices: $data['devices'] ?? null,
-            image_sizes: $data['image_sizes'] ?? null,
-            main_image_size: $data['main_image_size'] ?? null,
             main_image_url: $data['main_image_url'] ?? null,
             is_adult: $data['is_adult'] ?? false,
             social_likes: isset($data['social_likes']) ? (int)$data['social_likes'] : null,
@@ -105,6 +100,7 @@ class CreativeDTO implements Arrayable, Jsonable
             is_active: $data['is_active'] ?? null,
             platform: $data['platform'] ?? null,
             activity_title: $data['activity_title'] ?? null,
+            file_sizes_detailed: $data['file_sizes_detailed'] ?? null,
         );
     }
 
@@ -120,6 +116,9 @@ class CreativeDTO implements Arrayable, Jsonable
 
     /**
      * Вычислить computed свойства с кешированием
+     * 
+     * Примечание: is_active определяется исключительно моделью Creative через getIsActiveAttribute()
+     * на основе статуса креатива и не вычисляется по дате активности в DTO
      */
     public function computeProperties(?int $userId = null): void
     {
@@ -140,11 +139,6 @@ class CreativeDTO implements Arrayable, Jsonable
         if ($this->activity_date) {
             $activityCarbon = Carbon::parse($this->activity_date);
             $this->last_activity_date_formatted = $activityCarbon->format('d.m.Y');
-
-            // is_active - активность за последние 30 дней (только если не задано значение из модели)
-            if ($this->is_active === null) {
-                $this->is_active = $activityCarbon->isAfter($now->copy()->subDays(30));
-            }
         }
 
         // activity_title - локализованный заголовок активности (только если не задано значение из модели)
@@ -260,7 +254,7 @@ class CreativeDTO implements Arrayable, Jsonable
         }
 
         // Массивы
-        $arrayFields = ['advertising_networks', 'languages', 'operating_systems', 'browsers', 'devices', 'image_sizes'];
+        $arrayFields = ['advertising_networks', 'languages', 'operating_systems', 'browsers', 'devices', 'file_sizes_detailed'];
         foreach ($arrayFields as $field) {
             if (isset($data[$field]) && !is_array($data[$field])) {
                 $errors[] = "Field '{$field}' must be array";
@@ -351,6 +345,7 @@ class CreativeDTO implements Arrayable, Jsonable
             'icon_url' => $this->icon_url,
             'has_video' => $this->has_video,
             'is_adult' => $this->is_adult,
+            'is_active' => $this->is_active,
             'displayName' => $this->displayName,
             'isRecent' => $this->isRecent,
             'isFavorite' => $this->isFavorite,
@@ -363,6 +358,7 @@ class CreativeDTO implements Arrayable, Jsonable
             'devices' => $this->devices,
             'activity_date' => $this->activity_date,
             'activity_title' => $this->activity_title,
+            'file_sizes_detailed' => $this->file_sizes_detailed,
         ];
     }
 
@@ -385,7 +381,6 @@ class CreativeDTO implements Arrayable, Jsonable
             'description' => $this->description,
             'category' => $this->category,
             'country' => $this->country,
-            'file_size' => $this->file_size,
             'icon_url' => $this->icon_url,
             'landing_url' => $this->landing_url,
             'video_url' => $this->video_url,
@@ -397,8 +392,6 @@ class CreativeDTO implements Arrayable, Jsonable
             'operating_systems' => $this->operating_systems,
             'browsers' => $this->browsers,
             'devices' => $this->devices,
-            'image_sizes' => $this->image_sizes,
-            'main_image_size' => $this->main_image_size,
             'main_image_url' => $this->main_image_url,
             'is_adult' => $this->is_adult,
             'social_likes' => $this->social_likes,
@@ -413,6 +406,7 @@ class CreativeDTO implements Arrayable, Jsonable
             'is_active' => $this->is_active,
             'platform' => $this->platform,
             'activity_title' => $this->activity_title,
+            'file_sizes_detailed' => $this->file_sizes_detailed,
         ];
     }
 
@@ -439,8 +433,7 @@ class CreativeDTO implements Arrayable, Jsonable
                 'total' => ($this->social_likes ?? 0) + ($this->social_comments ?? 0) + ($this->social_shares ?? 0)
             ],
             'techInfo' => [
-                'fileSize' => $this->file_size,
-                'imageSize' => $this->main_image_size,
+                'fileSizesDetailed' => $this->file_sizes_detailed,
                 'duration' => $this->duration
             ],
             'platforms' => [
