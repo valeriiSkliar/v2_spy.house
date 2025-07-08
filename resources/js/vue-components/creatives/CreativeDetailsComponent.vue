@@ -64,6 +64,7 @@
                   :href="selectedCreative?.icon_url"
                   target="_blank"
                   class="btn _flex _medium _gray w-100"
+                  @click.prevent="handleOpenInNewTab(selectedCreative?.landing_url ?? '')"
                   ><span class="icon-new-tab font-16 mr-2"></span
                   >{{ translations.openTab.value }}</a
                 >
@@ -195,7 +196,11 @@
           </h3>
           <div class="form-link mb-25">
             <input type="url" :value="selectedCreative?.landing_url" readonly />
-            <a href="#" target="_blank" class="btn-icon _small _white"
+            <a
+              :href="selectedCreative?.landing_url ?? ''"
+              target="_blank"
+              class="btn-icon _small _white"
+              @click.prevent="handleOpenInNewTab(selectedCreative?.landing_url ?? '')"
               ><span class="icon-new-tab"></span
             ></a>
           </div>
@@ -360,11 +365,13 @@ import { computed, onMounted } from 'vue';
 interface Props {
   showSimilarCreatives?: boolean;
   translations?: Record<string, string>;
+  handleOpenInNewTab?: (url: string) => void;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   showSimilarCreatives: true,
   translations: () => ({}),
+  handleOpenInNewTab: () => {},
 });
 
 // Подключение к store и композаблу переводов
