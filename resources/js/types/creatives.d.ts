@@ -73,12 +73,12 @@ export interface Creative {
  */
 export interface CreativesFilters {
   searchKeyword?: string;
-  country?: CountryCode;
+  countries?: string[];
   dateCreation?: DateRangeValue;
   sortBy?: SortValue;
   periodDisplay?: DateRangeValue;
   advertisingNetworks?: string[];
-  languages?: LanguageCode[];
+  languages?: string[];
   operatingSystems?: string[];
   browsers?: string[];
   devices?: string[];
@@ -95,7 +95,7 @@ export interface CreativesFilters {
 export interface FilterState {
   isDetailedVisible: boolean;
   searchKeyword: string;
-  country: string;
+  countries: string[];
   dateCreation: string;
   sortBy: string;
   periodDisplay: string;
@@ -254,7 +254,7 @@ export interface TabOptions {
  */
 export interface UrlSyncParams {
   cr_searchKeyword?: string;
-  cr_country?: string;
+  cr_countries?: string;
   cr_dateCreation?: string;
   cr_sortBy?: string;
   cr_periodDisplay?: string;
@@ -318,7 +318,7 @@ export const CREATIVES_CONSTANTS = {
 export const DEFAULT_FILTERS: FilterState = {
   isDetailedVisible: false,
   searchKeyword: '',
-  country: 'default',
+  countries: [],
   dateCreation: 'default',
   sortBy: 'default',
   periodDisplay: 'default',
@@ -343,7 +343,7 @@ export const DEFAULT_TABS: TabsState = {
  * Утилитарные типы
  */
 export type FilterKey = keyof FilterState;
-export type MultiSelectFilterKey = 'advertisingNetworks' | 'languages' | 'operatingSystems' | 'browsers' | 'devices' | 'imageSizes';
+export type MultiSelectFilterKey = 'countries' | 'advertisingNetworks' | 'languages' | 'operatingSystems' | 'browsers' | 'devices' | 'imageSizes';
 export type SimpleFilterKey = Exclude<FilterKey, MultiSelectFilterKey | 'isDetailedVisible' | 'savedSettings'>;
 
 /**

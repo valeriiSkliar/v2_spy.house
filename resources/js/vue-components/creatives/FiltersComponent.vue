@@ -41,13 +41,14 @@
               </div>
             </div>
 
-            <!-- Выбор страны/категории -->
+            <!-- Выбор стран (мультиселект) -->
             <div class="col-12 col-md-6 col-lg-3 mb-10 w-lg-1 flex-grow-1">
-              <BaseSelect
-                :value="store.filters.country"
-                :options="store.countryOptions"
-                :placeholder="translations.country.value"
-                @update:value="value => store.updateFilter('country', value)"
+              <MultiSelect
+                :values="store.filters.countries"
+                :options="store.countriesOptions"
+                :placeholder="translations.countries.value"
+                @add="value => store.addToMultiSelect('countries', value)"
+                @remove="value => store.removeFromMultiSelect('countries', value)"
               />
             </div>
 
@@ -274,7 +275,7 @@ const translations = createReactiveTranslations(
   {
     title: 'title',
     searchKeyword: 'searchKeyword',
-    country: 'country',
+    countries: 'countries',
     dateCreation: 'dateCreation',
     sortBy: 'sortBy',
     resetButton: 'resetButton',
@@ -295,7 +296,7 @@ const translations = createReactiveTranslations(
     // Fallback значения для критических переводов
     title: 'Filter',
     searchKeyword: 'Search by Keyword',
-    country: 'Country',
+    countries: 'Countries',
     dateCreation: 'Date of creation',
     sortBy: 'Sort by',
     resetButton: 'Reset',

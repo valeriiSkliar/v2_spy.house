@@ -50,7 +50,7 @@ export function useCreativesUrlSync(): UseCreativesUrlSyncReturn {
    */
   const FILTER_URL_MAPPING = {
     searchKeyword: 'cr_searchKeyword',
-    country: 'cr_country', 
+    countries: 'cr_countries', 
     dateCreation: 'cr_dateCreation',
     sortBy: 'cr_sortBy',
     periodDisplay: 'cr_periodDisplay',
@@ -72,7 +72,7 @@ export function useCreativesUrlSync(): UseCreativesUrlSyncReturn {
    */
   const getFieldType = (key: keyof FilterState): 'string' | 'boolean' | 'array' | 'number' => {
     const arrayFields: (keyof FilterState)[] = [
-      'advertisingNetworks', 'languages', 'operatingSystems', 
+      'countries', 'advertisingNetworks', 'languages', 'operatingSystems', 
       'browsers', 'devices', 'imageSizes'
     ];
     

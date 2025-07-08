@@ -67,7 +67,7 @@ abstract class BaseCreativesController extends FrontendController
                 'title' => "Creative {$i} Title",
                 'description' => "Detailed description for creative {$i} with marketing content",
                 'category' => $category,
-                'country' => $country,
+                'countries' => [$country],
                 'file_size' => rand(100, 5000) . 'KB',
                 'icon_url' => "https://picsum.photos/64/64?random={$i}",
                 'landing_url' => "https://example-landing-{$i}.com",
@@ -375,7 +375,7 @@ abstract class BaseCreativesController extends FrontendController
             // Основные переводы  
             'title' => __('creatives.filter.title'),
             'reset' => __('creatives.reset'),
-            'country' => __('creatives.country'),
+            'countries' => __('creatives.countries'),
             'search' => __('creatives.search'),
 
             // Плоские ключи для фронтенд совместимости
@@ -422,7 +422,7 @@ abstract class BaseCreativesController extends FrontendController
             'translateText' => __('creatives.details.translate'),
             'redirectsDetails' => __('creatives.details.redirects-details'),
             'advertisingNetworks' => __('creatives.details.advertising-networks'),
-            'country' => __('creatives.details.country'),
+            'countries' => __('creatives.details.countries'),
             'language' => __('creatives.details.language'),
             'firstDisplayDate' => __('creatives.details.first-display-date'),
             'lastDisplayDate' => __('creatives.details.last-display-date'),
@@ -522,7 +522,7 @@ abstract class BaseCreativesController extends FrontendController
     protected function getDefaultFilters(): array
     {
         return [
-            'country' => 'default',
+            'countries' => [],
             'dateCreation' => 'default',
             'sortBy' => 'default',
             'periodDisplay' => 'default',
@@ -584,7 +584,7 @@ abstract class BaseCreativesController extends FrontendController
                 fn($option) => $option->toArray(),
                 FilterOptionDTO::countries(
                     IsoCodesHelper::getAllCountries(app()->getLocale()),
-                    $filtersDTO->country
+                    $filtersDTO->countries
                 )
             ),
             'sortOptions' => array_map(

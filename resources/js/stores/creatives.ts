@@ -668,12 +668,12 @@ export const useFiltersStore = defineStore('filters', () => {
   function mapFiltersToCreativesFilters(): CreativesFilters {
     return {
       searchKeyword: filters.searchKeyword || undefined,
-      country: filters.country !== 'default' ? filters.country : undefined,
+      // country: filters.country !== 'default' ? filters.country : undefined,
       dateCreation: filters.dateCreation !== 'default' ? filters.dateCreation : undefined,
       sortBy: filters.sortBy !== 'default' ? (filters.sortBy as 'creation' | 'activity') : 'creation',
       periodDisplay: filters.periodDisplay !== 'default' ? filters.periodDisplay : undefined,
       advertisingNetworks: filters.advertisingNetworks.length > 0 ? filters.advertisingNetworks : undefined,
-      languages: filters.languages.length > 0 ? filters.languages : undefined,
+      // languages: filters.languages.length > 0 ? filters.languages : undefined,
       operatingSystems: filters.operatingSystems.length > 0 ? filters.operatingSystems : undefined,
       browsers: filters.browsers.length > 0 ? filters.browsers : undefined,
       devices: filters.devices.length > 0 ? filters.devices : undefined,

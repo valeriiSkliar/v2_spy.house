@@ -5,14 +5,14 @@
 
 import { creativesService } from '@/services/CreativesService';
 import type {
-  Creative,
-  CreativesFilters,
-  FilterState,
-  Pagination,
-  ProcessedCreativesData,
-  RequestMeta,
-  TabValue,
-  UseCreativesReturn
+    Creative,
+    CreativesFilters,
+    FilterState,
+    Pagination,
+    ProcessedCreativesData,
+    RequestMeta,
+    TabValue,
+    UseCreativesReturn
 } from '@/types/creatives.d';
 import { CREATIVES_CONSTANTS } from '@/types/creatives.d';
 import { computed, ref, shallowRef } from 'vue';
@@ -97,7 +97,7 @@ export function useCreatives(): UseCreativesReturn {
   ): CreativesFilters {
     return {
       searchKeyword: filters.searchKeyword || undefined,
-      country: filters.country !== 'default' ? filters.country : undefined,
+      countries: filters.countries.length > 0 ? filters.countries : undefined,
       dateCreation: filters.dateCreation !== 'default' ? filters.dateCreation : undefined,
       sortBy: filters.sortBy !== 'default' ? (filters.sortBy as any) : 'creation',
       periodDisplay: filters.periodDisplay !== 'default' ? filters.periodDisplay : undefined,

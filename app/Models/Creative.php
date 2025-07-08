@@ -140,13 +140,18 @@ class Creative extends Model
     }
 
     /**
-     * Scope для фильтрации по стране
+     * Scope для фильтрации по странам (поддерживает массив)
      */
-    public function scopeByCountry($query, $countryCode)
+    public function scopeByCountry($query, $countries)
     {
-        if ($countryCode && $countryCode !== 'default') {
-            return $query->whereHas('country', function ($q) use ($countryCode) {
-                $q->where('iso_code_2', $countryCode);
+        // Если передали строку (обратная совместимость), преобразуем в массив
+        if (is_string($countries)) {
+            $countries = $countries !== 'default' ? [$countries] : [];
+        }
+
+        if (!empty($countries)) {
+            return $query->whereHas('country', function ($q) use ($countries) {
+                $q->whereIn('iso_code_2', $countries);
             });
         }
         return $query;
@@ -317,7 +322,7 @@ class Creative extends Model
     {
         $query = self::with(['country', 'language', 'browser', 'advertismentNetwork', 'source'])
             ->byFormat($filters['activeTab'] ?? 'push')
-            ->byCountry($filters['country'] ?? null)
+            ->byCountry($filters['countries'] ?? [])
             ->byLanguage($filters['languages'] ?? [])
             ->byAdvertisingNetworks($filters['advertisingNetworks'] ?? [])
             ->byBrowsers($filters['browsers'] ?? [])
@@ -336,7 +341,7 @@ class Creative extends Model
     public static function getFilteredCount(array $filters)
     {
         return self::byFormat($filters['activeTab'] ?? 'push')
-            ->byCountry($filters['country'] ?? null)
+            ->byCountry($filters['countries'] ?? [])
             ->byLanguage($filters['languages'] ?? [])
             ->byAdvertisingNetworks($filters['advertisingNetworks'] ?? [])
             ->byBrowsers($filters['browsers'] ?? [])

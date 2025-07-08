@@ -29,7 +29,7 @@
 //
 // 🔗 URL СИНХРОНИЗАЦИЯ:
 // Автоматически синхронизирует состояние фильтров с URL параметрами
-// через префикс 'cr_' (например: cr_country, cr_page, cr_activeTab)
+// через префикс 'cr_' (например: cr_countries, cr_page, cr_activeTab)
 //
 // ⚡ ПРОИЗВОДИТЕЛЬНОСТЬ:
 // - Debounced операции для URL синхронизации
@@ -72,7 +72,7 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   const defaultFilters: FilterState = {
     isDetailedVisible: false,
     searchKeyword: '',
-    country: 'default',
+    countries: [],
     dateCreation: 'default',
     sortBy: 'default',
     periodDisplay: 'default',
@@ -158,12 +158,12 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   const detailsLoadingMap = ref<Map<number, boolean>>(new Map());
 
   // Опции для селектов
-  const countryOptions = ref<FilterOption[]>([{ value: 'default', label: 'Все страны' }]);
   const sortOptions = ref<FilterOption[]>([{ value: 'default', label: 'По дате создания' }]);
   const dateRanges = ref<FilterOption[]>([{ value: 'default', label: 'Вся история' }]);
 
   // Опции для мультиселектов
   const multiSelectOptions = reactive<{
+    countries: FilterOption[];
     advertisingNetworks: FilterOption[];
     languages: FilterOption[];
     operatingSystems: FilterOption[];
@@ -171,6 +171,7 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     devices: FilterOption[];
     imageSizes: FilterOption[];
   }>({
+    countries: [],
     advertisingNetworks: [],
     languages: [],
     operatingSystems: [],
@@ -320,7 +321,7 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
       // Отслеживаем значимые фильтры с безопасной проверкой массивов
       const watchedFilters = {
         searchKeyword: filters.searchKeyword,
-        country: filters.country,
+        countries: Array.isArray(filters.countries) ? [...filters.countries] : [],
         dateCreation: filters.dateCreation,
         sortBy: filters.sortBy,
         periodDisplay: filters.periodDisplay,
@@ -359,7 +360,7 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
       // Создаем отпечаток состояния только для значимых изменений
       const currentFiltersState = JSON.stringify({
         searchKeyword: filters.searchKeyword,
-        country: filters.country,
+        countries: filters.countries,
         dateCreation: filters.dateCreation,
         sortBy: filters.sortBy,
         periodDisplay: filters.periodDisplay,
@@ -536,6 +537,7 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   // ============================================================================
   
   // Опции для мультиселектов (computed)
+  const countriesOptions = computed(() => multiSelectOptions.countries);
   const advertisingNetworksOptions = computed(() => multiSelectOptions.advertisingNetworks);
   const languagesOptions = computed(() => multiSelectOptions.languages);
   const operatingSystemsOptions = computed(() => multiSelectOptions.operatingSystems);
@@ -559,7 +561,7 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   // Есть ли активные фильтры
   const hasActiveFilters = computed(() => {
     return filters.searchKeyword !== '' ||
-           filters.country !== 'default' ||
+           filters.countries.length > 0 ||
            filters.dateCreation !== 'default' ||
            filters.sortBy !== 'default' ||
            filters.periodDisplay !== 'default' ||
@@ -629,10 +631,6 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
    * Устанавливает опции для селектов
    */
   function setSelectOptions(options: any): void {
-    if (options.countries && Array.isArray(options.countries)) {
-      countryOptions.value = [...options.countries];
-    }
-    
     if (options.sortOptions && Array.isArray(options.sortOptions)) {
       sortOptions.value = [...options.sortOptions];
     }
@@ -643,7 +641,7 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     
     // Обрабатываем мультиселекты
     const multiSelectFields = [
-      'advertisingNetworks', 'languages', 'operatingSystems', 
+      'countries', 'advertisingNetworks', 'languages', 'operatingSystems', 
       'browsers', 'devices', 'imageSizes'
     ];
     
@@ -1370,9 +1368,9 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     // ========================================
     // ОПЦИИ ДЛЯ СЕЛЕКТОВ И UI
     // ========================================
-    countryOptions,             // Опции стран для dropdown
     sortOptions,                // Опции сортировки
     dateRanges,                 // Опции диапазонов дат
+    countriesOptions,           // Опции стран для мультиселекта
     advertisingNetworksOptions, // Опции рекламных сетей
     languagesOptions,           // Опции языков
     operatingSystemsOptions,    // Опции ОС

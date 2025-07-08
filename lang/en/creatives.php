@@ -17,6 +17,7 @@ return [
     'perPage' => 'Per page',
     'reset' => 'Reset',
     'country' => 'Country',
+    'countries' => 'Countries',
     'search' => 'Search',
 
     // Плоские ключи для фильтров (совместимость с фронтенд системой переводов)
@@ -79,6 +80,7 @@ return [
         'close' => 'Close',
         'advertising-networks' => 'Advertising networks',
         'country' => 'Country',
+        'countries' => 'Countries',
         'language' => 'Language',
         'first-display-date' => 'First display date',
         'last-display-date' => 'Last display date',

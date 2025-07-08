@@ -134,31 +134,36 @@ class FilterOptionDTO implements Arrayable, Jsonable
     }
 
     /**
-     * Создать опции для стран из helper
+     * Создать опции для стран из helper (поддерживает мультиселект)
      */
-    public static function countries(array $countries, ?string $selectedCountry = null): array
+    public static function countries(array $countries, array $selectedCountries = []): array
     {
         $options = [];
 
-        // Добавляем опцию "Все страны"
-        $options[] = self::simple('default', 'Все страны', $selectedCountry === 'default');
-
-        foreach ($countries as $country) {
+        foreach ($countries as $key => $country) {
             if (is_array($country)) {
                 // Новый формат: массив с value/label/code
-                $code = $country['value'] ?? $country['code'] ?? $country['iso_code_2'] ?? '';
+                $code = $country['value'] ?? $country['code'] ?? $country['iso_code_2'] ?? $key;
                 $label = $country['label'] ?? $country['name'] ?? $code;
             } else {
-                // Старый формат: ключ => значение
-                $code = is_string($country) ? $country : '';
-                $label = is_string($country) ? $country : '';
+                // Старый формат: ключ => значение (ассоциативный массив)
+                // или числовой массив со строками
+                if (is_string($key) && !is_numeric($key)) {
+                    // Ассоциативный массив: 'US' => 'United States'
+                    $code = $key;
+                    $label = is_string($country) ? $country : $key;
+                } else {
+                    // Числовой массив: ['US', 'GB', 'DE']
+                    $code = is_string($country) ? $country : '';
+                    $label = is_string($country) ? $country : '';
+                }
             }
 
             if (empty($code)) {
                 continue; // Пропускаем пустые коды
             }
 
-            $options[] = self::simple($code, (string)$label, $selectedCountry === $code);
+            $options[] = self::simple($code, (string)$label, in_array($code, $selectedCountries));
         }
 
         return $options;
@@ -171,15 +176,23 @@ class FilterOptionDTO implements Arrayable, Jsonable
     {
         $options = [];
 
-        foreach ($languages as $language) {
+        foreach ($languages as $key => $language) {
             if (is_array($language)) {
                 // Новый формат: массив с value/label/code
-                $code = $language['value'] ?? $language['code'] ?? $language['iso_code_2'] ?? '';
+                $code = $language['value'] ?? $language['code'] ?? $language['iso_code_2'] ?? $key;
                 $label = $language['label'] ?? $language['name'] ?? $code;
             } else {
-                // Старый формат: ключ => значение
-                $code = is_string($language) ? $language : '';
-                $label = is_string($language) ? $language : '';
+                // Старый формат: ключ => значение (ассоциативный массив)
+                // или числовой массив со строками
+                if (is_string($key) && !is_numeric($key)) {
+                    // Ассоциативный массив: 'en' => 'English'
+                    $code = $key;
+                    $label = is_string($language) ? $language : $key;
+                } else {
+                    // Числовой массив: ['en', 'ru', 'de']
+                    $code = is_string($language) ? $language : '';
+                    $label = is_string($language) ? $language : '';
+                }
             }
 
             if (empty($code)) {

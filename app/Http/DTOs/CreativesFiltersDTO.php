@@ -16,7 +16,7 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
     public function __construct(
         // Основные фильтры
         public string $searchKeyword = '',
-        public string $country = 'default',
+        public array $countries = [],
         public string $dateCreation = 'default',
         public string $sortBy = 'default',
         public string $periodDisplay = 'default',
@@ -53,7 +53,7 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
 
         return new self(
             searchKeyword: self::sanitizeString($data['searchKeyword'] ?? ''),
-            country: self::validateCountry($data['country'] ?? 'default'),
+            countries: self::validateCountries($data['countries'] ?? []),
             dateCreation: self::validateDateOption($data['dateCreation'] ?? 'default'),
             sortBy: self::validateSortOption($data['sortBy'] ?? 'default'),
             periodDisplay: self::validatePeriodOption($data['periodDisplay'] ?? 'default'),
@@ -90,7 +90,7 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
     {
         return new self(
             searchKeyword: self::sanitizeString($data['searchKeyword'] ?? ''),
-            country: self::validateCountry($data['country'] ?? 'default', true),
+            countries: self::validateCountries($data['countries'] ?? []),
             dateCreation: self::validateDateOption($data['dateCreation'] ?? 'default', true),
             sortBy: self::validateSortOption($data['sortBy'] ?? 'default', true),
             periodDisplay: self::validatePeriodOption($data['periodDisplay'] ?? 'default', true),
@@ -121,7 +121,20 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
             $errors[] = 'searchKeyword must be less than 255 characters';
         }
 
-        // Валидация country - используем новую логику
+        // Валидация countries - используем новую логику для массива
+        if (isset($data['countries'])) {
+            if (!is_array($data['countries'])) {
+                $errors[] = 'countries must be an array';
+            } else {
+                foreach ($data['countries'] as $country) {
+                    if (!is_string($country) || !self::isValidCountry($country)) {
+                        $errors[] = "Invalid country in countries array: {$country}";
+                    }
+                }
+            }
+        }
+
+        // Поддержка legacy поля country для обратной совместимости
         if (isset($data['country']) && !self::isValidCountry($data['country'])) {
             $errors[] = "Invalid country: {$data['country']}";
         }
@@ -165,7 +178,7 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
         }
 
         // Валидация массивов
-        $arrayFields = ['advertisingNetworks', 'languages', 'operatingSystems', 'browsers', 'devices', 'imageSizes', 'savedSettings'];
+        $arrayFields = ['countries', 'advertisingNetworks', 'languages', 'operatingSystems', 'browsers', 'devices', 'imageSizes', 'savedSettings'];
         foreach ($arrayFields as $field) {
             if (isset($data[$field]) && !is_array($data[$field])) {
                 $errors[] = "{$field} must be an array";
@@ -182,7 +195,7 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
     {
         return [
             'searchKeyword' => '',
-            'country' => 'default',
+            'countries' => [],
             'dateCreation' => 'default',
             'sortBy' => 'default',
             'periodDisplay' => 'default',
@@ -313,17 +326,21 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
         }));
     }
 
-    private static function validateCountry(string $value, bool $safe = false): string
+    private static function validateCountries(array $value): array
     {
-        if (self::isValidCountry($value)) {
-            return $value;
+        if (!is_array($value)) {
+            return [];
         }
 
-        if ($safe) {
-            return 'default';
+        // Фильтруем и валидируем каждую страну
+        $validCountries = [];
+        foreach ($value as $country) {
+            if (is_string($country) && self::isValidCountry($country)) {
+                $validCountries[] = $country;
+            }
         }
 
-        throw new \InvalidArgumentException("Invalid country: {$value}");
+        return array_unique($validCountries);
     }
 
     private static function isValidCountry(string $value): bool
@@ -531,7 +548,7 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
     {
         return [
             'searchKeyword' => $this->searchKeyword,
-            'country' => $this->country,
+            'countries' => $this->countries,
             'dateCreation' => $this->dateCreation,
             'sortBy' => $this->sortBy,
             'periodDisplay' => $this->periodDisplay,

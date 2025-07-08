@@ -111,19 +111,18 @@ class FilterOptionDTOTest extends TestCase
             'DE' => 'Germany',
         ];
 
-        $options = FilterOptionDTO::countries($countries, 'US');
+        $options = FilterOptionDTO::countries($countries, ['US']);
 
-        $this->assertCount(4, $options); // +1 for "Все страны"
-        $this->assertEquals('default', $options[0]->value);
-        $this->assertEquals('Все страны', $options[0]->label);
-        $this->assertFalse($options[0]->selected);
+        $this->assertCount(3, $options); // Возвращаем все страны из входного массива
 
-        $this->assertEquals('US', $options[1]->value);
-        $this->assertEquals('United States', $options[1]->label);
-        $this->assertTrue($options[1]->selected);
+        // Проверяем что метод возвращает все страны в том же порядке
+        $this->assertEquals('US', $options[0]->value);
+        $this->assertEquals('United States', $options[0]->label);
+        $this->assertTrue($options[0]->selected);
 
-        $this->assertEquals('GB', $options[2]->value);
-        $this->assertFalse($options[2]->selected);
+        $this->assertEquals('GB', $options[1]->value);
+        $this->assertEquals('United Kingdom', $options[1]->label);
+        $this->assertFalse($options[1]->selected);
     }
 
     public function test_countries_options_with_array_values()
@@ -136,22 +135,25 @@ class FilterOptionDTOTest extends TestCase
             'FR' => ['code' => 'FR'], // no name or label - should fallback to code
         ];
 
-        $options = FilterOptionDTO::countries($countries, 'US');
+        $options = FilterOptionDTO::countries($countries, ['US']);
 
-        $this->assertCount(5, $options); // +1 for "Все страны"
-        
-        $this->assertEquals('US', $options[1]->value);
-        $this->assertEquals('United States', $options[1]->label);
-        $this->assertTrue($options[1]->selected);
+        $this->assertCount(4, $options); // Возвращаем все страны из входного массива
 
-        $this->assertEquals('GB', $options[2]->value);
-        $this->assertEquals('United Kingdom', $options[2]->label);
+        $this->assertEquals('US', $options[0]->value);
+        $this->assertEquals('United States', $options[0]->label);
+        $this->assertTrue($options[0]->selected);
 
-        $this->assertEquals('DE', $options[3]->value);
-        $this->assertEquals('Germany', $options[3]->label);
+        $this->assertEquals('GB', $options[1]->value);
+        $this->assertEquals('United Kingdom', $options[1]->label);
+        $this->assertFalse($options[1]->selected);
 
-        $this->assertEquals('FR', $options[4]->value);
-        $this->assertEquals('FR', $options[4]->label); // fallback to code
+        $this->assertEquals('DE', $options[2]->value);
+        $this->assertEquals('Germany', $options[2]->label);
+        $this->assertFalse($options[2]->selected);
+
+        $this->assertEquals('FR', $options[3]->value);
+        $this->assertEquals('FR', $options[3]->label); // fallback to code
+        $this->assertFalse($options[3]->selected);
     }
 
     public function test_languages_options()
@@ -186,7 +188,7 @@ class FilterOptionDTOTest extends TestCase
         $options = FilterOptionDTO::languages($languages, $selectedLanguages);
 
         $this->assertCount(4, $options);
-        
+
         $this->assertEquals('en', $options[0]->value);
         $this->assertEquals('English', $options[0]->label);
         $this->assertTrue($options[0]->selected);
@@ -209,7 +211,7 @@ class FilterOptionDTOTest extends TestCase
         $options = FilterOptionDTO::sortOptions(['byCreationDate']);
 
         $this->assertCount(3, $options);
-        
+
         $creationOption = $options[0];
         $this->assertEquals('byCreationDate', $creationOption->value);
         $this->assertEquals('По дате создания', $creationOption->label);
@@ -229,11 +231,11 @@ class FilterOptionDTOTest extends TestCase
         $options = FilterOptionDTO::dateRangeOptions('last7');
 
         $this->assertCount(10, $options);
-        
+
         // Проверяем выбранную опцию
         $selectedOption = array_filter($options, fn($opt) => $opt->selected);
         $this->assertCount(1, $selectedOption);
-        
+
         $selected = array_values($selectedOption)[0];
         $this->assertEquals('last7', $selected->value);
         $this->assertEquals('За последние 7 дней', $selected->label);
@@ -271,7 +273,7 @@ class FilterOptionDTOTest extends TestCase
         $options = FilterOptionDTO::advertisingNetworksWithCount($networks, $selectedNetworks, $counts);
 
         $this->assertCount(3, $options);
-        
+
         $this->assertEquals('facebook', $options[0]->value);
         $this->assertEquals('Facebook', $options[0]->label);
         $this->assertTrue($options[0]->selected);
@@ -305,7 +307,7 @@ class FilterOptionDTOTest extends TestCase
         $options = FilterOptionDTO::advertisingNetworksWithCount($networks, $selectedNetworks, $counts);
 
         $this->assertCount(3, $options);
-        
+
         $this->assertEquals('facebook', $options[0]->value);
         $this->assertEquals('Facebook', $options[0]->label);
         $this->assertTrue($options[0]->selected);
@@ -327,7 +329,7 @@ class FilterOptionDTOTest extends TestCase
         $options = FilterOptionDTO::imageSizeOptions($selectedSizes);
 
         $this->assertCount(8, $options);
-        
+
         $selectedOptions = array_filter($options, fn($opt) => $opt->selected);
         $this->assertCount(2, $selectedOptions);
 
