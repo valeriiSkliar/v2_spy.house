@@ -233,7 +233,7 @@ class CreativesController extends BaseCreativesController
                 'social_shares' => $creative->social_shares ?? 0,
 
                 // Даты
-                'created_at' => $creative->created_at?->format('Y-m-d'),
+                'created_at' => $creative->external_created_at?->format('Y-m-d'),
                 'last_seen_at' => $creative->last_seen_at?->format('Y-m-d'),
                 // 'external_created_at' => $creative->external_created_at?->format('Y-m-d H:i:s'),
                 'start_date' => $creative->start_date?->format('Y-m-d'),

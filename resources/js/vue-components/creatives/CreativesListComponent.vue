@@ -56,7 +56,11 @@
         />
       </template>
     </div>
-    <CreativeDetailsComponent :showSimilarCreatives="true" :translations="detailsTranslations" />
+    <CreativeDetailsComponent
+      :handle-open-in-new-tab="handleOpenInNewTab"
+      :showSimilarCreatives="true"
+      :translations="detailsTranslations"
+    />
   </div>
 </template>
 

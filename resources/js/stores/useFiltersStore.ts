@@ -41,6 +41,7 @@
 // НЕ УДАЛЯТЬ через tree-shaking в production сборке!
 
 import { useCreatives } from '@/composables/useCreatives';
+import { useCreativesCopyText } from '@/composables/useCreativesCopyText';
 import { useCreativesDetails } from '@/composables/useCreativesDetails';
 import { useCreativesDownloader } from '@/composables/useCreativesDownloader';
 import { useCreativesTabOpener } from '@/composables/useCreativesTabOpener';
@@ -208,6 +209,9 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
 
   // 6️⃣ Централизованная обработка деталей креативов
   const detailsManager = useCreativesDetails();
+
+  // 7️⃣ Централизованная обработка копирования текста
+  const copyTextManager = useCreativesCopyText();
 
   // ============================================================================
   // WATCHERS - ЦЕНТРАЛИЗОВАННАЯ СИНХРОНИЗАЦИЯ
@@ -474,17 +478,21 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     // Инициализируем обработчик деталей креативов через композабл
     const detailsCleanup = detailsManager.setupDetailsEventListener();
     
+    // Инициализируем обработчик копирования текста через композабл
+    const copyTextCleanup = copyTextManager.setupCopyEventListener();
+    
     // Сохраняем функции очистки для использования в cleanupEventListeners
     (cleanupEventListeners as any).downloadCleanup = downloadCleanup;
     (cleanupEventListeners as any).tabOpenerCleanup = tabOpenerCleanup;
     (cleanupEventListeners as any).detailsCleanup = detailsCleanup;
+    (cleanupEventListeners as any).copyTextCleanup = copyTextCleanup;
     
     // Логирование для production отладки
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('store:event-listeners-setup', {
         detail: { 
           store: 'CreativesFiltersStore',
-          listeners: ['toggle-favorite', 'details-shown', 'details-hidden', 'download', 'open-in-new-tab', 'show-details', 'hide-details', 'toggle-details'],
+          listeners: ['toggle-favorite', 'details-shown', 'details-hidden', 'download', 'open-in-new-tab', 'show-details', 'hide-details', 'toggle-details', 'copy-text'],
           timestamp: Date.now()
         }
       }));
@@ -519,6 +527,11 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     // Очищаем обработчик деталей если он был инициализирован
     if ((cleanupEventListeners as any).detailsCleanup) {
       (cleanupEventListeners as any).detailsCleanup();
+    }
+    
+    // Очищаем обработчик копирования текста если он был инициализирован
+    if ((cleanupEventListeners as any).copyTextCleanup) {
+      (cleanupEventListeners as any).copyTextCleanup();
     }
     
     // Логирование для production отладки
@@ -1491,6 +1504,7 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     downloader,                 // useCreativesDownloader композабл
     tabOpener,                  // useCreativesTabOpener композабл
     detailsManager,             // useCreativesDetails композабл
+    copyTextManager,            // useCreativesCopyText композабл
     
     // ========================================
     // МЕТОДЫ ОЧИСТКИ

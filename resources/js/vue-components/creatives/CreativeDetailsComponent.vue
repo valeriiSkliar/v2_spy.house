@@ -64,6 +64,7 @@
                   :href="selectedCreative?.icon_url"
                   target="_blank"
                   class="btn _flex _medium _gray w-100"
+                  @click.prevent="handleOpenInNewTab(selectedCreative?.landing_url ?? '')"
                   ><span class="icon-new-tab font-16 mr-2"></span
                   >{{ translations.openTab.value }}</a
                 >
@@ -154,7 +155,7 @@
                 <span class="txt-gray">{{ translations.titleField.value }}</span>
               </div>
               <div class="col-auto">
-                <button class="btn copy-btn _flex _dark js-copy">
+                <button class="btn copy-btn _flex _dark js-copy" @click="handleCopyTitle">
                   <span class="icon-copy"></span>
                   {{ translations.copy.value }}
                   <span class="copy-btn__copied">{{ translations.copied.value }}</span>
@@ -171,7 +172,7 @@
                 <span class="txt-gray">{{ translations.description.value }}</span>
               </div>
               <div class="col-auto">
-                <button class="btn copy-btn _flex _dark js-copy">
+                <button class="btn copy-btn _flex _dark js-copy" @click="handleCopyDescription">
                   <span class="icon-copy"></span>
                   {{ translations.copy.value }}
                   <span class="copy-btn__copied">{{ translations.copied.value }}</span>
@@ -195,7 +196,11 @@
           </h3>
           <div class="form-link mb-25">
             <input type="url" :value="selectedCreative?.landing_url" readonly />
-            <a href="#" target="_blank" class="btn-icon _small _white"
+            <a
+              :href="selectedCreative?.landing_url ?? ''"
+              target="_blank"
+              class="btn-icon _small _white"
+              @click.prevent="handleOpenInNewTab(selectedCreative?.landing_url ?? '')"
               ><span class="icon-new-tab"></span
             ></a>
           </div>
@@ -360,11 +365,13 @@ import { computed, onMounted } from 'vue';
 interface Props {
   showSimilarCreatives?: boolean;
   translations?: Record<string, string>;
+  handleOpenInNewTab?: (url: string) => void;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   showSimilarCreatives: true,
   translations: () => ({}),
+  handleOpenInNewTab: () => {},
 });
 
 // Подключение к store и композаблу переводов
@@ -516,5 +523,49 @@ async function handleFavoriteClick(): Promise<void> {
   } catch (error) {
     console.error('Ошибка обработки избранного в деталях:', error);
   }
+}
+
+/**
+ * Обработчик копирования заголовка креатива
+ * Использует централизованную событийную систему
+ */
+function handleCopyTitle(): void {
+  if (!selectedCreative.value?.title) {
+    console.warn('Заголовок креатива недоступен для копирования');
+    return;
+  }
+
+  // Эмитируем событие для централизованной обработки
+  document.dispatchEvent(
+    new CustomEvent('creatives:copy-text', {
+      detail: {
+        text: selectedCreative.value.title,
+        type: 'title',
+        creativeId: selectedCreative.value.id,
+      },
+    })
+  );
+}
+
+/**
+ * Обработчик копирования описания креатива
+ * Использует централизованную событийную систему
+ */
+function handleCopyDescription(): void {
+  if (!selectedCreative.value?.description) {
+    console.warn('Описание креатива недоступно для копирования');
+    return;
+  }
+
+  // Эмитируем событие для централизованной обработки
+  document.dispatchEvent(
+    new CustomEvent('creatives:copy-text', {
+      detail: {
+        text: selectedCreative.value.description,
+        type: 'description',
+        creativeId: selectedCreative.value.id,
+      },
+    })
+  );
 }
 </script>

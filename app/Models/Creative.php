@@ -303,7 +303,7 @@ class Creative extends Model
         switch ($sortBy) {
             case 'byCreationDate':
             case 'creation':
-                return $query->orderBy('created_at', 'desc');
+                return $query->orderBy('external_created_at', 'desc');
             case 'byActivity':
             case 'activity':
                 return $query->orderBy('last_seen_at', 'desc');
@@ -311,7 +311,7 @@ class Creative extends Model
             case 'popularity':
                 return $query->orderByRaw('(social_likes + social_comments + social_shares) DESC');
             default:
-                return $query->orderBy('created_at', 'desc');
+                return $query->orderBy('external_created_at', 'desc');
         }
     }
 

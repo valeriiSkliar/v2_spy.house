@@ -166,10 +166,10 @@ describe('useCreativesFiltersStore - Computed свойства', () => {
     store.updateFilter('searchKeyword', '');
     expect(store.hasActiveFilters).toBe(false);
 
-    // Тест country (не default)
-    store.updateFilter('country', 'US');
+    // Тест countries (массив стран)
+    store.updateFilter('countries', ['US']);
     expect(store.hasActiveFilters).toBe(true);
-    store.updateFilter('country', 'default');
+    store.updateFilter('countries', []);
     expect(store.hasActiveFilters).toBe(false);
 
     // Тест dateCreation
@@ -233,7 +233,7 @@ describe('useCreativesFiltersStore - Computed свойства', () => {
     expect(store.hasActiveFilters).toBe(false);
 
     // Комбинация нескольких фильтров
-    store.updateFilter('country', 'RU');
+    store.updateFilter('countries', ['RU']);
     store.updateFilter('languages', ['ru', 'en']);
     store.updateFilter('onlyAdult', true);
     expect(store.hasActiveFilters).toBe(true);
@@ -475,7 +475,7 @@ describe('useCreativesFiltersStore - Инициализация и конфиг�
 
   it('инициализация с props фильтрами - проверка применения начальных значений', async () => {
     const initialFilters = {
-      country: 'US',
+      countries: ['US'],
       languages: ['en', 'fr'],
       advertisingNetworks: ['google'],
       searchKeyword: 'test search',
@@ -484,7 +484,7 @@ describe('useCreativesFiltersStore - Инициализация и конфиг�
 
     await store.initializeFilters(initialFilters);
 
-    expect(store.filters.country).toBe('US');
+    expect(store.filters.countries).toEqual(['US']);
     expect(store.filters.languages).toEqual(['en', 'fr']);
     expect(store.filters.advertisingNetworks).toEqual(['google']);
     expect(store.filters.searchKeyword).toBe('test search');
@@ -500,10 +500,10 @@ describe('useCreativesFiltersStore - Инициализация и конфиг�
         facebook: 'Facebook'
       },
       filters: {
-        country: {
+        countries: {
           label: 'Страна'
         },
-        language: {
+        languages: {
           label: 'Язык'
         }
       }
@@ -522,7 +522,7 @@ describe('useCreativesFiltersStore - Инициализация и конфиг�
     await store.initializeFilters(undefined, undefined, translations as any, tabsOptions);
 
     expect(store.getTranslation('tabs.push')).toBe('Push');
-    expect(store.getTranslation('filters.country.label')).toBe('Страна');
+    expect(store.getTranslation('filters.countries.label')).toBe('Страна');
     expect(store.tabs.availableTabs).toEqual(['push', 'facebook', 'tiktok']);
     expect(store.tabs.tabCounts.push).toBe('200k');
   });
@@ -531,7 +531,7 @@ describe('useCreativesFiltersStore - Инициализация и конфиг�
     await store.initializeFilters();
 
     // Проверяем дефолтные значения фильтров
-    expect(store.filters.country).toBe('default');
+    expect(store.filters.countries).toEqual([]);
     expect(store.filters.languages).toEqual([]);
     expect(store.filters.advertisingNetworks).toEqual([]);
     expect(store.filters.searchKeyword).toBe('');
@@ -555,7 +555,7 @@ describe('useCreativesFiltersStore - Инициализация и конфиг�
 
   it('инициализация с невалидными данными - обработка некорректных входных параметров', async () => {
     const invalidFilters = {
-      country: null,
+      countries: null,
       languages: 'invalid_string', // должен быть массив
       advertisingNetworks: undefined,
       searchKeyword: 123, // должна быть строка
@@ -566,7 +566,7 @@ describe('useCreativesFiltersStore - Инициализация и конфиг�
 
     // Object.assign просто присваивает значения, не валидирует их
     // Проверяем что store получил невалидные данные как есть
-    expect(store.filters.country).toBe(null); // null как есть
+    expect(store.filters.countries).toBe(null); // null как есть
     expect(store.filters.languages).toBe('invalid_string'); // строка как есть
     expect(store.filters.advertisingNetworks).toBe(undefined); // undefined как есть
     expect(store.filters.searchKeyword).toBe(123); // число как есть
@@ -577,14 +577,14 @@ describe('useCreativesFiltersStore - Инициализация и конфиг�
 
   it('инициализация с частичными данными фильтров', async () => {
     const partialFilters = {
-      country: 'RU',
+      countries: ['RU'],
       languages: ['ru']
       // остальные поля отсутствуют
     };
 
     await store.initializeFilters(partialFilters);
 
-    expect(store.filters.country).toBe('RU');
+    expect(store.filters.countries).toEqual(['RU']);
     expect(store.filters.languages).toEqual(['ru']);
     expect(store.filters.advertisingNetworks).toEqual([]); // дефолтное значение
     expect(store.filters.searchKeyword).toBe(''); // дефолтное значение
@@ -603,7 +603,7 @@ describe('useCreativesFiltersStore - Инициализация и конфиг�
   it('проверка что Object.assign не выполняет валидацию данных', async () => {
     // Этот тест документирует текущее поведение Object.assign
     const mixedFilters = {
-      country: 'valid_country',
+      countries: ['valid_country'],
       languages: null, // невалидный тип
       searchKeyword: '', // валидная пустая строка
       onlyAdult: false, // валидный boolean
@@ -612,7 +612,7 @@ describe('useCreativesFiltersStore - Инициализация и конфиг�
 
     await store.initializeFilters(mixedFilters as any);
 
-    expect(store.filters.country).toBe('valid_country');
+    expect(store.filters.countries).toEqual(['valid_country']);
     expect(store.filters.languages).toBe(null); // Object.assign не валидирует
     expect(store.filters.searchKeyword).toBe('');
     expect(store.filters.onlyAdult).toBe(false);
@@ -675,7 +675,7 @@ describe('useCreativesFiltersStore - Управление опциями сел�
     store.setSelectOptions(emptyOptions);
 
     // Проверяем что пустые массивы корректно устанавливаются
-    expect(store.countryOptions).toEqual([]);
+    expect(store.countriesOptions).toEqual([]);
     expect(store.sortOptions).toEqual([]);
     expect(store.dateRanges).toEqual([]);
     expect(store.advertisingNetworksOptions).toEqual([]);
@@ -687,8 +687,8 @@ describe('useCreativesFiltersStore - Управление опциями сел�
   });
 
   it('setSelectOptions с null/undefined значениями', () => {
-    // Сохраняем изначальные значения
-    const initialCountryOptions = [...store.countryOptions];
+    // Сохраняем изначальные значения  
+    const initialCountriesOptions = [...store.countriesOptions];
     const initialSortOptions = [...store.sortOptions];
     const initialLanguagesOptions = [...store.languagesOptions];
 
@@ -707,7 +707,7 @@ describe('useCreativesFiltersStore - Управление опциями сел�
     store.setSelectOptions(nullOptions);
 
     // Проверяем что null/undefined значения игнорируются и опции остаются неизменными
-    expect(store.countryOptions).toEqual(initialCountryOptions);
+    expect(store.countriesOptions).toEqual(initialCountriesOptions);
     expect(store.sortOptions).toEqual(initialSortOptions);
     expect(store.languagesOptions).toEqual(initialLanguagesOptions);
   });
@@ -732,7 +732,7 @@ describe('useCreativesFiltersStore - Управление опциями сел�
     store.setSelectOptions(partialOptions);
 
     // Проверяем что указанные поля обновились
-    expect(store.countryOptions).toEqual([
+    expect(store.countriesOptions).toEqual([
       { value: 'US', label: 'United States' },
       { value: 'RU', label: 'Russia' }
     ]);
@@ -840,7 +840,7 @@ describe('useCreativesFiltersStore - Управление опциями сел�
     store.setSelectOptions(mixedFormats);
 
     // Проверяем массив объектов (остается как есть)
-    expect(store.countryOptions).toEqual([
+    expect(store.countriesOptions).toEqual([
       { value: 'US', label: 'United States' },
       { value: 'RU', label: 'Russia' }
     ]);
@@ -886,7 +886,7 @@ describe('useCreativesFiltersStore - Управление опциями сел�
     expect(originalOptions.advertisingNetworks).toBe(originalNetworks);
 
     // Проверяем что store содержит копии данных
-    expect(store.countryOptions).not.toBe(originalCountries);
+    expect(store.countriesOptions).not.toBe(originalCountries);
     expect(store.advertisingNetworksOptions).not.toBe(originalNetworks);
   });
 
@@ -1401,7 +1401,7 @@ describe('useCreativesFiltersStore - Управление фильтрами', (
 
   it('resetFilters - полный сброс к дефолтным значениям', () => {
     // Устанавливаем различные значения фильтров
-    store.updateFilter('country', 'US');
+    store.updateFilter('countries', ['US']);
     store.updateFilter('searchKeyword', 'test search');
     store.updateFilter('onlyAdult', true);
     store.updateFilter('languages', ['en', 'ru']);
@@ -1419,7 +1419,7 @@ describe('useCreativesFiltersStore - Управление фильтрами', (
     expect(store.filters.isDetailedVisible).toBe(true);
 
     // Проверяем что значения установлены
-    expect(store.filters.country).toBe('US');
+    expect(store.filters.countries).toEqual(['US']);
     expect(store.filters.searchKeyword).toBe('test search');
     expect(store.filters.onlyAdult).toBe(true);
     expect(store.filters.languages).toEqual(['en', 'ru']);
@@ -1428,7 +1428,7 @@ describe('useCreativesFiltersStore - Управление фильтрами', (
     store.resetFilters();
 
     // Проверяем что все значения сброшены к дефолтным
-    expect(store.filters.country).toBe('default');
+    expect(store.filters.countries).toEqual([]);
     expect(store.filters.searchKeyword).toBe('');
     expect(store.filters.onlyAdult).toBe(false);
     expect(store.filters.languages).toEqual([]);
@@ -1455,19 +1455,19 @@ describe('useCreativesFiltersStore - Управление фильтрами', (
     store.setTranslations({ key: 'value' } as any);
 
     // Изменяем фильтры
-    store.updateFilter('country', 'RU');
+    store.updateFilter('countries', ['RU']);
     store.updateFilter('searchKeyword', 'test');
 
     // Сбрасываем фильтры
     store.resetFilters();
 
     // Проверяем что фильтры сброшены
-    expect(store.filters.country).toBe('default');
+    expect(store.filters.countries).toEqual([]);
     expect(store.filters.searchKeyword).toBe('');
 
     // Проверяем что другие состояния сохранились
     expect(store.tabs.activeTab).toBe('facebook');
-    expect(store.countryOptions).toEqual([{ value: 'US', label: 'United States' }]);
+    expect(store.countriesOptions).toEqual([{ value: 'US', label: 'United States' }]);
     expect(store.languagesOptions).toEqual([{ value: 'en', label: 'English' }]);
     expect(store.getTranslation('key')).toBe('value');
   });
@@ -2203,7 +2203,7 @@ describe('useCreativesFiltersStore - Проксирование композаб
     vi.clearAllMocks();
 
     // Тест с полностью заполненными фильтрами
-    store.updateFilter('country', 'RU');
+    store.updateFilter('countries', ['RU']);
     store.updateFilter('searchKeyword', 'creative test');
     store.updateFilter('onlyAdult', true);
     store.updateFilter('languages', ['ru', 'en', 'fr']);
@@ -2221,7 +2221,7 @@ describe('useCreativesFiltersStore - Проксирование композаб
 
     const secondCall = creativesMock.mapFiltersToCreativesFilters.mock.calls[0];
     expect(secondCall[0]).toEqual({
-      country: 'RU',
+      countries: ['RU'],
       searchKeyword: 'creative test',
       onlyAdult: true,
       languages: ['ru', 'en', 'fr'],
@@ -2244,7 +2244,7 @@ describe('useCreativesFiltersStore - Проксирование композаб
 
     // Тест с частично заполненными фильтрами
     store.resetFilters();
-    store.updateFilter('country', 'US');
+    store.updateFilter('countries', ['US']);
     store.updateFilter('languages', ['en']);
     store.updateFilter('onlyAdult', false); // явно false
     store.setActiveTab('inpage');
@@ -2253,7 +2253,7 @@ describe('useCreativesFiltersStore - Проксирование композаб
 
     const thirdCall = creativesMock.mapFiltersToCreativesFilters.mock.calls[0];
     expect(thirdCall[0]).toEqual(expect.objectContaining({
-      country: 'US',
+      countries: ['US'],
       languages: ['en'],
       onlyAdult: false,
       searchKeyword: '',
@@ -2316,7 +2316,7 @@ describe('useCreativesFiltersStore - Проксирование композаб
     expect(urlSyncMock.syncFiltersToUrl).toHaveBeenCalledTimes(2);
 
     // Третий вызов с изменением фильтров
-    store.updateFilter('country', 'FR');
+    store.updateFilter('countries', ['FR']);
     await store.loadCreatives(3);
     expect(urlSyncMock.syncFiltersToUrl).toHaveBeenCalledTimes(3);
 
@@ -2326,7 +2326,7 @@ describe('useCreativesFiltersStore - Проксирование композаб
     // Проверяем параметры последнего вызова
     const lastCall = urlSyncMock.syncFiltersToUrl.mock.calls[2];
     expect(lastCall[0]).toEqual(expect.objectContaining({
-      country: 'FR'
+      countries: ['FR']
     })); // filters
     expect(lastCall[1]).toBe('push'); // activeTab
     expect(lastCall[2]).toBe(3); // page
@@ -2379,7 +2379,7 @@ describe('useCreativesFiltersStore - Проксирование композаб
     // Проверяем что это действительно те же данные что и в Store
     expect(passedFilters.languages).toEqual(store.filters.languages);
     expect(passedFilters.devices).toEqual(store.filters.devices);
-    expect(passedFilters.country).toBe(store.filters.country);
+    expect(passedFilters.countries).toEqual(store.filters.countries);
 
     // В текущей реализации данные передаются по ссылке, что нормально для Vue reactive
     // Изменение переданных данных влияет на оригинал (это ожидаемое поведение для Vue)
@@ -3020,7 +3020,7 @@ describe('useCreativesFiltersStore - Автоматическое скрытие
   it('скрывает детали при изменении страны', async () => {
     expect(store.isDetailsVisible).toBe(true);
 
-    store.updateFilter('country', 'US');
+    store.updateFilter('countries', ['US']);
     await nextTick();
 
     expect(store.isDetailsVisible).toBe(false);
@@ -3315,7 +3315,7 @@ describe('useCreativesFiltersStore - Автоматическое скрытие
 
     // Делаем несколько изменений одновременно
     store.updateFilter('searchKeyword', 'complex search');
-    store.updateFilter('country', 'RU');
+    store.updateFilter('countries', ['RU']);
     store.updateFilter('onlyAdult', true);
     store.updateFilter('languages', ['en', 'ru', 'fr']);
     
@@ -3341,7 +3341,7 @@ describe('useCreativesFiltersStore - Автоматическое скрытие
     // Симулируем изменение каждого отслеживаемого параметра по очереди
     const trackedChanges = [
       () => store.updateFilter('searchKeyword', 'test1'),
-      () => store.updateFilter('country', 'US'),
+      () => store.updateFilter('countries', ['US']),
       () => store.updateFilter('dateCreation', 'last_week'),
       () => store.updateFilter('sortBy', 'popular'),
       () => store.updateFilter('periodDisplay', 'monthly'),
