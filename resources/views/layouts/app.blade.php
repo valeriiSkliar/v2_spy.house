@@ -2,7 +2,6 @@
 @section('content')
 
 <!-- Scripts -->
-@vite(['resources/js/app.js', 'resources/scss/app.scss'])
 
 <body class="">
     <div class="navigation-bg"></div>

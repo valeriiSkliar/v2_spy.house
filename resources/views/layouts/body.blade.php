@@ -24,7 +24,9 @@ use Illuminate\Support\Facades\Auth;
     <!-- Frontend Translations -->
     <x-frontend-translations />
 </head>
+
 <body>
     @yield('content')
 </body>
+
 </html>

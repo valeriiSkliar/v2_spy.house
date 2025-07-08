@@ -39,9 +39,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="header__login">
+                {{-- <div class="header__login">
                     <a href="#" class="btn _flex _orange font-16 font-weight-bold">Login</a>
-                </div>
+                </div> --}}
                 <div class="header__login-mobile">
                     <a href="#" class="btn-icon _dark"><span class="icon-login font-20"></span></a>
                 </div>
@@ -59,7 +59,7 @@
     <section class="offer">
         <div class="offer__bg">
             <video autoplay muted playsinline preload="auto" loop>
-                <source src="img/main/1.mp4" type="video/mp4">
+                <source src="{{ Vite::asset('resources/scss/img/main/1.mp4') }}" type="video/mp4">
             </video>
         </div>
         <div class="container" data-aos-delay="600" data-aos="fade-up">
@@ -68,7 +68,7 @@
                     <div class="offer-phone">
                         <div class="offer-phone__content">
                             <video autoplay muted playsinline preload="auto" loop>
-                                <source src="img/main/screen.mp4" type="video/mp4">
+                                <source src="{{ Vite::asset('resources/scss/img/main/screen.mp4') }}" type="video/mp4">
                             </video>
                         </div>
                     </div>
@@ -93,7 +93,7 @@
                             </div>
                             <div class="offer__winner">
                                 <div class="best-affiliate">
-                                    <img src="img/main/winner-2021.svg" alt="">
+                                    <img src="{{ Vite::asset('resources/scss/img/main/winner-2021.svg') }}" alt="">
                                     <div class="best-affiliate__title">Best Affiliate Spy Tool</div>
                                     <div class="best-affiliate__desc">Conversion club awards 2021</div>
                                 </div>
