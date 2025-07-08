@@ -302,7 +302,7 @@ const getActiveText = (): string => {
 
 // Функция для получения иконки флага
 const getFlagIcon = (): string => {
-  return `/img/flags/${props.creative.country || 'KZ'}.svg`;
+  return `/img/flags/${props.creative.country?.code}.svg`;
 };
 
 // Функция для получения CSS класса иконки избранного

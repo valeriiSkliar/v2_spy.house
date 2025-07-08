@@ -118,4 +118,208 @@ class CreativesController extends BaseCreativesController
             ], 500);
         }
     }
+
+    /**
+     * Получить детали конкретного креатива
+     * 
+     * @OA\Get(
+     *     path="/api/creatives/{id}/details",
+     *     operationId="getCreativeDetails",
+     *     tags={"Креативы - Детали"},
+     *     summary="Получить детали креатива",
+     *     description="Возвращает подробную информацию о конкретном креативе включая все метаданные, статистику и связанные данные",
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID креатива",
+     *         required=true,
+     *         @OA\Schema(type="integer", minimum=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Детали креатива успешно получены",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="success"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=21717),
+     *                 @OA\Property(property="title", type="string", example="Creative Title"),
+     *                 @OA\Property(property="description", type="string", example="Creative description"),
+     *                 @OA\Property(property="country", type="string", example="US"),
+     *                 @OA\Property(property="language", type="string", example="en"),
+     *                 @OA\Property(property="format", type="string", example="push"),
+     *                 @OA\Property(property="status", type="string", example="active"),
+     *                 @OA\Property(property="is_adult", type="boolean", example=false),
+     *                 @OA\Property(property="has_video", type="boolean", example=true),
+     *                 @OA\Property(property="video_url", type="string", example="https://example.com/video.mp4"),
+     *                 @OA\Property(property="main_image_url", type="string", example="https://example.com/image.jpg"),
+     *                 @OA\Property(property="icon_url", type="string", example="https://example.com/icon.png"),
+     *                 @OA\Property(property="landing_url", type="string", example="https://example.com/landing"),
+     *                 @OA\Property(property="social_likes", type="integer", example=1500),
+     *                 @OA\Property(property="social_comments", type="integer", example=250),
+     *                 @OA\Property(property="social_shares", type="integer", example=100),
+     *                 @OA\Property(property="created_at", type="string", example="2024-01-15"),
+     *                 @OA\Property(property="last_seen_at", type="string", example="2024-01-20"),
+     *                 @OA\Property(property="advertising_network", type="object",
+     *                     @OA\Property(property="name", type="string", example="facebook"),
+     *                     @OA\Property(property="display_name", type="string", example="Facebook"),
+     *                     @OA\Property(property="logo", type="string", example="facebook.png")
+     *                 ),
+     *                 @OA\Property(property="browser", type="object",
+     *                     @OA\Property(property="name", type="string", example="chrome"),
+     *                     @OA\Property(property="type", type="string", example="desktop")
+     *                 ),
+     *                 @OA\Property(property="is_favorite", type="boolean", example=false)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Креатив не найден",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="error"),
+     *             @OA\Property(property="message", type="string", example="Creative not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Ошибка сервера",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="error"),
+     *             @OA\Property(property="message", type="string", example="Error loading creative details")
+     *         )
+     *     )
+     * )
+     */
+    public function getCreativeDetails($id)
+    {
+        try {
+            // Находим креатив с предзагрузкой связанных данных
+            $creative = Creative::with([
+                'country',
+                'language',
+                'browser',
+                'advertismentNetwork',
+                'source'
+            ])->find($id);
+
+            if (!$creative) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Creative not found',
+                    'data' => null
+                ], 404);
+            }
+
+            // Подготавливаем детализированные данные креатива
+            $creativeDetails = [
+                'id' => $creative->id,
+                'title' => $creative->title,
+                'description' => $creative->description,
+                'format' => $creative->format?->value ?? 'unknown',
+                'status' => $creative->status?->value ?? 'unknown',
+                'is_adult' => $creative->is_adult,
+                'has_video' => $creative->has_video,
+                'video_url' => $creative->video_url,
+                'video_duration' => $creative->video_duration,
+                'main_image_url' => $creative->main_image_url,
+                'main_image_size' => $creative->main_image_size,
+                'icon_url' => $creative->icon_url,
+                'icon_size' => $creative->icon_size,
+                'landing_url' => $creative->landing_url,
+                'external_id' => $creative->external_id,
+
+                // Социальная статистика
+                'social_likes' => $creative->social_likes ?? 0,
+                'social_comments' => $creative->social_comments ?? 0,
+                'social_shares' => $creative->social_shares ?? 0,
+
+                // Даты
+                'created_at' => $creative->created_at?->format('Y-m-d H:i:s'),
+                'last_seen_at' => $creative->last_seen_at?->format('Y-m-d H:i:s'),
+                'external_created_at' => $creative->external_created_at?->format('Y-m-d H:i:s'),
+                'start_date' => $creative->start_date?->format('Y-m-d H:i:s'),
+                'end_date' => $creative->end_date?->format('Y-m-d H:i:s'),
+
+                // Метаданные обработки
+                'is_processed' => $creative->is_processed,
+                'processed_at' => $creative->processed_at?->format('Y-m-d H:i:s'),
+                'is_valid' => $creative->is_valid,
+                'validation_error' => $creative->validation_error,
+                'processing_error' => $creative->processing_error,
+
+                // Связанные сущности
+                'country' => $creative->country ? [
+                    'code' => $creative->country->iso_code_2,
+                    'name' => $creative->country->name,
+                    'iso_code_3' => $creative->country->iso_code_3,
+                ] : null,
+
+                'language' => $creative->language ? [
+                    'code' => $creative->language->iso_code_2,
+                    'name' => $creative->language->name,
+                    'iso_code_3' => $creative->language->iso_code_3,
+                ] : null,
+
+                'advertising_network' => $creative->advertismentNetwork ? [
+                    'name' => $creative->advertismentNetwork->network_name,
+                    'display_name' => $creative->advertismentNetwork->network_display_name,
+                    'logo' => $creative->advertismentNetwork->network_logo,
+                    'description' => $creative->advertismentNetwork->description,
+                    'traffic_type' => $creative->advertismentNetwork->traffic_type_description,
+                    'is_adult' => $creative->advertismentNetwork->is_adult,
+                ] : null,
+
+                'browser' => $creative->browser ? [
+                    'name' => $creative->browser->browser,
+                    'type' => $creative->browser->browser_type?->value,
+                    'device_type' => $creative->browser->device_type?->value,
+                    'version' => $creative->browser->browser_version,
+                    'platform' => $creative->browser->platform,
+                    'is_mobile' => $creative->browser->ismobiledevice,
+                    'is_tablet' => $creative->browser->istablet,
+                ] : null,
+
+                'source' => $creative->source ? [
+                    'name' => $creative->source->source_name,
+                    'display_name' => $creative->source->source_display_name,
+                ] : null,
+
+                'platform' => $creative->platform?->value,
+                'operation_system' => $creative->operation_system?->value,
+
+                // TODO: Реализовать проверку избранного для пользователя
+                'is_favorite' => false, // Пока заглушка
+
+                // Дополнительные вычисляемые поля
+                'file_size' => $creative->calculateFileSize(),
+                'devices' => $creative->guessDevices(),
+                'combined_hash' => $creative->combined_hash,
+
+                // Метаданные ответа
+                'loadedAt' => now()->toISOString(),
+                'cacheKey' => "creative_details_{$id}",
+            ];
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $creativeDetails,
+                'meta' => [
+                    'timestamp' => now()->toISOString(),
+                    'version' => '1.0.0',
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while loading creative details: ' . $e->getMessage(),
+                'data' => null,
+                'debug' => [
+                    'creative_id' => $id,
+                    'error_class' => get_class($e),
+                    'error_line' => $e->getLine(),
+                    'error_file' => basename($e->getFile()),
+                ]
+            ], 500);
+        }
+    }
 }

@@ -53,31 +53,34 @@ export function useCreativesDetails() {
   }
   
   /**
-   * Загружает дополнительные данные креатива с сервера
-   * @param creative - базовые данные креатива
-   * @returns Promise с полными данными креатива
+   * Загружает данные креатива по ID с сервера
+   * @param creativeId - ID креатива
+   * @returns Promise с данными креатива
    */
-  async function loadCreativeDetails(creative: Creative): Promise<Creative> {
+  async function loadCreativeById(creativeId: number): Promise<Creative> {
     try {
-      // Если креатив уже содержит все необходимые данные, возвращаем как есть
-      if (creative && typeof creative === 'object' && creative.id) {
-        // TODO: Здесь можно добавить проверку на наличие всех необходимых полей
-        // и делать дополнительный запрос только если данных недостаточно
-        
-        // Пока возвращаем существующие данные
-        return creative;
+      console.log(`📋 Загружаем данные креатива по ID: ${creativeId}`);
+      
+      // Запрос к API для получения деталей креатива
+      const response = await window.axios.get(`/api/creatives/${creativeId}/details`);
+      
+      if (!response.data || !response.data.data) {
+        throw new Error('Некорректный ответ API');
       }
       
-      // Если креатив неполный, загружаем дополнительные данные
-      const response = await window.axios.get(`/api/creatives/${creative.id}/details`);
-      console.log(response);
-      return response.data.data;
+      const creativeData = response.data.data;
+      
+      // Валидируем полученные данные
+      if (!validateCreativeData(creativeData)) {
+        throw new Error('Полученные данные креатива некорректны');
+      }
+      
+      console.log(`✅ Данные креатива ${creativeId} успешно загружены`);
+      return creativeData;
       
     } catch (error) {
-      console.error('Ошибка загрузки дополнительных данных креатива:', error);
-      
-      // В случае ошибки возвращаем исходные данные
-      return creative;
+      console.error(`❌ Ошибка загрузки данных креатива ${creativeId}:`, error);
+      throw error;
     }
   }
   
@@ -92,22 +95,18 @@ export function useCreativesDetails() {
   }
   
   /**
-   * Главный обработчик показа деталей креатива
-   * @param creative - данные креатива или ID креатива
+   * Главный обработчик показа деталей креатива по ID
+   * @param creativeId - ID креатива
    */
-  async function handleShowCreativeDetails(id: number): Promise<Creative | null> {
-    try {
-      // Определяем данные креатива
-      if (typeof id === 'number') {
-        // Если передан только ID, нужно получить данные
-        throw new Error('Передан только ID креатива. Необходимы полные данные креатива.');
-      } else if (validateCreativeData(id)) {
-        const creativeData = await loadCreativeDetails(id);
-        console.log('🔍 handleShowCreativeDetails', creativeData);
-      } else {
-        throw new Error('Некорректные данные креатива');
-      }
+  async function handleShowCreativeDetails(creativeId: number): Promise<Creative | null> {
     
+    try {
+      // Валидируем ID
+      if (!creativeId || typeof creativeId !== 'number' || creativeId <= 0) {
+        throw new Error('Некорректный ID креатива');
+      }
+      
+      console.log(`📋 Начинаем показ деталей креатива по ID: ${creativeId}`);
       
       // Показываем placeholder для мгновенного отклика
       showDetailsPlaceholder();
@@ -115,13 +114,13 @@ export function useCreativesDetails() {
       // Эмитируем событие начала показа деталей
       document.dispatchEvent(new CustomEvent('creatives:details-show-started', {
         detail: {
-          id: id,
+          creativeId,
           timestamp: new Date().toISOString()
         }
       }));
       
-      // Загружаем дополнительные данные если необходимо
-      const fullCreativeData = await loadCreativeDetails(id);
+      // Загружаем данные креатива по ID
+      const creativeData = await loadCreativeById(creativeId);
       
       // Скрываем placeholder
       hideDetailsPlaceholder();
@@ -129,19 +128,20 @@ export function useCreativesDetails() {
       // Эмитируем событие успешного показа деталей
       document.dispatchEvent(new CustomEvent('creatives:details-shown', {
         detail: {
-          creative: fullCreativeData,
+          creative: creativeData,
+          creativeId,
           timestamp: new Date().toISOString()
         }
       }));
       
-      console.log(`✅ Детали креатива показаны успешно`);
+      console.log(`✅ Детали креатива ${creativeId} показаны успешно`);
       
-      return fullCreativeData;
+      return creativeData;
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       
-      console.error(`❌ Ошибка показа деталей креатива:`, error);
+      console.error(`❌ Ошибка показа деталей креатива ${creativeId}:`, error);
       
       // Скрываем placeholder в случае ошибки
       hideDetailsPlaceholder();
@@ -149,7 +149,7 @@ export function useCreativesDetails() {
       // Эмитируем событие ошибки показа деталей
       document.dispatchEvent(new CustomEvent('creatives:details-show-error', {
         detail: {
-          id: id,
+          creativeId,
           error: errorMessage,
           timestamp: new Date().toISOString()
         }
@@ -193,21 +193,21 @@ export function useCreativesDetails() {
   
   /**
    * Обработчик переключения видимости деталей
-   * @param creative - данные креатива (для показа) или null (для скрытия)
+   * @param creativeId - ID креатива (для показа) или null (для скрытия)
    * @param isCurrentlyVisible - текущее состояние видимости
    */
   async function handleToggleCreativeDetails(
-    creative: Creative | null, 
+    creativeId: number | null, 
     isCurrentlyVisible: boolean
   ): Promise<Creative | null> {
     try {
       if (isCurrentlyVisible) {
         handleHideCreativeDetails();
         return null;
-      } else if (creative) {
-        return await handleShowCreativeDetails(creative.id);
+      } else if (creativeId) {
+        return await handleShowCreativeDetails(creativeId);
       } else {
-        throw new Error('Нет данных креатива для показа деталей');
+        throw new Error('Нет ID креатива для показа деталей');
       }
     } catch (error) {
       console.error('Ошибка переключения деталей креатива:', error);
@@ -223,12 +223,16 @@ export function useCreativesDetails() {
     const handleShowDetailsEvent = async (event: CustomEvent) => {
       const { id } = event.detail;
       
-      try {          
-          handleShowCreativeDetails(id);
-          console.log(`Получен только ID креатива (${id}). Запрошены полные данные.`);
-          return;        
+      try {
+        // Проверяем что передан ID
+        if (typeof id !== 'number' || id <= 0) {
+          throw new Error('Некорректный ID креатива в событии show-details');
+        }
+        
+        await handleShowCreativeDetails(id);
       } catch (error) {
         console.error('Ошибка в обработчике события показа деталей:', error);
+        // Ошибка уже эмитирована в handleShowCreativeDetails
       }
     };
     
@@ -241,10 +245,10 @@ export function useCreativesDetails() {
     };
     
     const handleToggleDetailsEvent = async (event: CustomEvent) => {
-      const { creative, isCurrentlyVisible } = event.detail;
+      const { creativeId, isCurrentlyVisible } = event.detail;
       
       try {
-        await handleToggleCreativeDetails(creative, isCurrentlyVisible);
+        await handleToggleCreativeDetails(creativeId, isCurrentlyVisible);
       } catch (error) {
         console.error('Ошибка в обработчике события переключения деталей:', error);
       }
@@ -274,7 +278,7 @@ export function useCreativesDetails() {
     setupDetailsEventListener,
     
     // Утилитарные методы (для использования в других местах)
-    loadCreativeDetails,
+    loadCreativeById,
     validateCreativeData,
     
     // Методы работы с placeholder

@@ -163,22 +163,12 @@ function handleDownload(url: string): void {
 }
 
 function handleShowDetails(id: number): void {
-  console.log(`Карточка эмитировала show-details:`, id);
+  console.log(`Карточка эмитировала show-details для креатива ID: ${id}`);
 
-  // Находим креатив по ID в текущем списке
-  const creative = creatives.value.find((c: Creative) => c.id === id);
-
-  if (!creative) {
-    console.warn(`Креатив с ID ${id} не найден в списке для показа деталей`);
-    return;
-  }
-
-  // Основная логика обрабатывается в Store через DOM события
-  // Передаем полные данные креатива вместо только ID
+  // Передаем только ID креатива - композабл сам загрузит данные
   document.dispatchEvent(
     new CustomEvent('creatives:show-details', {
       detail: {
-        creative,
         id,
       },
     })

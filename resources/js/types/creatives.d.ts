@@ -5,7 +5,11 @@
  * Базовые типы
  */
 export type CreativeId = number;
-export type CountryCode = string;
+export type CountryCode = {
+  code: string;
+  name: string;
+  iso_code_3: string;
+};
 export type LanguageCode = string;
 export type TabValue = 'push' | 'inpage' | 'facebook' | 'tiktok';
 export type SortValue = 'creation' | 'activity' | 'popularity' | 'byCreationDate' | 'byActivity' | 'byPopularity' | 'default';
@@ -25,14 +29,14 @@ export interface Creative {
   title: string;
   description: string;
   category: string;
-  country: CountryCode;
+  country: CountryCode | null;
   file_size: string;
   // media fields
   icon_url: string;
   image_sizes?: string[];
   main_image_size?: string;
   main_image_url?: string;
-  landing_page_url: string;
+  landing_url: string;
   video_url?: string;
   duration?: string;
   has_video?: boolean;

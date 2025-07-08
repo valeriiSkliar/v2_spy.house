@@ -354,7 +354,7 @@ class TikTokParser extends BaseParser
             'adgroup_id' => $item['adgroup_id'] ?? null,
             'creative_id' => $item['creative_id'] ?? null,
             'ad_format' => $item['ad_format'] ?? null,
-            'landing_page_url' => $item['landing_page_url'] ?? null,
+            'landing_url' => $item['landing_url'] ?? null,
             'display_name' => $item['display_name'] ?? null
         ];
     }
@@ -375,7 +375,7 @@ class TikTokParser extends BaseParser
             'creative_type' => $item['creative_type'] ?? null,
             'video_id' => $item['video_id'] ?? null,
             'image_ids' => $item['image_ids'] ?? [],
-            'landing_page_url' => $item['landing_page_url'] ?? null
+            'landing_url' => $item['landing_url'] ?? null
         ];
     }
 

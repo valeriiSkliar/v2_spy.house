@@ -194,7 +194,7 @@
             {{ translations.redirectsDetails.value }}
           </h3>
           <div class="form-link mb-25">
-            <input type="url" :value="selectedCreative?.landing_page_url" readonly />
+            <input type="url" :value="selectedCreative?.landing_url" readonly />
             <a href="#" target="_blank" class="btn-icon _small _white"
               ><span class="icon-new-tab"></span
             ></a>
@@ -216,10 +216,10 @@
               </div>
               <div class="details-table__col">
                 <img
-                  :src="`img/flags/${selectedCreative?.country}.svg`"
-                  :alt="selectedCreative?.country"
+                  :src="`img/flags/${selectedCreative?.country?.code}.svg`"
+                  :alt="selectedCreative?.country?.name"
                 />
-                {{ selectedCreative?.country }}
+                {{ selectedCreative?.country?.name }}
               </div>
             </div>
             <div class="details-table__row">

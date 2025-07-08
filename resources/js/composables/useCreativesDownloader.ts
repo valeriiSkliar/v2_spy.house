@@ -3,7 +3,7 @@ import type { Creative } from '@/types/creatives.d';
 /**
  * Тип изображения для скачивания
  */
-export type CreativeImageType = 'main_image_url' | 'icon_url' | 'video_url' | 'landing_page_url' | 'auto';
+export type CreativeImageType = 'main_image_url' | 'icon_url' | 'video_url' | 'landing_url' | 'auto';
 
 /**
  * Композабл для централизованной обработки скачивания креативов
@@ -19,7 +19,7 @@ export type CreativeImageType = 'main_image_url' | 'icon_url' | 'video_url' | 'l
  * - main_image_url → основное изображение креатива
  * - icon_url → иконка креатива  
  * - video_url → видео креатив
- * - landing_page_url → fallback для некоторых случаев
+ * - landing_url → fallback для некоторых случаев
  * - auto → автоматический выбор по приоритету
  * 
  * 🔧 ИНТЕГРАЦИЯ:
@@ -58,8 +58,8 @@ export function useCreativesDownloader() {
       return creative.video_url;
     }
     
-    if (creative.landing_page_url) {
-      return creative.landing_page_url;
+    if (creative.landing_url) {
+      return creative.landing_url;
     }
     
     return null;

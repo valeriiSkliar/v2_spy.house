@@ -86,7 +86,7 @@
           <span class="creative-item-info__txt">{{ getNetworkName }}</span>
         </div>
         <div class="creative-item-info">
-          <img :src="getFlagIcon()" alt="" />{{ creative.country || 'KZ' }}
+          <img :src="getFlagIcon()" alt="" />{{ creative.country?.code }}
         </div>
         <div class="creative-item-info">
           <div :class="getDeviceIconClass()"></div>
@@ -346,7 +346,7 @@ const getNetworkName: string = getNetworkText();
 
 // Функция для получения иконки флага
 const getFlagIcon = (): string => {
-  return `/img/flags/${props.creative.country || 'KZ'}.svg`;
+  return `/img/flags/${props.creative.country?.code}.svg`;
 };
 
 // Функция для получения CSS класса иконки устройства

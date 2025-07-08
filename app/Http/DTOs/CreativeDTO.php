@@ -18,10 +18,10 @@ class CreativeDTO implements Arrayable, Jsonable
         public string $title,
         public string $description,
         public string $category,
-        public string $country,
+        public array|null $country,
         public string $file_size,
         public string $icon_url,
-        public string $landing_page_url,
+        public string $landing_url,
         public string $created_at,
 
         // Опциональные поля
@@ -63,10 +63,10 @@ class CreativeDTO implements Arrayable, Jsonable
             title: $data['title'],
             description: $data['description'],
             category: $data['category'],
-            country: $data['country'],
+            country: $data['country'] ?? null,
             file_size: $data['file_size'],
             icon_url: $data['icon_url'],
-            landing_page_url: $data['landing_page_url'],
+            landing_url: $data['landing_url'],
             created_at: $data['created_at'],
             video_url: $data['video_url'] ?? null,
             has_video: $data['has_video'] ?? false,
@@ -192,7 +192,7 @@ class CreativeDTO implements Arrayable, Jsonable
         $errors = [];
 
         // Обязательные поля
-        $required = ['id', 'title', 'description', 'category', 'country', 'file_size', 'icon_url', 'landing_page_url', 'created_at'];
+        $required = ['id', 'title', 'description', 'category', 'country', 'file_size', 'icon_url', 'landing_url', 'created_at'];
 
         foreach ($required as $field) {
             if (empty($data[$field])) {
@@ -214,7 +214,7 @@ class CreativeDTO implements Arrayable, Jsonable
         }
 
         // Валидация URL
-        $urlFields = ['icon_url', 'landing_page_url', 'video_url', 'main_image_url'];
+        $urlFields = ['icon_url', 'landing_url', 'video_url', 'main_image_url'];
         foreach ($urlFields as $field) {
             if (isset($data[$field]) && !empty($data[$field]) && !filter_var($data[$field], FILTER_VALIDATE_URL)) {
                 $errors[] = "Field '{$field}' must be a valid URL";
@@ -297,10 +297,10 @@ class CreativeDTO implements Arrayable, Jsonable
             'title' => $apiData['title'] ?? '',
             'description' => $apiData['description'] ?? $apiData['desc'] ?? '',
             'category' => $apiData['category'] ?? $apiData['type'] ?? '',
-            'country' => $apiData['country'] ?? $apiData['country_code'] ?? '',
+            'country' => $apiData['country'] ?? $apiData['country_code'] ?? null,
             'file_size' => $apiData['file_size'] ?? $apiData['size'] ?? '0KB',
             'icon_url' => $apiData['icon_url'] ?? $apiData['icon'] ?? '',
-            'landing_page_url' => $apiData['landing_page_url'] ?? $apiData['landing_url'] ?? '',
+            'landing_url' => $apiData['landing_url'] ?? '',
             'created_at' => $apiData['created_at'] ?? $apiData['date_created'] ?? now()->format('Y-m-d'),
         ];
 
@@ -363,7 +363,7 @@ class CreativeDTO implements Arrayable, Jsonable
             'country' => $this->country,
             'file_size' => $this->file_size,
             'icon_url' => $this->icon_url,
-            'landing_page_url' => $this->landing_page_url,
+            'landing_url' => $this->landing_url,
             'video_url' => $this->video_url,
             'has_video' => $this->has_video,
             'created_at' => $this->created_at,

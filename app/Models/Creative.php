@@ -380,10 +380,14 @@ class Creative extends Model
             'title' => $this->title,
             'description' => $this->description,
             'category' => $this->format->value,
-            'country' => $this->country?->iso_code_2 ?? 'unknown',
+            'country' => $this->country ? [
+                'code' => $this->country->iso_code_2,
+                'name' => $this->country->name,
+                'iso_code_3' => $this->country->iso_code_3,
+            ] : null,
             'file_size' => $this->calculateFileSize(),
             'icon_url' => $this->icon_url ?? '',
-            'landing_page_url' => $this->landing_url ?? '',
+            'landing_url' => $this->landing_url ?? '',
             'video_url' => $this->video_url,
             'has_video' => $this->has_video,
             'created_at' => $this->created_at->format('Y-m-d'),
@@ -392,7 +396,7 @@ class Creative extends Model
             'advertising_networks' => $this->advertismentNetwork ? [$this->advertismentNetwork->network_display_name ?? $this->advertismentNetwork->network_name] : [],
             'languages' => $this->language ? [$this->language->iso_code_2] : [],
             'operating_systems' => $this->operation_system ? [$this->operation_system->value] : [],
-            'browsers' => $this->browser && $this->browser->name ? [$this->browser->name] : [],
+            'browsers' => $this->browser && $this->browser->browser ? [$this->browser->browser] : [],
             'devices' => $this->guessDevices(),
             'image_sizes' => $this->main_image_size ? [$this->main_image_size] : [],
             'main_image_size' => $this->main_image_size,
@@ -415,7 +419,7 @@ class Creative extends Model
     /**
      * Вычислить размер файла (заглушка)
      */
-    private function calculateFileSize(): string
+    public function calculateFileSize(): string
     {
         // TODO: Реализовать реальный расчет размера файла
         return rand(100, 5000) . 'KB';
@@ -424,7 +428,7 @@ class Creative extends Model
     /**
      * Угадать устройства на основе других данных
      */
-    private function guessDevices(): array
+    public function guessDevices(): array
     {
         // TODO: Реализовать логику определения устройств
         $devices = ['desktop'];

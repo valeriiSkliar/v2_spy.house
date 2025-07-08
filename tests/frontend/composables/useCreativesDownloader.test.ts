@@ -55,7 +55,7 @@ const mockCreative: Creative = {
   icon_url: 'https://example.com/icon.png',
   main_image_url: 'https://example.com/image.jpg',
   video_url: 'https://example.com/video.mp4',
-  landing_page_url: 'https://example.com/landing',
+  landing_url: 'https://example.com/landing',
   created_at: '2024-01-01',
 };
 
@@ -85,7 +85,7 @@ describe('useCreativesDownloader', () => {
       expect(downloader.getDownloadUrl(mockCreative, 'icon_url')).toBe('https://example.com/icon.png');
       expect(downloader.getDownloadUrl(mockCreative, 'main_image_url')).toBe('https://example.com/image.jpg');
       expect(downloader.getDownloadUrl(mockCreative, 'video_url')).toBe('https://example.com/video.mp4');
-      expect(downloader.getDownloadUrl(mockCreative, 'landing_page_url')).toBe('https://example.com/landing');
+      expect(downloader.getDownloadUrl(mockCreative, 'landing_url')).toBe('https://example.com/landing');
     });
 
     it('should return null when specified type is not available', () => {
@@ -112,7 +112,7 @@ describe('useCreativesDownloader', () => {
       expect(result).toBe('https://example.com/video.mp4');
     });
 
-    it('should fallback to landing_page_url if other urls are not available', () => {
+    it('should fallback to landing_url if other urls are not available', () => {
       const creative = { 
         ...mockCreative, 
         main_image_url: undefined, 
@@ -129,7 +129,7 @@ describe('useCreativesDownloader', () => {
         main_image_url: undefined, 
         icon_url: undefined,
         video_url: undefined,
-        landing_page_url: undefined
+        landing_url: undefined
       };
       const result = downloader.getDownloadUrl(creative, 'auto');
       expect(result).toBe(null);
@@ -153,7 +153,7 @@ describe('useCreativesDownloader', () => {
   //     expect(downloader.generateFileName(mockCreative, 'https://example.com/test.jpg', 'main_image_url')).toBe('Test_Creative_Title_main_image_123.jpg');
   //     expect(downloader.generateFileName(mockCreative, 'https://example.com/test.png', 'icon_url')).toBe('Test_Creative_Title_icon_123.png');
   //     expect(downloader.generateFileName(mockCreative, 'https://example.com/test.mp4', 'video_url')).toBe('Test_Creative_Title_video_123.mp4');
-  //     expect(downloader.generateFileName(mockCreative, 'https://example.com/test.html', 'landing_page_url')).toBe('Test_Creative_Title_landing_page_123.html');
+  //     expect(downloader.generateFileName(mockCreative, 'https://example.com/test.html', 'landing_url')).toBe('Test_Creative_Title_landing_page_123.html');
   //   });
 
   //   it('should clean invalid characters from title', () => {
@@ -386,7 +386,7 @@ describe('useCreativesDownloader', () => {
   //       ...mockCreative, 
   //       main_image_url: undefined, 
   //       icon_url: undefined,
-  //       landing_page_url: undefined,
+  //       landing_url: undefined,
   //       video_url: undefined
   //     };
       

@@ -66,7 +66,7 @@ detail: {
 ```typescript
 // В любом компоненте
 const handleOpenInNewTab = (): void => {
-  const url = props.creative.landing_page_url;
+  const url = props.creative.landing_url;
 
   if (!url) {
     console.warn('URL не доступен для открытия');
@@ -155,13 +155,13 @@ const handleOpenInNewTab = (): void => {
   document.dispatchEvent(
     new CustomEvent('creatives:open-in-new-tab', {
       detail: {
-        url: props.creative.landing_page_url,
+        url: props.creative.landing_url,
       },
     })
   );
 
   // Fallback реализация
-  const url = props.creative.landing_page_url || props.creative.main_image_url;
+  const url = props.creative.landing_url || props.creative.main_image_url;
   if (url) {
     window.open(url, '_blank');
   }

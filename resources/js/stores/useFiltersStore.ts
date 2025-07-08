@@ -392,8 +392,27 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
       }
     };
 
+    // Слушатель успешного показа деталей от композабла (для обновления состояния Store)
+    const handleDetailsShown = (event: CustomEvent) => {
+      const { creative } = event.detail;
+      if (creative) {
+        selectedCreative.value = creative;
+        isDetailsVisible.value = true;
+        console.log('🎯 Store: детали креатива показаны, состояние обновлено');
+      }
+    };
+
+    // Слушатель скрытия деталей от композабла (для обновления состояния Store)
+    const handleDetailsHidden = () => {
+      selectedCreative.value = null;
+      isDetailsVisible.value = false;
+      console.log('🎯 Store: детали креатива скрыты, состояние обновлено');
+    };
+
     // Регистрируем слушатели
     document.addEventListener('creatives:toggle-favorite', handleFavoriteToggle as unknown as EventListener);
+    document.addEventListener('creatives:details-shown', handleDetailsShown as unknown as EventListener);
+    document.addEventListener('creatives:details-hidden', handleDetailsHidden as unknown as EventListener);
     
     // Инициализируем обработчик скачивания креативов через композабл
     const downloadCleanup = downloader.setupDownloadEventListener();
@@ -414,7 +433,7 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
       window.dispatchEvent(new CustomEvent('store:event-listeners-setup', {
         detail: { 
           store: 'CreativesFiltersStore',
-          listeners: ['toggle-favorite', 'download', 'open-in-new-tab', 'show-details', 'hide-details', 'toggle-details'],
+          listeners: ['toggle-favorite', 'details-shown', 'details-hidden', 'download', 'open-in-new-tab', 'show-details', 'hide-details', 'toggle-details'],
           timestamp: Date.now()
         }
       }));
@@ -433,6 +452,8 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
    */
   function cleanupEventListeners(): void {
     document.removeEventListener('creatives:toggle-favorite', () => {});
+    document.removeEventListener('creatives:details-shown', () => {});
+    document.removeEventListener('creatives:details-hidden', () => {});
     
     // Очищаем обработчик скачивания если он был инициализирован
     if ((cleanupEventListeners as any).downloadCleanup) {
@@ -1109,66 +1130,9 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   // МЕТОДЫ УПРАВЛЕНИЯ ДЕТАЛЯМИ КРЕАТИВОВ - ПРОКСИРОВАНИЕ К КОМПОЗАБЛУ
   // ============================================================================
   
-  // /**
-  //  * Показать детали креатива (проксирование к композаблу)
-  //  */
-  // async function showCreativeDetails(creative: Creative): Promise<void> {
-  //   try {
-  //     console.log('🔍 [Store] showCreativeDetails', creative);
-  //     const result = await detailsManager.handleShowCreativeDetails(creative);
-  //     if (result) {
-  //       selectedCreative.value = result;
-  //       isDetailsVisible.value = true;
-  //     }
-  //   } catch (error) {
-  //     console.error('Ошибка при показе деталей креатива в Store:', error);
-  //     throw error;
-  //   }
-  // }
-
-  // /**
-  //  * Скрыть детали креатива (проксирование к композаблу)
-  //  */
-  // function hideCreativeDetails(): void {
-  //   try {
-  //     detailsManager.handleHideCreativeDetails();
-  //     selectedCreative.value = null;
-  //     isDetailsVisible.value = false;
-  //   } catch (error) {
-  //     console.error('Ошибка при скрытии деталей креатива в Store:', error);
-  //   }
-  // }
-
-  // /**
-  //  * Переключить видимость деталей (проксирование к композаблу)
-  //  */
-  // async function toggleCreativeDetails(creative?: Creative): Promise<void> {
-  //   try {
-  //     const result = await detailsManager.handleToggleCreativeDetails(
-  //       creative || null, 
-  //       isDetailsVisible.value
-  //     );
-      
-  //     if (result) {
-  //       selectedCreative.value = result;
-  //       isDetailsVisible.value = true;
-  //     } else {
-  //       selectedCreative.value = null;
-  //       isDetailsVisible.value = false;
-  //     }
-  //   } catch (error) {
-  //     console.error('Ошибка при переключении деталей креатива в Store:', error);
-  //     throw error;
-  //   }
-  // }
-
-  // /**
-  //  * Проверить загружается ли креатив (проксирование к композаблу)
-  //  */
-  // function isCreativeDetailsLoading(creativeId: number): boolean {
-  //   return detailsLoadingMap.value.get(creativeId) ?? false;
-  // }
-
+  // Все методы управления деталями креативов перенесены в композабл useCreativesDetails
+  // Store больше не содержит логику отображения деталей, только состояние для UI
+  // Методы доступны через detailsManager композабл в return объекте
 
   // ============================================================================
   // МЕТОДЫ УПРАВЛЕНИЯ ИЗБРАННЫМ
@@ -1463,14 +1427,6 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     refreshFavoritesCount,      // Обновление счетчика с сервера
     addToFavorites,             // Добавление в избранное
     removeFromFavorites,        // Удаление из избранного
-    
-    // ========================================
-    // МЕТОДЫ УПРАВЛЕНИЯ ДЕТАЛЯМИ КРЕАТИВОВ
-    // ========================================
-    // showCreativeDetails,        // Показать детали креатива
-    // hideCreativeDetails,        // Скрыть детали креатива  
-    // toggleCreativeDetails,      // Переключить видимость деталей
-    // isCreativeDetailsLoading,   // Проверить загружается ли креатив
     
     // ========================================
     // ПРЯМОЙ ДОСТУП К КОМПОЗАБЛАМ (для отладки)

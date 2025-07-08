@@ -20,7 +20,7 @@ class CreativeDTOTest extends TestCase
             'country' => 'US',
             'file_size' => '1024KB',
             'icon_url' => 'https://example.com/icon.png',
-            'landing_page_url' => 'https://example.com',
+            'landing_url' => 'https://example.com',
             'created_at' => '2024-01-15',
         ];
 
@@ -42,7 +42,7 @@ class CreativeDTOTest extends TestCase
             'country' => 'US',
             'file_size' => '1024KB',
             'icon_url' => 'https://example.com/icon.png',
-            'landing_page_url' => 'https://example.com',
+            'landing_url' => 'https://example.com',
             'created_at' => now()->subDays(3)->format('Y-m-d'), // 3 дня назад - recent
             'activity_date' => now()->subDays(35)->format('Y-m-d'), // 35 дней назад - не активен
         ];
@@ -80,7 +80,7 @@ class CreativeDTOTest extends TestCase
             'country' => 'US',
             'file_size' => '1024KB',
             'icon_url' => 'https://example.com/icon.png',
-            'landing_page_url' => 'https://example.com',
+            'landing_url' => 'https://example.com',
             'created_at' => '2024-01-15',
             'has_video' => 'yes', // Должно быть boolean
             'advertising_networks' => 'facebook', // Должно быть array
@@ -104,7 +104,7 @@ class CreativeDTOTest extends TestCase
             'country' => 'US',
             'file_size' => '1024KB',
             'icon_url' => 'https://example.com/icon.png',
-            'landing_page_url' => 'https://example.com',
+            'landing_url' => 'https://example.com',
             'created_at' => '2024-01-15',
             'has_video' => true,
             'social_likes' => 1000,
@@ -137,7 +137,7 @@ class CreativeDTOTest extends TestCase
                 'country' => 'US',
                 'file_size' => '1024KB',
                 'icon_url' => 'https://example.com/icon1.png',
-                'landing_page_url' => 'https://example1.com',
+                'landing_url' => 'https://example1.com',
                 'created_at' => '2024-01-15',
             ],
             [
@@ -148,7 +148,7 @@ class CreativeDTOTest extends TestCase
                 'country' => 'GB',
                 'file_size' => '2048KB',
                 'icon_url' => 'https://example.com/icon2.png',
-                'landing_page_url' => 'https://example2.com',
+                'landing_url' => 'https://example2.com',
                 'created_at' => '2024-01-16',
             ],
         ];
@@ -172,7 +172,7 @@ class CreativeDTOTest extends TestCase
             'country' => 'US',
             'file_size' => '1024KB',
             'icon_url' => 'https://example.com/icon.png',
-            'landing_page_url' => 'https://example.com',
+            'landing_url' => 'https://example.com',
             'created_at' => '2024-01-15',
         ];
 
@@ -196,7 +196,7 @@ class CreativeDTOTest extends TestCase
             'country' => 'US',
             'file_size' => '1024KB',
             'icon_url' => 'invalid-url',
-            'landing_page_url' => 'not-a-url',
+            'landing_url' => 'not-a-url',
             'created_at' => '2024-01-15',
         ];
 
@@ -204,7 +204,7 @@ class CreativeDTOTest extends TestCase
 
         $this->assertNotEmpty($errors);
         $this->assertContains("Field 'icon_url' must be a valid URL", $errors);
-        $this->assertContains("Field 'landing_page_url' must be a valid URL", $errors);
+        $this->assertContains("Field 'landing_url' must be a valid URL", $errors);
     }
 
     public function test_dto_validates_categories()
@@ -217,7 +217,7 @@ class CreativeDTOTest extends TestCase
             'country' => 'US',
             'file_size' => '1024KB',
             'icon_url' => 'https://example.com/icon.png',
-            'landing_page_url' => 'https://example.com',
+            'landing_url' => 'https://example.com',
             'created_at' => '2024-01-15',
         ];
 
@@ -237,7 +237,7 @@ class CreativeDTOTest extends TestCase
             'country' => 'US',
             'file_size' => '1024KB',
             'icon_url' => 'https://example.com/icon.png',
-            'landing_page_url' => 'https://example.com',
+            'landing_url' => 'https://example.com',
             'created_at' => '2024-01-15',
             'social_likes' => 'not-a-number',
             'social_comments' => 'invalid',
@@ -260,7 +260,7 @@ class CreativeDTOTest extends TestCase
             'country' => 'US',
             'file_size' => '1024KB',
             'icon_url' => 'https://example.com/icon.png',
-            'landing_page_url' => 'https://example.com',
+            'landing_url' => 'https://example.com',
             'created_at' => '2024-01-15',
             'social_likes' => '1000',
             'social_comments' => '50',
@@ -287,7 +287,7 @@ class CreativeDTOTest extends TestCase
             'country' => 'US',
             'file_size' => '1024KB',
             'icon_url' => 'https://example.com/icon.png',
-            'landing_page_url' => 'https://example.com',
+            'landing_url' => 'https://example.com',
             'created_at' => '2024-01-15',
         ];
 
@@ -311,7 +311,7 @@ class CreativeDTOTest extends TestCase
             'country' => 'US',
             'file_size' => '1024KB',
             'icon_url' => 'https://example.com/icon.png',
-            'landing_page_url' => 'https://example.com',
+            'landing_url' => 'https://example.com',
             'created_at' => '2024-01-15',
         ];
 
@@ -335,7 +335,7 @@ class CreativeDTOTest extends TestCase
             'country' => 'US',
             'file_size' => '1024KB',
             'icon_url' => 'https://example.com/icon.png',
-            'landing_page_url' => 'https://example.com',
+            'landing_url' => 'https://example.com',
             'created_at' => '2024-01-15',
             'has_video' => true,
             'social_likes' => 100,

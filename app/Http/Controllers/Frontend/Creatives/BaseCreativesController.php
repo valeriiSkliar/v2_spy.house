@@ -70,7 +70,7 @@ abstract class BaseCreativesController extends FrontendController
                 'country' => $country,
                 'file_size' => rand(100, 5000) . 'KB',
                 'icon_url' => "https://picsum.photos/64/64?random={$i}",
-                'landing_page_url' => "https://example-landing-{$i}.com",
+                'landing_url' => "https://example-landing-{$i}.com",
                 'main_image_url' => "https://picsum.photos/400/300?random={$i}",
                 'video_url' => $hasVideo ? "https://dev.vitaliimaksymchuk.com.ua/spy/img/video-3.mp4" : null,
                 'has_video' => $hasVideo,

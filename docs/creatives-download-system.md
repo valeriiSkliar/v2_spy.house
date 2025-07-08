@@ -18,19 +18,19 @@ Stateless композабл, предоставляющий функции:
 #### Поддерживаемые типы изображений
 
 ```typescript
-type CreativeImageType = 'main_image_url' | 'icon_url' | 'video_url' | 'landing_page_url' | 'auto';
+type CreativeImageType = 'main_image_url' | 'icon_url' | 'video_url' | 'landing_url' | 'auto';
 ```
 
 - **`main_image_url`** - основное изображение креатива
 - **`icon_url`** - иконка креатива
 - **`video_url`** - видео креатив
-- **`landing_page_url`** - URL лендинга (fallback)
+- **`landing_url`** - URL лендинга (fallback)
 - **`auto`** - автоматический выбор по приоритету (по умолчанию)
 
 #### Логика выбора URL
 
 1. **Конкретный тип**: Если указан `type !== 'auto'`, используется только этот URL или возвращается `null`
-2. **Автоматический выбор**: Приоритет `main_image_url > icon_url > video_url > landing_page_url`
+2. **Автоматический выбор**: Приоритет `main_image_url > icon_url > video_url > landing_urls`
 
 ### 2. Интеграция в карточках креативов
 
