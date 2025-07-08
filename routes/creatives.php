@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('creatives')
     ->name('creatives.')
+    ->middleware(['throttle:10,1', 'auth'])
     ->group(function () {
         Route::get('/', [CreativesController::class, 'index'])->name('index');
     });
