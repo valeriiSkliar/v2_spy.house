@@ -17,7 +17,7 @@
                     <li><a href="#">Features</a></li>
                     <li><a href="#">Prices</a></li>
                     <li><a href="#">Reviews</a></li>
-                    <li><a href="#">Blog</a></li>
+                    <li><a href="{{ route('blog.index') }}">Blog</a></li>
                 </ul>
             </nav>
             <div class="header__right">
