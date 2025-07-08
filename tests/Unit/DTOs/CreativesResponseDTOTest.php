@@ -6,9 +6,45 @@ use App\Http\DTOs\CreativesResponseDTO;
 use App\Http\DTOs\CreativesFiltersDTO;
 use App\Http\DTOs\PaginationDTO;
 use Tests\TestCase;
+use App\Models\Frontend\IsoEntity;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 
 class CreativesResponseDTOTest extends TestCase
 {
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Очищаем кеш перед каждым тестом
+        Cache::flush();
+
+        // Создаем основные страны для тестов
+        $basicCountries = [
+            ['iso_code_2' => 'US', 'iso_code_3' => 'USA', 'numeric_code' => '840', 'name' => 'United States'],
+            ['iso_code_2' => 'GB', 'iso_code_3' => 'GBR', 'numeric_code' => '826', 'name' => 'United Kingdom'],
+            ['iso_code_2' => 'DE', 'iso_code_3' => 'DEU', 'numeric_code' => '276', 'name' => 'Germany'],
+            ['iso_code_2' => 'FR', 'iso_code_3' => 'FRA', 'numeric_code' => '250', 'name' => 'France'],
+            ['iso_code_2' => 'CA', 'iso_code_3' => 'CAN', 'numeric_code' => '124', 'name' => 'Canada'],
+        ];
+
+        foreach ($basicCountries as $country) {
+            IsoEntity::create([
+                'type' => 'country',
+                'iso_code_2' => $country['iso_code_2'],
+                'iso_code_3' => $country['iso_code_3'],
+                'numeric_code' => $country['numeric_code'],
+                'name' => $country['name'],
+                'is_active' => true,
+            ]);
+        }
+
+        // Очищаем кеш стран после создания тестовых данных
+        CreativesFiltersDTO::clearCountriesCache();
+    }
+
     public function test_can_create_successful_response()
     {
         $items = [
@@ -51,7 +87,7 @@ class CreativesResponseDTOTest extends TestCase
 
     public function test_can_create_loading_response()
     {
-        $filters = ['country' => 'US'];
+        $filters = ['countries' => ['US']];
 
         $response = CreativesResponseDTO::loading($filters);
 
@@ -66,7 +102,7 @@ class CreativesResponseDTOTest extends TestCase
     {
         $filtersDTO = CreativesFiltersDTO::fromArraySafe([
             'searchKeyword' => 'nonexistent',
-            'country' => 'US',
+            'countries' => ['US'],
         ]);
 
         $response = CreativesResponseDTO::empty($filtersDTO);
@@ -88,7 +124,7 @@ class CreativesResponseDTOTest extends TestCase
 
         $filtersDTO = CreativesFiltersDTO::fromArraySafe([
             'searchKeyword' => 'test',
-            'country' => 'US',
+            'countries' => ['US'],
             'page' => 2,
             'perPage' => 24,
         ]);
@@ -141,12 +177,14 @@ class CreativesResponseDTOTest extends TestCase
     public function test_get_stats_method()
     {
         $items = [
-            ['id' => 1], ['id' => 2], ['id' => 3]
+            ['id' => 1],
+            ['id' => 2],
+            ['id' => 3]
         ];
 
         $filtersDTO = CreativesFiltersDTO::fromArraySafe([
             'searchKeyword' => 'test',
-            'country' => 'US',
+            'countries' => ['US'],
         ]);
 
         $response = CreativesResponseDTO::success($items, $filtersDTO, 50);
@@ -174,7 +212,7 @@ class CreativesResponseDTOTest extends TestCase
         // Проверяем основную структуру
         $this->assertArrayHasKey('status', $apiResponse);
         $this->assertArrayHasKey('data', $apiResponse);
-        
+
         // Проверяем структуру data
         $this->assertArrayHasKey('items', $apiResponse['data']);
         $this->assertArrayHasKey('pagination', $apiResponse['data']);

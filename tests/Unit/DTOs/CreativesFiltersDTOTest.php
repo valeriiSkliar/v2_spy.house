@@ -43,6 +43,9 @@ class CreativesFiltersDTOTest extends TestCase
                 'is_active' => true,
             ]);
         }
+
+        // Очищаем кеш стран после создания тестовых данных
+        CreativesFiltersDTO::clearCountriesCache();
     }
 
     public function test_dto_can_be_created_with_defaults()
@@ -604,5 +607,76 @@ class CreativesFiltersDTOTest extends TestCase
         // Проверяем, что смешанный регистр работает
         $dto = CreativesFiltersDTO::fromArraySafe(['countries' => ['Te']]);
         $this->assertEquals(['Te'], $dto->countries);
+    }
+
+    /** @test */
+    public function debug_active_filters_count()
+    {
+        // Тест для отладки подсчета активных фильтров
+        $inputData = [
+            'searchKeyword' => 'test',
+            'countries' => ['US'],
+        ];
+
+        $dto = CreativesFiltersDTO::fromArraySafe($inputData);
+
+        $defaults = CreativesFiltersDTO::getDefaults();
+        $current = $dto->toArray();
+        $activeFilters = $dto->getActiveFilters();
+
+        // Проверим что страна US существует в тестовых данных
+        $usCountry = \App\Models\Frontend\IsoEntity::where('iso_code_2', 'US')->where('type', 'country')->first();
+        $this->assertNotNull($usCountry, 'Страна US должна существовать в тестовых данных');
+
+        // Проверим каждое поле отдельно
+        $this->assertEquals('', $defaults['searchKeyword']);
+        $this->assertEquals('test', $current['searchKeyword']);
+        $this->assertNotEquals($defaults['searchKeyword'], $current['searchKeyword'], 'SearchKeyword должен быть активным фильтром');
+
+        $this->assertEquals([], $defaults['countries']);
+        // ВАЖНО: проверим что США действительно попали в результат
+        $this->assertNotEmpty($current['countries'], 'Countries не должны быть пустыми после валидации');
+        $this->assertEquals(['US'], $current['countries'], 'Должна быть страна US');
+        $this->assertNotEquals($defaults['countries'], $current['countries'], 'Countries должен быть активным фильтром');
+
+        // Проверим что оба фильтра считаются активными
+        $this->assertArrayHasKey('searchKeyword', $activeFilters, 'searchKeyword должен быть в активных фильтрах');
+        $this->assertArrayHasKey('countries', $activeFilters, 'countries должен быть в активных фильтрах');
+        $this->assertEquals('test', $activeFilters['searchKeyword']);
+        $this->assertEquals(['US'], $activeFilters['countries']);
+
+        $this->assertEquals(2, $dto->getActiveFiltersCount(), 'Должно быть 2 активных фильтра: searchKeyword и countries');
+    }
+
+    /** @test */
+    public function simple_country_validation_test()
+    {
+        // Очищаем кеш перед тестом
+        \App\Http\DTOs\CreativesFiltersDTO::clearCountriesCache();
+
+        // Простая проверка валидации стран
+        $dto = CreativesFiltersDTO::fromArraySafe([
+            'countries' => ['US'],
+        ]);
+
+        // Отладка: проверим что есть в базе данных
+        $usCountry = \App\Models\Frontend\IsoEntity::where('iso_code_2', 'US')
+            ->where('type', 'country')
+            ->where('is_active', true)
+            ->first();
+
+        if (!$usCountry) {
+            $this->markTestSkipped('US country not found in test database');
+        }
+
+        $this->assertEquals(['US'], $dto->countries, 'US должна пройти валидацию');
+
+        // Проверим активные фильтры
+        $this->assertEquals(1, $dto->getActiveFiltersCount(), 'Должен быть 1 активный фильтр (countries)');
+        $this->assertTrue($dto->hasActiveFilters(), 'Должны быть активные фильтры');
+
+        $activeFilters = $dto->getActiveFilters();
+        $this->assertArrayHasKey('countries', $activeFilters, 'countries должен быть активным фильтром');
+        $this->assertEquals(['US'], $activeFilters['countries']);
     }
 }
