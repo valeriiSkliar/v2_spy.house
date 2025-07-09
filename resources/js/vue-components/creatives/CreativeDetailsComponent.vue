@@ -277,10 +277,10 @@
 
         <!-- Похожие креативы (если включено) -->
         <div class="creative-details__group">
-          <h3 class="mb-20">Similar creatives</h3>
-          <div class="promo-premium">
-            <p>Similar ads are available in the <strong>Premium plan</strong></p>
-            <a href="/tariffs" class="btn _flex _green _medium">Go</a>
+          <h3 class="mb-20">{{ translations.similarCreatives_title.value }}</h3>
+          <div v-if="!showSimilarCreatives" class="promo-premium">
+            <p v-html="translations.promoPremium.value"></p>
+            <a href="/tariffs" class="btn _flex _green _medium">{{ translations.go.value }}</a>
           </div>
           <div v-if="showSimilarCreatives" class="similar-creatives">
             <div class="creative-item">
@@ -344,13 +344,13 @@
               </div>
             </div>
           </div>
-          <div v-else class="similar-creatives">
+          <div v-if="!showSimilarCreatives" class="similar-creatives">
             <div class="similar-creative-empty _inpage"><img :src="emptyImage" alt="" /></div>
             <div class="similar-creative-empty _inpage"><img :src="emptyImage" alt="" /></div>
           </div>
           <div v-if="showSimilarCreatives" class="d-flex justify-content-center pt-3">
             <button class="btn _gray _flex _medium w-mob-100">
-              <span class="icon-load-more font-16 mr-2"></span>Load more
+              <span class="icon-load-more font-16 mr-2"></span>{{ translations.loadMore.value }}
             </button>
           </div>
         </div>
@@ -392,28 +392,32 @@ const { waitForReady, t } = useTranslations();
 // Создаем reactive переводы для часто используемых ключей с fallback значениями
 const translations = createReactiveTranslations(
   {
-    title: 'details.title',
-    addToFavorites: 'details.add-to-favorites',
-    removeFromFavorites: 'details.remove-from-favorites',
-    download: 'details.download',
-    openTab: 'details.open-tab',
-    copy: 'details.copy',
-    copied: 'details.copied',
-    icon: 'details.icon',
-    image: 'details.image',
-    text: 'details.text',
-    titleField: 'details.creative-title',
-    description: 'details.description',
-    translateText: 'details.translate',
-    redirectsDetails: 'details.redirects-details',
-    advertisingNetworks: 'details.advertising-networks',
-    country: 'details.country',
-    language: 'details.language',
-    firstDisplayDate: 'details.first-display-date',
-    lastDisplayDate: 'details.last-display-date',
-    status: 'details.status',
-    active: 'details.active',
-    inactive: 'details.inactive',
+    title: 'title',
+    addToFavorites: 'addToFavorites',
+    removeFromFavorites: 'removeFromFavorites',
+    download: 'download',
+    openTab: 'openTab',
+    copy: 'copy',
+    copied: 'copied',
+    icon: 'icon',
+    image: 'image',
+    text: 'text',
+    titleField: 'titleField',
+    description: 'description',
+    translateText: 'translateText',
+    redirectsDetails: 'redirectsDetails',
+    advertisingNetworks: 'advertisingNetworks',
+    country: 'country',
+    language: 'language',
+    firstDisplayDate: 'firstDisplayDate',
+    lastDisplayDate: 'lastDisplayDate',
+    status: 'status',
+    active: 'active',
+    inactive: 'inactive',
+    similarCreatives_title: 'similarCreatives_title',
+    promoPremium: 'promo-premium',
+    go: 'go',
+    loadMore: 'loadMore',
   },
   {
     // Fallback значения
@@ -439,6 +443,10 @@ const translations = createReactiveTranslations(
     status: 'Status',
     active: 'Active',
     inactive: 'Inactive',
+    similarCreatives_title: 'Similar creatives',
+    promoPremium: 'Similar ads are available in the <strong>Premium plan</strong>',
+    go: 'Go',
+    loadMore: 'Load more',
   }
 );
 

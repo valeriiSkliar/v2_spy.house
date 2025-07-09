@@ -46,7 +46,7 @@
     {{-- Компонент списка креативов с новой системой композаблов --}}
 
     <x-creatives.vue.list :listTranslations="$listTranslations" :perPage="12" :activeTab="$activeTab"
-        :detailsTranslations="$detailsTranslations ?? []"
+        :detailsTranslations="$allTranslations ?? []"
         :showSimilarCreatives="$userData['show_similar_creatives'] ?? false" :cardTranslations="$cardTranslations ?? []"
         :userData="$userData" />
 

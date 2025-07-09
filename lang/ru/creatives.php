@@ -67,7 +67,7 @@ return [
         'description' => 'Описание',
         'download' => 'Скачать',
         'open-tab' => 'Открыть в новой вкладке',
-        'redirects-details' => 'Редиректы',
+        'redirects-details' => 'Лендинг',
         'translate' => 'Перевести',
         'open-in-tab' => 'Открыть в новой вкладке',
         'title' => 'Детали',

@@ -434,6 +434,10 @@ abstract class BaseCreativesController extends FrontendController
             'information' => __('creatives.details.information'),
             'stats' => __('creatives.details.stats'),
             'close' => __('creatives.details.close'),
+            'similarCreatives_title' => __('creatives.details.similar-creatives.title'),
+            'promo-premium' => __('creatives.details.similar-creatives.promo-premium'),
+            'go' => __('creatives.details.similar-creatives.go'),
+            'loadMore' => __('creatives.details.similar-creatives.load-more'),
         ];
     }
 
