@@ -283,8 +283,6 @@
             <a href="/tariffs" class="btn _flex _green _medium">Go</a>
           </div>
           <div v-if="showSimilarCreatives" class="similar-creatives">
-            <div class="similar-creative-empty _inpage"><img :src="emptyImage" alt="" /></div>
-            <div class="similar-creative-empty _inpage"><img :src="emptyImage" alt="" /></div>
             <div class="creative-item">
               <div class="creative-item__head">
                 <div class="creative-item__icon thumb thumb-with-controls-small mr-2">
@@ -327,8 +325,8 @@
                     <span class="creative-item-info__txt">Push.house</span>
                   </div>
                   <div class="creative-item-info">
-                    <img :src="`img/flags/${selectedCreative?.country}.svg`" alt="" />
-                    {{ selectedCreative?.country }}
+                    <img :src="`img/flags/${selectedCreative?.country?.code}.svg`" alt="" />
+                    {{ selectedCreative?.country?.name }}
                   </div>
                   <div class="creative-item-info">
                     <div class="icon-pc"></div>
@@ -345,6 +343,10 @@
                 </div>
               </div>
             </div>
+          </div>
+          <div v-else class="similar-creatives">
+            <div class="similar-creative-empty _inpage"><img :src="emptyImage" alt="" /></div>
+            <div class="similar-creative-empty _inpage"><img :src="emptyImage" alt="" /></div>
           </div>
           <div v-if="showSimilarCreatives" class="d-flex justify-content-center pt-3">
             <button class="btn _gray _flex _medium w-mob-100">
