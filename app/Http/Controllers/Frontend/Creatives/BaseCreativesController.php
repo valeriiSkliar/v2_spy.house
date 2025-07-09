@@ -12,11 +12,13 @@ use App\Helpers\IsoCodesHelper;
 use App\Models\AdvertismentNetwork;
 use App\Models\Browser;
 use App\Models\Creative;
+use App\Models\FilterPreset;
 use App\Enums\Frontend\DeviceType;
 use App\Enums\Frontend\OperationSystem;
 use App\Enums\Frontend\AdvertisingFormat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Validation\Rule;
 
 abstract class BaseCreativesController extends FrontendController
 {
@@ -1130,6 +1132,391 @@ abstract class BaseCreativesController extends FrontendController
             return response()->json([
                 'status' => 'error',
                 'message' => 'Failed to check favorite status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // ============================================================================
+    // МЕТОДЫ ДЛЯ РАБОТЫ С ПРЕСЕТАМИ ФИЛЬТРОВ
+    // ============================================================================
+
+    /**
+     * Получить все пресеты фильтров для текущего пользователя
+     * 
+     * @OA\Get(
+     *     path="/api/creatives/filter-presets",
+     *     operationId="getFilterPresets",
+     *     tags={"Креативы - Пресеты фильтров"},
+     *     summary="Получить список пресетов фильтров",
+     *     description="Возвращает все сохраненные пресеты фильтров для аутентифицированного пользователя",
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Пресеты успешно получены",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="success"),
+     *             @OA\Property(property="data", type="array", @OA\Items(
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="Facebook USA"),
+     *                 @OA\Property(property="filters", type="object"),
+     *                 @OA\Property(property="has_active_filters", type="boolean", example=true),
+     *                 @OA\Property(property="active_filters_count", type="integer", example=3),
+     *                 @OA\Property(property="created_at", type="string", format="date-time"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time")
+     *             ))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Пользователь не аутентифицирован"
+     *     )
+     * )
+     */
+    public function getFilterPresets(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+
+            $presets = FilterPreset::forUser($user->id)
+                ->orderBy('name')
+                ->get()
+                ->map(function ($preset) {
+                    return $preset->toApiArray();
+                });
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $presets,
+                'meta' => [
+                    'total' => $presets->count(),
+                    'timestamp' => now()->toISOString()
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to get filter presets: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Создать новый пресет фильтров
+     * 
+     * @OA\Post(
+     *     path="/api/creatives/filter-presets",
+     *     operationId="createFilterPreset",
+     *     tags={"Креативы - Пресеты фильтров"},
+     *     summary="Создать пресет фильтров",
+     *     description="Создает новый пресет фильтров с текущими настройками",
+     *     security={{"bearerAuth": {}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="name", type="string", example="My Facebook Preset", maxLength=255),
+     *             @OA\Property(property="filters", type="object",
+     *                 @OA\Property(property="searchKeyword", type="string"),
+     *                 @OA\Property(property="countries", type="array", @OA\Items(type="string")),
+     *                 @OA\Property(property="advertisingNetworks", type="array", @OA\Items(type="string")),
+     *                 @OA\Property(property="activeTab", type="string")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Пресет успешно создан",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="success"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="My Facebook Preset"),
+     *                 @OA\Property(property="filters", type="object")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Ошибка валидации"
+     *     )
+     * )
+     */
+    public function createFilterPreset(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+
+            // Валидация входных данных
+            $validated = $request->validate([
+                'name' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    Rule::unique('filter_presets', 'name')->where('user_id', $user->id)
+                ],
+                'filters' => 'required|array'
+            ]);
+
+            // Создаем пресет
+            $preset = FilterPreset::createPreset(
+                $user->id,
+                $validated['name'],
+                $validated['filters']
+            );
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $preset->toApiArray(),
+                'message' => 'Filter preset created successfully'
+            ], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to create filter preset: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Получить конкретный пресет фильтров
+     * 
+     * @OA\Get(
+     *     path="/api/creatives/filter-presets/{id}",
+     *     operationId="getFilterPreset",
+     *     tags={"Креативы - Пресеты фильтров"},
+     *     summary="Получить пресет фильтров",
+     *     description="Возвращает конкретный пресет фильтров по ID",
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID пресета",
+     *         required=true,
+     *         @OA\Schema(type="integer", minimum=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Пресет успешно получен"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Пресет не найден"
+     *     )
+     * )
+     */
+    public function getFilterPreset(Request $request, $id)
+    {
+        try {
+            $user = $request->user();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+
+            $preset = FilterPreset::forUser($user->id)->findOrFail($id);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $preset->toApiArray()
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Filter preset not found'
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to get filter preset: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Обновить пресет фильтров
+     * 
+     * @OA\Put(
+     *     path="/api/creatives/filter-presets/{id}",
+     *     operationId="updateFilterPreset",
+     *     tags={"Креативы - Пресеты фильтров"},
+     *     summary="Обновить пресет фильтров",
+     *     description="Обновляет существующий пресет фильтров",
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID пресета",
+     *         required=true,
+     *         @OA\Schema(type="integer", minimum=1)
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="name", type="string", example="Updated Preset Name"),
+     *             @OA\Property(property="filters", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Пресет успешно обновлен"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Пресет не найден"
+     *     )
+     * )
+     */
+    public function updateFilterPreset(Request $request, $id)
+    {
+        try {
+            $user = $request->user();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+
+            $preset = FilterPreset::forUser($user->id)->findOrFail($id);
+
+            // Валидация входных данных
+            $validated = $request->validate([
+                'name' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    Rule::unique('filter_presets', 'name')
+                        ->where('user_id', $user->id)
+                        ->ignore($preset->id)
+                ],
+                'filters' => 'required|array'
+            ]);
+
+            // Обновляем пресет
+            $preset->updatePreset(
+                $validated['name'],
+                $validated['filters']
+            );
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $preset->fresh()->toApiArray(),
+                'message' => 'Filter preset updated successfully'
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Filter preset not found'
+            ], 404);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to update filter preset: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Удалить пресет фильтров
+     * 
+     * @OA\Delete(
+     *     path="/api/creatives/filter-presets/{id}",
+     *     operationId="deleteFilterPreset",
+     *     tags={"Креативы - Пресеты фильтров"},
+     *     summary="Удалить пресет фильтров",
+     *     description="Удаляет существующий пресет фильтров",
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID пресета",
+     *         required=true,
+     *         @OA\Schema(type="integer", minimum=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Пресет успешно удален"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Пресет не найден"
+     *     )
+     * )
+     */
+    public function deleteFilterPreset(Request $request, $id)
+    {
+        try {
+            $user = $request->user();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+
+            $preset = FilterPreset::forUser($user->id)->findOrFail($id);
+            $presetName = $preset->name;
+
+            $preset->delete();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => "Filter preset '{$presetName}' deleted successfully",
+                'data' => [
+                    'deleted_id' => (int)$id,
+                    'deleted_name' => $presetName,
+                    'deleted_at' => now()->toISOString()
+                ]
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Filter preset not found'
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to delete filter preset: ' . $e->getMessage()
             ], 500);
         }
     }

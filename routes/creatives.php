@@ -34,4 +34,13 @@ Route::prefix('api/creatives')
             Route::post('/{id}/favorite', [CreativesController::class, 'addToFavorites'])->name('favorites.add');
             Route::delete('/{id}/favorite', [CreativesController::class, 'removeFromFavorites'])->name('favorites.remove');
         });
+
+        // API для пресетов фильтров
+        Route::middleware('auth')->group(function () {
+            Route::get('/filter-presets', [CreativesController::class, 'getFilterPresets'])->name('filterPresets.index');
+            Route::post('/filter-presets', [CreativesController::class, 'createFilterPreset'])->name('filterPresets.store');
+            Route::get('/filter-presets/{id}', [CreativesController::class, 'getFilterPreset'])->name('filterPresets.show');
+            Route::put('/filter-presets/{id}', [CreativesController::class, 'updateFilterPreset'])->name('filterPresets.update');
+            Route::delete('/filter-presets/{id}', [CreativesController::class, 'deleteFilterPreset'])->name('filterPresets.destroy');
+        });
     });

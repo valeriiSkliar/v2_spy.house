@@ -450,3 +450,18 @@ export interface UseFiltersReturn {
   addToMultiSelect: (field: MultiSelectFilterKey, value: string) => void;
   removeFromMultiSelect: (field: MultiSelectFilterKey, value: string) => void;
 }
+
+  // Типизация для пресетов фильтров (расширяем FilterState для включения activeTab)
+  export interface FilterPresetState extends FilterState {
+    activeTab?: TabValue;
+  }
+
+  export interface FilterPreset {
+    id: number;
+    name: string;
+    filters: Partial<FilterPresetState>;
+    has_active_filters: boolean;
+    active_filters_count: number;
+    created_at: string;
+    updated_at: string;
+  }
