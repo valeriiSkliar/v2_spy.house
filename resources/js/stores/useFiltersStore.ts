@@ -154,6 +154,42 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   // Состояние загрузки для конкретных креативов (предотвращение множественных запросов)
   const favoritesLoadingMap = ref<Map<number, boolean>>(new Map());
 
+  // ============================================================================
+  // ПОЛЬЗОВАТЕЛЬСКИЕ ДАННЫЕ
+  // ============================================================================
+  
+  // Типизация для данных пользователя
+  interface UserData {
+    id: number | null;
+    email: string | null;
+    tariff: {
+      id: number | null;
+      name: string;
+      css_class: string;
+      expires_at: string | null;
+      status: string;
+      is_active: boolean;
+      is_trial: boolean;
+    } | null;
+    is_trial: boolean;
+    show_similar_creatives: boolean;
+    favoritesCount: number;
+    isAuthenticated: boolean;
+  }
+
+  // Состояние пользовательских данных
+  const userData = ref<UserData>({
+    id: null,
+    email: null,
+    tariff: null,
+    is_trial: false,
+    show_similar_creatives: false,
+    favoritesCount: 0,
+    isAuthenticated: false,
+  });
+  
+  const isUserDataLoading = ref(false);
+
   // Состояние просмотра деталей креативов
   const selectedCreative = ref<Creative | null>(null);
   const isDetailsVisible = ref(false);
@@ -1532,6 +1568,118 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   }
 
   // ============================================================================
+  // МЕТОДЫ РАБОТЫ С ПОЛЬЗОВАТЕЛЬСКИМИ ДАННЫМИ
+  // ============================================================================
+
+  /**
+   * Установить данные пользователя
+   * Вызывается при инициализации Store или получении данных с сервера
+   */
+  function setUserData(newUserData: Partial<UserData>): void {
+    console.log('🔧 Setting user data:', newUserData);
+    
+    // Обновляем данные пользователя
+    userData.value = {
+      ...userData.value,
+      ...newUserData
+    };
+
+    // Синхронизируем счетчик избранного если передан
+    if (newUserData.favoritesCount !== undefined) {
+      favoritesCount.value = newUserData.favoritesCount;
+    }
+
+    console.log('✅ User data updated:', userData.value);
+  }
+
+  /**
+   * Загрузить актуальные данные пользователя с сервера
+   */
+  async function loadUserData(): Promise<void> {
+    if (isUserDataLoading.value) {
+      console.log('⏳ User data is already loading, skipping...');
+      return;
+    }
+
+    try {
+      isUserDataLoading.value = true;
+      console.log('🔄 Loading user data from server...');
+
+      const response = await window.axios.get('/api/creatives/user');
+      const { data } = response.data;
+
+      setUserData(data);
+      console.log('✅ User data loaded successfully:', data);
+    } catch (error) {
+      console.error('❌ Error loading user data:', error);
+      
+      // В случае ошибки устанавливаем состояние неавторизованного пользователя
+      setUserData({
+        id: null,
+        email: null,
+        tariff: null,
+        is_trial: false,
+        show_similar_creatives: false,
+        favoritesCount: 0,
+        isAuthenticated: false,
+      });
+    } finally {
+      isUserDataLoading.value = false;
+    }
+  }
+
+  /**
+   * Обновить тариф пользователя
+   */
+  function updateUserTariff(tariff: UserData['tariff']): void {
+    console.log('🔧 Updating user tariff:', tariff);
+    userData.value.tariff = tariff;
+  }
+
+  /**
+   * Обновить счетчик избранного пользователя
+   */
+  function updateUserFavoritesCount(count: number): void {
+    console.log('🔧 Updating user favorites count:', count);
+    userData.value.favoritesCount = count;
+    favoritesCount.value = count;
+  }
+
+  /**
+   * Проверить, аутентифицирован ли пользователь
+   */
+  const isUserAuthenticated = computed(() => userData.value.isAuthenticated);
+
+  /**
+   * Получить информацию о тарифе пользователя
+   */
+  const userTariffInfo = computed(() => {
+    const tariff = userData.value.tariff;
+    if (!tariff) return null;
+    
+    return {
+      name: tariff.name,
+      isActive: tariff.is_active,
+      isTrial: tariff.is_trial,
+      showSimilarCreatives: userData.value.show_similar_creatives,
+      expiresAt: tariff.expires_at,
+      cssClass: tariff.css_class,
+      status: tariff.status,
+    };
+  });
+
+  /**
+   * Получить информацию о пользователе для отображения
+   */
+  const userDisplayInfo = computed(() => ({
+    id: userData.value.id,
+    email: userData.value.email,
+    isAuthenticated: userData.value.isAuthenticated,
+    favoritesCount: userData.value.favoritesCount,
+    tariff: userTariffInfo.value,
+  }));
+
+  // ============================================================================
   // ВОЗВРАТ ОБЪЕКТА STORE - ЕДИНЫЙ API ДЛЯ VUE КОМПОНЕНТОВ
   // ============================================================================
   
@@ -1663,6 +1811,19 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     updateCreativeInList,       // Обновление креатива в локальном состоянии
     syncFavoriteStatus,         // Синхронизация статуса избранного с сервером
     showMessage,                // Показ сообщений пользователю
+    
+    // ========================================
+    // ПОЛЬЗОВАТЕЛЬСКИЕ ДАННЫЕ И МЕТОДЫ
+    // ========================================
+    userData,                   // Данные пользователя (reactive)
+    isUserDataLoading,          // Состояние загрузки данных пользователя
+    setUserData,                // Установка данных пользователя
+    loadUserData,               // Загрузка данных пользователя с сервера
+    updateUserTariff,           // Обновление тарифа пользователя
+    updateUserFavoritesCount,   // Обновление счетчика избранного пользователя
+    isUserAuthenticated,        // Computed: аутентифицирован ли пользователь
+    userTariffInfo,             // Computed: информация о тарифе
+    userDisplayInfo,            // Computed: информация для отображения
     
     // ========================================
     // ПРЯМОЙ ДОСТУП К КОМПОЗАБЛАМ (для отладки)

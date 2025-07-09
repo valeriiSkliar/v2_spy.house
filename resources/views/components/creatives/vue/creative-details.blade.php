@@ -4,7 +4,7 @@
 --}}
 
 @props([
-'showSimilarCreatives' => true,
+'showSimilarCreatives' => false,
 'translations' => [],
 ])
 

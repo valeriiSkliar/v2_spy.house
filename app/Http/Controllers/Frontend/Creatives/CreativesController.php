@@ -49,8 +49,31 @@ class CreativesController extends BaseCreativesController
 
         // Получаем количество избранных креативов для текущего пользователя
         $favoritesCount = 0;
+        $userData = [];
         if ($request->user()) {
-            $favoritesCount = $request->user()->getFavoritesCount();
+            $user = $request->user();
+            $favoritesCount = $user->getFavoritesCount();
+
+            // Формируем данные пользователя для передачи в Vue Store
+            $userData = [
+                'id' => $user->id,
+                'email' => $user->email,
+                'tariff' => $user->currentTariff(),
+                'is_trial' => $user->is_trial,
+                'show_similar_creatives' => $user->show_similar_creatives ?? false,
+                'favoritesCount' => $favoritesCount,
+                'isAuthenticated' => true,
+            ];
+        } else {
+            $userData = [
+                'id' => null,
+                'email' => null,
+                'tariff' => null,
+                'is_trial' => false,
+                'show_similar_creatives' => false,
+                'favoritesCount' => 0,
+                'isAuthenticated' => false,
+            ];
         }
 
         return view('pages.creatives.index', [
@@ -73,6 +96,7 @@ class CreativesController extends BaseCreativesController
             'cardTranslations' => $cardTranslations,
             'searchCount' => $searchCount,
             'favoritesCount' => $favoritesCount,
+            'userData' => $userData,
         ]);
     }
 
@@ -322,6 +346,113 @@ class CreativesController extends BaseCreativesController
                 'data' => null,
                 'debug' => [
                     'creative_id' => $id,
+                    'error_class' => get_class($e),
+                    'error_line' => $e->getLine(),
+                    'error_file' => basename($e->getFile()),
+                ]
+            ], 500);
+        }
+    }
+
+    /**
+     * Получить данные текущего пользователя для Vue Store
+     * 
+     * @OA\Get(
+     *     path="/api/creatives/user",
+     *     operationId="getCurrentUser",
+     *     tags={"Креативы - Пользователь"},
+     *     summary="Получить данные текущего пользователя",
+     *     description="Возвращает информацию о текущем пользователе включая ID, email, тариф и количество избранных",
+     *     @OA\Response(
+     *         response=200,
+     *         description="Данные пользователя успешно получены",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="success"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=123),
+     *                 @OA\Property(property="email", type="string", example="user@example.com"),
+     *                 @OA\Property(property="isAuthenticated", type="boolean", example=true),
+     *                 @OA\Property(property="favoritesCount", type="integer", example=15),
+     *                 @OA\Property(property="tariff", type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="Premium"),
+     *                     @OA\Property(property="css_class", type="string", example="premium"),
+     *                     @OA\Property(property="expires_at", type="string", example="2024-12-31"),
+     *                     @OA\Property(property="status", type="string", example="Активная"),
+     *                     @OA\Property(property="is_active", type="boolean", example=true),
+     *                     @OA\Property(property="is_trial", type="boolean", example=false),
+     *                     @OA\Property(property="show_similar_creatives", type="boolean", example=false)
+     *                 ),
+     *                 @OA\Property(property="show_similar_creatives", type="boolean", example=false)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Пользователь не аутентифицирован",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="success"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="null", example=null),
+     *                 @OA\Property(property="email", type="null", example=null),
+     *                 @OA\Property(property="isAuthenticated", type="boolean", example=false),
+     *                 @OA\Property(property="favoritesCount", type="integer", example=0),
+     *                 @OA\Property(property="tariff", type="null", example=null),
+     *                 @OA\Property(property="show_similar_creatives", type="boolean", example=false)
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function getCurrentUser()
+    {
+        try {
+            $user = request()->user();
+
+            if ($user) {
+                $userData = [
+                    'id' => $user->id,
+                    'email' => $user->email,
+                    'tariff' => $user->currentTariff(),
+                    'is_trial' => $user->is_trial,
+                    'show_similar_creatives' => $user->show_similar_creatives ?? false,
+                    'favoritesCount' => $user->getFavoritesCount(),
+                    'isAuthenticated' => true,
+                ];
+            } else {
+                $userData = [
+                    'id' => null,
+                    'email' => null,
+                    'tariff' => null,
+                    'is_trial' => false,
+                    'show_similar_creatives' => false,
+                    'favoritesCount' => 0,
+                    'isAuthenticated' => false,
+                ];
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $userData,
+                'meta' => [
+                    'timestamp' => now()->toISOString(),
+                    'version' => '1.0.0',
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while loading user data: ' . $e->getMessage(),
+                'data' => [
+                    'id' => null,
+                    'email' => null,
+                    'tariff' => null,
+                    'is_trial' => false,
+                    'show_similar_creatives' => false,
+                    'favoritesCount' => 0,
+                    'isAuthenticated' => false,
+                ],
+                'debug' => [
                     'error_class' => get_class($e),
                     'error_line' => $e->getLine(),
                     'error_file' => basename($e->getFile()),

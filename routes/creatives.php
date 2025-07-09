@@ -23,6 +23,9 @@ Route::prefix('api/creatives')
         // API для деталей креативов
         Route::get('/{id}/details', [CreativesController::class, 'getCreativeDetails'])->name('details');
 
+        // API для получения данных пользователя
+        Route::get('/user', [CreativesController::class, 'getCurrentUser'])->name('user');
+
         // API для избранного
         Route::middleware('auth')->group(function () {
             Route::get('/favorites/count', [CreativesController::class, 'getFavoritesCount'])->name('favorites.count');

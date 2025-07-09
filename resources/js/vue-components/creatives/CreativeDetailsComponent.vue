@@ -276,7 +276,7 @@
         </div>
 
         <!-- Похожие креативы (если включено) -->
-        <div class="creative-details__group">
+        <div v-if="showSimilarCreatives" class="creative-details__group">
           <h3 class="mb-20">Similar creatives</h3>
           <div class="promo-premium">
             <p>Similar ads are available in the <strong>Premium plan</strong></p>

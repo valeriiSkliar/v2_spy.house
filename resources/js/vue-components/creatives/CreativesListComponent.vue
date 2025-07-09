@@ -59,7 +59,7 @@
     <CreativeDetailsComponent
       :handle-open-in-new-tab="handleOpenInNewTab"
       :handle-download="handleDownload"
-      :showSimilarCreatives="true"
+      :showSimilarCreatives="showSimilarCreatives"
       :translations="detailsTranslations"
     />
   </div>
@@ -81,6 +81,14 @@ interface Props {
   detailsTranslations?: Record<string, string>;
   perPage?: number;
   activeTab?: string;
+  showSimilarCreatives?: boolean;
+  userData?: {
+    id: number | null;
+    email: string | null;
+    tariff: any;
+    favoritesCount: number;
+    isAuthenticated: boolean;
+  };
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -89,6 +97,14 @@ const props = withDefaults(defineProps<Props>(), {
   detailsTranslations: () => ({}),
   perPage: 12,
   activeTab: 'push',
+  showSimilarCreatives: false,
+  userData: () => ({
+    id: null,
+    email: null,
+    tariff: null,
+    favoritesCount: 0,
+    isAuthenticated: false,
+  }),
 });
 
 // Подключение к store
@@ -105,42 +121,6 @@ const currentTab = computed((): string => {
   // Приоритет: активная вкладка из store > prop activeTab > 'push'
   return store.tabs?.activeTab || props.activeTab || 'push';
 });
-
-// Computed для определения типа списка (для CSS классов)
-const listTypeClass = computed((): string => {
-  switch (currentTab.value) {
-    case 'facebook':
-    case 'tiktok':
-      return '_social';
-    case 'inpage':
-      return '_inpage';
-    case 'push':
-    default:
-      return '_push';
-  }
-});
-
-// Методы для форматирования данных
-function formatArrayField(field: string[] | string | undefined): string {
-  if (!field) return '';
-  if (Array.isArray(field)) {
-    return field.join(', ');
-  }
-  return String(field);
-}
-
-function formatDate(dateString: string): string {
-  try {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ru-RU', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  } catch {
-    return dateString;
-  }
-}
 
 function handleRetry(): void {
   store.refreshCreatives();
@@ -221,6 +201,12 @@ onMounted(() => {
     error: error.value,
     currentTab: currentTab.value,
   });
+
+  // Инициализируем данные пользователя в Store если переданы
+  if (props.userData) {
+    console.log('🔧 Инициализируем userData в Store:', props.userData);
+    store.setUserData(props.userData);
+  }
 
   // Убираем автоматическое скрытие placeholder при монтировании
   // Placeholder будет скрыт только через watcher когда появятся данные
