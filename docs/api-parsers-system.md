@@ -1,6 +1,6 @@
 # API Parsers System
 
-Модульная система парсеров для извлечения данных из API различных источников (PushHouse, TikTok и др.).
+Модульная система парсеров для извлечения данных из API различных источников (PushHouse, FeedHouse и др.).
 
 ## Архитектура
 
@@ -10,7 +10,7 @@
 app/Services/Parsers/
 ├── BaseParser.php              # Абстрактный базовый класс
 ├── PushHouseParser.php         # Парсер для PushHouse API
-├── TikTokParser.php           # Парсер для TikTok Business API
+├── FeedHouseParser.php           # Парсер для FeedHouse Business API
 ├── ParserManager.php          # Менеджер для управления парсерами
 └── Exceptions/
     ├── ParserException.php     # Базовое исключение
@@ -115,9 +115,9 @@ $offers = $parser->fetchOffers(['category' => 'gaming']);
 
 Использует заголовок `X-API-Key` для аутентификации.
 
-### TikTokParser
+### FeedHouseParser
 
-Парсер для работы с TikTok Business API.
+Парсер для работы с FeedHouse Business API.
 
 #### Доступные эндпоинты
 
@@ -167,7 +167,7 @@ $manager = app(ParserManager::class);
 
 // Получение конкретного парсера
 $pushHouse = $manager->pushHouse();
-$tikTok = $manager->tikTok();
+$feedHouse = $manager->feedHouse();
 
 // Получение парсера по имени
 $parser = $manager->parser('pushhouse');
@@ -180,7 +180,7 @@ $results = $manager->fetchMultiple([
         'params' => ['status' => 'active']
     ],
     'ads' => [
-        'parser' => 'tiktok',
+        'parser' => 'feedHouse',
         'method' => 'fetchAds',
         'params' => []
     ]
@@ -210,14 +210,14 @@ $configs = $manager->getConfigs();
     'retry_delay' => env('PUSH_HOUSE_RETRY_DELAY', 2)
 ],
 
-'tiktok' => [
-    'api_key' => env('TIKTOK_API_KEY'),
-    'advertiser_id' => env('TIKTOK_ADVERTISER_ID'),
-    'base_url' => env('TIKTOK_BASE_URL', 'https://business-api.tiktok.com/open_api/v1.3'),
-    'rate_limit' => env('TIKTOK_RATE_LIMIT', 100),
-    'timeout' => env('TIKTOK_TIMEOUT', 60),
-    'max_retries' => env('TIKTOK_MAX_RETRIES', 3),
-    'retry_delay' => env('TIKTOK_RETRY_DELAY', 3)
+'feedHouse' => [
+    'api_key' => env('FEEDHOUSE_API_KEY'),
+    'advertiser_id' => env('FEEDHOUSE_ADVERTISER_ID'),
+    'base_url' => env('FEEDHOUSE_BASE_URL', 'https://api.feed.house/internal/v1/feed-campaigns'),
+    'rate_limit' => env('FEEDHOUSE_RATE_LIMIT', 100),
+    'timeout' => env('FEEDHOUSE_TIMEOUT', 60),
+    'max_retries' => env('FEEDHOUSE_MAX_RETRIES', 3),
+    'retry_delay' => env('FEEDHOUSE_RETRY_DELAY', 3)
 ],
 ```
 
@@ -232,14 +232,14 @@ PUSH_HOUSE_TIMEOUT=45
 PUSH_HOUSE_MAX_RETRIES=3
 PUSH_HOUSE_RETRY_DELAY=2
 
-# TikTok Business API
-TIKTOK_API_KEY=your_tiktok_access_token
-TIKTOK_ADVERTISER_ID=your_advertiser_id
-TIKTOK_BASE_URL=https://business-api.tiktok.com/open_api/v1.3
-TIKTOK_RATE_LIMIT=100
-TIKTOK_TIMEOUT=60
-TIKTOK_MAX_RETRIES=3
-TIKTOK_RETRY_DELAY=3
+# FeedHouse API
+FEEDHOUSE_API_KEY=your_feedHouse_access_token
+FEEDHOUSE_ADVERTISER_ID=your_advertiser_id
+FEEDHOUSE_BASE_URL=https://api.feed.house/internal/v1/feed-campaigns
+FEEDHOUSE_RATE_LIMIT=100
+FEEDHOUSE_TIMEOUT=60
+FEEDHOUSE_MAX_RETRIES=3
+FEEDHOUSE_RETRY_DELAY=3
 
 # Логирование парсеров
 LOG_PARSERS_LEVEL=info
@@ -384,8 +384,8 @@ $results = $manager->fetchMultiple([
         'method' => 'fetchCampaigns',
         'params' => ['status' => 'active']
     ],
-    'tiktok_campaigns' => [
-        'parser' => 'tiktok',
+    'feedHouse_campaigns' => [
+        'parser' => 'feedHouse',
         'method' => 'fetchCampaigns',
         'params' => []
     ]
