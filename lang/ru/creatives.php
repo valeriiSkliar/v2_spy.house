@@ -71,7 +71,7 @@ return [
         'translate' => 'Перевести',
         'open-in-tab' => 'Открыть в новой вкладке',
         'title' => 'Детали',
-        'remove-from-favorites' => 'Убрать',
+        'remove-from-favorites' => 'Убрать из избранного',
         'add-to-favorites' => 'Добавить в избранное',
         'show-all-text' => 'Показать все',
         'hide-text' => 'Скрыть',
