@@ -4,16 +4,20 @@ namespace Tests\Feature;
 
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Models\User;
 
 class TranslationSystemIntegrationTest extends TestCase
 {
+    use RefreshDatabase;
     /**
      * Тест обновленной системы переводов контроллера креативов
      */
     public function test_creatives_controller_provides_unified_translations()
     {
+        $user = User::factory()->create();
+
         // Отправляем запрос на страницу креативов
-        $response = $this->get('/creatives');
+        $response = $this->actingAs($user)->get('/creatives');
 
         $response->assertStatus(200);
 
@@ -121,7 +125,9 @@ class TranslationSystemIntegrationTest extends TestCase
         config(['app.locale' => 'ru']);
         config(['app.fallback_locale' => 'ru']);
 
-        $response = $this->get('/creatives');
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get('/creatives');
         $viewData = $response->original->getData();
 
         // Проверяем что переводы не пустые и соответствуют ожидаемым значениям
@@ -160,7 +166,9 @@ class TranslationSystemIntegrationTest extends TestCase
      */
     public function test_backward_compatibility_translations()
     {
-        $response = $this->get('/creatives');
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get('/creatives');
         $viewData = $response->original->getData();
 
         // Проверяем что старые массивы переводов все еще доступны
@@ -179,7 +187,9 @@ class TranslationSystemIntegrationTest extends TestCase
      */
     public function test_translations_count_is_sufficient()
     {
-        $response = $this->get('/creatives');
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get('/creatives');
         $viewData = $response->original->getData();
 
         $translationsCount = count($viewData['allTranslations']);

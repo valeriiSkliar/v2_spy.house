@@ -422,7 +422,7 @@ abstract class BaseCreativesController extends FrontendController
             'translateText' => __('creatives.details.translate'),
             'redirectsDetails' => __('creatives.details.redirects-details'),
             'advertisingNetworks' => __('creatives.details.advertising-networks'),
-            'countries' => __('creatives.details.countries'),
+            'country' => __('creatives.details.country'),
             'language' => __('creatives.details.language'),
             'firstDisplayDate' => __('creatives.details.first-display-date'),
             'lastDisplayDate' => __('creatives.details.last-display-date'),
