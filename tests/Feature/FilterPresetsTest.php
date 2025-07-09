@@ -201,14 +201,14 @@ class FilterPresetsTest extends TestCase
     {
         $response = $this->getJson('/api/creatives/filter-presets');
         $response->assertStatus(401)
-            ->assertJson(['status' => 'error']);
+            ->assertJson(['message' => 'Unauthenticated.']);
 
         $response = $this->postJson('/api/creatives/filter-presets', [
             'name' => 'Test',
             'filters' => [],
         ]);
         $response->assertStatus(401)
-            ->assertJson(['status' => 'error']);
+            ->assertJson(['message' => 'Unauthenticated.']);
     }
 
     public function test_preset_validation_requires_name_and_filters(): void
