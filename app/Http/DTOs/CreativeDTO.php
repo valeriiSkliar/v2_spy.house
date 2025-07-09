@@ -143,7 +143,7 @@ class CreativeDTO implements Arrayable, Jsonable
 
         // activity_title - локализованный заголовок активности (только если не задано значение из модели)
         if ($this->activity_title === null && $this->is_active !== null) {
-            $this->activity_title = $this->is_active ? __('creatives.active') : __('creatives.was_active');
+            $this->activity_title = $this->is_active ? __('creatives.activity_title_active') : __('creatives.activity_title_was_active');
         }
 
         // isFavorite - требует userId для проверки

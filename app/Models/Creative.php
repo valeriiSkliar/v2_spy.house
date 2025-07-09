@@ -449,7 +449,24 @@ class Creative extends Model
 
     private function getCardActivityTitle(): string
     {
-        return $this->is_active ? __('creatives.active') : __('creatives.was_active');
+        if ($this->is_active) {
+            // Для активного креатива: разность между текущей датой и external_created_at
+            if ($this->external_created_at) {
+                $difference = ceil($this->external_created_at->diffInDays(now(), false));
+                return trans_choice('creatives.activity_title_active', $difference, ['difference' => $difference]);
+            }
+            return __('creatives.activity_title_active_no_date');
+        } else {
+            // Для неактивного креатива
+            if ($this->end_date && $this->external_created_at) {
+                // Если есть end_date: разность между external_created_at и end_date
+                $difference = ceil($this->external_created_at->diffInDays($this->end_date, false));
+                return trans_choice('creatives.activity_title_was_active', $difference, ['difference' => $difference]);
+            } else {
+                // Если нет end_date: просто "Не активно"
+                return __('creatives.activity_title_inactive');
+            }
+        }
     }
 
     /**

@@ -42,7 +42,11 @@ return [
     'comments' => 'Комментарии',
     'shared' => 'Поделились',
     'active' => 'Активно:',
-    'was_active' => 'Было активно:',
+    'activity_title_active' => 'Активно: :difference день|Активно: :difference дня|Активно: :difference дней',
+    'activity_title_active_no_date' => 'Активно',
+    'activity_title_was_active' => 'Было активно: :difference день|Было активно: :difference дня|Было активно: :difference дней',
+    'activity_title_inactive' => 'Не активно',
+    'wasActive' => 'Было активно',
 
     // Переводы для вкладок
     'tabs' => [
