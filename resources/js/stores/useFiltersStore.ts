@@ -48,14 +48,14 @@ import { useCreativesTabOpener } from '@/composables/useCreativesTabOpener';
 import { useCreativesUrlSync } from '@/composables/useCreativesUrlSync';
 import { useFiltersSynchronization } from '@/composables/useFiltersSynchronization';
 import {
-    CREATIVES_CONSTANTS,
-    type Creative,
-    type FavoritesSyncData,
-    type FilterOption,
-    type FilterState,
-    type TabOption,
-    type TabsState,
-    type TabValue
+  CREATIVES_CONSTANTS,
+  type Creative,
+  type FavoritesSyncData,
+  type FilterOption,
+  type FilterState,
+  type TabOption,
+  type TabsState,
+  type TabValue
 } from '@/types/creatives.d';
 import merge from 'deepmerge';
 import debounce from 'lodash.debounce';
@@ -840,7 +840,15 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     // 3. Инициализируем синхронизацию фильтров (только утилиты)
     await filtersSync.initialize();
     
-    // 4. Устанавливаем флаг инициализации для активации watchers
+    // 4. Загружаем избранные креативы (только для аутентифицированных пользователей)
+    try {
+      await loadFavoritesIds();
+    } catch (error) {
+      console.warn('Не удалось загрузить избранные креативы (возможно пользователь не аутентифицирован):', error);
+      // Не прерываем инициализацию, если избранное не загрузилось
+    }
+    
+    // 5. Устанавливаем флаг инициализации для активации watchers
     await nextTick();
     isInitialized.value = true;
     
@@ -1238,6 +1246,48 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   }
 
   /**
+   * Загрузка списка ID избранных креативов
+   */
+  async function loadFavoritesIds(): Promise<void> {
+    if (isFavoritesLoading.value) return;
+
+    try {
+      isFavoritesLoading.value = true;
+      
+      // Реальный API вызов для получения списка ID
+      const response = await window.axios.get('/api/creatives/favorites/ids');
+      
+      // Обновляем состояние
+      favoritesItems.value = response.data.data.ids || [];
+      favoritesCount.value = response.data.data.count || 0;
+      
+      console.log('✅ Загружены избранные креативы:', {
+        count: favoritesCount.value,
+        ids: favoritesItems.value
+      });
+      
+      // Эмитим событие загрузки
+      const event = new CustomEvent('creatives:favorites-loaded', {
+        detail: {
+          count: favoritesCount.value,
+          ids: favoritesItems.value,
+          timestamp: new Date().toISOString()
+        }
+      });
+      document.dispatchEvent(event);
+      
+    } catch (error) {
+      console.error('Ошибка при загрузке списка избранного:', error);
+      // При ошибке сбрасываем состояние
+      favoritesItems.value = [];
+      favoritesCount.value = 0;
+      throw error;
+    } finally {
+      isFavoritesLoading.value = false;
+    }
+  }
+
+  /**
    * Добавление креатива в избранное
    */
   async function addToFavorites(creativeId: number): Promise<void> {
@@ -1607,6 +1657,7 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     favoritesLoadingMap,        // Map состояний загрузки для конкретных креативов
     setFavoritesCount,          // Установка количества избранного
     refreshFavoritesCount,      // Обновление счетчика с сервера
+    loadFavoritesIds,           // Загрузка списка ID избранных креативов
     addToFavorites,             // Добавление в избранное
     removeFromFavorites,        // Удаление из избранного
     updateCreativeInList,       // Обновление креатива в локальном состоянии

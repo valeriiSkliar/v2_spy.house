@@ -250,6 +250,14 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->favoriteCreatives()->count();
     }
 
+    /**
+     * Get list of user's favorite creative IDs
+     */
+    public function getFavoriteCreativeIds(): array
+    {
+        return $this->favoriteCreatives()->pluck('creative_id')->toArray();
+    }
+
     public function getRatingForService(int $serviceId): ?int
     {
         $rating = $this->ratings()->where('service_id', $serviceId)->first();

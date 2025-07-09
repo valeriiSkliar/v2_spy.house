@@ -332,6 +332,48 @@ class FavoriteController extends FrontendController
     }
 
     /**
+     * Get list of user's favorite creative IDs.
+     * 
+     * @OA\Get(
+     *     path="/api/favorites/ids",
+     *     operationId="getFavoriteIds",
+     *     tags={"Креативы - Избранное"},
+     *     summary="Получить список ID избранных креативов",
+     *     description="Возвращает массив ID всех креативов в избранном для аутентифицированного пользователя",
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Список ID избранного успешно получен",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="success"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="ids", type="array", 
+     *                     @OA\Items(type="integer", example=123),
+     *                     description="Массив ID избранных креативов"
+     *                 ),
+     *                 @OA\Property(property="count", type="integer", example=42),
+     *                 @OA\Property(property="lastUpdated", type="string", format="date-time")
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function ids(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $ids = $user->getFavoriteCreativeIds();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'ids' => $ids,
+                'count' => count($ids),
+                'lastUpdated' => now()->toISOString()
+            ]
+        ]);
+    }
+
+    /**
      * Check if specific creative is in user's favorites.
      * 
      * @OA\Get(

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Frontend\Creatives\CreativesController;
+use App\Http\Controllers\Frontend\FavoriteController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('creatives')
@@ -23,8 +24,11 @@ Route::prefix('api/creatives')
         Route::get('/{id}/details', [CreativesController::class, 'getCreativeDetails'])->name('details');
 
         // API для избранного
-        Route::get('/favorites/count', [CreativesController::class, 'getFavoritesCount'])->name('favorites.count');
-        Route::get('/{id}/favorite/status', [CreativesController::class, 'getFavoriteStatus'])->name('favorites.status');
-        Route::post('/{id}/favorite', [CreativesController::class, 'addToFavorites'])->name('favorites.add');
-        Route::delete('/{id}/favorite', [CreativesController::class, 'removeFromFavorites'])->name('favorites.remove');
+        Route::middleware('auth')->group(function () {
+            Route::get('/favorites/count', [CreativesController::class, 'getFavoritesCount'])->name('favorites.count');
+            Route::get('/favorites/ids', [FavoriteController::class, 'ids'])->name('favorites.ids');
+            Route::get('/{id}/favorite/status', [CreativesController::class, 'getFavoriteStatus'])->name('favorites.status');
+            Route::post('/{id}/favorite', [CreativesController::class, 'addToFavorites'])->name('favorites.add');
+            Route::delete('/{id}/favorite', [CreativesController::class, 'removeFromFavorites'])->name('favorites.remove');
+        });
     });
