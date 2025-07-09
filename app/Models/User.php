@@ -130,6 +130,7 @@ class User extends Authenticatable implements MustVerifyEmail
                 'status' => 'Триал активен',
                 'is_active' => true,
                 'is_trial' => true,
+                'show_similar_creatives' => false, // Триал не имеет доступа к похожим креативам
             ];
         }
 
@@ -142,6 +143,7 @@ class User extends Authenticatable implements MustVerifyEmail
                 'status' => 'Не активно',
                 'is_active' => false,
                 'is_trial' => false,
+                'show_similar_creatives' => false, // Free не имеет доступа к похожим креативам
             ];
         }
 
@@ -155,6 +157,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'status' => $isActive ? 'Активная' : 'Не активно',
             'is_active' => $isActive,
             'is_trial' => false,
+            'show_similar_creatives' => $isActive ? $this->canViewSimilarCreatives() : false,
         ];
     }
 
@@ -559,5 +562,25 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         return (int) $now->diffInDays($endDate, false);
+    }
+
+    /**
+     * Check if user can view similar creatives based on subscription
+     * Only Premium and Enterprise subscriptions have access
+     */
+    public function canViewSimilarCreatives(): bool
+    {
+        // Если активен триал период - нет доступа
+        if ($this->isTrialPeriod()) {
+            return false;
+        }
+
+        // Если нет активной подписки - нет доступа
+        if (!$this->hasActiveSubscription() || !$this->subscription) {
+            return false;
+        }
+
+        // Проверяем тип подписки
+        return $this->subscription->isPremium() || $this->subscription->isEnterprise();
     }
 }

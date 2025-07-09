@@ -60,7 +60,7 @@ class CreativesController extends BaseCreativesController
                 'email' => $user->email,
                 'tariff' => $user->currentTariff(),
                 'is_trial' => $user->is_trial,
-                'show_similar_creatives' => $user->show_similar_creatives ?? false,
+                'show_similar_creatives' => $user->canViewSimilarCreatives(),
                 'favoritesCount' => $favoritesCount,
                 'isAuthenticated' => true,
             ];
@@ -415,7 +415,7 @@ class CreativesController extends BaseCreativesController
                     'email' => $user->email,
                     'tariff' => $user->currentTariff(),
                     'is_trial' => $user->is_trial,
-                    'show_similar_creatives' => $user->show_similar_creatives ?? false,
+                    'show_similar_creatives' => $user->canViewSimilarCreatives(),
                     'favoritesCount' => $user->getFavoritesCount(),
                     'isAuthenticated' => true,
                 ];

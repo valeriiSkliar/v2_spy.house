@@ -276,13 +276,13 @@
         </div>
 
         <!-- Похожие креативы (если включено) -->
-        <div v-if="showSimilarCreatives" class="creative-details__group">
+        <div class="creative-details__group">
           <h3 class="mb-20">Similar creatives</h3>
           <div class="promo-premium">
             <p>Similar ads are available in the <strong>Premium plan</strong></p>
-            <a href="#" class="btn _flex _green _medium">Go</a>
+            <a href="/tariffs" class="btn _flex _green _medium">Go</a>
           </div>
-          <div class="similar-creatives">
+          <div v-if="showSimilarCreatives" class="similar-creatives">
             <div class="similar-creative-empty _inpage"><img :src="emptyImage" alt="" /></div>
             <div class="similar-creative-empty _inpage"><img :src="emptyImage" alt="" /></div>
             <div class="creative-item">
@@ -346,7 +346,7 @@
               </div>
             </div>
           </div>
-          <div class="d-flex justify-content-center pt-3">
+          <div v-if="showSimilarCreatives" class="d-flex justify-content-center pt-3">
             <button class="btn _gray _flex _medium w-mob-100">
               <span class="icon-load-more font-16 mr-2"></span>Load more
             </button>
