@@ -54,7 +54,10 @@
                 {{ iconSize }}
               </p>
               <div class="mb-10">
-                <a href="#" class="btn _flex _medium _green w-100"
+                <a
+                  href="#"
+                  class="btn _flex _medium _green w-100"
+                  @click.prevent="handleDownload(selectedCreative?.icon_url ?? '')"
                   ><span class="icon-download2 font-16 mr-2"></span
                   >{{ translations.download.value }}</a
                 >
@@ -87,7 +90,10 @@
           </div>
           <div class="row">
             <div class="col-auto flex-grow-1 mb-10">
-              <a href="#" class="btn _flex _medium _green w-100"
+              <a
+                href="#"
+                class="btn _flex _medium _green w-100"
+                @click.prevent="handleDownload(selectedCreative?.icon_url ?? '')"
                 ><span class="icon-download2 font-16 mr-2"></span
                 >{{ translations.download.value }}</a
               >
@@ -130,6 +136,7 @@
                 :href="selectedCreative?.main_image_url"
                 download
                 class="btn _flex _medium _green w-100"
+                @click.prevent="handleDownload(selectedCreative?.main_image_url ?? '')"
                 ><span class="icon-download2 font-16 mr-2"></span
                 >{{ translations.download.value }}</a
               >
@@ -366,12 +373,14 @@ interface Props {
   showSimilarCreatives?: boolean;
   translations?: Record<string, string>;
   handleOpenInNewTab?: (url: string) => void;
+  handleDownload?: (url: string) => void;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   showSimilarCreatives: true,
   translations: () => ({}),
   handleOpenInNewTab: () => {},
+  handleDownload: () => {},
 });
 
 // Подключение к store и композаблу переводов

@@ -58,6 +58,7 @@
     </div>
     <CreativeDetailsComponent
       :handle-open-in-new-tab="handleOpenInNewTab"
+      :handle-download="handleDownload"
       :showSimilarCreatives="true"
       :translations="detailsTranslations"
     />
