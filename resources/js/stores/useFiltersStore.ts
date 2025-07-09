@@ -1455,29 +1455,17 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   /**
    * Сохранение настроек (показывает диалог создания пресета)
    */
-  function saveSettings(): void {
-    // Эмитируем событие для показа диалога сохранения
-    document.dispatchEvent(new CustomEvent('creatives:show-save-preset-dialog', {
-      detail: {
-        currentFilters: {
-          searchKeyword: filters.searchKeyword,
-          countries: [...filters.countries],
-          dateCreation: filters.dateCreation,
-          sortBy: filters.sortBy,
-          periodDisplay: filters.periodDisplay,
-          advertisingNetworks: [...filters.advertisingNetworks],
-          languages: [...filters.languages],
-          operatingSystems: [...filters.operatingSystems],
-          browsers: [...filters.browsers],
-          devices: [...filters.devices],
-          imageSizes: [...filters.imageSizes],
-          onlyAdult: filters.onlyAdult,
-          perPage: filters.perPage,
-          activeTab: tabs.activeTab
-        },
-        timestamp: new Date().toISOString()
+  async function saveSettings(): Promise<void> {
+    const name = prompt('Enter a name for your preset');
+    if (name && name.trim()) {
+      try {
+        await saveCurrentFiltersAsPreset(name);
+        alert('Preset saved successfully!');
+      } catch (error: any) {
+        console.error('Failed to save preset:', error);
+        alert(`Error saving preset: ${error.message}`);
       }
-    }));
+    }
   }
 
   // ============================================================================
