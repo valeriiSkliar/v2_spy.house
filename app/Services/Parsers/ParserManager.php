@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Parsers;
 
 use App\Services\Parsers\Exceptions\ParserException;
+use App\Models\AdSource;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Log;
 
@@ -26,6 +27,7 @@ class ParserManager
     private const PARSERS = [
         'pushhouse' => PushHouseParser::class,
         'tiktok' => TikTokParser::class,
+        'feedhouse' => FeedHouseParser::class,
     ];
 
     /**
@@ -88,6 +90,29 @@ class ParserManager
     public function tikTok(): TikTokParser
     {
         return $this->parser('tiktok');
+    }
+
+    /**
+     * Get FeedHouse parser
+     *
+     * @return FeedHouseParser
+     */
+    public function feedHouse(): FeedHouseParser
+    {
+        return $this->parser('feedhouse');
+    }
+
+    /**
+     * Get FeedHouse parser with AdSource state management
+     *
+     * @param AdSource $adSource AdSource model for state management
+     * @param array $params Additional parameters
+     * @return array Parsing results
+     */
+    public function feedHouseWithState(AdSource $adSource, array $params = []): array
+    {
+        $parser = $this->feedHouse();
+        return $parser->fetchWithStateManagement($adSource, $params);
     }
 
     /**

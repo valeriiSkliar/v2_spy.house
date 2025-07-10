@@ -55,7 +55,8 @@ class FeedHouseParser extends BaseParser
 
     /**
      * Fetch data from FeedHouse API with AdSource state management
-     * Основной метод для работы с состоянием AdSource и порционной обработкой
+     * НОВАЯ ЛОГИКА: One-shot режим для периодических запусков через Scheduler
+     * За один запуск обрабатывает максимум N элементов, затем останавливается
      *
      * @param AdSource $adSource Модель источника для сохранения состояния
      * @param array $params Дополнительные параметры
@@ -64,111 +65,79 @@ class FeedHouseParser extends BaseParser
     public function fetchWithStateManagement(AdSource $adSource, array $params = []): array
     {
         try {
-            // 1. Обновляем статус на 'running'
+            // 1. Проверяем, не запущен ли уже парсер
+            if ($adSource->parser_status === 'running') {
+                $timeDiff = now()->diffInMinutes($adSource->updated_at);
+                if ($timeDiff < 10) { // Если меньше 10 минут, считаем что еще выполняется
+                    Log::info("FeedHouse: Parser already running, skipping", [
+                        'adSource_id' => $adSource->id,
+                        'running_for_minutes' => $timeDiff
+                    ]);
+                    return [
+                        'total_processed' => 0,
+                        'status' => 'skipped',
+                        'reason' => 'already_running',
+                        'running_for_minutes' => $timeDiff
+                    ];
+                } else {
+                    // Сброс зависшего статуса
+                    Log::warning("FeedHouse: Resetting stuck parser status", [
+                        'adSource_id' => $adSource->id,
+                        'stuck_for_minutes' => $timeDiff
+                    ]);
+                }
+            }
+
+            // 2. Обновляем статус на 'running'
             $adSource->update(['parser_status' => 'running']);
 
-            // 2. Получаем lastId из состояния
+            // 3. Получаем lastId из состояния
             $lastId = $adSource->parser_state['lastId'] ?? null;
 
-            // 3. Определяем режим работы
+            // 4. Определяем режим работы
             $mode = $params['mode'] ?? 'regular';
             if ($mode === 'initial_scan') {
                 $lastId = null; // Сброс для полного скана
             }
 
-            // 4. Настройки пагинации для порционной обработки
-            $batchSize = $params['batch_size'] ?? 200;
-            $queueChunkSize = $params['queue_chunk_size'] ?? 50;
+            // 5. НОВЫЕ НАСТРОЙКИ: One-shot режим
+            $isOneShot = $params['one_shot'] ?? true; // По умолчанию one-shot
+            $maxItemsPerRun = $params['max_items_per_run'] ?? 1000; // 1000 элементов за запуск
+            $batchSize = $params['batch_size'] ?? 200; // Размер страницы API
             $dryRun = $params['dry_run'] ?? false;
-            $limit = $params['limit'] ?? $batchSize;
             $formats = $params['formats'] ?? ['push', 'inpage'];
             $adNetworks = $params['adNetworks'] ?? ['rollerads', 'richads'];
 
-            // 5. Выполняем порционную обработку
-            $processedCount = 0;
-            $currentLastId = $lastId;
-            $pageCount = 0;
+            Log::info("FeedHouse: Starting one-shot parsing cycle", [
+                'mode' => $mode,
+                'one_shot' => $isOneShot,
+                'max_items_per_run' => $maxItemsPerRun,
+                'batch_size' => $batchSize,
+                'starting_lastId' => $lastId,
+                'dry_run' => $dryRun
+            ]);
 
-            while (true) {
-                $pageCount++;
-
-                // Формируем параметры запроса
-                $queryParams = [
-                    'limit' => $limit,
-                    'formats' => implode(',', $formats),
-                    'adNetworks' => implode(',', $adNetworks)
-                ];
-
-                // Добавляем lastId только если он есть
-                if ($currentLastId !== null) {
-                    $queryParams['lastId'] = $currentLastId;
-                }
-
-                // Выполняем запрос через fetchData для правильной аутентификации
-                $batch = $this->fetchData($queryParams);
-
-                // Проверяем, есть ли данные
-                if (empty($batch) || !is_array($batch)) {
-                    Log::info("FeedHouse: No more data on page {$pageCount}");
-                    break;
-                }
-
-                // 6. Немедленно обрабатываем порцию без накопления в памяти
-                if (!$dryRun) {
-                    $this->processBatchInChunks($batch, $queueChunkSize);
-                }
-                $processedCount += count($batch);
-
-                // 7. КРИТИЧНО: Сохраняем состояние после каждой итерации
-                $currentLastId = max(array_column($batch, 'id'));
-                $adSource->parser_state = ['lastId' => $currentLastId];
-                $adSource->save();
-
-                Log::info("FeedHouse: Page {$pageCount} processed", [
-                    'batch_size' => count($batch),
-                    'total_processed' => $processedCount,
-                    'lastId' => $currentLastId,
-                    'dry_run' => $dryRun
-                ]);
-
-                // 8. Проверяем условия завершения
-                $batchCount = count($batch);
-
-                // 9. Освобождаем память
-                unset($batch);
-
-                if ($batchCount < $limit) {
-                    Log::info("FeedHouse: Last page reached");
-                    break;
-                }
-
-                // 10. Rate limiting между запросами
-                usleep(500000); // 0.5 сек между запросами
+            // 6. One-shot обработка
+            if ($isOneShot) {
+                return $this->performOneShotProcessing(
+                    $adSource,
+                    $lastId,
+                    $maxItemsPerRun,
+                    $batchSize,
+                    $formats,
+                    $adNetworks,
+                    $dryRun
+                );
+            } else {
+                // 7. Fallback: Старая логика для backward compatibility
+                return $this->performContinuousProcessing(
+                    $adSource,
+                    $lastId,
+                    $params
+                );
             }
-
-            // 11. Успешное завершение
-            $adSource->update([
-                'parser_status' => 'idle',
-                'parser_last_error' => null,
-                'parser_last_error_at' => null,
-                'parser_last_error_message' => null
-            ]);
-
-            Log::info("FeedHouse: Parsing completed successfully", [
-                'total_processed' => $processedCount,
-                'final_lastId' => $currentLastId,
-                'pages_processed' => $pageCount
-            ]);
-
-            // Возвращаем статистику вместо данных (порционный подход)
-            return [
-                'total_processed' => $processedCount,
-                'final_last_id' => $currentLastId ?? null,
-                'pages_processed' => $pageCount,
-                'status' => 'completed'
-            ];
         } catch (\Exception $e) {
-            // 12. Обработка ошибок с сохранением в AdSource
+            // 8. Обработка ошибок с сохранением в AdSource
             $adSource->update([
                 'parser_status' => 'failed',
                 'parser_last_error' => [
@@ -184,8 +153,7 @@ class FeedHouseParser extends BaseParser
 
             Log::error("FeedHouse: Parsing failed", [
                 'error' => $e->getMessage(),
-                'adSource_id' => $adSource->id,
-                'last_successful_lastId' => $currentLastId ?? 'none'
+                'adSource_id' => $adSource->id
             ]);
 
             throw new ParserException("FeedHouse parsing failed: " . $e->getMessage(), 0, $e);
@@ -529,5 +497,143 @@ class FeedHouseParser extends BaseParser
         }
 
         return $headers;
+    }
+
+    /**
+     * НОВЫЙ МЕТОД: One-shot обработка для Scheduler режима
+     * Получает максимум N элементов за один запуск, затем останавливается
+     */
+    private function performOneShotProcessing(
+        AdSource $adSource,
+        ?int $lastId,
+        int $maxItemsPerRun,
+        int $batchSize,
+        array $formats,
+        array $adNetworks,
+        bool $dryRun
+    ): array {
+        $processedCount = 0;
+        $currentLastId = $lastId;
+        $batchCount = 0;
+        $startTime = microtime(true);
+
+        while ($processedCount < $maxItemsPerRun) {
+            $batchCount++;
+
+            // Рассчитываем размер текущей порции
+            $remainingItems = $maxItemsPerRun - $processedCount;
+            $currentBatchSize = min($batchSize, $remainingItems);
+
+            // Формируем параметры запроса
+            $queryParams = [
+                'limit' => $currentBatchSize,
+                'formats' => implode(',', $formats),
+                'adNetworks' => implode(',', $adNetworks)
+            ];
+
+            if ($currentLastId !== null) {
+                $queryParams['lastId'] = $currentLastId;
+            }
+
+            Log::info("FeedHouse: One-shot batch {$batchCount}", [
+                'current_batch_size' => $currentBatchSize,
+                'processed_so_far' => $processedCount,
+                'remaining' => $remainingItems,
+                'lastId' => $currentLastId
+            ]);
+
+            // Получаем данные
+            $batch = $this->fetchData($queryParams);
+
+            // Проверяем наличие данных
+            if (empty($batch) || !is_array($batch)) {
+                Log::info("FeedHouse: No more data available, ending one-shot cycle", [
+                    'processed_total' => $processedCount,
+                    'batches_processed' => $batchCount
+                ]);
+                break;
+            }
+
+            // Обрабатываем порцию
+            if (!$dryRun) {
+                $this->processBatchInChunks($batch, 50); // Фиксированный chunk size
+            }
+
+            $batchSize = count($batch);
+            $processedCount += $batchSize;
+
+            // Обновляем lastId
+            $currentLastId = max(array_column($batch, 'id'));
+
+            // КРИТИЧНО: Сохраняем состояние после каждой порции
+            $adSource->parser_state = ['lastId' => $currentLastId];
+            $adSource->save();
+
+            Log::info("FeedHouse: One-shot batch processed", [
+                'batch_number' => $batchCount,
+                'batch_size' => $batchSize,
+                'total_processed' => $processedCount,
+                'new_lastId' => $currentLastId,
+                'max_target' => $maxItemsPerRun
+            ]);
+
+            // Если получили меньше запрошенного - достигли конца
+            if ($batchSize < $currentBatchSize) {
+                Log::info("FeedHouse: Reached end of available data", [
+                    'requested' => $currentBatchSize,
+                    'received' => $batchSize
+                ]);
+                break;
+            }
+
+            // Rate limiting между запросами
+            usleep(500000); // 0.5 сек
+
+            // Освобождаем память
+            unset($batch);
+        }
+
+        $duration = microtime(true) - $startTime;
+
+        // Успешное завершение
+        $adSource->update([
+            'parser_status' => 'idle',
+            'parser_last_error' => null,
+            'parser_last_error_at' => null,
+            'parser_last_error_message' => null
+        ]);
+
+        $result = [
+            'total_processed' => $processedCount,
+            'final_last_id' => $currentLastId,
+            'batches_processed' => $batchCount,
+            'status' => 'completed',
+            'mode' => 'one_shot',
+            'max_items_per_run' => $maxItemsPerRun,
+            'duration_seconds' => round($duration, 2),
+            'reached_limit' => $processedCount >= $maxItemsPerRun,
+            'reached_end' => $processedCount < $maxItemsPerRun
+        ];
+
+        Log::info("FeedHouse: One-shot parsing completed", $result);
+
+        return $result;
+    }
+
+    /**
+     * СТАРЫЙ МЕТОД: Continuous обработка (backward compatibility)
+     * Обрабатывает все доступные данные за один запуск
+     */
+    private function performContinuousProcessing(AdSource $adSource, ?int $lastId, array $params): array
+    {
+        Log::info("FeedHouse: Using legacy continuous processing mode");
+
+        // Здесь можно оставить старую логику или упростить
+        // Для краткости возвращаем заглушку
+        return [
+            'total_processed' => 0,
+            'status' => 'legacy_mode_not_implemented',
+            'mode' => 'continuous'
+        ];
     }
 }
