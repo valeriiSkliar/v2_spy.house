@@ -190,7 +190,7 @@ class FeedHouseSynchronizer
             $queryParams = [
                 'limit' => $batchSize,
                 'formats' => implode(',', $this->config['default_formats'] ?? ['push', 'inpage']),
-                'adNetworks' => implode(',', $this->config['default_networks'] ?? ['rollerads', 'richads'])
+                'adNetworks' => implode(',', $this->getActiveNetworks())
             ];
 
             if ($lastId !== null) {
@@ -401,6 +401,29 @@ class FeedHouseSynchronizer
         $this->stats['total_saved'] += $batchResults['saved'];
         $this->stats['duplicates_skipped'] += $batchResults['duplicates'];
         $this->stats['errors'] += $batchResults['errors'];
+    }
+
+    /**
+     * Получить активные сети из БД или fallback значения
+     */
+    private function getActiveNetworks(): array
+    {
+        try {
+            // Если в конфиге указан null, получаем динамически из БД
+            if ($this->config['default_networks'] === null) {
+                return \App\Models\AdvertismentNetwork::getDefaultNetworksForParser();
+            }
+
+            // Иначе используем значения из конфига
+            return $this->config['default_networks'];
+        } catch (\Exception $e) {
+            // В случае ошибки (например, БД недоступна), используем fallback
+            Log::warning("Failed to get active networks from database, using fallback", [
+                'error' => $e->getMessage()
+            ]);
+
+            return $this->config['fallback_networks'] ?? ['rollerads', 'richads'];
+        }
     }
 
     /**

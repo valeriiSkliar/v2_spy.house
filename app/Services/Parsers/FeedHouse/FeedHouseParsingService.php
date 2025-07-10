@@ -101,7 +101,7 @@ class FeedHouseParsingService
         $lastId = $options['lastId'] ?? null;
         $limit = $options['limit'] ?? 200;
         $formats = $options['formats'] ?? ['push', 'inpage'];
-        $adNetworks = $options['adNetworks'] ?? ['rollerads', 'richads'];
+        $adNetworks = $options['adNetworks'] ?? $this->getActiveNetworks();
 
         Log::info("FeedHouse Parsing: Fetching from API", [
             'lastId' => $lastId,
@@ -312,6 +312,23 @@ class FeedHouseParsingService
     }
 
     /**
+     * Получить активные сети из БД или fallback значения
+     */
+    private function getActiveNetworks(): array
+    {
+        try {
+            return \App\Models\AdvertismentNetwork::getDefaultNetworksForParser();
+        } catch (\Exception $e) {
+            // В случае ошибки (например, БД недоступна), используем fallback
+            Log::warning("Failed to get active networks from database, using fallback", [
+                'error' => $e->getMessage()
+            ]);
+
+            return ['rollerads', 'richads'];
+        }
+    }
+
+    /**
      * Проверить соединение с API
      *
      * @return array Результат проверки
@@ -319,10 +336,11 @@ class FeedHouseParsingService
     public function testConnection(): array
     {
         try {
+            $activeNetworks = $this->getActiveNetworks();
             $testData = $this->parser->fetchData([
                 'limit' => 5,
                 'formats' => 'push,inpage',
-                'adNetworks' => 'rollerads,richads'
+                'adNetworks' => implode(',', $activeNetworks)
             ]);
 
             return [

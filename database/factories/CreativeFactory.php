@@ -80,7 +80,7 @@ class CreativeFactory extends Factory
         return $this->state(fn(array $attributes) => [
             'has_video' => true,
             'video_url' => $this->faker->url(),
-            'video_duration' => $this->faker->randomElement(['0:15', '0:30', '1:00', '1:30', '2:00']),
+            'video_duration' => $this->faker->randomElement([545448, 123456, 1234567, 12345678, 123456789]),
         ]);
     }
 

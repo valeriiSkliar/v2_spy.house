@@ -106,7 +106,7 @@ class FeedHouseParser extends BaseParser
             $batchSize = $params['batch_size'] ?? 200; // Размер страницы API
             $dryRun = $params['dry_run'] ?? false;
             $formats = $params['formats'] ?? ['push', 'inpage'];
-            $adNetworks = $params['adNetworks'] ?? ['rollerads', 'richads'];
+            $adNetworks = $params['adNetworks'] ?? $this->getActiveNetworks();
 
             Log::info("FeedHouse: Starting one-shot parsing cycle", [
                 'mode' => $mode,
@@ -190,7 +190,7 @@ class FeedHouseParser extends BaseParser
                     ? implode(',', $params['adNetworks'])
                     : $params['adNetworks'];
             } else {
-                $queryParams['adNetworks'] = 'rollerads,richads';
+                $queryParams['adNetworks'] = implode(',', $this->getActiveNetworks());
             }
 
             // Добавляем API key в зависимости от настройки auth_method
@@ -635,5 +635,22 @@ class FeedHouseParser extends BaseParser
             'status' => 'legacy_mode_not_implemented',
             'mode' => 'continuous'
         ];
+    }
+
+    /**
+     * Получить активные сети из БД или fallback значения
+     */
+    private function getActiveNetworks(): array
+    {
+        try {
+            return \App\Models\AdvertismentNetwork::getDefaultNetworksForParser();
+        } catch (\Exception $e) {
+            // В случае ошибки (например, БД недоступна), используем fallback
+            Log::warning("Failed to get active networks from database, using fallback", [
+                'error' => $e->getMessage()
+            ]);
+
+            return ['rollerads', 'richads'];
+        }
     }
 }

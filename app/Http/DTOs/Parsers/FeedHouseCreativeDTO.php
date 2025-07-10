@@ -302,7 +302,7 @@ class FeedHouseCreativeDTO
             'source_id' => SourceNormalizer::normalizeSourceName($this->source),
             'country_id' => CountryCodeNormalizer::normalizeCountryCode($this->countryCode),
             'browser_id' => BrowserNormalizer::normalizeBrowserName($this->browser),
-            'advertisment_network_id' => AdvertismentNetwork::where('network_name', 'feedhouse')->first()?->id,
+            'advertisment_network_id' => AdvertismentNetwork::where('network_name', $this->adNetwork)->first()?->id,
 
             // Статус
             'status' => $this->isActive ? AdvertisingStatus::Active : AdvertisingStatus::Inactive,
@@ -312,7 +312,6 @@ class FeedHouseCreativeDTO
 
             // Метаданные (базовые)
             'metadata' => [
-                'adNetwork' => $this->adNetwork,
                 'seenCount' => $this->seenCount,
                 'processing_status' => 'basic', // Флаг для отслеживания обработки
                 'enhancement_required' => true,
@@ -351,8 +350,8 @@ class FeedHouseCreativeDTO
 
             // Обновлённые поля
             'is_adult' => $enhancementData['refined_adult_detection'] ?? $this->isAdult,
-            'category_id' => $enhancementData['category_id'] ?? null,
-            'quality_score' => $enhancementData['quality_score'] ?? null,
+            // add all fields from enhancementData
+            // ...$enhancementData,
 
             'updated_at' => now(),
         ]);

@@ -149,7 +149,9 @@ class ParseFeedHouseCommand extends Command
             'batch_size' => $batchSize,
             'max_items_per_run' => $maxItemsPerRun,
             'one_shot' => $isOneShot,
-            'dry_run' => true
+            'dry_run' => true,
+            'formats' => ['push', 'inpage'], // Ограничиваем форматы креативов
+            'adNetworks' => $this->getActiveNetworks() // Динамические сети из БД
         ];
 
         // Для dry-run используем старый ParserManager
@@ -210,7 +212,9 @@ class ParseFeedHouseCommand extends Command
             'one_shot' => $isOneShot,
             'queue_chunk_size' => $queueChunkSize,
             'enhancement_level' => $enhancementLevel,
-            'skip_enhancement' => $skipEnhancement
+            'skip_enhancement' => $skipEnhancement,
+            'formats' => ['push', 'inpage'], // Ограничиваем форматы креативов  
+            'adNetworks' => $this->getActiveNetworks() // Динамические сети из БД
         ];
 
         // ВАЖНО: Используем новый FeedHouseParsingService для реального сохранения в БД
@@ -238,7 +242,7 @@ class ParseFeedHouseCommand extends Command
             ['Final Last ID', $result['final_last_id'] ?? 'none'],
             ['Batches Processed', $result['batches_processed'] ?? 0],
             ['Mode', $result['mode'] ?? 'unknown'],
-            ['Max Items Per Run', $options['max_items_per_run'] ?? 'not set'],
+            ['Max Items Per Run', $options['max_items_per_run'] ?? $result['max_items_per_run'] ?? 'not set'],
             ['Duration (seconds)', $result['duration_seconds'] ?? 'unknown'],
             ['Reached Limit', ($result['reached_limit'] ?? false) ? 'Yes' : 'No'],
             ['Reached End', ($result['reached_end'] ?? false) ? 'Yes' : 'No'],
@@ -247,8 +251,9 @@ class ParseFeedHouseCommand extends Command
 
         // Показываем информацию о следующем запуске для Scheduler
         if ($result['mode'] === 'one_shot' && ($result['reached_limit'] ?? false)) {
+            $maxItems = $options['max_items_per_run'] ?? $result['max_items_per_run'] ?? 'unknown';
             $this->info('🔄 Scheduler Information:');
-            $this->line("   • Parser stopped after reaching limit ({$options['max_items_per_run']} items)");
+            $this->line("   • Parser stopped after reaching limit ({$maxItems} items)");
             $this->line("   • Next run will continue from Last ID: {$result['final_last_id']}");
             $this->line("   • Ready for next scheduled execution");
         } elseif ($result['mode'] === 'one_shot' && ($result['reached_end'] ?? false)) {
@@ -290,6 +295,21 @@ class ParseFeedHouseCommand extends Command
             return round($bytes / 1024, 2) . ' KB';
         }
         return $bytes . ' B';
+    }
+
+    /**
+     * Получить активные сети из БД или fallback значения
+     */
+    private function getActiveNetworks(): array
+    {
+        try {
+            return \App\Models\AdvertismentNetwork::getDefaultNetworksForParser();
+        } catch (\Exception $e) {
+            // В случае ошибки (например, БД недоступна), используем fallback
+            $this->warn("Failed to get active networks from database, using fallback: " . $e->getMessage());
+
+            return ['rollerads', 'richads'];
+        }
     }
 
     /**
