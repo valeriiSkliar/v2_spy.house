@@ -6,6 +6,7 @@ namespace App\Services\Parsers;
 
 use App\Services\Parsers\Exceptions\ParserException;
 use App\Models\AdSource;
+use App\Http\DTOs\Parsers\FeedHouseCreativeDTO;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Client\Response;
@@ -437,42 +438,114 @@ class FeedHouseParser extends BaseParser
     }
 
     /**
-     * Parse individual item from FeedHouse API
+     * Parse individual item from FeedHouse API с валидацией через DTO
      *
      * @param array $item Raw item data from API
-     * @return array Parsed item data
+     * @return array Parsed item data (пустой массив если валидация не прошла)
      */
     public function parseItem(array $item): array
     {
-        // Простое преобразование - детальная обработка будет в DTO
-        return $item;
+        try {
+            // Создаем DTO из данных API
+            $dto = FeedHouseCreativeDTO::fromApiResponse($item);
+
+            // ОБЯЗАТЕЛЬНАЯ валидация с проверкой изображений
+            if (!$dto->isValid(validateImages: true)) {
+                // Дополнительная диагностика причин отклонения
+                $rejectionReasons = [];
+
+                if (empty($dto->externalId)) $rejectionReasons[] = 'empty_external_id';
+                if (empty($dto->title) && empty($dto->text)) $rejectionReasons[] = 'empty_title_and_text';
+                if (empty($dto->iconUrl) && empty($dto->imageUrl)) $rejectionReasons[] = 'no_images';
+                if (!in_array($dto->format->value, FeedHouseCreativeDTO::getSupportedFormats(), true)) $rejectionReasons[] = 'unsupported_format';
+                if (!empty($dto->targetUrl) && !filter_var($dto->targetUrl, FILTER_VALIDATE_URL)) $rejectionReasons[] = 'invalid_landing_url';
+
+                // Если базовая валидация прошла, значит проблема с изображениями
+                if (empty($rejectionReasons)) $rejectionReasons[] = 'image_validation_failed';
+
+                Log::info("FeedHouse: Creative failed validation", [
+                    'external_id' => $dto->externalId,
+                    'title' => $dto->title,
+                    'icon_url' => $dto->iconUrl,
+                    'image_url' => $dto->imageUrl,
+                    'format' => $dto->format->value,
+                    'rejection_reasons' => $rejectionReasons
+                ]);
+                return []; // Возвращаем пустой массив для невалидных элементов
+            }
+
+            // Возвращаем данные для БД если валидация прошла
+            return $dto->toBasicDatabase();
+        } catch (\Exception $e) {
+            Log::error("FeedHouse: Failed to parse item", [
+                'item_id' => $item['id'] ?? 'unknown',
+                'error' => $e->getMessage(),
+                'raw_item' => $item
+            ]);
+            return [];
+        }
     }
 
     /**
      * Обрабатывает порцию данных и отправляет в очереди (порционная обработка)
+     * ГАРАНТИРУЕТ валидацию изображений для всех элементов
      */
-    private function processBatchInChunks(array $batch, int $chunkSize): void
+    private function processBatchInChunks(array $batch, int $chunkSize, bool $dryRun = false): void
     {
         $chunks = array_chunk($batch, $chunkSize);
+        $totalProcessed = 0;
+        $totalValidated = 0;
+        $totalRejected = 0;
 
-        foreach ($chunks as $chunk) {
-            // Обрабатываем каждый элемент через DTO
+        foreach ($chunks as $chunkIndex => $chunk) {
+            // Обрабатываем каждый элемент через DTO с ОБЯЗАТЕЛЬНОЙ валидацией изображений
             $processedItems = [];
+            $chunkValidated = 0;
+            $chunkRejected = 0;
+
             foreach ($chunk as $item) {
-                $parsedItem = $this->parseItem($item);
+                $chunkValidated++;
+                $parsedItem = $this->parseItem($item); // DTO + валидация изображений
+
                 if (!empty($parsedItem)) {
                     $processedItems[] = $parsedItem;
+                } else {
+                    $chunkRejected++;
                 }
             }
 
-            // TODO: Отправляем в очередь для постобработки
-            // ProcessFeedHouseCreativesJob::dispatch($processedItems);
+            $totalValidated += $chunkValidated;
+            $totalRejected += $chunkRejected;
+            $totalProcessed += count($processedItems);
 
-            Log::info("FeedHouse: Batch chunk processed", [
-                'items_count' => count($processedItems),
-                'chunk_size' => count($chunk)
+            // Отправляем в очередь для постобработки (только если не dry run)
+            if (!$dryRun && !empty($processedItems)) {
+                // TODO: ProcessFeedHouseCreativesJob::dispatch($processedItems);
+                Log::debug("FeedHouse: Would dispatch to queue", [
+                    'items_count' => count($processedItems)
+                ]);
+            } elseif ($dryRun && !empty($processedItems)) {
+                Log::debug("FeedHouse: DRY RUN - skipping queue dispatch", [
+                    'items_count' => count($processedItems)
+                ]);
+            }
+
+            Log::info("FeedHouse: Batch chunk processed with image validation", [
+                'chunk_index' => $chunkIndex + 1,
+                'chunk_size' => count($chunk),
+                'validated_items' => $chunkValidated,
+                'passed_validation' => count($processedItems),
+                'failed_validation' => $chunkRejected,
+                'validation_pass_rate' => $chunkValidated > 0 ? round((count($processedItems) / $chunkValidated) * 100, 2) . '%' : '0%'
             ]);
         }
+
+        Log::info("FeedHouse: Batch processing completed with image validation", [
+            'total_items_processed' => $totalValidated,
+            'total_passed_validation' => $totalProcessed,
+            'total_failed_validation' => $totalRejected,
+            'overall_pass_rate' => $totalValidated > 0 ? round(($totalProcessed / $totalValidated) * 100, 2) . '%' : '0%'
+        ]);
     }
 
     /**
@@ -554,9 +627,14 @@ class FeedHouseParser extends BaseParser
                 break;
             }
 
-            // Обрабатываем порцию
-            if (!$dryRun) {
-                $this->processBatchInChunks($batch, 50); // Фиксированный chunk size
+            // Обрабатываем порцию (валидация выполняется ВСЕГДА, независимо от dry run)
+            $this->processBatchInChunks($batch, 50, $dryRun); // Фиксированный chunk size
+
+            // В dry run режиме логируем что НЕ отправляем в очереди
+            if ($dryRun) {
+                Log::info("FeedHouse: DRY RUN - validation performed but data not queued", [
+                    'batch_size' => count($batch)
+                ]);
             }
 
             $batchSize = count($batch);

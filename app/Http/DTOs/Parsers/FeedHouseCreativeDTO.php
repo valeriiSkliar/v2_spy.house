@@ -11,7 +11,9 @@ use App\Services\Parsers\BrowserNormalizer;
 use App\Services\Parsers\CreativePlatformNormalizer;
 use App\Services\Parsers\CountryCodeNormalizer;
 use App\Services\Parsers\SourceNormalizer;
+use App\Services\Parsers\CreativeImageValidator;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 /**
  * DTO для креативов FeedHouse API
@@ -379,11 +381,12 @@ class FeedHouseCreativeDTO
     }
 
     /**
-     * Валидация данных DTO (упрощенная для FeedHouse)
+     * Валидация данных DTO с проверкой доступности изображений
      *
+     * @param bool $validateImages Включить глубокую валидацию изображений (по умолчанию true)
      * @return bool true если данные валидны
      */
-    public function isValid(): bool
+    public function isValid(bool $validateImages = true): bool
     {
         // Базовая валидация - только обязательные поля
         if (empty($this->externalId)) {
@@ -400,7 +403,7 @@ class FeedHouseCreativeDTO
             return false;
         }
 
-        // Проверяем валидность URL
+        // Проверяем валидность URL лендинга
         if (!empty($this->targetUrl) && !filter_var($this->targetUrl, FILTER_VALIDATE_URL)) {
             return false;
         }
@@ -410,7 +413,56 @@ class FeedHouseCreativeDTO
             return false;
         }
 
+        // Глубокая валидация изображений (опциональная)
+        if ($validateImages && config('services.creative_validator.image_validation.enabled', true)) {
+            return $this->validateImageAccessibility();
+        }
+
         return true;
+    }
+
+    /**
+     * Проверяет доступность изображений креатива
+     *
+     * @return bool true если хотя бы одно изображение доступно
+     */
+    private function validateImageAccessibility(): bool
+    {
+        $validator = new CreativeImageValidator();
+
+        $imageUrls = array_filter([
+            $this->iconUrl,
+            $this->imageUrl
+        ]);
+
+        if (empty($imageUrls)) {
+            return false;
+        }
+
+        try {
+            $validationResults = $validator->validateImages($imageUrls);
+
+            // Хотя бы одно изображение должно быть валидным
+            foreach ($validationResults as $result) {
+                if ($result['valid']) {
+                    return true;
+                }
+            }
+
+            return false;
+        } catch (\Exception $e) {
+            // При ошибке валидации логируем и пропускаем креатив если настроено fallback
+            Log::warning('Image validation failed for creative', [
+                'external_id' => $this->externalId,
+                'title' => $this->title,
+                'error' => $e->getMessage(),
+                'image_urls' => $imageUrls,
+                'validation_results' => isset($validationResults) ? $validationResults : 'Not available'
+            ]);
+
+            // Если включен fallback - пропускаем валидацию при ошибках
+            return config('services.creative_validator.fallback.skip_on_error', true);
+        }
     }
 
     /**

@@ -81,4 +81,54 @@ return [
         'retry_delay' => env('PARSER_RETRY_DELAY', 1)
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Creative Validation Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for creative validation services including image
+    | accessibility checks, content validation, and performance settings.
+    |
+    */
+
+    'creative_validator' => [
+        'image_validation' => [
+            'enabled' => env('CREATIVE_IMAGE_VALIDATION_ENABLED', true),
+            'timeout' => env('CREATIVE_IMAGE_VALIDATION_TIMEOUT', 15), // seconds
+            'max_redirects' => env('CREATIVE_IMAGE_VALIDATION_MAX_REDIRECTS', 3),
+            'max_image_size' => env('CREATIVE_IMAGE_VALIDATION_MAX_SIZE', 10485760), // 10MB in bytes
+            'min_image_size' => env('CREATIVE_IMAGE_VALIDATION_MIN_SIZE', 1024), // 1KB in bytes
+            'verify_ssl' => env('CREATIVE_IMAGE_VALIDATION_VERIFY_SSL', false),
+            'allowed_types' => [
+                'image/jpeg',
+                'image/jpg',
+                'image/png',
+                'image/gif',
+                'image/webp',
+                'image/svg+xml',
+                'image/bmp',
+                'image/tiff'
+            ],
+        ],
+
+        'performance' => [
+            'async_validation' => env('CREATIVE_ASYNC_VALIDATION', false), // Future feature
+            'cache_results' => env('CREATIVE_CACHE_VALIDATION_RESULTS', true),
+            'cache_ttl' => env('CREATIVE_VALIDATION_CACHE_TTL', 3600), // 1 hour in seconds
+        ],
+
+        'fallback' => [
+            'skip_on_error' => env('CREATIVE_VALIDATION_SKIP_ON_ERROR', false),
+            'log_errors' => env('CREATIVE_VALIDATION_LOG_ERRORS', true),
+            'max_validation_time' => env('CREATIVE_MAX_VALIDATION_TIME', 30), // seconds per creative
+        ],
+
+        'statistics' => [
+            'enabled' => env('CREATIVE_VALIDATION_STATS_ENABLED', true),
+            'log_interval' => env('CREATIVE_VALIDATION_STATS_LOG_INTERVAL', 100), // Логировать каждые N валидаций
+            'auto_recommendations' => env('CREATIVE_VALIDATION_AUTO_RECOMMENDATIONS', true),
+            'detailed_domain_analysis' => env('CREATIVE_VALIDATION_DETAILED_DOMAIN_ANALYSIS', true),
+        ]
+    ],
+
 ];
