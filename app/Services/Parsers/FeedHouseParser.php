@@ -460,22 +460,34 @@ class FeedHouseParser extends BaseParser
                 if (!in_array($dto->format->value, FeedHouseCreativeDTO::getSupportedFormats(), true)) $rejectionReasons[] = 'unsupported_format';
                 if (!empty($dto->targetUrl) && !filter_var($dto->targetUrl, FILTER_VALIDATE_URL)) $rejectionReasons[] = 'invalid_landing_url';
 
-                // Если базовая валидация прошла, значит проблема с изображениями
-                if (empty($rejectionReasons)) $rejectionReasons[] = 'image_validation_failed';
+                // Если базовая валидация прошла, значит проблема с format-specific изображениями
+                if (empty($rejectionReasons)) $rejectionReasons[] = 'format_specific_image_validation_failed';
 
-                Log::info("FeedHouse: Creative failed validation", [
+                Log::info("FeedHouse: Creative failed format-specific validation", [
                     'external_id' => $dto->externalId,
                     'title' => $dto->title,
-                    'icon_url' => $dto->iconUrl,
-                    'image_url' => $dto->imageUrl,
                     'format' => $dto->format->value,
+                    'original_icon_url' => $dto->iconUrl,
+                    'original_image_url' => $dto->imageUrl,
                     'rejection_reasons' => $rejectionReasons
                 ]);
                 return []; // Возвращаем пустой массив для невалидных элементов
             }
 
+            // Логируем успешную валидацию с примененными правилами
+            $dbData = $dto->toBasicDatabase();
+            $appliedRules = $dbData['metadata']['format_specific_validation']['applied_rules'] ?? 'unknown';
+
+            Log::debug("FeedHouse: Creative passed format-specific validation", [
+                'external_id' => $dto->externalId,
+                'format' => $dto->format->value,
+                'applied_rules' => $appliedRules,
+                'final_icon_url' => $dbData['icon_url'] ? 'set' : 'null',
+                'final_main_image_url' => $dbData['main_image_url'] ? 'set' : 'null'
+            ]);
+
             // Возвращаем данные для БД если валидация прошла
-            return $dto->toBasicDatabase();
+            return $dbData;
         } catch (\Exception $e) {
             Log::error("FeedHouse: Failed to parse item", [
                 'item_id' => $item['id'] ?? 'unknown',

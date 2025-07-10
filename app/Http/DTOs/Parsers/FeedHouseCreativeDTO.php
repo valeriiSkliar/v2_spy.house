@@ -23,6 +23,19 @@ use Illuminate\Support\Facades\Log;
  * 
  * Поддерживает только форматы: push, inpage
  * Все остальные форматы игнорируются при валидации
+ * 
+ * FORMAT-SPECIFIC ПРАВИЛА ВАЛИДАЦИИ ИЗОБРАЖЕНИЙ:
+ * 
+ * PUSH креативы:
+ * - Валидны если оба изображения (icon + image) доступны
+ * - Валидны если только main image доступна (icon_url устанавливается в null)
+ * - НЕ валидны если только icon доступна без main image
+ * 
+ * INPAGE креативы:
+ * - Валидны если хотя бы одно изображение доступно
+ * - Доступное изображение записывается в поле icon_url
+ * - main_image_url всегда устанавливается в null
+ * - Если доступна только main image, она перемещается в icon_url
  *
  * @package App\Http\DTOs\Parsers
  * @author SeniorSoftwareEngineer
@@ -284,16 +297,20 @@ class FeedHouseCreativeDTO
     /**
      * Преобразует DTO в базовую версию для немедленного сохранения
      * Включает только критически необходимые поля (для hybrid подхода)
+     * Применяет format-specific правила для URL изображений
      */
     public function toBasicDatabase(): array
     {
+        // Получаем правильные URL изображений согласно format-specific правилам
+        $validatedImages = $this->getValidatedImageUrls();
+
         return [
             // Критические поля (обработаны синхронно)
             'external_id' => $this->externalId,
             'title' => $this->title,
             'description' => $this->text,
-            'icon_url' => $this->iconUrl,
-            'main_image_url' => $this->imageUrl,
+            'icon_url' => $validatedImages['icon_url'],
+            'main_image_url' => $validatedImages['main_image_url'],
             'landing_url' => $this->targetUrl,
             'platform' => $this->platform->value,
             'format' => $this->format->value,
@@ -312,12 +329,18 @@ class FeedHouseCreativeDTO
             // Уникальный хеш
             'combined_hash' => $this->generateCombinedHash(),
 
-            // Метаданные (базовые)
+            // Метаданные (базовые + информация о валидации изображений)
             'metadata' => [
                 'seenCount' => $this->seenCount,
-                'processing_status' => 'basic', // Флаг для отслеживания обработки
+                'processing_status' => 'basic',
                 'enhancement_required' => true,
-                'source_api' => 'feedhouse_business_api'
+                'source_api' => 'feedhouse_business_api',
+                'format_specific_validation' => [
+                    'format' => $this->format->value,
+                    'original_icon_url' => $this->iconUrl,
+                    'original_image_url' => $this->imageUrl,
+                    'applied_rules' => $this->getAppliedValidationRules($validatedImages)
+                ]
             ],
 
             // Временные метки
@@ -422,42 +445,146 @@ class FeedHouseCreativeDTO
     }
 
     /**
-     * Проверяет доступность изображений креатива
+     * Получает правильные URL изображений согласно format-specific правилам
      *
-     * @return bool true если хотя бы одно изображение доступно
+     * @return array ['icon_url' => string|null, 'main_image_url' => string|null]
      */
-    private function validateImageAccessibility(): bool
+    private function getValidatedImageUrls(): array
     {
         $validator = new CreativeImageValidator();
 
         $imageUrls = array_filter([
-            $this->iconUrl,
-            $this->imageUrl
+            'icon' => $this->iconUrl,
+            'image' => $this->imageUrl
         ]);
 
         if (empty($imageUrls)) {
-            return false;
+            return ['icon_url' => null, 'main_image_url' => null];
         }
 
         try {
             $validationResults = $validator->validateImages($imageUrls);
 
-            // Хотя бы одно изображение должно быть валидным
-            foreach ($validationResults as $result) {
-                if ($result['valid']) {
-                    return true;
+            $iconValid = isset($validationResults[$this->iconUrl]) && $validationResults[$this->iconUrl]['valid'];
+            $imageValid = isset($validationResults[$this->imageUrl]) && $validationResults[$this->imageUrl]['valid'];
+
+            // Format-specific логика обработки URL
+            if ($this->format->value === 'push') {
+                // Push: оба изображения валидны ИЛИ только main image валидна
+                if ($iconValid && $imageValid) {
+                    // Случай 1: оба изображения валидны
+                    return [
+                        'icon_url' => $this->iconUrl,
+                        'main_image_url' => $this->imageUrl
+                    ];
+                } elseif (!$iconValid && $imageValid) {
+                    // Случай 2: только main image валидна - icon_url = null
+                    return [
+                        'icon_url' => null,
+                        'main_image_url' => $this->imageUrl
+                    ];
                 }
+
+                // Если только icon валидна (но не main image) - креатив невалиден для push
+                return ['icon_url' => null, 'main_image_url' => null];
+            } elseif ($this->format->value === 'inpage') {
+                // Inpage: валидное изображение записывается в icon_url, второе поле = null
+                if ($iconValid) {
+                    return [
+                        'icon_url' => $this->iconUrl,
+                        'main_image_url' => null
+                    ];
+                } elseif ($imageValid) {
+                    return [
+                        'icon_url' => $this->imageUrl, // main image перемещается в icon_url
+                        'main_image_url' => null
+                    ];
+                }
+
+                return ['icon_url' => null, 'main_image_url' => null];
             }
 
-            return false;
+            // Fallback для других форматов: стандартная логика
+            return [
+                'icon_url' => $iconValid ? $this->iconUrl : null,
+                'main_image_url' => $imageValid ? $this->imageUrl : null
+            ];
+        } catch (\Exception $e) {
+            Log::warning('Failed to validate image URLs for creative', [
+                'external_id' => $this->externalId,
+                'format' => $this->format->value,
+                'error' => $e->getMessage()
+            ]);
+
+            // Fallback при ошибке валидации
+            return ['icon_url' => null, 'main_image_url' => null];
+        }
+    }
+
+    /**
+     * Получает описание примененных правил валидации
+     *
+     * @param array $validatedImages Результат валидации изображений
+     * @return string Описание примененных правил
+     */
+    private function getAppliedValidationRules(array $validatedImages): string
+    {
+        $rules = [];
+
+        if ($this->format->value === 'push') {
+            if ($validatedImages['icon_url'] && $validatedImages['main_image_url']) {
+                $rules[] = 'push_both_images_valid';
+            } elseif (!$validatedImages['icon_url'] && $validatedImages['main_image_url']) {
+                $rules[] = 'push_only_main_image_valid_icon_nulled';
+            } else {
+                $rules[] = 'push_invalid_image_combination';
+            }
+        } elseif ($this->format->value === 'inpage') {
+            if ($validatedImages['icon_url'] && !$validatedImages['main_image_url']) {
+                if ($validatedImages['icon_url'] === $this->iconUrl) {
+                    $rules[] = 'inpage_icon_used_main_nulled';
+                } elseif ($validatedImages['icon_url'] === $this->imageUrl) {
+                    $rules[] = 'inpage_main_moved_to_icon';
+                }
+            } else {
+                $rules[] = 'inpage_no_valid_images';
+            }
+        } else {
+            $rules[] = 'fallback_standard_validation';
+        }
+
+        return implode(', ', $rules);
+    }
+
+    /**
+     * Проверяет доступность изображений креатива с учетом format-specific правил
+     *
+     * @return bool true если изображения соответствуют правилам формата
+     */
+    private function validateImageAccessibility(): bool
+    {
+        try {
+            // Используем новый метод для получения валидированных URL
+            $validatedImages = $this->getValidatedImageUrls();
+
+            // Format-specific валидация
+            if ($this->format->value === 'push') {
+                // Push: должна быть хотя бы main_image_url (icon_url может быть null)
+                return !empty($validatedImages['main_image_url']);
+            } elseif ($this->format->value === 'inpage') {
+                // Inpage: должна быть icon_url (main_image_url всегда null)
+                return !empty($validatedImages['icon_url']);
+            }
+
+            // Fallback для других форматов: хотя бы одно изображение
+            return !empty($validatedImages['icon_url']) || !empty($validatedImages['main_image_url']);
         } catch (\Exception $e) {
             // При ошибке валидации логируем и пропускаем креатив если настроено fallback
             Log::warning('Image validation failed for creative', [
                 'external_id' => $this->externalId,
                 'title' => $this->title,
-                'error' => $e->getMessage(),
-                'image_urls' => $imageUrls,
-                'validation_results' => isset($validationResults) ? $validationResults : 'Not available'
+                'format' => $this->format->value,
+                'error' => $e->getMessage()
             ]);
 
             // Если включен fallback - пропускаем валидацию при ошибках
