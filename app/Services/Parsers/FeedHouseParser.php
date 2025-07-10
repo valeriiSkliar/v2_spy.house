@@ -236,20 +236,26 @@ class FeedHouseParser extends BaseParser
                 $queryParams['lastId'] = $params['lastId'];
             }
 
-            Log::info("FeedHouse: Making native curl request", [
+            Log::info("FeedHouse: Making request via BaseParser integration", [
                 'query_params' => $queryParams,
-                'auth_method' => $authMethod,
-                'base_url' => $this->baseUrl
+                'auth_method' => $authMethod
             ]);
 
-            // Используем нативный curl для FeedHouse 
-            $data = $this->makeNativeCurlRequest($queryParams);
+            // Используем интегрированный makeRequest() вместо нативного curl
+            $response = $this->makeRequest('', $queryParams, 'GET');
+
+            // Декодируем JSON ответ
+            $data = json_decode($response->body(), true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new ParserException("JSON decode error: " . json_last_error_msg());
+            }
 
             if (!is_array($data)) {
                 throw new ParserException("Invalid response format from FeedHouse API");
             }
 
-            Log::info("FeedHouse: Data fetched successfully", [
+            Log::info("FeedHouse: Data fetched successfully via BaseParser", [
                 'items_count' => count($data),
                 'lastId' => $params['lastId'] ?? 'none'
             ]);
@@ -280,31 +286,115 @@ class FeedHouseParser extends BaseParser
     }
 
     /**
-     * Специальный метод для FeedHouse API с использованием нативного curl
+     * Override BaseParser makeRequest to use native curl for FeedHouse API compatibility
+     * Интегрирует нативный curl с полной логикой BaseParser (rate limit, retry, logging)
+     *
+     * @param string $endpoint API endpoint path  
+     * @param array $params Query parameters
+     * @param string $method HTTP method (GET, POST, etc.)
+     * @param array $headers Additional headers
+     * @param int $retries Number of retry attempts
+     * 
+     * @return \Illuminate\Http\Client\Response Mock response object for compatibility
+     * @throws ParserException On unrecoverable errors
+     * @throws RateLimitException When rate limit is exceeded
      */
-    private function makeNativeCurlRequest(array $params): array
-    {
-        $fullUrl = $this->baseUrl . '?' . http_build_query($params);
+    protected function makeRequest(
+        string $endpoint,
+        array $params = [],
+        string $method = 'GET',
+        array $headers = [],
+        ?int $retries = null
+    ): \Illuminate\Http\Client\Response {
+        $retries = $retries ?? $this->maxRetries;
+        $url = $this->baseUrl . '/' . ltrim($endpoint, '/');
 
-        // Получаем заголовки аутентификации
-        $authHeaders = $this->getAuthHeaders();
-        $headers = [];
-        foreach ($authHeaders as $name => $value) {
-            $headers[] = "{$name}: {$value}";
+        // 1. ПРИМЕНЯЕМ RATE LIMITING из BaseParser
+        $this->checkRateLimit();
+
+        // 2. Подготавливаем заголовки с аутентификацией
+        $headers = array_merge($this->getAuthHeaders(), $headers);
+
+        // 3. ЛОГИРУЕМ ЗАПРОС через BaseParser
+        $this->logRequest($url, $params, $method);
+
+        // 4. RETRY ЛОГИКА с exponential backoff из BaseParser
+        for ($attempt = 1; $attempt <= $retries + 1; $attempt++) {
+            try {
+                // Используем нативный curl для совместимости с FeedHouse API
+                $responseData = $this->makeNativeCurlRequestWithRetry($url, $params, $headers, $attempt);
+
+                // Создаем mock Response объект для совместимости с BaseParser
+                $mockResponse = $this->createMockResponse($responseData['body'], $responseData['http_code']);
+
+                // 5. ЛОГИРУЕМ ОТВЕТ через BaseParser
+                $this->logResponse($mockResponse, $attempt);
+
+                // Handle successful response
+                if ($mockResponse->successful()) {
+                    // 6. ОБНОВЛЯЕМ RATE LIMIT COUNTER из BaseParser
+                    $this->updateRateLimitCounter();
+                    return $mockResponse;
+                }
+
+                // 7. ОБРАБОТКА ОШИБОК через BaseParser
+                $this->handleError($mockResponse);
+
+                // If we reach here, it's a retryable error
+                if ($attempt <= $retries) {
+                    $this->logRetry($attempt, $retries, $mockResponse->status());
+                    sleep($this->retryDelay * $attempt); // Exponential backoff из конфига
+                }
+            } catch (\Exception $e) {
+                if ($attempt <= $retries) {
+                    $this->logRetry($attempt, $retries, 0, $e->getMessage());
+                    sleep($this->retryDelay * $attempt); // Используем retry_delay из конфига
+                } else {
+                    throw new ParserException("Request failed after {$retries} retries: " . $e->getMessage(), 0, $e);
+                }
+            }
         }
 
-        Log::info("FeedHouse: Native curl request", [
+        throw new ParserException("Request failed after {$retries} retries");
+    }
+
+    /**
+     * Нативный curl запрос, адаптированный для интеграции с BaseParser
+     * 
+     * @param string $fullUrl Полный URL с query параметрами
+     * @param array $params Query параметры
+     * @param array $headers Заголовки запроса
+     * @param int $attempt Номер попытки (для логирования)
+     * @return array ['body' => string, 'http_code' => int]
+     * @throws ParserException
+     */
+    private function makeNativeCurlRequestWithRetry(string $baseUrl, array $params, array $headers, int $attempt): array
+    {
+        // Формируем URL с query параметрами для FeedHouse API
+        $fullUrl = $baseUrl;
+        if (!empty($params)) {
+            $fullUrl .= '?' . http_build_query($params);
+        }
+
+        // Конвертируем заголовки в формат для curl
+        $curlHeaders = [];
+        foreach ($headers as $name => $value) {
+            $curlHeaders[] = "{$name}: {$value}";
+        }
+
+        Log::info("FeedHouse: Native curl request (attempt {$attempt})", [
             'full_url' => $fullUrl,
-            'headers' => $headers
+            'headers' => $curlHeaders,
+            'timeout' => $this->timeout
         ]);
 
         $curl = curl_init();
         curl_setopt_array($curl, [
             CURLOPT_URL => $fullUrl,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => $this->timeout,
+            CURLOPT_TIMEOUT => $this->timeout, // Используем timeout из конфига
             CURLOPT_CUSTOMREQUEST => 'GET',
-            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_HTTPHEADER => $curlHeaders,
         ]);
 
         $responseBody = curl_exec($curl);
@@ -316,48 +406,66 @@ class FeedHouseParser extends BaseParser
             throw new ParserException("Curl error: " . $curlError);
         }
 
-        // Пытаемся декодировать JSON независимо от HTTP кода
-        $data = json_decode($responseBody, true);
+        return [
+            'body' => $responseBody,
+            'http_code' => $httpCode
+        ];
+    }
 
-        // Если JSON валидный, проверяем его на ошибки FeedHouse API
-        if (json_last_error() === JSON_ERROR_NONE && is_array($data) && isset($data['error'])) {
-            $errorMessage = $data['message'] ?? 'Unknown error';
-            $errorCode = 0; // По умолчанию
+    /**
+     * Создает mock объект Response для совместимости с BaseParser
+     * Включает специальную обработку ошибок FeedHouse API
+     * 
+     * @param string $body Тело ответа
+     * @param int $statusCode HTTP статус код
+     * @return \Illuminate\Http\Client\Response
+     * @throws ParserException Для FeedHouse API ошибок
+     */
+    private function createMockResponse(string $body, int $statusCode): \Illuminate\Http\Client\Response
+    {
+        // Создаем mock response используя Laravel HTTP Client структуры
+        $response = new \Illuminate\Http\Client\Response(
+            new \GuzzleHttp\Psr7\Response($statusCode, [], $body)
+        );
 
-            // Логируем структуру ошибки для отладки
-            Log::debug("FeedHouse API Error structure", [
-                'error_field' => $data['error'],
-                'message_field' => $data['message'] ?? null,
-                'full_response' => $data
-            ]);
+        // Специальная обработка ошибок FeedHouse API
+        // FeedHouse возвращает ошибки в JSON формате даже при HTTP 200
+        if (!empty($body)) {
+            $data = json_decode($body, true);
 
-            // Извлекаем числовой код из строки вида "code=429, message=..."
-            if (is_string($data['error']) && preg_match('/code=(\d+)/', $data['error'], $matches)) {
-                $errorCode = (int)$matches[1];
-                Log::debug("FeedHouse: Extracted error code", ['code' => $errorCode]);
-            } elseif (isset($data['code'])) {
-                // Альтернативный путь - прямое поле code
-                $errorCode = (int)$data['code'];
-                Log::debug("FeedHouse: Found direct error code", ['code' => $errorCode]);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($data) && isset($data['error'])) {
+                $errorMessage = $data['message'] ?? 'Unknown error';
+                $errorCode = 0; // По умолчанию
+
+                // Логируем структуру ошибки для отладки
+                Log::debug("FeedHouse API Error structure", [
+                    'error_field' => $data['error'],
+                    'message_field' => $data['message'] ?? null,
+                    'full_response' => $data,
+                    'http_status' => $statusCode
+                ]);
+
+                // Извлекаем числовой код из строки вида "code=429, message=..."
+                if (is_string($data['error']) && preg_match('/code=(\d+)/', $data['error'], $matches)) {
+                    $errorCode = (int)$matches[1];
+                    Log::debug("FeedHouse: Extracted error code from string", ['code' => $errorCode]);
+                } elseif (isset($data['code'])) {
+                    // Альтернативный путь - прямое поле code
+                    $errorCode = (int)$data['code'];
+                    Log::debug("FeedHouse: Found direct error code", ['code' => $errorCode]);
+                }
+
+                // Пересоздаем response с корректным HTTP кодом для BaseParser
+                if ($errorCode > 0) {
+                    $response = new \Illuminate\Http\Client\Response(
+                        new \GuzzleHttp\Psr7\Response($errorCode, [], $body)
+                    );
+                    Log::info("FeedHouse: Updated HTTP status from {$statusCode} to {$errorCode} based on API error");
+                }
             }
-
-            throw new ParserException("FeedHouse API Error {$errorCode}: {$errorMessage}", $errorCode);
         }
 
-        // Fallback: если JSON невалидный или HTTP код не 200
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new ParserException("JSON decode error: " . json_last_error_msg() . " (HTTP {$httpCode})");
-        }
-
-        if ($httpCode !== 200) {
-            throw new ParserException("HTTP {$httpCode}: {$responseBody}", $httpCode);
-        }
-
-        if (!is_array($data)) {
-            throw new ParserException("Invalid response format from FeedHouse API");
-        }
-
-        return $data;
+        return $response;
     }
 
     /**
@@ -403,6 +511,8 @@ class FeedHouseParser extends BaseParser
      * FeedHouse поддерживает два метода аутентификации:
      * 1. Query parameter: ?key=api_key (по умолчанию)
      * 2. Header: X-Api-Key: api_key
+     * 
+     * Переопределяем BaseParser getAuthHeaders() для FeedHouse специфики
      */
     protected function getAuthHeaders(): array
     {
