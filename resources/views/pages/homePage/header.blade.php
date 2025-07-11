@@ -10,9 +10,9 @@
         </div>
         <nav class="header__nav">
             <ul>
-                <li><a href="#">{{ __('main_page.features') }}</a></li>
-                <li><a href="#">{{ __('main_page.prices') }}</a></li>
-                <li><a href="#">{{ __('main_page.reviews') }}</a></li>
+                <li><a href="#features">{{ __('main_page.features') }}</a></li>
+                <li><a href="#prices">{{ __('main_page.prices') }}</a></li>
+                <li><a href="#reviews">{{ __('main_page.reviews') }}</a></li>
                 <li><a href="{{ route('blog.index') }}">{{ __('main_page.blog') }}</a></li>
             </ul>
         </nav>

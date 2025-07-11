@@ -1,4 +1,4 @@
-<section class="features">
+<section id="features" class="features">
     <div class="container">
         <div class="row align-items-end _offset30">
             <div class="col-12 col-md-6">

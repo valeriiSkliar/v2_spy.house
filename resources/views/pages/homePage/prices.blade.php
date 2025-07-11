@@ -1,4 +1,4 @@
-<section class="prices">
+<section id="prices" class="prices">
     <div class="container">
         <div class="row align-items-end _offset30">
             <div class="col-12 col-md-7 mb-md-4">
