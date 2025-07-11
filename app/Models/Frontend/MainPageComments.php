@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Frontend;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -39,7 +39,8 @@ class MainPageComments extends Model
         'text',
         'content',
         'is_active',
-        'display_order'
+        'display_order',
+        'rating'
     ];
 
     /**
@@ -54,6 +55,7 @@ class MainPageComments extends Model
         'user_position' => 'array',
         'user_name' => 'array',
         'text' => 'array',
-        'content' => 'array'
+        'content' => 'array',
+        'rating' => 'integer'
     ];
 }

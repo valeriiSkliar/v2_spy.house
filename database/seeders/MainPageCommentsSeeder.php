@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\MainPageComments;
+use App\Models\Frontend\MainPageComments;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -32,7 +32,8 @@ class MainPageCommentsSeeder extends Seeder
                     'en' => ''
                 ],
                 'thumbnail_src' => '/storage/assets/images/mainpage/review/ava1.jpg',
-                'email' => 'conversion@example.com'
+                'email' => 'conversion@example.com',
+                'rating' => 5
             ],
             [
                 'heading' => [
@@ -52,7 +53,8 @@ class MainPageCommentsSeeder extends Seeder
                     'en' => 'Moneycrafter'
                 ],
                 'thumbnail_src' => '/storage/assets/images/mainpage/review/ava2.jpg',
-                'email' => 'konstantin@moneycrafter.com'
+                'email' => 'konstantin@moneycrafter.com',
+                'rating' => 5
             ],
             [
                 'heading' => [
@@ -72,7 +74,8 @@ class MainPageCommentsSeeder extends Seeder
                     'en' => ''
                 ],
                 'thumbnail_src' => '/storage/assets/images/mainpage/review/ava3.jpg',
-                'email' => 'team@everad.com'
+                'email' => 'team@everad.com',
+                'rating' => 5
             ],
             [
                 'heading' => [
@@ -92,7 +95,8 @@ class MainPageCommentsSeeder extends Seeder
                     'en' => ''
                 ],
                 'thumbnail_src' => '/storage/assets/images/mainpage/review/ava4.jpg',
-                'email' => 'conversion2@example.com'
+                'email' => 'conversion2@example.com',
+                'rating' => 5
             ],
             [
                 'heading' => [
@@ -112,7 +116,8 @@ class MainPageCommentsSeeder extends Seeder
                     'en' => 'Moneycrafter'
                 ],
                 'thumbnail_src' => '/storage/assets/images/mainpage/review/ava5.jpg',
-                'email' => 'konstantin2@moneycrafter.com'
+                'email' => 'konstantin2@moneycrafter.com',
+                'rating' => 5
             ],
             [
                 'heading' => [
@@ -132,7 +137,8 @@ class MainPageCommentsSeeder extends Seeder
                     'en' => ''
                 ],
                 'thumbnail_src' => '/storage/assets/images/mainpage/review/ava6.jpg',
-                'email' => 'team2@everad.com'
+                'email' => 'team2@everad.com',
+                'rating' => 5
             ],
             [
                 'heading' => [
@@ -152,7 +158,8 @@ class MainPageCommentsSeeder extends Seeder
                     'en' => ''
                 ],
                 'thumbnail_src' => '/storage/assets/images/mainpage/review/ava7.jpg',
-                'email' => 'conversion3@example.com'
+                'email' => 'conversion3@example.com',
+                'rating' => 5
             ],
             [
                 'heading' => [
@@ -172,7 +179,8 @@ class MainPageCommentsSeeder extends Seeder
                     'en' => 'Moneycrafter'
                 ],
                 'thumbnail_src' => '/storage/assets/images/mainpage/review/ava8.jpg',
-                'email' => 'konstantin3@moneycrafter.com'
+                'email' => 'konstantin3@moneycrafter.com',
+                'rating' => 5
             ],
             [
                 'heading' => [
@@ -192,7 +200,8 @@ class MainPageCommentsSeeder extends Seeder
                     'en' => ''
                 ],
                 'thumbnail_src' => '/storage/assets/images/mainpage/review/ava9.jpg',
-                'email' => 'team3@everad.com'
+                'email' => 'team3@everad.com',
+                'rating' => 5
             ],
             [
                 'heading' => [
@@ -212,7 +221,8 @@ class MainPageCommentsSeeder extends Seeder
                     'en' => ''
                 ],
                 'thumbnail_src' => '/storage/assets/images/mainpage/review/ava10.jpg',
-                'email' => 'conversion4@example.com'
+                'email' => 'conversion4@example.com',
+                'rating' => 5
             ],
             [
                 'heading' => [
@@ -232,7 +242,8 @@ class MainPageCommentsSeeder extends Seeder
                     'en' => 'Moneycrafter'
                 ],
                 'thumbnail_src' => '/storage/assets/images/mainpage/review/ava11.jpg',
-                'email' => 'konstantin4@moneycrafter.com'
+                'email' => 'konstantin4@moneycrafter.com',
+                'rating' => 5
             ],
             [
                 'heading' => [
@@ -252,7 +263,8 @@ class MainPageCommentsSeeder extends Seeder
                     'en' => ''
                 ],
                 'thumbnail_src' => '/storage/assets/images/mainpage/review/ava12.jpg',
-                'email' => 'team4@everad.com'
+                'email' => 'team4@everad.com',
+                'rating' => 5
             ]
         ];
 
@@ -268,9 +280,10 @@ class MainPageCommentsSeeder extends Seeder
                 'user_position' => json_encode($review['user_position']),
                 'thumbnail_src' => $review['thumbnail_src'],
                 'email' => $review['email'],
+                'rating' => $review['rating'],
                 'display_order' => $index + 1,
                 'is_active' => true,
-                'content' => json_encode([]),
+                'content' => json_encode($review['text']), // Используем text как content
                 'created_at' => now(),
                 'updated_at' => now()
             ];
