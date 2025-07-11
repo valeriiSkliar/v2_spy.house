@@ -120,6 +120,38 @@ class AdvertismentNetwork extends Model
     }
 
     /**
+     * Get active network names for FeedHouse parser API
+     * Returns array of network_name values for active networks
+     */
+    public static function getActiveNetworksForParser(): array
+    {
+        return Cache::remember('active_networks_for_parser', 60 * 60, function () {
+            return self::active()
+                ->select('network_name')
+                ->orderBy('network_name')
+                ->pluck('network_name')
+                ->toArray();
+        });
+    }
+
+    /**
+     * Get default networks for FeedHouse parser (with fallback)
+     * Returns predefined networks if no active networks found
+     */
+    public static function getDefaultNetworksForParser(): array
+    {
+        $activeNetworks = self::getActiveNetworksForParser();
+
+        // Если есть активные сети, используем их
+        if (!empty($activeNetworks)) {
+            return $activeNetworks;
+        }
+
+        // Fallback к предопределенным сетям
+        return ['rollerads', 'richads'];
+    }
+
+    /**
      * Clear networks cache (useful for admin updates)
      */
     public static function clearCache()
@@ -128,6 +160,7 @@ class AdvertismentNetwork extends Model
         Cache::forget('advertisment_networks_filters');
         Cache::forget('advertisment_networks_filters_all');
         Cache::forget('advertisment_networks_filters_grouped');
+        Cache::forget('active_networks_for_parser'); // Добавляем новый ключ кеша
     }
 
     // public function advertisements(): HasMany

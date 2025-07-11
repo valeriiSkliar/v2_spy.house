@@ -267,7 +267,8 @@ class PushHouseSynchronizer
                 ->whereIn('creatives.external_id', $batch)
                 ->update([
                     'creatives.status' => 'inactive',
-                    'creatives.updated_at' => now()
+                    'creatives.updated_at' => now(),
+                    'creatives.end_date' => now()
                 ]);
 
             $updatedCount += $updated;

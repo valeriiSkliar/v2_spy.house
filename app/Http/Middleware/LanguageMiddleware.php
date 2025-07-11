@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 
 class LanguageMiddleware
@@ -26,8 +27,10 @@ class LanguageMiddleware
             $userLocale = Auth::user()->preferred_locale;
             if (array_key_exists($userLocale, $supportedLocales)) {
                 $locale = $userLocale;
-                // Синхронизируем с сессией
-                Session::put('locale', $locale);
+                // Синхронизируем с сессией для консистентности
+                if (Session::get('locale') !== $locale) {
+                    Session::put('locale', $locale);
+                }
             }
         }
 
@@ -37,9 +40,19 @@ class LanguageMiddleware
             if ($sessionLocale && array_key_exists($sessionLocale, $supportedLocales)) {
                 $locale = $sessionLocale;
 
-                // Синхронизируем с профилем пользователя, если он авторизован
+                // Синхронизируем с профилем пользователя только если значения действительно отличаются
+                // и пользователь авторизован
                 if (Auth::check() && Auth::user()->preferred_locale !== $sessionLocale) {
-                    Auth::user()->update(['preferred_locale' => $sessionLocale]);
+                    try {
+                        Auth::user()->update(['preferred_locale' => $sessionLocale]);
+                    } catch (\Exception $e) {
+                        // Логируем ошибку синхронизации, но не прерываем запрос
+                        Log::warning('Failed to sync user preferred locale from session', [
+                            'user_id' => Auth::id(),
+                            'session_locale' => $sessionLocale,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
                 }
             }
         }
@@ -51,7 +64,15 @@ class LanguageMiddleware
 
             // Обновляем профиль пользователя fallback локалью, если он авторизован и у него нет локали
             if (Auth::check() && ! Auth::user()->preferred_locale) {
-                Auth::user()->update(['preferred_locale' => $locale]);
+                try {
+                    Auth::user()->update(['preferred_locale' => $locale]);
+                } catch (\Exception $e) {
+                    Log::warning('Failed to set fallback locale for user', [
+                        'user_id' => Auth::id(),
+                        'fallback_locale' => $locale,
+                        'error' => $e->getMessage()
+                    ]);
+                }
             }
         }
 

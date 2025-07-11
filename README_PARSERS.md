@@ -21,10 +21,6 @@ App\Providers\ParserServiceProvider::class,
 # PushHouse API (API ключ опционален для открытых эндпоинтов)
 PUSH_HOUSE_API_KEY=your_api_key_optional
 PUSH_HOUSE_BASE_URL=https://api.pushhouse.com
-
-# TikTok Business API
-TIKTOK_API_KEY=your_access_token
-TIKTOK_ADVERTISER_ID=your_advertiser_id
 ```
 
 **Важно**: PushHouse поддерживает работу с открытыми эндпоинтами без API ключа. Если `PUSH_HOUSE_API_KEY` не указан, парсер будет работать только с публичными данными.
@@ -41,8 +37,6 @@ $manager = app(ParserManager::class);
 // Получить кампании из PushHouse (с API ключом или без)
 $campaigns = $manager->pushHouse()->fetchCampaigns(['status' => 'active']);
 
-// Получить кампании из TikTok
-$tiktokCampaigns = $manager->tikTok()->fetchCampaigns();
 ```
 
 #### Работа с открытыми эндпоинтами PushHouse
@@ -67,8 +61,8 @@ $results = $manager->fetchMultiple([
         'method' => 'fetchCampaigns',
         'params' => ['status' => 'active']
     ],
-    'tiktok_ads' => [
-        'parser' => 'tiktok',
+    'feed_house_campaigns' => [
+        'parser' => 'feedhouse',
         'method' => 'fetchAds',
         'params' => []
     ]
@@ -95,21 +89,13 @@ $results = $manager->fetchMultiple([
 - 📊 Статистика
 - 🎁 Офферы
 
-### TikTok Business
-
-- 🎯 Кампании
-- 👥 Группы объявлений
-- 📢 Объявления
-- 🎨 Креативы
-- 📈 Отчеты
-
 ## Архитектура
 
 ```
 app/Services/Parsers/
-├── BaseParser.php              # Базовый абстрактный класс
-├── PushHouseParser.php         # PushHouse API парсер
-├── TikTokParser.php           # TikTok Business API парсер
+├── BaseParser.php             # Базовый абстрактный класс
+├── PushHouseParser.php        # PushHouse API парсер
+├── FeedHouseParser.php        # FeedHouse API парсер
 ├── ParserManager.php          # Менеджер парсеров
 └── Exceptions/
     ├── ParserException.php     # Базовое исключение
@@ -154,12 +140,12 @@ $configs = $manager->getConfigs();
 ### Rate Limits (по умолчанию)
 
 - **PushHouse**: 1000 запросов/минуту
-- **TikTok**: 100 запросов/минуту
+- **FeedHouse**: 100 запросов/минуту
 
 ### Timeouts
 
 - **PushHouse**: 45 секунд
-- **TikTok**: 60 секунд
+- **FeedHouse**: 60 секунд
 
 ### Retries
 
@@ -279,7 +265,7 @@ echo "Requests remaining: " . $stats['requests_remaining'];
 
 - Базовая архитектура парсеров
 - Поддержка PushHouse API
-- Поддержка TikTok Business API
+- Поддержка FeedHouse API
 - Автоматические ретраи и rate limiting
 - Система логирования
 - ParserManager для централизованного управления
@@ -292,5 +278,3 @@ echo "Requests remaining: " . $stats['requests_remaining'];
 Этот проект является частью SpyHouse платформы.
 
 ---
-
-**Разработано с ❤️ командой SpyHouse**

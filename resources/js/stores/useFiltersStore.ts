@@ -50,7 +50,10 @@ import { useFiltersSynchronization } from '@/composables/useFiltersSynchronizati
 import {
   CREATIVES_CONSTANTS,
   type Creative,
+  type FavoritesSyncData,
   type FilterOption,
+  type FilterPreset,
+  type FilterPresetState,
   type FilterState,
   type TabOption,
   type TabsState,
@@ -152,6 +155,52 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   
   // Состояние загрузки для конкретных креативов (предотвращение множественных запросов)
   const favoritesLoadingMap = ref<Map<number, boolean>>(new Map());
+
+  // ============================================================================
+  // СОСТОЯНИЕ ПРЕСЕТОВ ФИЛЬТРОВ
+  // ============================================================================
+
+  // Состояние пресетов
+  const filterPresets = ref<FilterPreset[]>([]);
+  const isPresetsLoading = ref(false);
+  const selectedPresetId = ref<number | null>(null);
+  const isSavingPreset = ref(false);
+
+  // ============================================================================
+  // ПОЛЬЗОВАТЕЛЬСКИЕ ДАННЫЕ
+  // ============================================================================
+  
+  // Типизация для данных пользователя
+  interface UserData {
+    id: number | null;
+    email: string | null;
+    tariff: {
+      id: number | null;
+      name: string;
+      css_class: string;
+      expires_at: string | null;
+      status: string;
+      is_active: boolean;
+      is_trial: boolean;
+    } | null;
+    is_trial: boolean;
+    show_similar_creatives: boolean;
+    favoritesCount: number;
+    isAuthenticated: boolean;
+  }
+
+  // Состояние пользовательских данных
+  const userData = ref<UserData>({
+    id: null,
+    email: null,
+    tariff: null,
+    is_trial: false,
+    show_similar_creatives: false,
+    favoritesCount: 0,
+    isAuthenticated: false,
+  });
+  
+  const isUserDataLoading = ref(false);
 
   // Состояние просмотра деталей креативов
   const selectedCreative = ref<Creative | null>(null);
@@ -503,6 +552,366 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   setupEventListeners();
 
   // ============================================================================
+  // МЕТОДЫ УПРАВЛЕНИЯ ПРЕСЕТАМИ ФИЛЬТРОВ
+  // ============================================================================
+
+  /**
+   * Загрузить все пресеты пользователя
+   */
+  async function loadFilterPresets(): Promise<void> {
+    if (isPresetsLoading.value) return;
+
+    try {
+      isPresetsLoading.value = true;
+      
+      const response = await window.axios.get('/api/creatives/filter-presets');
+      filterPresets.value = response.data.data || [];
+      
+      console.log('✅ Пресеты фильтров загружены:', {
+        count: filterPresets.value.length,
+        presets: filterPresets.value.map(p => ({ id: p.id, name: p.name }))
+      });
+      
+      // Эмитируем событие загрузки пресетов
+      document.dispatchEvent(new CustomEvent('creatives:presets-loaded', {
+        detail: {
+          count: filterPresets.value.length,
+          presets: filterPresets.value,
+          timestamp: new Date().toISOString()
+        }
+      }));
+      
+    } catch (error) {
+      console.error('Ошибка при загрузке пресетов фильтров:', error);
+      // При ошибке сбрасываем состояние
+      filterPresets.value = [];
+      throw error;
+    } finally {
+      isPresetsLoading.value = false;
+    }
+  }
+
+  /**
+   * Сохранить текущие фильтры как новый пресет
+   */
+  async function saveCurrentFiltersAsPreset(name: string): Promise<FilterPreset> {
+    if (isSavingPreset.value) {
+      throw new Error('Saving preset is already in progress');
+    }
+
+    if (!name.trim()) {
+      throw new Error('Preset name cannot be empty');
+    }
+
+    try {
+      isSavingPreset.value = true;
+
+      // Подготавливаем текущие фильтры для сохранения
+      const currentFilters = {
+        searchKeyword: filters.searchKeyword,
+        countries: [...filters.countries],
+        dateCreation: filters.dateCreation,
+        sortBy: filters.sortBy,
+        periodDisplay: filters.periodDisplay,
+        advertisingNetworks: [...filters.advertisingNetworks],
+        languages: [...filters.languages],
+        operatingSystems: [...filters.operatingSystems],
+        browsers: [...filters.browsers],
+        devices: [...filters.devices],
+        imageSizes: [...filters.imageSizes],
+        onlyAdult: filters.onlyAdult,
+        perPage: filters.perPage,
+        activeTab: tabs.activeTab
+      };
+
+      const response = await window.axios.post('/api/creatives/filter-presets', {
+        name: name.trim(),
+        filters: currentFilters
+      });
+
+      const newPreset: FilterPreset = response.data.data;
+      
+      // Добавляем новый пресет в список
+      filterPresets.value.push(newPreset);
+      
+      // Сортируем по имени
+      filterPresets.value.sort((a, b) => a.name.localeCompare(b.name));
+
+      console.log('✅ Пресет фильтров сохранен:', newPreset);
+
+      // Эмитируем событие сохранения
+      document.dispatchEvent(new CustomEvent('creatives:preset-saved', {
+        detail: {
+          preset: newPreset,
+          timestamp: new Date().toISOString()
+        }
+      }));
+
+      return newPreset;
+    } catch (error: any) {
+      console.error('Ошибка при сохранении пресета:', error);
+      
+      // Обработка специфических ошибок
+      if (error.response?.status === 422) {
+        const validationError = error.response.data.message || 'Validation error';
+        throw new Error(validationError);
+      }
+      
+      throw new Error('Failed to save preset: ' + (error.message || 'Unknown error'));
+    } finally {
+      isSavingPreset.value = false;
+    }
+  }
+
+  /**
+   * Применить пресет фильтров
+   */
+  async function applyFilterPreset(presetId: number): Promise<void> {
+    const preset = filterPresets.value.find(p => p.id === presetId);
+    
+    if (!preset) {
+      throw new Error(`Preset with ID ${presetId} not found`);
+    }
+
+    try {
+      console.log('🔄 Применяем пресет:', preset.name, preset.filters);
+
+      // Временно отключаем watchers для предотвращения множественных срабатываний
+      const wasInitialized = isInitialized.value;
+      isInitialized.value = false;
+
+      // Применяем фильтры из пресета
+      const presetFilters = preset.filters;
+      
+      // Сбрасываем фильтры до дефолтных значений
+      Object.assign(filters, defaultFilters);
+      
+      // Применяем фильтры из пресета
+      if (presetFilters.searchKeyword !== undefined) {
+        filters.searchKeyword = presetFilters.searchKeyword;
+      }
+      if (presetFilters.countries !== undefined) {
+        filters.countries = [...presetFilters.countries];
+      }
+      if (presetFilters.dateCreation !== undefined) {
+        filters.dateCreation = presetFilters.dateCreation;
+      }
+      if (presetFilters.sortBy !== undefined) {
+        filters.sortBy = presetFilters.sortBy;
+      }
+      if (presetFilters.periodDisplay !== undefined) {
+        filters.periodDisplay = presetFilters.periodDisplay;
+      }
+      if (presetFilters.advertisingNetworks !== undefined) {
+        filters.advertisingNetworks = [...presetFilters.advertisingNetworks];
+      }
+      if (presetFilters.languages !== undefined) {
+        filters.languages = [...presetFilters.languages];
+      }
+      if (presetFilters.operatingSystems !== undefined) {
+        filters.operatingSystems = [...presetFilters.operatingSystems];
+      }
+      if (presetFilters.browsers !== undefined) {
+        filters.browsers = [...presetFilters.browsers];
+      }
+      if (presetFilters.devices !== undefined) {
+        filters.devices = [...presetFilters.devices];
+      }
+      if (presetFilters.imageSizes !== undefined) {
+        filters.imageSizes = [...presetFilters.imageSizes];
+      }
+      if (presetFilters.onlyAdult !== undefined) {
+        filters.onlyAdult = presetFilters.onlyAdult;
+      }
+      if (presetFilters.perPage !== undefined) {
+        filters.perPage = presetFilters.perPage;
+      }
+      
+      // Применяем активную вкладку если есть в пресете
+      if (presetFilters.activeTab !== undefined) {
+        tabs.activeTab = presetFilters.activeTab as TabValue;
+      }
+
+      // Устанавливаем выбранный пресет
+      selectedPresetId.value = presetId;
+
+      // Восстанавливаем watchers
+      await nextTick();
+      isInitialized.value = wasInitialized;
+
+      console.log('✅ Пресет применен:', preset.name);
+
+      // Эмитируем событие применения пресета
+      document.dispatchEvent(new CustomEvent('creatives:preset-applied', {
+        detail: {
+          preset,
+          timestamp: new Date().toISOString()
+        }
+      }));
+
+    } catch (error) {
+      console.error('Ошибка при применении пресета:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Удалить пресет
+   */
+  async function deleteFilterPreset(presetId: number): Promise<void> {
+    const preset = filterPresets.value.find(p => p.id === presetId);
+    
+    if (!preset) {
+      throw new Error(`Preset with ID ${presetId} not found`);
+    }
+
+    try {
+      await window.axios.delete(`/api/creatives/filter-presets/${presetId}`);
+      
+      // Удаляем из локального состояния
+      const index = filterPresets.value.findIndex(p => p.id === presetId);
+      if (index > -1) {
+        filterPresets.value.splice(index, 1);
+      }
+
+      // Сбрасываем выбранный пресет если он был удален
+      if (selectedPresetId.value === presetId) {
+        selectedPresetId.value = null;
+      }
+
+      console.log('✅ Пресет удален:', preset.name);
+
+      // Эмитируем событие удаления
+      document.dispatchEvent(new CustomEvent('creatives:preset-deleted', {
+        detail: {
+          presetId,
+          presetName: preset.name,
+          timestamp: new Date().toISOString()
+        }
+      }));
+
+    } catch (error) {
+      console.error('Ошибка при удалении пресета:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Обновить существующий пресет
+   */
+  async function updateFilterPreset(presetId: number, name: string, newFilters?: Partial<FilterPresetState>): Promise<FilterPreset> {
+    const preset = filterPresets.value.find(p => p.id === presetId);
+    
+    if (!preset) {
+      throw new Error(`Preset with ID ${presetId} not found`);
+    }
+
+    if (!name.trim()) {
+      throw new Error('Preset name cannot be empty');
+    }
+
+    try {
+      // Используем переданные фильтры или текущие
+      const filtersToSave = newFilters || {
+        searchKeyword: filters.searchKeyword,
+        countries: [...filters.countries],
+        dateCreation: filters.dateCreation,
+        sortBy: filters.sortBy,
+        periodDisplay: filters.periodDisplay,
+        advertisingNetworks: [...filters.advertisingNetworks],
+        languages: [...filters.languages],
+        operatingSystems: [...filters.operatingSystems],
+        browsers: [...filters.browsers],
+        devices: [...filters.devices],
+        imageSizes: [...filters.imageSizes],
+        onlyAdult: filters.onlyAdult,
+        perPage: filters.perPage,
+        activeTab: tabs.activeTab
+      };
+
+      const response = await window.axios.put(`/api/creatives/filter-presets/${presetId}`, {
+        name: name.trim(),
+        filters: filtersToSave
+      });
+
+      const updatedPreset: FilterPreset = response.data.data;
+      
+      // Обновляем в локальном состоянии
+      const index = filterPresets.value.findIndex(p => p.id === presetId);
+      if (index > -1) {
+        filterPresets.value[index] = updatedPreset;
+      }
+      
+      // Пересортировываем если изменилось имя
+      filterPresets.value.sort((a, b) => a.name.localeCompare(b.name));
+
+      console.log('✅ Пресет обновлен:', updatedPreset);
+
+      // Эмитируем событие обновления
+      document.dispatchEvent(new CustomEvent('creatives:preset-updated', {
+        detail: {
+          preset: updatedPreset,
+          timestamp: new Date().toISOString()
+        }
+      }));
+
+      return updatedPreset;
+    } catch (error: any) {
+      console.error('Ошибка при обновлении пресета:', error);
+      
+      if (error.response?.status === 422) {
+        const validationError = error.response.data.message || 'Validation error';
+        throw new Error(validationError);
+      }
+      
+      throw new Error('Failed to update preset: ' + (error.message || 'Unknown error'));
+    }
+  }
+
+  /**
+   * Сбросить выбор пресета (установить "По умолчанию")
+   */
+  function clearSelectedPreset(): void {
+    selectedPresetId.value = null;
+    
+    console.log('🔄 Выбор пресета сброшен');
+
+    // Эмитируем событие сброса
+    document.dispatchEvent(new CustomEvent('creatives:preset-cleared', {
+      detail: {
+        timestamp: new Date().toISOString()
+      }
+    }));
+  }
+
+  /**
+   * Проверить, соответствуют ли текущие фильтры выбранному пресету
+   */
+  function isCurrentFiltersMatchPreset(): boolean {
+    if (!currentPreset.value) return false;
+
+    const presetFilters = currentPreset.value.filters;
+    
+    // Сравниваем ключевые поля
+    return (
+      filters.searchKeyword === (presetFilters.searchKeyword || '') &&
+      JSON.stringify(filters.countries) === JSON.stringify(presetFilters.countries || []) &&
+      filters.dateCreation === (presetFilters.dateCreation || 'default') &&
+      filters.sortBy === (presetFilters.sortBy || 'default') &&
+      filters.periodDisplay === (presetFilters.periodDisplay || 'default') &&
+      JSON.stringify(filters.advertisingNetworks) === JSON.stringify(presetFilters.advertisingNetworks || []) &&
+      JSON.stringify(filters.languages) === JSON.stringify(presetFilters.languages || []) &&
+      JSON.stringify(filters.operatingSystems) === JSON.stringify(presetFilters.operatingSystems || []) &&
+      JSON.stringify(filters.browsers) === JSON.stringify(presetFilters.browsers || []) &&
+      JSON.stringify(filters.devices) === JSON.stringify(presetFilters.devices || []) &&
+      JSON.stringify(filters.imageSizes) === JSON.stringify(presetFilters.imageSizes || []) &&
+      filters.onlyAdult === (presetFilters.onlyAdult || false) &&
+      filters.perPage === (presetFilters.perPage || 12) &&
+      tabs.activeTab === (presetFilters.activeTab || 'push')
+    );
+  }
+
+  // ============================================================================
   // МЕТОДЫ ОЧИСТКИ
   // ============================================================================
   
@@ -635,6 +1044,41 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
       return detailsLoadingMap.value.get(creativeId) ?? false;
     };
   });
+
+  // ============================================================================
+  // COMPUTED СВОЙСТВА ДЛЯ ПРЕСЕТОВ
+  // ============================================================================
+  
+  // Опции пресетов для селекта с дефолтным значением
+  const presetOptions = computed(() => {
+    const defaultOption = {
+      value: 'default',
+      label: getTranslation('savedSettings', 'Сохраненные настройки'),
+      disabled: false
+    };
+    
+    const presetOpts = filterPresets.value.map((preset: FilterPreset) => ({
+      value: preset.id.toString(),
+      label: preset.name,
+      disabled: false,
+      filtersCount: preset.active_filters_count,
+      createdAt: preset.created_at
+    }));
+    
+    return [defaultOption, ...presetOpts];
+  });
+
+  // Текущий выбранный пресет
+  const currentPreset = computed(() => {
+    if (!selectedPresetId.value) return null;
+    return filterPresets.value.find(preset => preset.id === selectedPresetId.value) || null;
+  });
+
+  // Есть ли сохраненные пресеты
+  const hasPresets = computed(() => filterPresets.value.length > 0);
+
+  // Количество пресетов
+  const presetsCount = computed(() => filterPresets.value.length);
 
   // ============================================================================
   // МЕТОДЫ ИНИЦИАЛИЗАЦИИ
@@ -839,7 +1283,23 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     // 3. Инициализируем синхронизацию фильтров (только утилиты)
     await filtersSync.initialize();
     
-    // 4. Устанавливаем флаг инициализации для активации watchers
+    // 4. Загружаем избранные креативы (только для аутентифицированных пользователей)
+    try {
+      await loadFavoritesIds();
+    } catch (error) {
+      console.warn('Не удалось загрузить избранные креативы (возможно пользователь не аутентифицирован):', error);
+      // Не прерываем инициализацию, если избранное не загрузилось
+    }
+
+    // 5. Загружаем пресеты фильтров (только для аутентифицированных пользователей)
+    try {
+      await loadFilterPresets();
+    } catch (error) {
+      console.warn('Не удалось загрузить пресеты фильтров (возможно пользователь не аутентифицирован):', error);
+      // Не прерываем инициализацию, если пресеты не загрузились
+    }
+    
+    // 6. Устанавливаем флаг инициализации для активации watchers
     await nextTick();
     isInitialized.value = true;
     
@@ -993,11 +1453,19 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   }
 
   /**
-   * Сохранение настроек
+   * Сохранение настроек (показывает диалог создания пресета)
    */
-  function saveSettings(): void {
-    // TODO: Реализовать сохранение на сервер
-    console.log('Сохранение настроек фильтров');
+  async function saveSettings(): Promise<void> {
+    const name = prompt('Enter a name for your preset');
+    if (name && name.trim()) {
+      try {
+        await saveCurrentFiltersAsPreset(name);
+        alert('Preset saved successfully!');
+      } catch (error: any) {
+        console.error('Failed to save preset:', error);
+        alert(`Error saving preset: ${error.message}`);
+      }
+    }
   }
 
   // ============================================================================
@@ -1237,6 +1705,48 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   }
 
   /**
+   * Загрузка списка ID избранных креативов
+   */
+  async function loadFavoritesIds(): Promise<void> {
+    if (isFavoritesLoading.value) return;
+
+    try {
+      isFavoritesLoading.value = true;
+      
+      // Реальный API вызов для получения списка ID
+      const response = await window.axios.get('/api/creatives/favorites/ids');
+      
+      // Обновляем состояние
+      favoritesItems.value = response.data.data.ids || [];
+      favoritesCount.value = response.data.data.count || 0;
+      
+      console.log('✅ Загружены избранные креативы:', {
+        count: favoritesCount.value,
+        ids: favoritesItems.value
+      });
+      
+      // Эмитим событие загрузки
+      const event = new CustomEvent('creatives:favorites-loaded', {
+        detail: {
+          count: favoritesCount.value,
+          ids: favoritesItems.value,
+          timestamp: new Date().toISOString()
+        }
+      });
+      document.dispatchEvent(event);
+      
+    } catch (error) {
+      console.error('Ошибка при загрузке списка избранного:', error);
+      // При ошибке сбрасываем состояние
+      favoritesItems.value = [];
+      favoritesCount.value = 0;
+      throw error;
+    } finally {
+      isFavoritesLoading.value = false;
+    }
+  }
+
+  /**
    * Добавление креатива в избранное
    */
   async function addToFavorites(creativeId: number): Promise<void> {
@@ -1278,8 +1788,27 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
       });
       document.dispatchEvent(event);
       
-    } catch (error) {
-      // Откатываем оптимистичное обновление при ошибке
+    } catch (error: any) {
+      // Проверяем, является ли это ошибкой синхронизации (409 - уже в избранном)
+      if (error.response?.status === 409 && error.response?.data?.code === 'ALREADY_IN_FAVORITES') {
+        // Синхронизируем состояние с сервером
+        const syncData: FavoritesSyncData = error.response.data.data;
+
+        // Обновляем локальное состояние
+        updateCreativeInList(syncData.creativeId, {
+          isFavorite: syncData.isFavorite
+        });
+
+        // Обновляем общий счетчик
+        favoritesCount.value = syncData.totalFavorites;
+
+        // Показываем пользователю информативное сообщение
+        showMessage('Креатив уже в избранном', 'info');
+
+        return; // Выходим, не показывая ошибку
+      }
+
+      // Откатываем оптимистичное обновление при других ошибках
       const index = favoritesItems.value.indexOf(creativeId);
       if (index > -1) {
         favoritesItems.value.splice(index, 1);
@@ -1289,6 +1818,7 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
       }
       
       console.error('Ошибка при добавлении в избранное:', error);
+      showMessage('Ошибка при добавлении в избранное', 'error');
       throw error;
     } finally {
       // Очищаем состояние загрузки для конкретного креатива и глобально
@@ -1340,8 +1870,27 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
       });
       document.dispatchEvent(event);
       
-    } catch (error) {
-      // Откатываем оптимистичное обновление при ошибке
+    } catch (error: any) {
+      // Проверяем, является ли это ошибкой синхронизации (404 - не в избранном)
+      if (error.response?.status === 404 && error.response?.data?.code === 'NOT_IN_FAVORITES') {
+        // Синхронизируем состояние с сервером
+        const syncData: FavoritesSyncData = error.response.data.data;
+
+        // Обновляем локальное состояние
+        updateCreativeInList(syncData.creativeId, {
+          isFavorite: syncData.isFavorite
+        });
+
+        // Обновляем общий счетчик
+        favoritesCount.value = syncData.totalFavorites;
+
+        // Показываем пользователю информативное сообщение
+        showMessage('Креатив не найден в избранном', 'info');
+
+        return; // Выходим, не показывая ошибку
+      }
+
+      // Откатываем оптимистичное обновление при других ошибках
       if (!favoritesItems.value.includes(creativeId)) {
         favoritesItems.value.push(creativeId);
         if (favoritesCount.value !== undefined) {
@@ -1350,6 +1899,7 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
       }
       
       console.error('Ошибка при удалении из избранного:', error);
+      showMessage('Ошибка при удалении из избранного', 'error');
       throw error;
     } finally {
       // Очищаем состояние загрузки для конкретного креатива и глобально
@@ -1365,6 +1915,192 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
   function setFavoritesCount(count: number): void {
     favoritesCount.value = count;
   }
+
+  /**
+   * Обновление креатива в локальном состоянии
+   * Используется для синхронизации данных с сервером
+   */
+  function updateCreativeInList(creativeId: number, updates: Partial<Creative>): void {
+    // Обновляем в основном списке креативов
+    const creative = creatives.value.find((c: Creative) => c.id === creativeId);
+    if (creative) {
+      Object.assign(creative, updates);
+    }
+
+    // Обновляем в выбранном креативе для деталей, если это он
+    if (selectedCreative.value && selectedCreative.value.id === creativeId) {
+      Object.assign(selectedCreative.value, updates);
+    }
+
+    // Обновляем состояние избранного в локальном массиве
+    if ('isFavorite' in updates) {
+      const isInFavorites = favoritesItems.value.includes(creativeId);
+      
+      if (updates.isFavorite && !isInFavorites) {
+        favoritesItems.value.push(creativeId);
+      } else if (!updates.isFavorite && isInFavorites) {
+        const index = favoritesItems.value.indexOf(creativeId);
+        if (index > -1) {
+          favoritesItems.value.splice(index, 1);
+        }
+      }
+    }
+  }
+
+  /**
+   * Синхронизация статуса избранного с сервером
+   * Загружает актуальный статус креатива и обновляет локальное состояние
+   */
+  async function syncFavoriteStatus(creativeId: number): Promise<FavoritesSyncData> {
+    try {
+      const response = await window.axios.get(`/api/creatives/${creativeId}/favorite/status`);
+      const data: FavoritesSyncData = response.data.data;
+
+      // Обновляем локальное состояние креатива
+      updateCreativeInList(data.creativeId, {
+        isFavorite: data.isFavorite
+      });
+
+      // Обновляем общий счетчик
+      favoritesCount.value = data.totalFavorites;
+
+      return data;
+    } catch (error) {
+      console.error('Ошибка синхронизации статуса избранного:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Показать сообщение пользователю
+   * В будущем может быть заменено на toast/notification систему
+   */
+  function showMessage(message: string, type: 'info' | 'error' | 'success' = 'info'): void {
+    // Временная реализация через console
+    // В будущем можно заменить на toast/notification
+    console.log(`[${type.toUpperCase()}] ${message}`);
+    
+    // Эмитируем событие для возможной обработки в UI
+    document.dispatchEvent(new CustomEvent('creatives:user-message', {
+      detail: {
+        message,
+        type,
+        timestamp: new Date().toISOString()
+      }
+    }));
+  }
+
+  // ============================================================================
+  // МЕТОДЫ РАБОТЫ С ПОЛЬЗОВАТЕЛЬСКИМИ ДАННЫМИ
+  // ============================================================================
+
+  /**
+   * Установить данные пользователя
+   * Вызывается при инициализации Store или получении данных с сервера
+   */
+  function setUserData(newUserData: Partial<UserData>): void {
+    console.log('🔧 Setting user data:', newUserData);
+    
+    // Обновляем данные пользователя
+    userData.value = {
+      ...userData.value,
+      ...newUserData
+    };
+
+    // Синхронизируем счетчик избранного если передан
+    if (newUserData.favoritesCount !== undefined) {
+      favoritesCount.value = newUserData.favoritesCount;
+    }
+
+    console.log('✅ User data updated:', userData.value);
+  }
+
+  /**
+   * Загрузить актуальные данные пользователя с сервера
+   */
+  async function loadUserData(): Promise<void> {
+    if (isUserDataLoading.value) {
+      console.log('⏳ User data is already loading, skipping...');
+      return;
+    }
+
+    try {
+      isUserDataLoading.value = true;
+      console.log('🔄 Loading user data from server...');
+
+      const response = await window.axios.get('/api/creatives/user');
+      const { data } = response.data;
+
+      setUserData(data);
+      console.log('✅ User data loaded successfully:', data);
+    } catch (error) {
+      console.error('❌ Error loading user data:', error);
+      
+      // В случае ошибки устанавливаем состояние неавторизованного пользователя
+      setUserData({
+        id: null,
+        email: null,
+        tariff: null,
+        is_trial: false,
+        show_similar_creatives: false,
+        favoritesCount: 0,
+        isAuthenticated: false,
+      });
+    } finally {
+      isUserDataLoading.value = false;
+    }
+  }
+
+  /**
+   * Обновить тариф пользователя
+   */
+  function updateUserTariff(tariff: UserData['tariff']): void {
+    console.log('🔧 Updating user tariff:', tariff);
+    userData.value.tariff = tariff;
+  }
+
+  /**
+   * Обновить счетчик избранного пользователя
+   */
+  function updateUserFavoritesCount(count: number): void {
+    console.log('🔧 Updating user favorites count:', count);
+    userData.value.favoritesCount = count;
+    favoritesCount.value = count;
+  }
+
+  /**
+   * Проверить, аутентифицирован ли пользователь
+   */
+  const isUserAuthenticated = computed(() => userData.value.isAuthenticated);
+
+  /**
+   * Получить информацию о тарифе пользователя
+   */
+  const userTariffInfo = computed(() => {
+    const tariff = userData.value.tariff;
+    if (!tariff) return null;
+    
+    return {
+      name: tariff.name,
+      isActive: tariff.is_active,
+      isTrial: tariff.is_trial,
+      showSimilarCreatives: userData.value.show_similar_creatives,
+      expiresAt: tariff.expires_at,
+      cssClass: tariff.css_class,
+      status: tariff.status,
+    };
+  });
+
+  /**
+   * Получить информацию о пользователе для отображения
+   */
+  const userDisplayInfo = computed(() => ({
+    id: userData.value.id,
+    email: userData.value.email,
+    isAuthenticated: userData.value.isAuthenticated,
+    favoritesCount: userData.value.favoritesCount,
+    tariff: userTariffInfo.value,
+  }));
 
   // ============================================================================
   // ВОЗВРАТ ОБЪЕКТА STORE - ЕДИНЫЙ API ДЛЯ VUE КОМПОНЕНТОВ
@@ -1492,8 +2228,25 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     favoritesLoadingMap,        // Map состояний загрузки для конкретных креативов
     setFavoritesCount,          // Установка количества избранного
     refreshFavoritesCount,      // Обновление счетчика с сервера
+    loadFavoritesIds,           // Загрузка списка ID избранных креативов
     addToFavorites,             // Добавление в избранное
     removeFromFavorites,        // Удаление из избранного
+    updateCreativeInList,       // Обновление креатива в локальном состоянии
+    syncFavoriteStatus,         // Синхронизация статуса избранного с сервером
+    showMessage,                // Показ сообщений пользователю
+    
+    // ========================================
+    // ПОЛЬЗОВАТЕЛЬСКИЕ ДАННЫЕ И МЕТОДЫ
+    // ========================================
+    userData,                   // Данные пользователя (reactive)
+    isUserDataLoading,          // Состояние загрузки данных пользователя
+    setUserData,                // Установка данных пользователя
+    loadUserData,               // Загрузка данных пользователя с сервера
+    updateUserTariff,           // Обновление тарифа пользователя
+    updateUserFavoritesCount,   // Обновление счетчика избранного пользователя
+    isUserAuthenticated,        // Computed: аутентифицирован ли пользователь
+    userTariffInfo,             // Computed: информация о тарифе
+    userDisplayInfo,            // Computed: информация для отображения
     
     // ========================================
     // ПРЯМОЙ ДОСТУП К КОМПОЗАБЛАМ (для отладки)
@@ -1505,6 +2258,25 @@ export const useCreativesFiltersStore = defineStore('creativesFilters', () => {
     tabOpener,                  // useCreativesTabOpener композабл
     detailsManager,             // useCreativesDetails композабл
     copyTextManager,            // useCreativesCopyText композабл
+    
+    // ========================================
+    // СОСТОЯНИЕ И МЕТОДЫ ПРЕСЕТОВ ФИЛЬТРОВ
+    // ========================================
+    filterPresets,              // Список пресетов фильтров
+    isPresetsLoading,           // Состояние загрузки пресетов
+    selectedPresetId,           // ID выбранного пресета
+    isSavingPreset,             // Состояние сохранения пресета
+    presetOptions,              // Опции пресетов для селекта
+    currentPreset,              // Текущий выбранный пресет
+    hasPresets,                 // Есть ли сохраненные пресеты
+    presetsCount,               // Количество пресетов
+    loadFilterPresets,          // Загрузить все пресеты
+    saveCurrentFiltersAsPreset, // Сохранить текущие фильтры как пресет
+    applyFilterPreset,          // Применить пресет фильтров
+    deleteFilterPreset,         // Удалить пресет
+    updateFilterPreset,         // Обновить пресет
+    clearSelectedPreset,        // Сбросить выбор пресета
+    isCurrentFiltersMatchPreset, // Проверить соответствие текущих фильтров пресету
     
     // ========================================
     // МЕТОДЫ ОЧИСТКИ

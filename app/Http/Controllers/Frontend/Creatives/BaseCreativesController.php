@@ -12,11 +12,13 @@ use App\Helpers\IsoCodesHelper;
 use App\Models\AdvertismentNetwork;
 use App\Models\Browser;
 use App\Models\Creative;
+use App\Models\FilterPreset;
 use App\Enums\Frontend\DeviceType;
 use App\Enums\Frontend\OperationSystem;
 use App\Enums\Frontend\AdvertisingFormat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Validation\Rule;
 
 abstract class BaseCreativesController extends FrontendController
 {
@@ -422,7 +424,7 @@ abstract class BaseCreativesController extends FrontendController
             'translateText' => __('creatives.details.translate'),
             'redirectsDetails' => __('creatives.details.redirects-details'),
             'advertisingNetworks' => __('creatives.details.advertising-networks'),
-            'countries' => __('creatives.details.countries'),
+            'country' => __('creatives.details.country'),
             'language' => __('creatives.details.language'),
             'firstDisplayDate' => __('creatives.details.first-display-date'),
             'lastDisplayDate' => __('creatives.details.last-display-date'),
@@ -434,6 +436,10 @@ abstract class BaseCreativesController extends FrontendController
             'information' => __('creatives.details.information'),
             'stats' => __('creatives.details.stats'),
             'close' => __('creatives.details.close'),
+            'similarCreatives_title' => __('creatives.details.similar-creatives.title'),
+            'promo-premium' => __('creatives.details.similar-creatives.promo-premium'),
+            'go' => __('creatives.details.similar-creatives.go'),
+            'loadMore' => __('creatives.details.similar-creatives.load-more'),
         ];
     }
 
@@ -795,20 +801,31 @@ abstract class BaseCreativesController extends FrontendController
      */
     public function getFavoritesCount(Request $request)
     {
-        // TODO: Реализовать получение реального количества избранного
-        // $user = $request->user();
-        // $count = $user->favoriteCreatives()->count();
+        try {
+            $user = $request->user();
 
-        // Мок данные для тестирования
-        $mockCount = rand(20, 100);
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
 
-        return response()->json([
-            'status' => 'success',
-            'data' => [
-                'count' => $mockCount,
-                'lastUpdated' => now()->toISOString()
-            ]
-        ]);
+            $count = $user->getFavoritesCount();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'count' => $count,
+                    'lastUpdated' => now()->toISOString()
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to get favorites count: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -860,23 +877,65 @@ abstract class BaseCreativesController extends FrontendController
      */
     public function addToFavorites(Request $request, $id)
     {
-        // TODO: Реализовать добавление в избранное
-        // $user = $request->user();
-        // $creative = Creative::findOrFail($id);
-        // $user->favoriteCreatives()->attach($creative->id);
+        try {
+            $user = $request->user();
 
-        // Мок данные для тестирования
-        $mockTotalCount = rand(40, 100);
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
 
-        return response()->json([
-            'status' => 'success',
-            'data' => [
-                'creativeId' => (int)$id,
-                'isFavorite' => true,
-                'totalFavorites' => $mockTotalCount,
-                'addedAt' => now()->toISOString()
-            ]
-        ]);
+            $creativeId = (int)$id;
+
+            // Проверяем, существует ли креатив
+            $creative = Creative::findOrFail($creativeId);
+
+            // Проверяем, не добавлен ли уже в избранное
+            if ($user->hasFavoriteCreative($creativeId)) {
+                // Получаем информацию о том, когда был добавлен
+                $existingFavorite = \App\Models\Favorite::where('user_id', $user->id)
+                    ->where('creative_id', $creativeId)
+                    ->first();
+
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Creative already in favorites',
+                    'code' => 'ALREADY_IN_FAVORITES',
+                    'data' => [
+                        'creativeId' => $creativeId,
+                        'isFavorite' => true,
+                        'totalFavorites' => $user->getFavoritesCount(),
+                        'addedAt' => $existingFavorite ? $existingFavorite->created_at->toISOString() : null,
+                        'shouldSync' => true // Подсказка фронтенду обновить состояние
+                    ]
+                ], 409);
+            }
+
+            // Добавляем в избранное
+            $favorite = \App\Models\Favorite::addToFavorites($user->id, $creativeId);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'creativeId' => $creativeId,
+                    'isFavorite' => true,
+                    'totalFavorites' => $user->getFavoritesCount(),
+                    'addedAt' => $favorite->created_at->toISOString()
+                ]
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Creative not found'
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to add creative to favorites: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -920,21 +979,786 @@ abstract class BaseCreativesController extends FrontendController
      */
     public function removeFromFavorites(Request $request, $id)
     {
-        // TODO: Реализовать удаление из избранного
-        // $user = $request->user();
-        // $user->favoriteCreatives()->detach($id);
+        try {
+            $user = $request->user();
 
-        // Мок данные для тестирования
-        $mockTotalCount = rand(20, 80);
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
 
-        return response()->json([
-            'status' => 'success',
-            'data' => [
-                'creativeId' => (int)$id,
-                'isFavorite' => false,
-                'totalFavorites' => $mockTotalCount,
-                'removedAt' => now()->toISOString()
-            ]
+            $creativeId = (int)$id;
+
+            // Проверяем, есть ли креатив в избранном
+            if (!$user->hasFavoriteCreative($creativeId)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Creative not found in favorites',
+                    'code' => 'NOT_IN_FAVORITES',
+                    'data' => [
+                        'creativeId' => $creativeId,
+                        'isFavorite' => false,
+                        'totalFavorites' => $user->getFavoritesCount(),
+                        'shouldSync' => true // Подсказка фронтенду обновить состояние
+                    ]
+                ], 404);
+            }
+
+            // Удаляем из избранного
+            $removed = \App\Models\Favorite::removeFromFavorites($user->id, $creativeId);
+
+            if ($removed) {
+                return response()->json([
+                    'status' => 'success',
+                    'data' => [
+                        'creativeId' => $creativeId,
+                        'isFavorite' => false,
+                        'totalFavorites' => $user->getFavoritesCount(),
+                        'removedAt' => now()->toISOString()
+                    ]
+                ]);
+            }
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to remove creative from favorites'
+            ], 500);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to remove creative from favorites: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Helper method to check if creative is in user's favorites
+     * Used internally by other controller methods
+     */
+    protected function checkIsFavorite(int $creativeId, Request $request): bool
+    {
+        $user = $request->user();
+
+        // Если пользователь не аутентифицирован, возвращаем false
+        if (!$user) {
+            return false;
+        }
+
+        return $user->hasFavoriteCreative($creativeId);
+    }
+
+    /**
+     * Проверить статус избранного для конкретного креатива
+     * 
+     * @OA\Get(
+     *     path="/api/creatives/{id}/favorite/status",
+     *     operationId="checkFavoriteStatus",
+     *     tags={"Креативы - Избранное"},
+     *     summary="Проверить статус избранного",
+     *     description="Возвращает актуальный статус избранного для конкретного креатива",
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID креатива",
+     *         required=true,
+     *         @OA\Schema(type="integer", minimum=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Статус избранного успешно получен",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="success"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="creativeId", type="integer", example=123),
+     *                 @OA\Property(property="isFavorite", type="boolean", example=true),
+     *                 @OA\Property(property="totalFavorites", type="integer", example=42),
+     *                 @OA\Property(property="addedAt", type="string", format="date-time", nullable=true)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Креатив не найден"
+     *     )
+     * )
+     */
+    public function getFavoriteStatus(Request $request, $id)
+    {
+        try {
+            $user = $request->user();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+
+            $creativeId = (int)$id;
+
+            // Проверяем, существует ли креатив
+            $creative = Creative::find($creativeId);
+            if (!$creative) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Creative not found'
+                ], 404);
+            }
+
+            $isFavorite = $user->hasFavoriteCreative($creativeId);
+            $addedAt = null;
+
+            if ($isFavorite) {
+                $favorite = \App\Models\Favorite::where('user_id', $user->id)
+                    ->where('creative_id', $creativeId)
+                    ->first();
+                $addedAt = $favorite ? $favorite->created_at->toISOString() : null;
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'creativeId' => $creativeId,
+                    'isFavorite' => $isFavorite,
+                    'totalFavorites' => $user->getFavoritesCount(),
+                    'addedAt' => $addedAt,
+                    'checkedAt' => now()->toISOString()
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to check favorite status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // ============================================================================
+    // МЕТОДЫ ДЛЯ РАБОТЫ С ПРЕСЕТАМИ ФИЛЬТРОВ
+    // ============================================================================
+
+    /**
+     * Получить все пресеты фильтров для текущего пользователя
+     * 
+     * @OA\Get(
+     *     path="/api/creatives/filter-presets",
+     *     operationId="getFilterPresets",
+     *     tags={"Креативы - Пресеты фильтров"},
+     *     summary="Получить список пресетов фильтров",
+     *     description="Возвращает все сохраненные пресеты фильтров для аутентифицированного пользователя",
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Пресеты успешно получены",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="success"),
+     *             @OA\Property(property="data", type="array", @OA\Items(
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="Facebook USA"),
+     *                 @OA\Property(property="filters", type="object"),
+     *                 @OA\Property(property="has_active_filters", type="boolean", example=true),
+     *                 @OA\Property(property="active_filters_count", type="integer", example=3),
+     *                 @OA\Property(property="created_at", type="string", format="date-time"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time")
+     *             ))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Пользователь не аутентифицирован"
+     *     )
+     * )
+     */
+    public function getFilterPresets(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+
+            $presets = FilterPreset::forUser($user->id)
+                ->orderBy('name')
+                ->get()
+                ->map(function ($preset) {
+                    return $preset->toApiArray();
+                });
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $presets,
+                'meta' => [
+                    'total' => $presets->count(),
+                    'timestamp' => now()->toISOString()
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to get filter presets: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Создать новый пресет фильтров
+     * 
+     * @OA\Post(
+     *     path="/api/creatives/filter-presets",
+     *     operationId="createFilterPreset",
+     *     tags={"Креативы - Пресеты фильтров"},
+     *     summary="Создать пресет фильтров",
+     *     description="Создает новый пресет фильтров с текущими настройками",
+     *     security={{"bearerAuth": {}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="name", type="string", example="My Facebook Preset", maxLength=255),
+     *             @OA\Property(property="filters", type="object",
+     *                 @OA\Property(property="searchKeyword", type="string"),
+     *                 @OA\Property(property="countries", type="array", @OA\Items(type="string")),
+     *                 @OA\Property(property="advertisingNetworks", type="array", @OA\Items(type="string")),
+     *                 @OA\Property(property="activeTab", type="string")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Пресет успешно создан",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="success"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="My Facebook Preset"),
+     *                 @OA\Property(property="filters", type="object")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Ошибка валидации"
+     *     )
+     * )
+     */
+    public function createFilterPreset(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+
+            // Валидация входных данных
+            $validated = $request->validate([
+                'name' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    Rule::unique('filter_presets', 'name')->where('user_id', $user->id)
+                ],
+                'filters' => 'required|array'
+            ]);
+
+            // Создаем пресет
+            $preset = FilterPreset::createPreset(
+                $user->id,
+                $validated['name'],
+                $validated['filters']
+            );
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $preset->toApiArray(),
+                'message' => 'Filter preset created successfully'
+            ], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to create filter preset: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Получить конкретный пресет фильтров
+     * 
+     * @OA\Get(
+     *     path="/api/creatives/filter-presets/{id}",
+     *     operationId="getFilterPreset",
+     *     tags={"Креативы - Пресеты фильтров"},
+     *     summary="Получить пресет фильтров",
+     *     description="Возвращает конкретный пресет фильтров по ID",
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID пресета",
+     *         required=true,
+     *         @OA\Schema(type="integer", minimum=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Пресет успешно получен"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Пресет не найден"
+     *     )
+     * )
+     */
+    public function getFilterPreset(Request $request, $id)
+    {
+        try {
+            $user = $request->user();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+
+            $preset = FilterPreset::forUser($user->id)->findOrFail($id);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $preset->toApiArray()
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Filter preset not found'
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to get filter preset: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Обновить пресет фильтров
+     * 
+     * @OA\Put(
+     *     path="/api/creatives/filter-presets/{id}",
+     *     operationId="updateFilterPreset",
+     *     tags={"Креативы - Пресеты фильтров"},
+     *     summary="Обновить пресет фильтров",
+     *     description="Обновляет существующий пресет фильтров",
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID пресета",
+     *         required=true,
+     *         @OA\Schema(type="integer", minimum=1)
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="name", type="string", example="Updated Preset Name"),
+     *             @OA\Property(property="filters", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Пресет успешно обновлен"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Пресет не найден"
+     *     )
+     * )
+     */
+    public function updateFilterPreset(Request $request, $id)
+    {
+        try {
+            $user = $request->user();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+
+            $preset = FilterPreset::forUser($user->id)->findOrFail($id);
+
+            // Валидация входных данных
+            $validated = $request->validate([
+                'name' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    Rule::unique('filter_presets', 'name')
+                        ->where('user_id', $user->id)
+                        ->ignore($preset->id)
+                ],
+                'filters' => 'required|array'
+            ]);
+
+            // Обновляем пресет
+            $preset->updatePreset(
+                $validated['name'],
+                $validated['filters']
+            );
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $preset->fresh()->toApiArray(),
+                'message' => 'Filter preset updated successfully'
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Filter preset not found'
+            ], 404);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to update filter preset: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Удалить пресет фильтров
+     * 
+     * @OA\Delete(
+     *     path="/api/creatives/filter-presets/{id}",
+     *     operationId="deleteFilterPreset",
+     *     tags={"Креативы - Пресеты фильтров"},
+     *     summary="Удалить пресет фильтров",
+     *     description="Удаляет существующий пресет фильтров",
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID пресета",
+     *         required=true,
+     *         @OA\Schema(type="integer", minimum=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Пресет успешно удален"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Пресет не найден"
+     *     )
+     * )
+     */
+    public function deleteFilterPreset(Request $request, $id)
+    {
+        try {
+            $user = $request->user();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+
+            $preset = FilterPreset::forUser($user->id)->findOrFail($id);
+            $presetName = $preset->name;
+
+            $preset->delete();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => "Filter preset '{$presetName}' deleted successfully",
+                'data' => [
+                    'deleted_id' => (int)$id,
+                    'deleted_name' => $presetName,
+                    'deleted_at' => now()->toISOString()
+                ]
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Filter preset not found'
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to delete filter preset: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Получить похожие креативы на основе текущего креатива
+     * Учитывает тарифные ограничения пользователя
+     */
+    protected function getSimilarCreatives(Creative $creative, ?int $userId = null, int $limit = 6): array
+    {
+        // Проверяем права доступа к похожим креативам
+        if ($userId) {
+            $user = \App\Models\User::find($userId);
+            if (!$user || !$user->canViewSimilarCreatives()) {
+                return []; // Возвращаем пустой массив если нет доступа
+            }
+        }
+
+        // Базовый запрос для поиска похожих креативов
+        $query = Creative::where('id', '!=', $creative->id);
+        // TODO: Временно отключаем фильтрацию по обработанности и валидности
+        // ->where('is_processed', true)
+        // ->where('is_valid', true);
+
+        // Приоритет 1: Тот же формат
+        if ($creative->format) {
+            $query->where('format', $creative->format);
+        }
+
+        // Приоритет 2: Та же страна
+        if ($creative->country_id) {
+            $query->where('country_id', $creative->country_id);
+        }
+
+        // Приоритет 3: Та же рекламная сеть  
+        if ($creative->advertisment_network_id) {
+            $query->where('advertisment_network_id', $creative->advertisment_network_id);
+        }
+
+        // Приоритет 4: Тот же язык
+        if ($creative->language_id) {
+            $query->where('language_id', $creative->language_id);
+        }
+
+        // Исключаем adult контент если исходный креатив не adult
+        if (!$creative->is_adult) {
+            $query->where('is_adult', false);
+        }
+
+        // Предзагружаем связанные данные
+        $query->with([
+            'country',
+            'language',
+            'browser',
+            'advertismentNetwork'
         ]);
+
+        // Сортируем по актуальности: сначала активные, потом по дате
+        $query->orderByRaw("CASE WHEN status = 'active' THEN 1 ELSE 0 END DESC")
+            ->orderByDesc('last_seen_at')
+            ->orderByDesc('external_created_at');
+
+        // Получаем результаты с лимитом
+        $similarCreatives = $query->limit($limit)->get();
+
+        // Если не хватает результатов, расширяем поиск
+        if ($similarCreatives->count() < $limit) {
+            $remainingLimit = $limit - $similarCreatives->count();
+            $excludeIds = $similarCreatives->pluck('id')->toArray();
+            $excludeIds[] = $creative->id;
+
+            // Более широкий поиск: только формат + активные
+            $additionalQuery = Creative::whereNotIn('id', $excludeIds)
+                ->where('is_processed', true)
+                ->where('is_valid', true);
+
+            if ($creative->format) {
+                $additionalQuery->where('format', $creative->format);
+            }
+
+            // if (!$creative->is_adult) {
+            //     $additionalQuery->where('is_adult', false);
+            // }
+
+            $additionalCreatives = $additionalQuery
+                ->with(['country', 'language', 'browser', 'advertismentNetwork'])
+                ->orderByRaw("CASE WHEN status = 'active' THEN 1 ELSE 0 END DESC")
+                ->orderByDesc('social_likes')
+                ->orderByDesc('last_seen_at')
+                ->limit($remainingLimit)
+                ->get();
+
+            $similarCreatives = $similarCreatives->merge($additionalCreatives);
+        }
+
+        // Конвертируем в массив для API
+        return $similarCreatives->map(function ($item) use ($userId) {
+            $creativeData = $item->toCreativeArray();
+
+            // Добавляем информацию о статусе избранного для аутентифицированных пользователей
+            if ($userId) {
+                $creativeData['is_favorite'] = $this->checkIsFavoriteById($item->id, $userId);
+            } else {
+                $creativeData['is_favorite'] = false;
+            }
+
+            return $creativeData;
+        })->toArray();
+    }
+
+    /**
+     * Получить похожие креативы с поддержкой пагинации
+     * Возвращает массив с элементами и метаинформацией о пагинации
+     */
+    protected function getSimilarCreativesWithPagination(Creative $creative, ?int $userId = null, int $limit = 6, int $offset = 0): array
+    {
+        // Проверяем права доступа к похожим креативам
+        if ($userId) {
+            $user = \App\Models\User::find($userId);
+            if (!$user || !$user->canViewSimilarCreatives()) {
+                return [
+                    'items' => [],
+                    'total' => 0,
+                    'hasMore' => false
+                ];
+            }
+        }
+
+        // Строим базовый запрос для подсчета общего количества
+        $baseQuery = Creative::where('id', '!=', $creative->id);
+
+        // Применяем те же фильтры что и в основном методе
+        if ($creative->format) {
+            $baseQuery->where('format', $creative->format);
+        }
+
+        if ($creative->country_id) {
+            $baseQuery->where('country_id', $creative->country_id);
+        }
+
+        if ($creative->advertisment_network_id) {
+            $baseQuery->where('advertisment_network_id', $creative->advertisment_network_id);
+        }
+
+        if ($creative->language_id) {
+            $baseQuery->where('language_id', $creative->language_id);
+        }
+
+        if (!$creative->is_adult) {
+            $baseQuery->where('is_adult', false);
+        }
+
+        // Получаем общее количество для пагинации
+        $totalCount = $baseQuery->count();
+
+        // Строим запрос для получения конкретной страницы
+        $query = clone $baseQuery;
+
+        // Предзагружаем связанные данные
+        $query->with([
+            'country',
+            'language',
+            'browser',
+            'advertismentNetwork'
+        ]);
+
+        // Сортируем по актуальности
+        $query->orderByRaw("CASE WHEN status = 'active' THEN 1 ELSE 0 END DESC")
+            ->orderByDesc('last_seen_at')
+            ->orderByDesc('external_created_at');
+
+        // Применяем пагинацию
+        $similarCreatives = $query->offset($offset)->limit($limit)->get();
+
+        // Если не хватает результатов и это первая страница, расширяем поиск
+        if ($similarCreatives->count() < $limit && $offset === 0) {
+            $remainingLimit = $limit - $similarCreatives->count();
+            $excludeIds = $similarCreatives->pluck('id')->toArray();
+            $excludeIds[] = $creative->id;
+
+            // Более широкий поиск
+            $additionalQuery = Creative::whereNotIn('id', $excludeIds);
+
+            if ($creative->format) {
+                $additionalQuery->where('format', $creative->format);
+            }
+
+            $additionalCreatives = $additionalQuery
+                ->with(['country', 'language', 'browser', 'advertismentNetwork'])
+                ->orderByRaw("CASE WHEN status = 'active' THEN 1 ELSE 0 END DESC")
+                ->orderByDesc('social_likes')
+                ->orderByDesc('last_seen_at')
+                ->limit($remainingLimit)
+                ->get();
+
+            $similarCreatives = $similarCreatives->merge($additionalCreatives);
+
+            // Обновляем общее количество с учетом расширенного поиска
+            $additionalCount = Creative::whereNotIn('id', [$creative->id])
+                ->when($creative->format, fn($q) => $q->where('format', $creative->format))
+                ->count();
+            $totalCount = max($totalCount, $additionalCount);
+        }
+
+        // Конвертируем в массив для API
+        $items = $similarCreatives->map(function ($item) use ($userId) {
+            $creativeData = $item->toCreativeArray();
+
+            // Добавляем информацию о статусе избранного для аутентифицированных пользователей
+            if ($userId) {
+                $creativeData['is_favorite'] = $this->checkIsFavoriteById($item->id, $userId);
+            } else {
+                $creativeData['is_favorite'] = false;
+            }
+
+            return $creativeData;
+        })->toArray();
+
+        // Определяем есть ли еще данные
+        $hasMore = ($offset + count($items)) < $totalCount;
+
+        return [
+            'items' => $items,
+            'total' => $totalCount,
+            'hasMore' => $hasMore,
+            'offset' => $offset,
+            'limit' => $limit,
+            'currentCount' => count($items)
+        ];
+    }
+
+    /**
+     * Helper method для проверки избранного по ID пользователя
+     */
+    protected function checkIsFavoriteById(int $creativeId, int $userId): bool
+    {
+        $user = \App\Models\User::find($userId);
+
+        if (!$user) {
+            return false;
+        }
+
+        return $user->hasFavoriteCreative($creativeId);
     }
 }

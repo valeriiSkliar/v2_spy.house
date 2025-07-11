@@ -42,7 +42,9 @@
       >
         {{ option.label }}
       </li>
-      <li v-if="safeOptions.length === 0" class="base-select__no-options">No options available</li>
+      <li v-if="safeOptions.length === 0" class="base-select__no-options">
+        {{ translations.noOptions }}
+      </li>
     </ul>
   </div>
 </template>
@@ -60,6 +62,10 @@ interface OnPageTranslations {
   perPage: string;
 }
 
+interface Translations {
+  noOptions: string;
+}
+
 interface Props {
   value: string | number;
   options: Option[];
@@ -67,6 +73,7 @@ interface Props {
   icon?: string;
   initialValue?: string | number;
   onPageTranslations?: OnPageTranslations;
+  translations?: Translations;
 }
 
 interface Emits {
@@ -80,6 +87,9 @@ const props = withDefaults(defineProps<Props>(), {
   onPageTranslations: () => ({
     onPage: 'On page',
     perPage: 'Per page',
+  }),
+  translations: () => ({
+    noOptions: 'No options available',
   }),
 });
 

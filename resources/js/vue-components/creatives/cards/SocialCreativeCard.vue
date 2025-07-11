@@ -78,9 +78,9 @@
         </div>
       </div>
       <div class="creative-item__btns">
-        <div class="creative-item-info">
+        <div v-if="creative.country" class="creative-item-info">
           <img :src="getFlagIcon()" alt="" />
-          {{ creative.country || 'KZ' }}
+          {{ creative.country?.code }}
         </div>
         <button
           class="btn-icon btn-favorite"

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Frontend\Creatives\CreativesController;
+use App\Http\Controllers\Frontend\FavoriteController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('creatives')
@@ -22,8 +23,27 @@ Route::prefix('api/creatives')
         // API для деталей креативов
         Route::get('/{id}/details', [CreativesController::class, 'getCreativeDetails'])->name('details');
 
+        // API для похожих креативов
+        Route::get('/{id}/similar', [CreativesController::class, 'getSimilarCreativesApi'])->name('similar');
+
+        // API для получения данных пользователя
+        Route::get('/user', [CreativesController::class, 'getCurrentUser'])->name('user');
+
         // API для избранного
-        Route::get('/favorites/count', [CreativesController::class, 'getFavoritesCount'])->name('favorites.count');
-        Route::post('/{id}/favorite', [CreativesController::class, 'addToFavorites'])->name('favorites.add');
-        Route::delete('/{id}/favorite', [CreativesController::class, 'removeFromFavorites'])->name('favorites.remove');
+        Route::middleware('auth')->group(function () {
+            Route::get('/favorites/count', [CreativesController::class, 'getFavoritesCount'])->name('favorites.count');
+            Route::get('/favorites/ids', [FavoriteController::class, 'ids'])->name('favorites.ids');
+            Route::get('/{id}/favorite/status', [CreativesController::class, 'getFavoriteStatus'])->name('favorites.status');
+            Route::post('/{id}/favorite', [CreativesController::class, 'addToFavorites'])->name('favorites.add');
+            Route::delete('/{id}/favorite', [CreativesController::class, 'removeFromFavorites'])->name('favorites.remove');
+        });
+
+        // API для пресетов фильтров
+        Route::middleware('auth')->group(function () {
+            Route::get('/filter-presets', [CreativesController::class, 'getFilterPresets'])->name('filterPresets.index');
+            Route::post('/filter-presets', [CreativesController::class, 'createFilterPreset'])->name('filterPresets.store');
+            Route::get('/filter-presets/{id}', [CreativesController::class, 'getFilterPreset'])->name('filterPresets.show');
+            Route::put('/filter-presets/{id}', [CreativesController::class, 'updateFilterPreset'])->name('filterPresets.update');
+            Route::delete('/filter-presets/{id}', [CreativesController::class, 'deleteFilterPreset'])->name('filterPresets.destroy');
+        });
     });
