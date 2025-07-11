@@ -17,17 +17,17 @@ use Illuminate\Support\Facades\Auth;
     @endif
 
     <title>{{ config('app.name', 'Laravel') }}</title>
-
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link href="{{ asset('css/libs/aos.min.css') }}" rel="stylesheet">
 
     <!-- Scripts -->
     @vite([
     'resources/scss/app.scss',
-    'resources/js/pages/mainPage/aos.js',
+    // 'resources/js/pages/mainPage/aos.js',
     'resources/js/pages/mainPage/ResizeSensor.js',
     'resources/js/pages/mainPage/jquery.sticky-sidebar.min.js',
     'resources/js/pages/mainPage/jquery.star-rating-svg.js',
@@ -49,6 +49,8 @@ use Illuminate\Support\Facades\Auth;
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick.min.js"></script>
+    <script src="{{ asset('js/libs/aos.min.js') }}"></script>
+
 </body>
 
 </html>

@@ -32,7 +32,6 @@ export default defineConfig({
         'resources/scss/img/main/phone.webp',
         'resources/scss/img/main/offer-figure2.webp',
         // main page js (порядок важен: библиотеки перед их использованием)
-        'resources/js/pages/mainPage/aos.js',
         'resources/js/pages/mainPage/ResizeSensor.js',
         'resources/js/pages/mainPage/jquery.sticky-sidebar.min.js',
         'resources/js/pages/mainPage/jquery.star-rating-svg.js',
