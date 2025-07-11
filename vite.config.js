@@ -25,6 +25,15 @@ export default defineConfig({
         'resources/js/tariffs.js',
         'resources/js/pages/blogs.js',
         'resources/js/vue-islands.ts',
+        // main page
+        'resources/scss/img/main/1.mp4',
+        'resources/scss/img/main/screen.mp4',
+        'resources/scss/img/main/winner-2021.svg',
+        'resources/scss/img/main/phone.webp',
+        'resources/scss/img/main/offer-figure2.webp',
+        // main page js (только custom логика, библиотеки подключены через <script>)
+        'resources/js/pages/mainPage/main.js',
+        'resources/js/pages/mainPage/home.js',
       ],
       refresh: true,
     }),
