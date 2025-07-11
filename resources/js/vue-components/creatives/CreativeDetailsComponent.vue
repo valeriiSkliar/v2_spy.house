@@ -1,7 +1,7 @@
 <template>
   <div class="creatives-list__details" :class="{ 'show-details': store.isDetailsVisible }">
     <div class="creative-details" v-if="store.hasSelectedCreative">
-      <div class="creative-details__content">
+      <div class="creative-details__content" ref="detailsContentContainer">
         <!-- Заголовок с кнопками -->
         <div class="creative-details__head">
           <div class="row align-items-center">
@@ -475,8 +475,9 @@ const similarCreativesLoaded = ref(false);
 const similarCreativesLoading = ref(false);
 const similarCreativesError = ref<string | null>(null);
 
-// Ссылка на DOM элемент секции похожих креативов
+// Ссылки на DOM элементы
 const similarCreativesSection = ref<HTMLElement | null>(null);
+const detailsContentContainer = ref<HTMLElement | null>(null);
 const intersectionObserver = ref<IntersectionObserver | null>(null);
 
 // Создаем reactive переводы для часто используемых ключей с fallback значениями
@@ -745,9 +746,26 @@ async function handleSimilarFavoriteClick(creative: Creative): Promise<void> {
 }
 
 /**
+ * Прокрутка к началу контейнера деталей креатива
+ */
+function scrollToTopDetails(): void {
+  if (!detailsContentContainer.value) {
+    console.warn('⚠️ Контейнер деталей креатива не найден для прокрутки');
+    return;
+  }
+
+  console.log('🔝 Прокручиваем детали креатива вверх');
+  detailsContentContainer.value.scrollTo({
+    top: 0,
+    behavior: 'smooth',
+  });
+}
+
+/**
  * Обработчик открытия деталей похожего креатива
  */
 function handleShowSimilarDetails(creative: Creative): void {
+  console.log('🔄 Переключение на похожий креатив ID:', creative.id);
   store.detailsManager.handleShowCreativeDetails(creative.id);
 }
 
@@ -895,6 +913,14 @@ watch(
   (newCreative, oldCreative) => {
     if (newCreative) {
       resetSimilarCreativesState();
+
+      // Прокручиваем вверх при смене креатива (особенно важно для похожих креативов)
+      if (oldCreative && newCreative.id !== oldCreative.id) {
+        nextTick(() => {
+          scrollToTopDetails();
+        });
+      }
+
       // Настраиваем наблюдатель после небольшой задержки, чтобы DOM обновился
       nextTick(() => {
         setTimeout(() => {
