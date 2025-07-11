@@ -23,6 +23,9 @@ Route::prefix('api/creatives')
         // API для деталей креативов
         Route::get('/{id}/details', [CreativesController::class, 'getCreativeDetails'])->name('details');
 
+        // API для похожих креативов
+        Route::get('/{id}/similar', [CreativesController::class, 'getSimilarCreativesApi'])->name('similar');
+
         // API для получения данных пользователя
         Route::get('/user', [CreativesController::class, 'getCurrentUser'])->name('user');
 

@@ -1520,4 +1520,124 @@ abstract class BaseCreativesController extends FrontendController
             ], 500);
         }
     }
+
+    /**
+     * Получить похожие креативы на основе текущего креатива
+     * Учитывает тарифные ограничения пользователя
+     */
+    protected function getSimilarCreatives(Creative $creative, ?int $userId = null, int $limit = 6): array
+    {
+        // Проверяем права доступа к похожим креативам
+        if ($userId) {
+            $user = \App\Models\User::find($userId);
+            if (!$user || !$user->canViewSimilarCreatives()) {
+                return []; // Возвращаем пустой массив если нет доступа
+            }
+        }
+
+        // Базовый запрос для поиска похожих креативов
+        $query = Creative::where('id', '!=', $creative->id);
+        // TODO: Временно отключаем фильтрацию по обработанности и валидности
+        // ->where('is_processed', true)
+        // ->where('is_valid', true);
+
+        // Приоритет 1: Тот же формат
+        if ($creative->format) {
+            $query->where('format', $creative->format);
+        }
+
+        // Приоритет 2: Та же страна
+        if ($creative->country_id) {
+            $query->where('country_id', $creative->country_id);
+        }
+
+        // Приоритет 3: Та же рекламная сеть  
+        if ($creative->advertisment_network_id) {
+            $query->where('advertisment_network_id', $creative->advertisment_network_id);
+        }
+
+        // Приоритет 4: Тот же язык
+        if ($creative->language_id) {
+            $query->where('language_id', $creative->language_id);
+        }
+
+        // Исключаем adult контент если исходный креатив не adult
+        if (!$creative->is_adult) {
+            $query->where('is_adult', false);
+        }
+
+        // Предзагружаем связанные данные
+        $query->with([
+            'country',
+            'language',
+            'browser',
+            'advertismentNetwork'
+        ]);
+
+        // Сортируем по актуальности: сначала активные, потом по дате
+        $query->orderByDesc('is_active')
+            ->orderByDesc('last_seen_at')
+            ->orderByDesc('external_created_at');
+
+        // Получаем результаты с лимитом
+        $similarCreatives = $query->limit($limit)->get();
+
+        // Если не хватает результатов, расширяем поиск
+        if ($similarCreatives->count() < $limit) {
+            $remainingLimit = $limit - $similarCreatives->count();
+            $excludeIds = $similarCreatives->pluck('id')->toArray();
+            $excludeIds[] = $creative->id;
+
+            // Более широкий поиск: только формат + активные
+            $additionalQuery = Creative::whereNotIn('id', $excludeIds)
+                ->where('is_processed', true)
+                ->where('is_valid', true);
+
+            if ($creative->format) {
+                $additionalQuery->where('format', $creative->format);
+            }
+
+            // if (!$creative->is_adult) {
+            //     $additionalQuery->where('is_adult', false);
+            // }
+
+            $additionalCreatives = $additionalQuery
+                ->with(['country', 'language', 'browser', 'advertismentNetwork'])
+                ->orderByDesc('is_active')
+                ->orderByDesc('social_likes')
+                ->orderByDesc('last_seen_at')
+                ->limit($remainingLimit)
+                ->get();
+
+            $similarCreatives = $similarCreatives->merge($additionalCreatives);
+        }
+
+        // Конвертируем в массив для API
+        return $similarCreatives->map(function ($item) use ($userId) {
+            $creativeData = $item->toCreativeArray();
+
+            // Добавляем информацию о статусе избранного для аутентифицированных пользователей
+            if ($userId) {
+                $creativeData['is_favorite'] = $this->checkIsFavoriteById($item->id, $userId);
+            } else {
+                $creativeData['is_favorite'] = false;
+            }
+
+            return $creativeData;
+        })->toArray();
+    }
+
+    /**
+     * Helper method для проверки избранного по ID пользователя
+     */
+    protected function checkIsFavoriteById(int $creativeId, int $userId): bool
+    {
+        $user = \App\Models\User::find($userId);
+
+        if (!$user) {
+            return false;
+        }
+
+        return $user->hasFavoriteCreative($creativeId);
+    }
 }

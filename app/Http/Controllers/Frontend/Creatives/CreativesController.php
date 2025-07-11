@@ -460,4 +460,209 @@ class CreativesController extends BaseCreativesController
             ], 500);
         }
     }
+
+    /**
+     * Получить похожие креативы для конкретного креатива
+     * 
+     * @OA\Get(
+     *     path="/api/creatives/{id}/similar",
+     *     operationId="getSimilarCreatives",
+     *     tags={"Креативы - Похожие"},
+     *     summary="Получить похожие креативы",
+     *     description="Возвращает список креативов, похожих на указанный. Алгоритм ищет креативы с совпадающими характеристиками: формат, страна, рекламная сеть, язык. Доступ ограничен тарифным планом пользователя.",
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID креатива для поиска похожих",
+     *         required=true,
+     *         @OA\Schema(type="integer", minimum=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         description="Максимальное количество похожих креативов",
+     *         required=false,
+     *         @OA\Schema(type="integer", minimum=1, maximum=20, default=6)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Похожие креативы успешно получены",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="success"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="similar_creatives", type="array", @OA\Items(
+     *                     @OA\Property(property="id", type="integer", example=21718),
+     *                     @OA\Property(property="title", type="string", example="Similar Creative Title"),
+     *                     @OA\Property(property="description", type="string", example="Similar creative description"),
+     *                     @OA\Property(property="format", type="string", example="push"),
+     *                     @OA\Property(property="country", type="object",
+     *                         @OA\Property(property="code", type="string", example="US"),
+     *                         @OA\Property(property="name", type="string", example="United States")
+     *                     ),
+     *                     @OA\Property(property="advertising_networks", type="array", @OA\Items(type="string")),
+     *                     @OA\Property(property="icon_url", type="string", example="https://example.com/icon.png"),
+     *                     @OA\Property(property="main_image_url", type="string", example="https://example.com/image.jpg"),
+     *                     @OA\Property(property="landing_url", type="string", example="https://example.com/landing"),
+     *                     @OA\Property(property="is_favorite", type="boolean", example=false),
+     *                     @OA\Property(property="is_active", type="boolean", example=true),
+     *                     @OA\Property(property="social_likes", type="integer", example=1200),
+     *                     @OA\Property(property="created_at", type="string", example="2024-01-15")
+     *                 )),
+     *                 @OA\Property(property="original_creative", type="object",
+     *                     @OA\Property(property="id", type="integer", example=21717),
+     *                     @OA\Property(property="title", type="string", example="Original Creative"),
+     *                     @OA\Property(property="format", type="string", example="push")
+     *                 ),
+     *                 @OA\Property(property="search_criteria", type="object",
+     *                     @OA\Property(property="format", type="string", example="push"),
+     *                     @OA\Property(property="country", type="string", example="US"),
+     *                     @OA\Property(property="advertising_network", type="string", example="facebook"),
+     *                     @OA\Property(property="language", type="string", example="en")
+     *                 ),
+     *                 @OA\Property(property="count", type="integer", example=6),
+     *                 @OA\Property(property="has_access", type="boolean", example=true)
+     *             ),
+     *             @OA\Property(property="meta", type="object",
+     *                 @OA\Property(property="timestamp", type="string", format="date-time"),
+     *                 @OA\Property(property="algorithm_version", type="string", example="1.0.0"),
+     *                 @OA\Property(property="cache_key", type="string")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Доступ к похожим креативам ограничен тарифным планом",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="error"),
+     *             @OA\Property(property="message", type="string", example="Similar creatives are available only for Premium users"),
+     *             @OA\Property(property="code", type="string", example="PREMIUM_FEATURE_REQUIRED"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="has_access", type="boolean", example=false),
+     *                 @OA\Property(property="required_plan", type="string", example="Premium"),
+     *                 @OA\Property(property="current_plan", type="string", example="Basic"),
+     *                 @OA\Property(property="upgrade_url", type="string", example="/tariffs")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Исходный креатив не найден",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="error"),
+     *             @OA\Property(property="message", type="string", example="Creative not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Ошибка сервера",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="error"),
+     *             @OA\Property(property="message", type="string", example="Error loading similar creatives")
+     *         )
+     *     )
+     * )
+     */
+    public function getSimilarCreativesApi($id)
+    {
+        try {
+            // Валидируем и получаем параметры
+            $limit = (int)request()->get('limit', 6);
+            $limit = max(1, min(20, $limit)); // Ограничиваем от 1 до 20
+
+            // Находим исходный креатив
+            $creative = Creative::with([
+                'country',
+                'language',
+                'browser',
+                'advertismentNetwork'
+            ])->find($id);
+
+            if (!$creative) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Creative not found',
+                    'data' => null
+                ], 404);
+            }
+
+            // Получаем текущего пользователя
+            $user = request()->user();
+            $userId = $user ? $user->id : null;
+
+            // Проверяем доступ к похожим креативам (только для аутентифицированных пользователей)
+            if ($user && !$user->canViewSimilarCreatives()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Similar creatives are available only for Premium users',
+                    'code' => 'PREMIUM_FEATURE_REQUIRED',
+                    'data' => [
+                        'has_access' => false,
+                        'required_plan' => 'Premium',
+                        'current_plan' => $user->currentTariff()['name'] ?? 'Basic',
+                        'upgrade_url' => '/tariffs',
+                        'original_creative_id' => $creative->id,
+                        'similar_creatives' => []
+                    ]
+                ], 403);
+            }
+
+            // Получаем похожие креативы через базовый контроллер
+            $similarCreatives = $this->getSimilarCreatives($creative, $userId, $limit);
+
+            // Формируем критерии поиска для отладки
+            $searchCriteria = [
+                'format' => $creative->format?->value,
+                'country' => $creative->country?->iso_code_2,
+                'advertising_network' => $creative->advertismentNetwork?->network_name,
+                'language' => $creative->language?->iso_code_2,
+            ];
+
+            // Минимальная информация об исходном креативе
+            $originalCreative = [
+                'id' => $creative->id,
+                'title' => $creative->title,
+                'format' => $creative->format?->value,
+                'country' => $creative->country ? [
+                    'code' => $creative->country->iso_code_2,
+                    'name' => $creative->country->name
+                ] : null,
+                'advertising_network' => $creative->advertismentNetwork?->network_name
+            ];
+
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'similar_creatives' => $similarCreatives,
+                    'original_creative' => $originalCreative,
+                    'search_criteria' => $searchCriteria,
+                    'count' => count($similarCreatives),
+                    'has_access' => $user ? $user->canViewSimilarCreatives() : false,
+                    'requested_limit' => $limit,
+                ],
+                'meta' => [
+                    'timestamp' => now()->toISOString(),
+                    'algorithm_version' => '1.0.0',
+                    'cache_key' => "similar_creatives_{$id}_{$limit}",
+                    'user_authenticated' => $user !== null,
+                    'user_id' => $userId,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while loading similar creatives: ' . $e->getMessage(),
+                'data' => [
+                    'similar_creatives' => [],
+                    'has_access' => false,
+                    'count' => 0
+                ],
+                'debug' => [
+                    'creative_id' => $id,
+                    'error_class' => get_class($e),
+                    'error_line' => $e->getLine(),
+                    'error_file' => basename($e->getFile()),
+                ]
+            ], 500);
+        }
+    }
 }
