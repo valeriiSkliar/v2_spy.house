@@ -15,8 +15,17 @@ class BlogComposer
      */
     public function compose(View $view)
     {
-        // Загружаем последние опубликованные статьи блога с необходимыми связями
+        // Получаем текущую локаль пользователя
+        $locale = app()->getLocale();
+
+        // Загружаем статьи блога с учетом текущей локали
         $blogPosts = BlogPost::where('is_published', true)
+            // Фильтруем статьи, у которых есть заголовок на текущей локали
+            ->whereRaw("JSON_EXTRACT(title, '$.\"{$locale}\"') IS NOT NULL")
+            ->whereRaw("JSON_EXTRACT(title, '$.\"{$locale}\"') != ''")
+            // Фильтруем статьи, у которых есть контент на текущей локали
+            ->whereRaw("JSON_EXTRACT(content, '$.\"{$locale}\"') IS NOT NULL")
+            ->whereRaw("JSON_EXTRACT(content, '$.\"{$locale}\"') != ''")
             ->with(['author', 'categories'])
             ->withCount('comments') // Загружаем количество комментариев для избежания N+1
             ->orderBy('created_at', 'desc')

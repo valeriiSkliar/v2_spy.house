@@ -34,8 +34,6 @@ class BlogPost extends Model
         'title',
         'content',
         'summary',
-        'is_published' => 'boolean',
-        'average_rating' => 'float',
     ];
 
     protected $casts = [
@@ -43,6 +41,7 @@ class BlogPost extends Model
         'content' => 'json',
         'summary' => 'json',
         'is_published' => 'boolean',
+        'average_rating' => 'float',
     ];
 
     /**
