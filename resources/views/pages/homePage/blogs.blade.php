@@ -2,12 +2,13 @@
     <div class="container">
         <div class="row align-items-end _offset30">
             <div class="col-12 col-md-8 pb-md-2">
-                <div class="title-label" data-aos-delay="200" data-aos="fade-up">Blog</div>
-                <h2 class="title" data-aos-delay="200" data-aos="fade-up">New cases in the blog</h2>
+                <div class="title-label" data-aos-delay="200" data-aos="fade-up">{{ __('main_page.blog') }}</div>
+                <h2 class="title" data-aos-delay="200" data-aos="fade-up">{{ __('main_page.blog_blok.title') }}</h2>
             </div>
             <div class="col-12 col-md-4 d-none d-md-flex justify-content-end mb-30" data-aos-delay="200"
                 data-aos="fade-up">
-                <a href="{{ route('blog.index') }}" class="btn _flex _border-green _large min-170">Go to blog <span
+                <a href="{{ route('blog.index') }}" class="btn _flex _border-green _large min-170">{{
+                    __('main_page.blog_blok.go_to_blog') }} <span
                         class="icon-arrow-up-right ml-2 font-24 pr-0"></span></a>
             </div>
         </div>

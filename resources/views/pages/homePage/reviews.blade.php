@@ -2,13 +2,14 @@
     <div class="container">
         <div class="row align-items-end _offset30">
             <div class="col-12 col-md-8 pb-2">
-                <div class="title-label" data-aos-delay="200" data-aos="fade-up">Reviews</div>
-                <h2 class="title" data-aos-delay="200" data-aos="fade-up">What media buyers say about us</h2>
+                <div class="title-label" data-aos-delay="200" data-aos="fade-up">{{ __('main_page.reviews') }}</div>
+                <h2 class="title" data-aos-delay="200" data-aos="fade-up">{{ __('main_page.reviews_blok.about_us') }}
+                </h2>
             </div>
             <div class="col-12 col-md-4 d-none d-md-flex justify-content-end mb-30" data-aos-delay="200"
                 data-aos="fade-up">
-                <a data-toggle="modal" data-target="#add-review" class="btn _flex _border-green _large min-170">Add
-                    a review</a>
+                <a data-toggle="modal" data-target="#add-review" class="btn _flex _border-green _large min-170">{{
+                    __('main_page.reviews_blok.add_review') }}</a>
             </div>
         </div>
         <div class="reviews-slider" data-aos-delay="200" data-aos="fade-up">
