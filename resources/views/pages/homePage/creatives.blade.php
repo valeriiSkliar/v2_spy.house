@@ -1,9 +1,9 @@
 <section class="creatives">
     <div class="container">
-        <h2 class="title text-center" data-aos-delay="200" data-aos="fade-up">Creatives from all popular verticals
+        <h2 class="title text-center" data-aos-delay="200" data-aos="fade-up">{{ __('main_page.creatives_blok.title') }}
         </h2>
-        <div class="after-title text-center" data-aos-delay="200" data-aos="fade-up">You will definitely find
-            creatives in your vertical</div>
+        <div class="after-title text-center" data-aos-delay="200" data-aos="fade-up">{{
+            __('main_page.creatives_blok.subtitle') }}</div>
     </div>
     <div class="creatives-content-marquee" data-aos-delay="200" data-aos="fade-up">
         <div class="creatives-marquee mqscroller">
@@ -201,10 +201,11 @@
     <div class="container">
         <div class="text-center" data-aos-delay="200" data-aos="fade-up">
             @guest
-            <a href="{{ route('login') }}" class="btn _flex _green _large min-170">Get started</a>
+            <a href="{{ route('login') }}" class="btn _flex _green _large min-170">{{ __('main_page.get_started') }}</a>
             @endguest
             @auth
-            <a href="{{ route('creatives.index') }}" class="btn _flex _green _large min-170">Get started</a>
+            <a href="{{ route('creatives.index') }}" class="btn _flex _green _large min-170">{{
+                __('main_page.get_started') }}</a>
             @endauth
         </div>
     </div>
