@@ -1575,7 +1575,7 @@ abstract class BaseCreativesController extends FrontendController
         ]);
 
         // Сортируем по актуальности: сначала активные, потом по дате
-        $query->orderByDesc('is_active')
+        $query->orderByRaw("CASE WHEN status = 'active' THEN 1 ELSE 0 END DESC")
             ->orderByDesc('last_seen_at')
             ->orderByDesc('external_created_at');
 
@@ -1603,7 +1603,7 @@ abstract class BaseCreativesController extends FrontendController
 
             $additionalCreatives = $additionalQuery
                 ->with(['country', 'language', 'browser', 'advertismentNetwork'])
-                ->orderByDesc('is_active')
+                ->orderByRaw("CASE WHEN status = 'active' THEN 1 ELSE 0 END DESC")
                 ->orderByDesc('social_likes')
                 ->orderByDesc('last_seen_at')
                 ->limit($remainingLimit)

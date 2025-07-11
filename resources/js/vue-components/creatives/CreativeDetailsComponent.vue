@@ -276,80 +276,145 @@
         </div>
 
         <!-- Похожие креативы (если включено) -->
-        <div class="creative-details__group">
+        <div class="creative-details__group" ref="similarCreativesSection">
           <h3 class="mb-20">{{ translations.similarCreatives_title.value }}</h3>
-          <div v-if="!showSimilarCreatives" class="promo-premium">
-            <p v-html="translations.promoPremium.value"></p>
-            <a href="/tariffs" class="btn _flex _green _medium">{{ translations.go.value }}</a>
+
+          <!-- Состояние загрузки -->
+          <div v-if="similarCreativesLoading" class="text-center py-4">
+            <div class="spinner-border" role="status">
+              <span class="sr-only">Загрузка...</span>
+            </div>
+            <p class="mt-2 text-muted">Загружаем похожие креативы...</p>
           </div>
-          <div v-if="showSimilarCreatives" class="similar-creatives">
-            <div class="creative-item">
+
+          <!-- Ошибка загрузки -->
+          <div v-else-if="similarCreativesError" class="alert alert-warning">
+            <p>Не удалось загрузить похожие креативы: {{ similarCreativesError }}</p>
+            <button
+              class="btn btn-sm btn-outline-primary"
+              @click="loadSimilarCreatives"
+              :disabled="similarCreativesLoading"
+            >
+              Попробовать снова
+            </button>
+          </div>
+
+          <!-- Загруженные похожие креативы -->
+          <div
+            v-else-if="similarCreativesLoaded && similarCreatives.length > 0"
+            class="similar-creatives"
+          >
+            <div v-for="similar in similarCreatives" :key="similar.id" class="creative-item">
               <div class="creative-item__head">
                 <div class="creative-item__icon thumb thumb-with-controls-small mr-2">
-                  <img :src="selectedCreative?.icon_url" :alt="selectedCreative?.title" />
+                  <img :src="similar.icon_url" :alt="similar.title" />
                   <div class="thumb-controls">
-                    <a href="#" class="btn-icon _black"><span class="icon-download2"></span></a>
+                    <a
+                      href="#"
+                      class="btn-icon _black"
+                      @click.prevent="handleDownload(similar.icon_url ?? '')"
+                    >
+                      <span class="icon-download2"></span>
+                    </a>
                   </div>
                 </div>
                 <div class="creative-item__txt">
-                  <div class="creative-item__active icon-dot">Active: 3 day</div>
-                  <div class="text-with-copy">
-                    <div class="text-with-copy__btn">
-                      <button class="btn copy-btn _flex _dark js-copy">
-                        <span class="icon-copy"></span>Copy<span class="copy-btn__copied"
-                          >Copied</span
-                        >
-                      </button>
-                    </div>
-                    <div class="creative-item__title">
-                      ⚡ What are the pensions the increase? 💰
-                    </div>
+                  <div class="creative-item__active icon-dot" v-if="similar.is_active">
+                    Active: {{ similar.created_at }}
                   </div>
                   <div class="text-with-copy">
                     <div class="text-with-copy__btn">
-                      <button class="btn copy-btn _flex _dark js-copy">
-                        <span class="icon-copy"></span>Copy<span class="copy-btn__copied"
-                          >Copied</span
-                        >
+                      <button
+                        class="btn copy-btn _flex _dark js-copy"
+                        @click="handleCopyCreativeTitle(similar)"
+                      >
+                        <span class="icon-copy"></span>
+                        {{ translations.copy.value }}
+                        <span class="copy-btn__copied">{{ translations.copied.value }}</span>
+                      </button>
+                    </div>
+                    <div class="creative-item__title">
+                      {{ similar.title }}
+                    </div>
+                  </div>
+                  <div class="text-with-copy" v-if="similar.description">
+                    <div class="text-with-copy__btn">
+                      <button
+                        class="btn copy-btn _flex _dark js-copy"
+                        @click="handleCopyCreativeDescription(similar)"
+                      >
+                        <span class="icon-copy"></span>
+                        {{ translations.copy.value }}
+                        <span class="copy-btn__copied">{{ translations.copied.value }}</span>
                       </button>
                     </div>
                     <div class="creative-item__desc">
-                      How much did Kazakhstanis begin to receive
+                      {{ similar.description }}
                     </div>
                   </div>
                 </div>
               </div>
               <div class="creative-item__footer">
                 <div class="creative-item__info">
-                  <div class="creative-item-info">
-                    <span class="creative-item-info__txt">Push.house</span>
+                  <div class="creative-item-info" v-if="similar.advertising_networks?.length">
+                    <span class="creative-item-info__txt">{{
+                      similar.advertising_networks[0]
+                    }}</span>
                   </div>
-                  <div class="creative-item-info">
-                    <img :src="`img/flags/${selectedCreative?.country?.code}.svg`" alt="" />
-                    {{ selectedCreative?.country?.name }}
+                  <div class="creative-item-info" v-if="similar.country">
+                    <img
+                      :src="`img/flags/${similar.country.code}.svg`"
+                      :alt="similar.country.name"
+                    />
+                    {{ similar.country.name }}
                   </div>
-                  <div class="creative-item-info">
+                  <div class="creative-item-info" v-if="similar.devices?.length">
                     <div class="icon-pc"></div>
-                    PC
+                    {{ similar.devices[0] }}
                   </div>
                 </div>
                 <div class="creative-item__btns">
-                  <button class="btn-icon btn-favorite">
+                  <button
+                    class="btn-icon btn-favorite"
+                    :class="{ active: similar.isFavorite }"
+                    @click="handleSimilarFavoriteClick(similar)"
+                  >
                     <span class="icon-favorite-empty"></span>
                   </button>
-                  <button class="btn-icon _dark js-show-details">
+                  <button
+                    class="btn-icon _dark js-show-details"
+                    @click="handleShowSimilarDetails(similar)"
+                  >
                     <span class="icon-info"></span>
                   </button>
                 </div>
               </div>
             </div>
           </div>
-          <div v-if="!showSimilarCreatives" class="similar-creatives">
+
+          <!-- Нет доступа к похожим креативам ИЛИ загружено но пустой результат -->
+          <div
+            v-else-if="
+              !showSimilarCreatives || (similarCreativesLoaded && similarCreatives.length === 0)
+            "
+            class="promo-premium"
+          >
+            <p v-html="translations.promoPremium.value"></p>
+            <a href="/tariffs" class="btn _flex _green _medium">{{ translations.go.value }}</a>
+          </div>
+
+          <!-- Заглушка пока не загружено (по умолчанию) -->
+          <div v-else class="similar-creatives">
             <div class="similar-creative-empty _inpage"><img :src="emptyImage" alt="" /></div>
             <div class="similar-creative-empty _inpage"><img :src="emptyImage" alt="" /></div>
           </div>
-          <div v-if="showSimilarCreatives" class="d-flex justify-content-center pt-3">
-            <button class="btn _gray _flex _medium w-mob-100">
+
+          <!-- Кнопка "Загрузить еще" (пока не реализована) -->
+          <div
+            v-if="similarCreativesLoaded && similarCreatives.length >= 6"
+            class="d-flex justify-content-center pt-3"
+          >
+            <button class="btn _gray _flex _medium w-mob-100" disabled>
               <span class="icon-load-more font-16 mr-2"></span>{{ translations.loadMore.value }}
             </button>
           </div>
@@ -369,7 +434,7 @@ import { useCreativesFiltersStore } from '@/stores/useFiltersStore';
 import type { Creative } from '@/types/creatives.d';
 import emptyImage from '@img/empty.svg';
 import facebookImage from '@img/facebook-2.jpg';
-import { computed, onMounted } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 
 interface Props {
   showSimilarCreatives?: boolean;
@@ -388,6 +453,16 @@ const props = withDefaults(defineProps<Props>(), {
 // Подключение к store и композаблу переводов
 const store = useCreativesFiltersStore();
 const { waitForReady, t } = useTranslations();
+
+// Состояние для похожих креативов
+const similarCreatives = ref<Creative[]>([]);
+const similarCreativesLoaded = ref(false);
+const similarCreativesLoading = ref(false);
+const similarCreativesError = ref<string | null>(null);
+
+// Ссылка на DOM элемент секции похожих креативов
+const similarCreativesSection = ref<HTMLElement | null>(null);
+const intersectionObserver = ref<IntersectionObserver | null>(null);
 
 // Создаем reactive переводы для часто используемых ключей с fallback значениями
 const translations = createReactiveTranslations(
@@ -460,6 +535,15 @@ onMounted(async () => {
   }
   // Ждем готовности переводов для предотвращения race condition
   await waitForReady();
+
+  // Настраиваем Intersection Observer после рендеринга
+  await nextTick();
+  setupIntersectionObserver();
+});
+
+// Очищаем наблюдатель при размонтировании компонента
+onUnmounted(() => {
+  cleanupIntersectionObserver();
 });
 
 // Computed свойства
@@ -587,4 +671,216 @@ function handleCopyDescription(): void {
     })
   );
 }
+
+/**
+ * Обработчик копирования заголовка похожего креатива
+ */
+function handleCopyCreativeTitle(creative: Creative): void {
+  if (!creative.title) {
+    console.warn('Заголовок креатива недоступен для копирования');
+    return;
+  }
+
+  document.dispatchEvent(
+    new CustomEvent('creatives:copy-text', {
+      detail: {
+        text: creative.title,
+        type: 'title',
+        creativeId: creative.id,
+      },
+    })
+  );
+}
+
+/**
+ * Обработчик копирования описания похожего креатива
+ */
+function handleCopyCreativeDescription(creative: Creative): void {
+  if (!creative.description) {
+    console.warn('Описание креатива недоступно для копирования');
+    return;
+  }
+
+  document.dispatchEvent(
+    new CustomEvent('creatives:copy-text', {
+      detail: {
+        text: creative.description,
+        type: 'description',
+        creativeId: creative.id,
+      },
+    })
+  );
+}
+
+/**
+ * Обработчик добавления похожего креатива в избранное
+ */
+async function handleSimilarFavoriteClick(creative: Creative): Promise<void> {
+  if (!creative || isFavoriteLoading.value) return;
+
+  try {
+    if (creative.isFavorite) {
+      await store.removeFromFavorites(creative.id);
+    } else {
+      await store.addToFavorites(creative.id);
+    }
+  } catch (error) {
+    console.error('Ошибка обработки избранного похожего креатива:', error);
+  }
+}
+
+/**
+ * Обработчик открытия деталей похожего креатива
+ */
+function handleShowSimilarDetails(creative: Creative): void {
+  store.detailsManager.handleShowCreativeDetails(creative.id);
+}
+
+/**
+ * Загрузка похожих креативов через API
+ */
+async function loadSimilarCreatives(): Promise<void> {
+  console.log('🔄 loadSimilarCreatives(): Начало выполнения');
+  console.log('📊 Состояние перед загрузкой:', {
+    similarCreativesLoaded: similarCreativesLoaded.value,
+    similarCreativesLoading: similarCreativesLoading.value,
+    selectedCreativeId: selectedCreative.value?.id,
+    selectedCreativeExists: !!selectedCreative.value,
+  });
+
+  if (similarCreativesLoaded.value || similarCreativesLoading.value || !selectedCreative.value) {
+    console.log('❌ loadSimilarCreatives(): Прерван - условие не выполнено');
+    return;
+  }
+
+  similarCreativesLoading.value = true;
+  similarCreativesError.value = null;
+
+  try {
+    const apiUrl = `/api/creatives/${selectedCreative.value.id}/similar?limit=6`;
+    console.log('🌐 Отправляем запрос:', apiUrl);
+
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        // Добавляем CSRF токен если доступен
+        ...((window as any).csrf_token && { 'X-CSRF-TOKEN': (window as any).csrf_token }),
+      },
+      credentials: 'same-origin', // Для передачи cookies с аутентификацией
+    });
+
+    console.log('📡 Ответ сервера:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
+    });
+
+    if (!response.ok) {
+      // Обрабатываем ошибки доступа к Premium функции
+      if (response.status === 403) {
+        const errorData = await response.json();
+        console.info('⚠️ Ошибка доступа 403:', errorData);
+        similarCreatives.value = [];
+        similarCreativesLoaded.value = true;
+        return;
+      }
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('📦 Полученные данные:', data);
+
+    if (data.status === 'success') {
+      const receivedCreatives = data.data.similar_creatives || [];
+      console.log('✅ Обработка успешных данных:', {
+        receivedCount: receivedCreatives.length,
+        dataStructure: receivedCreatives[0] || 'empty array',
+      });
+
+      similarCreatives.value = receivedCreatives;
+      console.log('🔄 Обновили similarCreatives.value:', similarCreatives.value.length);
+    } else {
+      throw new Error(data.message || 'Ошибка загрузки похожих креативов');
+    }
+
+    similarCreativesLoaded.value = true;
+    console.log('✅ Установили similarCreativesLoaded = true');
+  } catch (error) {
+    console.error('❌ Ошибка загрузки похожих креативов:', error);
+    similarCreativesError.value = error instanceof Error ? error.message : 'Неизвестная ошибка';
+    similarCreatives.value = [];
+  } finally {
+    similarCreativesLoading.value = false;
+    console.log('🏁 loadSimilarCreatives(): Завершено. Финальное состояние:', {
+      similarCreativesLoaded: similarCreativesLoaded.value,
+      similarCreativesLoading: similarCreativesLoading.value,
+      similarCreativesCount: similarCreatives.value.length,
+      similarCreativesError: similarCreativesError.value,
+    });
+  }
+}
+
+/**
+ * Настройка Intersection Observer для отслеживания появления секции похожих креативов
+ */
+function setupIntersectionObserver(): void {
+  if (!similarCreativesSection.value || intersectionObserver.value) {
+    return;
+  }
+
+  intersectionObserver.value = new IntersectionObserver(
+    entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !similarCreativesLoaded.value) {
+          console.log('Секция похожих креативов появилась в viewport, запускаем загрузку...');
+          loadSimilarCreatives();
+        }
+      });
+    },
+    {
+      root: null, // viewport
+      rootMargin: '50px', // Загружаем за 50px до появления секции
+      threshold: 0.1, // Срабатывает когда 10% элемента видно
+    }
+  );
+
+  intersectionObserver.value.observe(similarCreativesSection.value);
+}
+
+/**
+ * Очистка Intersection Observer
+ */
+function cleanupIntersectionObserver(): void {
+  if (intersectionObserver.value) {
+    intersectionObserver.value.disconnect();
+    intersectionObserver.value = null;
+  }
+}
+
+/**
+ * Сброс состояния похожих креативов при смене креатива
+ */
+function resetSimilarCreativesState(): void {
+  similarCreatives.value = [];
+  similarCreativesLoaded.value = false;
+  similarCreativesLoading.value = false;
+  similarCreativesError.value = null;
+  cleanupIntersectionObserver();
+}
+
+// Отслеживаем изменения выбранного креатива для сброса состояния
+watch(
+  selectedCreative,
+  newCreative => {
+    if (newCreative) {
+      resetSimilarCreativesState();
+      setupIntersectionObserver();
+    } else {
+      cleanupIntersectionObserver();
+    }
+  },
+  { immediate: true }
+);
 </script>
