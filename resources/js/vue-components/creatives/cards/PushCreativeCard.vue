@@ -46,9 +46,10 @@
         </div>
       </div>
       <div class="creative-item__icon thumb thumb-with-controls-small">
-        <img :src="getIconUrl()" alt="" />
+        <img :src="getIconUrl()" :alt="creative.title" />
         <div class="thumb-controls">
           <a
+            v-if="creative.icon_url"
             href="#"
             class="btn-icon _black"
             @click.prevent="() => handleDownload(getIconUrl())"
@@ -60,10 +61,11 @@
       </div>
     </div>
     <div class="creative-item__image thumb thumb-with-controls">
-      <img :src="getImageUrl()" alt="" />
+      <img :src="getImageUrl()" :alt="creative.title" />
       <div class="thumb-controls">
         <a
           href="#"
+          v-if="creative.main_image_url"
           class="btn-icon _black"
           @click.prevent="() => handleDownload(getImageUrl())"
           :class="{ disabled: isCreativesLoading }"
@@ -72,6 +74,7 @@
         </a>
         <a
           href="#"
+          v-if="creative.main_image_url"
           class="btn-icon _black"
           @click.prevent="() => handleOpenInNewTab(getImageUrl())"
           :class="{ disabled: isCreativesLoading }"
@@ -125,7 +128,7 @@
 <script setup lang="ts">
 import { useCreativesFiltersStore } from '@/stores/useFiltersStore';
 import type { Creative } from '@/types/creatives.d';
-import empty from '@img/empty.svg';
+import { default as empty } from '@img/empty.svg';
 import { computed, onMounted } from 'vue';
 
 // Импорты новой системы переводов
@@ -269,12 +272,12 @@ const getActiveText = (): string => {
 
 // Функция для получения URL иконки
 const getIconUrl = (): string => {
-  return props.creative.icon_url;
+  return props.creative.icon_url || empty;
 };
 
 // Функция для получения URL изображения
 const getImageUrl = (): string => {
-  return props.creative.main_image_url || 'https://picsum.photos/300/200';
+  return props.creative.main_image_url || empty;
 };
 
 // Функция для получения текста сети
