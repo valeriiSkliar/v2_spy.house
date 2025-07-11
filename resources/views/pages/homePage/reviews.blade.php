@@ -33,8 +33,29 @@
                 </div>
                 <div class="review__txt">
                     <div class="review__txt-in">
+
                         {{ $review->getTranslation('content', app()->getLocale()) ?: $review->getTranslation('text',
                         app()->getLocale()) }}
+                    </div>
+                </div>
+            </div>
+            @empty
+            {{-- Fallback для случая, когда нет отзывов в БД --}}
+            <div class="review">
+                <div class="review__head">
+                    <div class="review__avatar thumb">
+                        <img src="https://ui-avatars.com/api/?length=1&name=User&background=2B373D&color=ffffff&bold=true"
+                            alt="User" class="avatar">
+                    </div>
+                    <div class="review__author">
+                        <div class="review__name">Sample User</div>
+                        <div class="review__role">Media buyer</div>
+                        <div class="review__rating" data-rating="5"></div>
+                    </div>
+                </div>
+                <div class="review__txt">
+                    <div class="review__txt-in">
+                        Great service! Highly recommend to all media buyers.
                     </div>
                 </div>
             </div>
