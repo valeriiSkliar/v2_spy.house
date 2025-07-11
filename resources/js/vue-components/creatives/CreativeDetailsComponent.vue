@@ -42,7 +42,7 @@
           v-if="activeTab === 'push' || activeTab === 'inpage'"
           class="creative-details__group _first"
         >
-          <div class="row _offset20 align-items-center">
+          <div v-if="selectedCreative?.icon_url" class="row _offset20 align-items-center">
             <div class="col-5">
               <div class="thumb thumb-icon">
                 <img :src="selectedCreative?.icon_url" :alt="selectedCreative?.title" />
@@ -292,7 +292,7 @@
             <p>Не удалось загрузить похожие креативы: {{ similarCreativesError }}</p>
             <button
               class="btn btn-sm btn-outline-primary"
-              @click="loadSimilarCreatives"
+              @click="() => loadSimilarCreatives()"
               :disabled="similarCreativesLoading"
             >
               Попробовать снова
@@ -412,7 +412,7 @@
             <div class="text-center mt-3">
               <button
                 class="btn _gray _medium"
-                @click="loadSimilarCreatives"
+                @click="() => loadSimilarCreatives()"
                 :disabled="similarCreativesLoading"
               >
                 <span
@@ -424,13 +424,22 @@
             </div>
           </div>
 
-          <!-- Кнопка "Загрузить еще" (пока не реализована) -->
+          <!-- Кнопка "Загрузить еще" -->
           <div
-            v-if="similarCreativesLoaded && similarCreatives.length >= 6"
+            v-if="similarCreativesLoaded && similarCreativesHasMore"
             class="d-flex justify-content-center pt-3"
           >
-            <button class="btn _gray _flex _medium w-mob-100" disabled>
-              <span class="icon-load-more font-16 mr-2"></span>{{ translations.loadMore.value }}
+            <button
+              class="btn _gray _flex _medium w-mob-100"
+              @click="loadMoreSimilarCreatives"
+              :disabled="similarCreativesLoadingMore"
+            >
+              <span
+                v-if="similarCreativesLoadingMore"
+                class="spinner-border spinner-border-sm mr-2"
+              ></span>
+              <span v-else class="icon-load-more font-16 mr-2"></span>
+              {{ similarCreativesLoadingMore ? 'Загрузка...' : translations.loadMore.value }}
             </button>
           </div>
         </div>
@@ -474,6 +483,11 @@ const similarCreatives = ref<Creative[]>([]);
 const similarCreativesLoaded = ref(false);
 const similarCreativesLoading = ref(false);
 const similarCreativesError = ref<string | null>(null);
+
+// Состояние для пагинации похожих креативов
+const similarCreativesOffset = ref(0);
+const similarCreativesHasMore = ref(false);
+const similarCreativesLoadingMore = ref(false);
 
 // Ссылки на DOM элементы
 const similarCreativesSection = ref<HTMLElement | null>(null);
@@ -770,14 +784,32 @@ function handleShowSimilarDetails(creative: Creative): void {
 }
 
 /**
- * Загрузка похожих креативов через API
+ * Дозагрузка дополнительных похожих креативов
  */
-async function loadSimilarCreatives(): Promise<void> {
-  console.log('🔄 Загрузка похожих креативов для ID:', selectedCreative.value?.id);
+async function loadMoreSimilarCreatives(): Promise<void> {
+  console.log('📄 Дозагрузка похожих креативов...');
+  await loadSimilarCreatives(true);
+}
 
-  if (similarCreativesLoaded.value || similarCreativesLoading.value) {
-    console.log('⚠️ Загрузка пропущена - уже загружено или выполняется');
-    return;
+/**
+ * Загрузка похожих креативов через API
+ * @param isLoadMore - флаг дозагрузки (добавление к существующим данным)
+ */
+async function loadSimilarCreatives(isLoadMore: boolean = false): Promise<void> {
+  console.log('🔄 Загрузка похожих креативов для ID:', selectedCreative.value?.id, { isLoadMore });
+
+  // Проверки для первоначальной загрузки
+  if (!isLoadMore) {
+    if (similarCreativesLoaded.value || similarCreativesLoading.value) {
+      console.log('⚠️ Загрузка пропущена - уже загружено или выполняется');
+      return;
+    }
+  } else {
+    // Проверки для дозагрузки
+    if (similarCreativesLoadingMore.value || !similarCreativesHasMore.value) {
+      console.log('⚠️ Дозагрузка пропущена - уже выполняется или нет данных');
+      return;
+    }
   }
 
   if (!selectedCreative.value) {
@@ -790,11 +822,18 @@ async function loadSimilarCreatives(): Promise<void> {
     return;
   }
 
-  similarCreativesLoading.value = true;
-  similarCreativesError.value = null;
+  // Устанавливаем правильное состояние загрузки
+  if (isLoadMore) {
+    similarCreativesLoadingMore.value = true;
+  } else {
+    similarCreativesLoading.value = true;
+    similarCreativesError.value = null;
+  }
 
   try {
-    const apiUrl = `/api/creatives/${selectedCreative.value.id}/similar?limit=6`;
+    const limit = 3;
+    const offset = isLoadMore ? similarCreativesOffset.value : 0;
+    const apiUrl = `/api/creatives/${selectedCreative.value.id}/similar?limit=${limit}&offset=${offset}`;
     console.log('🌐 API запрос:', apiUrl);
 
     const response = await fetch(apiUrl, {
@@ -813,8 +852,10 @@ async function loadSimilarCreatives(): Promise<void> {
       if (response.status === 403) {
         const errorData = await response.json();
         console.info('ℹ️ Доступ к похожим креативам ограничен (Premium)');
-        similarCreatives.value = [];
-        similarCreativesLoaded.value = true;
+        if (!isLoadMore) {
+          similarCreatives.value = [];
+          similarCreativesLoaded.value = true;
+        }
         return;
       }
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -824,19 +865,43 @@ async function loadSimilarCreatives(): Promise<void> {
 
     if (data.status === 'success') {
       const receivedCreatives = data.data.similar_creatives || [];
-      console.log('✅ Загружено похожих креативов:', receivedCreatives.length);
-      similarCreatives.value = receivedCreatives;
+      const totalCount = data.meta?.total || 0;
+      const currentCount = offset + receivedCreatives.length;
+
+      console.log('✅ Загружено похожих креативов:', {
+        received: receivedCreatives.length,
+        total: totalCount,
+        offset,
+        hasMore: currentCount < totalCount,
+      });
+
+      if (isLoadMore) {
+        // Добавляем к существующим данным
+        similarCreatives.value = [...similarCreatives.value, ...receivedCreatives];
+      } else {
+        // Заменяем данные (первоначальная загрузка)
+        similarCreatives.value = receivedCreatives;
+        similarCreativesLoaded.value = true;
+      }
+
+      // Обновляем состояние пагинации
+      similarCreativesOffset.value = currentCount;
+      similarCreativesHasMore.value = currentCount < totalCount;
     } else {
       throw new Error(data.message || 'Ошибка загрузки похожих креативов');
     }
-
-    similarCreativesLoaded.value = true;
   } catch (error) {
     console.error('❌ Ошибка загрузки похожих креативов:', error);
-    similarCreativesError.value = error instanceof Error ? error.message : 'Неизвестная ошибка';
-    similarCreatives.value = [];
+    if (!isLoadMore) {
+      similarCreativesError.value = error instanceof Error ? error.message : 'Неизвестная ошибка';
+      similarCreatives.value = [];
+    }
   } finally {
-    similarCreativesLoading.value = false;
+    if (isLoadMore) {
+      similarCreativesLoadingMore.value = false;
+    } else {
+      similarCreativesLoading.value = false;
+    }
   }
 }
 
@@ -904,6 +969,12 @@ function resetSimilarCreativesState(): void {
   similarCreativesLoaded.value = false;
   similarCreativesLoading.value = false;
   similarCreativesError.value = null;
+
+  // Сброс состояния пагинации
+  similarCreativesOffset.value = 0;
+  similarCreativesHasMore.value = false;
+  similarCreativesLoadingMore.value = false;
+
   cleanupIntersectionObserver();
 }
 
