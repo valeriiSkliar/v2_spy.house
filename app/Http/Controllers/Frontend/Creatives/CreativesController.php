@@ -484,6 +484,13 @@ class CreativesController extends BaseCreativesController
      *         required=false,
      *         @OA\Schema(type="integer", minimum=1, maximum=20, default=6)
      *     ),
+     *     @OA\Parameter(
+     *         name="offset",
+     *         in="query",
+     *         description="Смещение для пагинации",
+     *         required=false,
+     *         @OA\Schema(type="integer", minimum=0, default=0)
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Похожие креативы успешно получены",
@@ -523,6 +530,10 @@ class CreativesController extends BaseCreativesController
      *                 @OA\Property(property="has_access", type="boolean", example=true)
      *             ),
      *             @OA\Property(property="meta", type="object",
+     *                 @OA\Property(property="total", type="integer", example=25),
+     *                 @OA\Property(property="offset", type="integer", example=0),
+     *                 @OA\Property(property="limit", type="integer", example=6),
+     *                 @OA\Property(property="hasMore", type="boolean", example=true),
      *                 @OA\Property(property="timestamp", type="string", format="date-time"),
      *                 @OA\Property(property="algorithm_version", type="string", example="1.0.0"),
      *                 @OA\Property(property="cache_key", type="string")
@@ -567,7 +578,9 @@ class CreativesController extends BaseCreativesController
         try {
             // Валидируем и получаем параметры
             $limit = (int)request()->get('limit', 6);
+            $offset = (int)request()->get('offset', 0);
             $limit = max(1, min(20, $limit)); // Ограничиваем от 1 до 20
+            $offset = max(0, $offset); // Offset не может быть отрицательным
 
             // Находим исходный креатив
             $creative = Creative::with([
@@ -606,8 +619,8 @@ class CreativesController extends BaseCreativesController
                 ], 403);
             }
 
-            // Получаем похожие креативы через базовый контроллер
-            $similarCreatives = $this->getSimilarCreatives($creative, $userId, $limit);
+            // Получаем похожие креативы с пагинацией через базовый контроллер
+            $similarData = $this->getSimilarCreativesWithPagination($creative, $userId, $limit, $offset);
 
             // Формируем критерии поиска для отладки
             $searchCriteria = [
@@ -632,17 +645,22 @@ class CreativesController extends BaseCreativesController
             return response()->json([
                 'status' => 'success',
                 'data' => [
-                    'similar_creatives' => $similarCreatives,
+                    'similar_creatives' => $similarData['items'],
                     'original_creative' => $originalCreative,
                     'search_criteria' => $searchCriteria,
-                    'count' => count($similarCreatives),
+                    'count' => count($similarData['items']),
                     'has_access' => $user ? $user->canViewSimilarCreatives() : false,
                     'requested_limit' => $limit,
+                    'requested_offset' => $offset,
                 ],
                 'meta' => [
+                    'total' => $similarData['total'],
+                    'offset' => $offset,
+                    'limit' => $limit,
+                    'hasMore' => $similarData['hasMore'],
                     'timestamp' => now()->toISOString(),
                     'algorithm_version' => '1.0.0',
-                    'cache_key' => "similar_creatives_{$id}_{$limit}",
+                    'cache_key' => "similar_creatives_{$id}_{$limit}_{$offset}",
                     'user_authenticated' => $user !== null,
                     'user_id' => $userId,
                 ]

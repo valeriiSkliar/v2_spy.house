@@ -1628,6 +1628,127 @@ abstract class BaseCreativesController extends FrontendController
     }
 
     /**
+     * Получить похожие креативы с поддержкой пагинации
+     * Возвращает массив с элементами и метаинформацией о пагинации
+     */
+    protected function getSimilarCreativesWithPagination(Creative $creative, ?int $userId = null, int $limit = 6, int $offset = 0): array
+    {
+        // Проверяем права доступа к похожим креативам
+        if ($userId) {
+            $user = \App\Models\User::find($userId);
+            if (!$user || !$user->canViewSimilarCreatives()) {
+                return [
+                    'items' => [],
+                    'total' => 0,
+                    'hasMore' => false
+                ];
+            }
+        }
+
+        // Строим базовый запрос для подсчета общего количества
+        $baseQuery = Creative::where('id', '!=', $creative->id);
+
+        // Применяем те же фильтры что и в основном методе
+        if ($creative->format) {
+            $baseQuery->where('format', $creative->format);
+        }
+
+        if ($creative->country_id) {
+            $baseQuery->where('country_id', $creative->country_id);
+        }
+
+        if ($creative->advertisment_network_id) {
+            $baseQuery->where('advertisment_network_id', $creative->advertisment_network_id);
+        }
+
+        if ($creative->language_id) {
+            $baseQuery->where('language_id', $creative->language_id);
+        }
+
+        if (!$creative->is_adult) {
+            $baseQuery->where('is_adult', false);
+        }
+
+        // Получаем общее количество для пагинации
+        $totalCount = $baseQuery->count();
+
+        // Строим запрос для получения конкретной страницы
+        $query = clone $baseQuery;
+
+        // Предзагружаем связанные данные
+        $query->with([
+            'country',
+            'language',
+            'browser',
+            'advertismentNetwork'
+        ]);
+
+        // Сортируем по актуальности
+        $query->orderByRaw("CASE WHEN status = 'active' THEN 1 ELSE 0 END DESC")
+            ->orderByDesc('last_seen_at')
+            ->orderByDesc('external_created_at');
+
+        // Применяем пагинацию
+        $similarCreatives = $query->offset($offset)->limit($limit)->get();
+
+        // Если не хватает результатов и это первая страница, расширяем поиск
+        if ($similarCreatives->count() < $limit && $offset === 0) {
+            $remainingLimit = $limit - $similarCreatives->count();
+            $excludeIds = $similarCreatives->pluck('id')->toArray();
+            $excludeIds[] = $creative->id;
+
+            // Более широкий поиск
+            $additionalQuery = Creative::whereNotIn('id', $excludeIds);
+
+            if ($creative->format) {
+                $additionalQuery->where('format', $creative->format);
+            }
+
+            $additionalCreatives = $additionalQuery
+                ->with(['country', 'language', 'browser', 'advertismentNetwork'])
+                ->orderByRaw("CASE WHEN status = 'active' THEN 1 ELSE 0 END DESC")
+                ->orderByDesc('social_likes')
+                ->orderByDesc('last_seen_at')
+                ->limit($remainingLimit)
+                ->get();
+
+            $similarCreatives = $similarCreatives->merge($additionalCreatives);
+
+            // Обновляем общее количество с учетом расширенного поиска
+            $additionalCount = Creative::whereNotIn('id', [$creative->id])
+                ->when($creative->format, fn($q) => $q->where('format', $creative->format))
+                ->count();
+            $totalCount = max($totalCount, $additionalCount);
+        }
+
+        // Конвертируем в массив для API
+        $items = $similarCreatives->map(function ($item) use ($userId) {
+            $creativeData = $item->toCreativeArray();
+
+            // Добавляем информацию о статусе избранного для аутентифицированных пользователей
+            if ($userId) {
+                $creativeData['is_favorite'] = $this->checkIsFavoriteById($item->id, $userId);
+            } else {
+                $creativeData['is_favorite'] = false;
+            }
+
+            return $creativeData;
+        })->toArray();
+
+        // Определяем есть ли еще данные
+        $hasMore = ($offset + count($items)) < $totalCount;
+
+        return [
+            'items' => $items,
+            'total' => $totalCount,
+            'hasMore' => $hasMore,
+            'offset' => $offset,
+            'limit' => $limit,
+            'currentCount' => count($items)
+        ];
+    }
+
+    /**
      * Helper method для проверки избранного по ID пользователя
      */
     protected function checkIsFavoriteById(int $creativeId, int $userId): bool
