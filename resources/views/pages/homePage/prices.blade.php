@@ -3,25 +3,27 @@
         <div class="row align-items-end _offset30">
             <div class="col-12 col-md-7 mb-md-4">
                 <div class="title-label _white" data-aos-delay="200" data-aos="fade-up">Prices</div>
-                <h2 class="title" data-aos-delay="200" data-aos="fade-up">Big investment for <br>little money</h2>
+                <h2 class="title" data-aos-delay="200" data-aos="fade-up">{!! __('main_page.prices_blok.title') !!}</h2>
             </div>
             <div class="col-12 col-md-5 pb-2">
-                <div class="section-desc icon-txt-dot mb-20" data-aos-delay="200" data-aos="fade-up">Expand your
-                    capabilities with a Pro plan with an annual subscription</div>
+                <div class="section-desc icon-txt-dot mb-20" data-aos-delay="200" data-aos="fade-up">{!!
+                    __('main_page.prices_blok.description') !!}</div>
                 <div class="prices__tubs row justify-content-end mb-30 pt-4 pt-md-5" data-aos-delay="200"
                     data-aos="fade-up">
                     <div class="col-6 col-md-auto">
-                        <button class="btn _flex _medium w-100 active" data-tub="month" data-group="pay">For a
-                            Month</button>
+                        <button class="btn _flex _medium w-100 active" data-tub="month" data-group="pay">{!!
+                            __('main_page.prices_blok.button') !!}</button>
                     </div>
                     <div class="col-6 col-md-auto">
-                        <button class="btn _flex _medium w-100" data-tub="year" data-group="pay">For a year
+                        <button class="btn _flex _medium w-100" data-tub="year" data-group="pay">{!!
+                            __('main_page.prices_blok.button_year') !!}
                             @if(isset($subscriptions) && $subscriptions->first() &&
                             $subscriptions->first()->early_discount)
                             <span class="btn__count">-{{ number_format($subscriptions->first()->early_discount, 0)
                                 }}%</span>
                             @else
-                            <span class="btn__count">-20%</span>
+                            <span class="btn__count">-{{ __('main_page.prices_blok.button_year_discount', ['discount' =>
+                                $subscriptions->first()->early_discount]) }}</span>
                             @endif
                         </button>
                     </div>

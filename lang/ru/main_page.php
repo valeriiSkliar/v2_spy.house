@@ -58,6 +58,13 @@ return [
         'title' => 'Скачайте креативы конкурентов <br>со скидкой 25%',
         'button' => 'Download',
     ],
+    'prices_blok' => [
+        'title' => 'Большие инвестиции <br>за маленькие деньги',
+        'description' => 'Расширьте свои возможности с планом Pro с годовой подпиской',
+        'button' => 'За месяц',
+        'button_year' => 'За год',
+        'button_year_discount' => 'For a year :discount%',
+    ],
 
     'features' => 'Возможности',
     'prices' => 'Цены',
