@@ -72,7 +72,7 @@ return new class extends Migration
             $table->index(['format', 'operation_system'], 'idx_format_os');
 
             // Основные поля
-            $table->unsignedInteger('external_id')->unique()->index();
+            $table->unsignedBigInteger('external_id')->unique()->index();
             $table->boolean('is_adult')->default(false);
             $table->string('title', 128)->default('')->comment('Заголовок');
             $table->string('description', 256)->default('')->comment('Описание');
