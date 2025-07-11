@@ -5,6 +5,7 @@ return [
     'login' => 'Войти',
     'register' => 'Регистрация',
     'registration' => 'Регистрация',
+    'logout' => 'Выйти',
     'email' => 'Email',
     'password' => 'Пароль',
     'confirm_password' => 'Подтвердите пароль',

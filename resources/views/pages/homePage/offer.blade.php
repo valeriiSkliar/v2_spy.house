@@ -17,7 +17,7 @@
             </div>
             <div class="col-12 col-md-7">
                 <div class="offer__content">
-                    <h1 class="offer__title">All competitors creatives are here</h1>
+                    <h1 class="offer__title">{{ __('main_page.offer.title') }}</h1>
                     <script>
                         let points = [
                             '<span style="color: rgba(117, 175, 229, 0.70);">Facebook Ads</span>',
@@ -26,18 +26,25 @@
                             '<span style="color: rgba(229, 188, 117, 0.70);">In-Page Ads</span>',
                         ];
                     </script>
-                    <div class="offer__desc">Spy House — advertising spy service for popular advertising formats
+                    <div class="offer__desc">{{ __('main_page.offer.description') }}
                         <br><span id="typeit"></span>
                     </div>
                     <div class="offer__row">
                         <div class="offer__btn">
-                            <a href="#" class="btn _flex _green _large min-170">Get started</a>
+                            @guest
+                            <a href="{{ route('register') }}" class="btn _flex _green _large min-170">{{
+                                __('main_page.offer.button') }}</a>
+                            @endguest
+                            @auth
+                            <a href="{{ route('creatives.index') }}" class="btn _flex _green _large min-170">{{
+                                __('main_page.offer.button') }}</a>
+                            @endauth
                         </div>
                         <div class="offer__winner">
                             <div class="best-affiliate">
                                 <img src="{{ Vite::asset('resources/scss/img/main/winner-2021.svg') }}" alt="">
-                                <div class="best-affiliate__title">Best Affiliate Spy Tool</div>
-                                <div class="best-affiliate__desc">Conversion club awards 2021</div>
+                                <div class="best-affiliate__title">{{ __('main_page.offer.winner_title') }}</div>
+                                <div class="best-affiliate__desc">{{ __('main_page.offer.winner_desc') }}</div>
                             </div>
                         </div>
                     </div>

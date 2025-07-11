@@ -200,7 +200,12 @@
     </div>
     <div class="container">
         <div class="text-center" data-aos-delay="200" data-aos="fade-up">
-            <a href="#" class="btn _flex _green _large min-170">Get started</a>
+            @guest
+            <a href="{{ route('login') }}" class="btn _flex _green _large min-170">Get started</a>
+            @endguest
+            @auth
+            <a href="{{ route('creatives.index') }}" class="btn _flex _green _large min-170">Get started</a>
+            @endauth
         </div>
     </div>
 </section>

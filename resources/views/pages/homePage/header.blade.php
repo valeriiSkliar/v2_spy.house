@@ -10,18 +10,18 @@
         </div>
         <nav class="header__nav">
             <ul>
-                <li><a href="#">Features</a></li>
-                <li><a href="#">Prices</a></li>
-                <li><a href="#">Reviews</a></li>
-                <li><a href="{{ route('blog.index') }}">Blog</a></li>
+                <li><a href="#">{{ __('main_page.features') }}</a></li>
+                <li><a href="#">{{ __('main_page.prices') }}</a></li>
+                <li><a href="#">{{ __('main_page.reviews') }}</a></li>
+                <li><a href="{{ route('blog.index') }}">{{ __('main_page.blog') }}</a></li>
             </ul>
         </nav>
         <div class="header__right">
             <div class="header__contacts">
-                <a data-toggle="modal" data-target="#modal-contacts" class="link">Contacts</a>
+                <a data-toggle="modal" data-target="#modal-contacts" class="link">{{ __('main_page.contacts') }}</a>
             </div>
             <div class="header__lang">
-                <div class="lang-menu">
+                {{-- <div class="lang-menu">
                     <div class="base-select">
                         <div class="base-select__trigger">
                             <span class="base-select__value"><img src="img/flags/US.svg" alt="">Eng</span>
@@ -33,14 +33,33 @@
                             <li class="base-select__option"><img src="img/flags/ES.svg" alt="">Esp</li>
                         </ul>
                     </div>
-                </div>
+                </div> --}}
+                {{--
+                <x-frontend.language-selector /> --}}
+
             </div>
             <div class="header__login">
-                <a href="#" class="btn _flex _orange font-16 font-weight-bold">Login</a>
+                @guest
+                <a href="{{ route('login') }}" class="btn _flex _orange font-16 font-weight-bold">{{ __('auth.login')
+                    }}</a>
+                @endguest
             </div>
+            @guest
+
             <div class="header__login-mobile">
                 <a href="#" class="btn-icon _dark"><span class="icon-login font-20"></span></a>
             </div>
+            @endguest
+            @auth
+            <div class="user-preview">
+                <a href="{{ route('profile.settings') }}" class="user-preview__trigger">
+                    <div class="user-preview__avatar thumb">
+                        <span>{{ mb_strtoupper(mb_substr(Auth::user()->name, 0, 2)) }}</span>
+                    </div>
+                    <div class="user-preview__name">{{ Auth::user()->name }}</div>
+                </a>
+            </div>
+            @endauth
             <!-- User Login
             <div class="user-preview">
                 <a href="#" class="user-preview__trigger">
