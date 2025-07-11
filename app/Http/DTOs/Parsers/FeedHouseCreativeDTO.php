@@ -10,6 +10,7 @@ use App\Models\Browser;
 use App\Services\Parsers\BrowserNormalizer;
 use App\Services\Parsers\CreativePlatformNormalizer;
 use App\Services\Parsers\CountryCodeNormalizer;
+use App\Services\Parsers\OperationSystemNormalizer;
 use App\Services\Parsers\SourceNormalizer;
 use App\Services\Parsers\CreativeImageValidator;
 use Carbon\Carbon;
@@ -322,6 +323,7 @@ class FeedHouseCreativeDTO
             'country_id' => CountryCodeNormalizer::normalizeCountryCode($this->countryCode),
             'browser_id' => BrowserNormalizer::normalizeBrowserName($this->browser),
             'advertisment_network_id' => AdvertismentNetwork::where('network_name', $this->adNetwork)->first()?->id,
+            'operation_system' => OperationSystemNormalizer::normalizeWithFallback($this->os),
 
             // Статус
             'status' => $this->isActive ? AdvertisingStatus::Active : AdvertisingStatus::Inactive,
