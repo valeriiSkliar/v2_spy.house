@@ -407,6 +407,21 @@
           <div v-else class="similar-creatives">
             <div class="similar-creative-empty _inpage"><img :src="emptyImage" alt="" /></div>
             <div class="similar-creative-empty _inpage"><img :src="emptyImage" alt="" /></div>
+
+            <!-- Кнопка для ручной загрузки (fallback) -->
+            <div class="text-center mt-3">
+              <button
+                class="btn _gray _medium"
+                @click="loadSimilarCreatives"
+                :disabled="similarCreativesLoading"
+              >
+                <span
+                  v-if="similarCreativesLoading"
+                  class="spinner-border spinner-border-sm mr-2"
+                ></span>
+                {{ similarCreativesLoading ? 'Загрузка...' : 'Загрузить похожие' }}
+              </button>
+            </div>
           </div>
 
           <!-- Кнопка "Загрузить еще" (пока не реализована) -->
@@ -740,16 +755,20 @@ function handleShowSimilarDetails(creative: Creative): void {
  * Загрузка похожих креативов через API
  */
 async function loadSimilarCreatives(): Promise<void> {
-  console.log('🔄 loadSimilarCreatives(): Начало выполнения');
-  console.log('📊 Состояние перед загрузкой:', {
-    similarCreativesLoaded: similarCreativesLoaded.value,
-    similarCreativesLoading: similarCreativesLoading.value,
-    selectedCreativeId: selectedCreative.value?.id,
-    selectedCreativeExists: !!selectedCreative.value,
-  });
+  console.log('🔄 Загрузка похожих креативов для ID:', selectedCreative.value?.id);
 
-  if (similarCreativesLoaded.value || similarCreativesLoading.value || !selectedCreative.value) {
-    console.log('❌ loadSimilarCreatives(): Прерван - условие не выполнено');
+  if (similarCreativesLoaded.value || similarCreativesLoading.value) {
+    console.log('⚠️ Загрузка пропущена - уже загружено или выполняется');
+    return;
+  }
+
+  if (!selectedCreative.value) {
+    console.warn('❌ Нет выбранного креатива для загрузки похожих');
+    return;
+  }
+
+  if (!props.showSimilarCreatives) {
+    console.log('⚠️ Загрузка похожих отключена в props');
     return;
   }
 
@@ -758,7 +777,7 @@ async function loadSimilarCreatives(): Promise<void> {
 
   try {
     const apiUrl = `/api/creatives/${selectedCreative.value.id}/similar?limit=6`;
-    console.log('🌐 Отправляем запрос:', apiUrl);
+    console.log('🌐 API запрос:', apiUrl);
 
     const response = await fetch(apiUrl, {
       method: 'GET',
@@ -771,17 +790,11 @@ async function loadSimilarCreatives(): Promise<void> {
       credentials: 'same-origin', // Для передачи cookies с аутентификацией
     });
 
-    console.log('📡 Ответ сервера:', {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok,
-    });
-
     if (!response.ok) {
       // Обрабатываем ошибки доступа к Premium функции
       if (response.status === 403) {
         const errorData = await response.json();
-        console.info('⚠️ Ошибка доступа 403:', errorData);
+        console.info('ℹ️ Доступ к похожим креативам ограничен (Premium)');
         similarCreatives.value = [];
         similarCreativesLoaded.value = true;
         return;
@@ -790,35 +803,22 @@ async function loadSimilarCreatives(): Promise<void> {
     }
 
     const data = await response.json();
-    console.log('📦 Полученные данные:', data);
 
     if (data.status === 'success') {
       const receivedCreatives = data.data.similar_creatives || [];
-      console.log('✅ Обработка успешных данных:', {
-        receivedCount: receivedCreatives.length,
-        dataStructure: receivedCreatives[0] || 'empty array',
-      });
-
+      console.log('✅ Загружено похожих креативов:', receivedCreatives.length);
       similarCreatives.value = receivedCreatives;
-      console.log('🔄 Обновили similarCreatives.value:', similarCreatives.value.length);
     } else {
       throw new Error(data.message || 'Ошибка загрузки похожих креативов');
     }
 
     similarCreativesLoaded.value = true;
-    console.log('✅ Установили similarCreativesLoaded = true');
   } catch (error) {
     console.error('❌ Ошибка загрузки похожих креативов:', error);
     similarCreativesError.value = error instanceof Error ? error.message : 'Неизвестная ошибка';
     similarCreatives.value = [];
   } finally {
     similarCreativesLoading.value = false;
-    console.log('🏁 loadSimilarCreatives(): Завершено. Финальное состояние:', {
-      similarCreativesLoaded: similarCreativesLoaded.value,
-      similarCreativesLoading: similarCreativesLoading.value,
-      similarCreativesCount: similarCreatives.value.length,
-      similarCreativesError: similarCreativesError.value,
-    });
   }
 }
 
@@ -826,15 +826,28 @@ async function loadSimilarCreatives(): Promise<void> {
  * Настройка Intersection Observer для отслеживания появления секции похожих креативов
  */
 function setupIntersectionObserver(): void {
-  if (!similarCreativesSection.value || intersectionObserver.value) {
+  if (!similarCreativesSection.value) {
+    console.warn('❌ Элемент секции похожих креативов не найден');
     return;
   }
+
+  if (intersectionObserver.value) {
+    return; // Observer уже существует
+  }
+
+  // Проверяем видимость элемента
+  const rect = similarCreativesSection.value.getBoundingClientRect();
+  const isCurrentlyVisible = rect.top < window.innerHeight && rect.bottom > 0;
 
   intersectionObserver.value = new IntersectionObserver(
     entries => {
       entries.forEach(entry => {
-        if (entry.isIntersecting && !similarCreativesLoaded.value) {
-          console.log('Секция похожих креативов появилась в viewport, запускаем загрузку...');
+        if (
+          entry.isIntersecting &&
+          !similarCreativesLoaded.value &&
+          !similarCreativesLoading.value
+        ) {
+          console.log('👁️ Секция похожих креативов стала видимой, запускаем загрузку');
           loadSimilarCreatives();
         }
       });
@@ -847,6 +860,12 @@ function setupIntersectionObserver(): void {
   );
 
   intersectionObserver.value.observe(similarCreativesSection.value);
+
+  // Если элемент уже виден - запускаем загрузку немедленно
+  if (isCurrentlyVisible && !similarCreativesLoaded.value && !similarCreativesLoading.value) {
+    console.log('🚀 Элемент уже виден, запускаем загрузку немедленно');
+    loadSimilarCreatives();
+  }
 }
 
 /**
@@ -873,14 +892,48 @@ function resetSimilarCreativesState(): void {
 // Отслеживаем изменения выбранного креатива для сброса состояния
 watch(
   selectedCreative,
-  newCreative => {
+  (newCreative, oldCreative) => {
     if (newCreative) {
       resetSimilarCreativesState();
-      setupIntersectionObserver();
+      // Настраиваем наблюдатель после небольшой задержки, чтобы DOM обновился
+      nextTick(() => {
+        setTimeout(() => {
+          setupIntersectionObserver();
+        }, 100);
+      });
     } else {
       cleanupIntersectionObserver();
     }
   },
   { immediate: true }
+);
+
+// Дополнительный watch на видимость деталей как fallback
+watch(
+  () => store.isDetailsVisible,
+  (isVisible, wasVisible) => {
+    if (isVisible && !wasVisible && selectedCreative.value) {
+      nextTick(() => {
+        setTimeout(() => {
+          setupIntersectionObserver();
+
+          // Если секция уже видна и ничего не загружено - запускаем принудительно
+          if (
+            similarCreativesSection.value &&
+            !similarCreativesLoaded.value &&
+            !similarCreativesLoading.value
+          ) {
+            const rect = similarCreativesSection.value.getBoundingClientRect();
+            const isCurrentlyVisible = rect.top < window.innerHeight && rect.bottom > 0;
+
+            if (isCurrentlyVisible) {
+              console.log('🚀 Fallback: принудительная загрузка похожих креативов');
+              loadSimilarCreatives();
+            }
+          }
+        }, 150);
+      });
+    }
+  }
 );
 </script>
