@@ -54,6 +54,10 @@ return [
         'about_us' => 'Что говорят о нас медиа "баеры"',
         'add_review' => 'Добавить отзыв',
     ],
+    'download_creatives_blok' => [
+        'title' => 'Скачайте креативы конкурентов <br>со скидкой 25%',
+        'button' => 'Download',
+    ],
 
     'features' => 'Возможности',
     'prices' => 'Цены',
