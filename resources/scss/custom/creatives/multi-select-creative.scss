@@ -174,4 +174,42 @@
     font-weight: 500;
     padding: 0 0 0 5px;
   }
+
+  .multi-select__actions {
+    display: flex;
+    gap: 8px;
+    padding: 8px 12px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .multi-select__action-btn {
+    flex: 1;
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #fff;
+    color: #333;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      background: #f5f5f5;
+      border-color: #ccc;
+    }
+
+    &--select-all {
+      &:hover {
+        background: color.adjust(#3dc98a, $alpha: -0.5);
+        border-color: #3dc98a;
+      }
+    }
+
+    &--clear-all {
+      &:hover {
+        background: #ffebee;
+        border-color: #f44336;
+      }
+    }
+  }
 }
