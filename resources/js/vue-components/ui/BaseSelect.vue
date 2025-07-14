@@ -49,6 +49,14 @@
   </div>
 </template>
 
+<style>
+.base-select__no-options {
+  padding: 10px;
+  color: #666;
+  text-align: center;
+}
+</style>
+
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 
