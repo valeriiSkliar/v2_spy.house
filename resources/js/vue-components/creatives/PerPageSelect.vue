@@ -17,7 +17,7 @@
           {{ option.label }}
         </li>
         <li v-if="perPageOptions.length === 0" class="base-select__no-options">
-          No options available
+          {{ translationsComputed.noOptions }}
         </li>
       </ul>
     </div>
@@ -39,6 +39,7 @@ interface Props {
   translations?: {
     onPage: string;
     perPage: string;
+    noOptions?: string;
   };
   initialPerPage?: number;
 }
@@ -51,8 +52,9 @@ const props = withDefaults(defineProps<Props>(), {
     { value: 96, label: '96' },
   ],
   translations: () => ({
-    onPage: 'На странице',
-    perPage: 'Элементов на странице',
+    onPage: 'On page',
+    perPage: 'Per page',
+    noOptions: 'No options available',
   }),
   initialPerPage: 12,
 });
@@ -74,6 +76,14 @@ const localPerPage = ref<number>(props.initialPerPage);
 // ============================================================================
 // COMPUTED PROPERTIES
 // ============================================================================
+
+// Переводы с fallback значениями
+const translationsComputed = computed(() => ({
+  onPage: props.translations?.onPage || 'On page',
+  perPage: props.translations?.perPage || 'Per page',
+  noOptions: props.translations?.noOptions || 'No options available',
+}));
+
 const perPageOptions = computed(() => {
   return props.options.filter(option => option.value > 0);
 });
@@ -83,7 +93,7 @@ const displayValue = computed(() => {
   const currentValue = store.isInitialized
     ? store.filters.perPage ?? localPerPage.value
     : localPerPage.value;
-  return `${props.translations.onPage} ${currentValue}`;
+  return `${translationsComputed.value.onPage} ${currentValue}`;
 });
 
 const isComponentReady = computed(() => {

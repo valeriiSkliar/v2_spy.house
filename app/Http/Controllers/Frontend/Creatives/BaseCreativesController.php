@@ -217,7 +217,7 @@ abstract class BaseCreativesController extends FrontendController
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to load filter options: ' . $e->getMessage(),
+                'message' => __('creatives.api.errors.failed_to_load_filter_options') . ': ' . $e->getMessage(),
                 'data' => [],
             ], 500);
         }
@@ -349,7 +349,7 @@ abstract class BaseCreativesController extends FrontendController
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Validation failed: ' . $e->getMessage(),
+                'message' => __('creatives.api.errors.validation_failed') . ': ' . $e->getMessage(),
                 'filters' => $request->all()
             ], 422);
         }
@@ -397,6 +397,18 @@ abstract class BaseCreativesController extends FrontendController
             'savePresetButton' => __('creatives.savePresetButton'),
             'resetButton' => __('creatives.resetButton'),
             'customDateLabel' => __('creatives.customDateLabel'),
+            // Переводы MultiSelect
+            'multiSelect.selectAll' => __('creatives.multiSelect.selectAll'),
+            'multiSelect.clearAll' => __('creatives.multiSelect.clearAll'),
+            'multiSelect.noOptionsFound' => __('creatives.multiSelect.noOptionsFound'),
+            'multiSelect.search' => __('creatives.multiSelect.search'),
+            'multiSelect.selectedItems' => __('creatives.multiSelect.selectedItems'),
+
+            // Переводы BaseSelect
+            'baseSelect.selectOption' => __('creatives.baseSelect.selectOption'),
+            'baseSelect.noOptionsAvailable' => __('creatives.baseSelect.noOptionsAvailable'),
+            'baseSelect.onPage' => __('creatives.baseSelect.onPage'),
+            'baseSelect.perPage' => __('creatives.baseSelect.perPage'),
 
             // Дополнительные
             'onPage' => __('creatives.filter.on-page'),
@@ -807,7 +819,7 @@ abstract class BaseCreativesController extends FrontendController
             if (!$user) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'User not authenticated'
+                    'message' => __('creatives.api.errors.user_not_authenticated')
                 ], 401);
             }
 
@@ -823,7 +835,7 @@ abstract class BaseCreativesController extends FrontendController
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to get favorites count: ' . $e->getMessage()
+                'message' => __('creatives.api.errors.failed_to_get_favorites_count') . ': ' . $e->getMessage()
             ], 500);
         }
     }
@@ -883,7 +895,7 @@ abstract class BaseCreativesController extends FrontendController
             if (!$user) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'User not authenticated'
+                    'message' => __('creatives.api.errors.user_not_authenticated')
                 ], 401);
             }
 
@@ -901,7 +913,7 @@ abstract class BaseCreativesController extends FrontendController
 
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Creative already in favorites',
+                    'message' => __('creatives.api.errors.creative_already_in_favorites'),
                     'code' => 'ALREADY_IN_FAVORITES',
                     'data' => [
                         'creativeId' => $creativeId,
@@ -928,12 +940,12 @@ abstract class BaseCreativesController extends FrontendController
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Creative not found'
+                'message' => __('creatives.api.errors.creative_not_found')
             ], 404);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to add creative to favorites: ' . $e->getMessage()
+                'message' => __('creatives.api.errors.failed_to_add_to_favorites') . ': ' . $e->getMessage()
             ], 500);
         }
     }
@@ -985,7 +997,7 @@ abstract class BaseCreativesController extends FrontendController
             if (!$user) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'User not authenticated'
+                    'message' => __('creatives.api.errors.user_not_authenticated')
                 ], 401);
             }
 
@@ -995,7 +1007,7 @@ abstract class BaseCreativesController extends FrontendController
             if (!$user->hasFavoriteCreative($creativeId)) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Creative not found in favorites',
+                    'message' => __('creatives.api.errors.creative_not_found_in_favorites'),
                     'code' => 'NOT_IN_FAVORITES',
                     'data' => [
                         'creativeId' => $creativeId,
@@ -1023,12 +1035,12 @@ abstract class BaseCreativesController extends FrontendController
 
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to remove creative from favorites'
+                'message' => __('creatives.api.errors.failed_to_remove_from_favorites')
             ], 500);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to remove creative from favorites: ' . $e->getMessage()
+                'message' => __('creatives.api.errors.failed_to_remove_from_favorites') . ': ' . $e->getMessage()
             ], 500);
         }
     }
@@ -1093,7 +1105,7 @@ abstract class BaseCreativesController extends FrontendController
             if (!$user) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'User not authenticated'
+                    'message' => __('creatives.api.errors.user_not_authenticated')
                 ], 401);
             }
 
@@ -1104,7 +1116,7 @@ abstract class BaseCreativesController extends FrontendController
             if (!$creative) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Creative not found'
+                    'message' => __('creatives.api.errors.creative_not_found')
                 ], 404);
             }
 
@@ -1131,7 +1143,7 @@ abstract class BaseCreativesController extends FrontendController
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to check favorite status: ' . $e->getMessage()
+                'message' => __('creatives.api.errors.failed_to_check_favorite_status') . ': ' . $e->getMessage()
             ], 500);
         }
     }
@@ -1180,7 +1192,7 @@ abstract class BaseCreativesController extends FrontendController
             if (!$user) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'User not authenticated'
+                    'message' => __('creatives.api.errors.user_not_authenticated')
                 ], 401);
             }
 
@@ -1202,7 +1214,7 @@ abstract class BaseCreativesController extends FrontendController
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to get filter presets: ' . $e->getMessage()
+                'message' => __('creatives.api.errors.failed_to_get_filter_presets') . ': ' . $e->getMessage()
             ], 500);
         }
     }
@@ -1255,7 +1267,7 @@ abstract class BaseCreativesController extends FrontendController
             if (!$user) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'User not authenticated'
+                    'message' => __('creatives.api.errors.user_not_authenticated')
                 ], 401);
             }
 
@@ -1280,12 +1292,12 @@ abstract class BaseCreativesController extends FrontendController
             return response()->json([
                 'status' => 'success',
                 'data' => $preset->toApiArray(),
-                'message' => 'Filter preset created successfully'
+                'message' => __('creatives.api.success.filter_preset_created')
             ], 201);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Validation failed',
+                'message' => __('creatives.api.errors.validation_failed'),
                 'errors' => $e->errors()
             ], 422);
         } catch (\InvalidArgumentException $e) {
@@ -1296,7 +1308,7 @@ abstract class BaseCreativesController extends FrontendController
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to create filter preset: ' . $e->getMessage()
+                'message' => __('creatives.api.errors.failed_to_create_filter_preset') . ': ' . $e->getMessage()
             ], 500);
         }
     }
@@ -1336,7 +1348,7 @@ abstract class BaseCreativesController extends FrontendController
             if (!$user) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'User not authenticated'
+                    'message' => __('creatives.api.errors.user_not_authenticated')
                 ], 401);
             }
 
@@ -1349,12 +1361,12 @@ abstract class BaseCreativesController extends FrontendController
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Filter preset not found'
+                'message' => __('creatives.api.errors.filter_preset_not_found')
             ], 404);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to get filter preset: ' . $e->getMessage()
+                'message' => __('creatives.api.errors.failed_to_get_filter_preset') . ': ' . $e->getMessage()
             ], 500);
         }
     }
@@ -1401,7 +1413,7 @@ abstract class BaseCreativesController extends FrontendController
             if (!$user) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'User not authenticated'
+                    'message' => __('creatives.api.errors.user_not_authenticated')
                 ], 401);
             }
 
@@ -1429,17 +1441,17 @@ abstract class BaseCreativesController extends FrontendController
             return response()->json([
                 'status' => 'success',
                 'data' => $preset->fresh()->toApiArray(),
-                'message' => 'Filter preset updated successfully'
+                'message' => __('creatives.api.success.filter_preset_updated')
             ]);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Filter preset not found'
+                'message' => __('creatives.api.errors.filter_preset_not_found')
             ], 404);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Validation failed',
+                'message' => __('creatives.api.errors.validation_failed'),
                 'errors' => $e->errors()
             ], 422);
         } catch (\InvalidArgumentException $e) {
@@ -1450,7 +1462,7 @@ abstract class BaseCreativesController extends FrontendController
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to update filter preset: ' . $e->getMessage()
+                'message' => __('creatives.api.errors.failed_to_update_filter_preset') . ': ' . $e->getMessage()
             ], 500);
         }
     }
@@ -1490,7 +1502,7 @@ abstract class BaseCreativesController extends FrontendController
             if (!$user) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'User not authenticated'
+                    'message' => __('creatives.api.errors.user_not_authenticated')
                 ], 401);
             }
 
@@ -1501,7 +1513,7 @@ abstract class BaseCreativesController extends FrontendController
 
             return response()->json([
                 'status' => 'success',
-                'message' => "Filter preset '{$presetName}' deleted successfully",
+                'message' => __('creatives.api.success.filter_preset_deleted', ['name' => $presetName]),
                 'data' => [
                     'deleted_id' => (int)$id,
                     'deleted_name' => $presetName,
@@ -1511,12 +1523,12 @@ abstract class BaseCreativesController extends FrontendController
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Filter preset not found'
+                'message' => __('creatives.api.errors.filter_preset_not_found')
             ], 404);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to delete filter preset: ' . $e->getMessage()
+                'message' => __('creatives.api.errors.failed_to_delete_filter_preset') . ': ' . $e->getMessage()
             ], 500);
         }
     }

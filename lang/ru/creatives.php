@@ -38,6 +38,8 @@ return [
     'resetButton' => 'Сбросить',
     'customDateLabel' => 'Пользовательская дата',
     'copyButton' => 'Копировать',
+    'selectAll' => 'Выбрать все',
+    'clearAll' => 'Снять выделение',
     'likes' => 'Лайков',
     'comments' => 'Комментарии',
     'shared' => 'Поделились',
@@ -47,6 +49,54 @@ return [
     'activity_title_was_active' => 'Было активно: :difference день|Было активно: :difference дня|Было активно: :difference дней',
     'activity_title_inactive' => 'Не активно',
     'wasActive' => 'Было активно',
+    'selectedItems' => 'выбрано',
+    'noOptionsFound' => 'Ничего не найдено',
+
+    // Новые переводы для MultiSelect
+    'multiSelect' => [
+        'selectAll' => 'Отметить все',
+        'clearAll' => 'Снять выделение',
+        'noOptionsFound' => 'Ничего не найдено',
+        'selectedItems' => 'выбранных элементов',
+        'search' => 'Поиск',
+        'selectOptions' => 'Выберите опции',
+    ],
+
+    // Переводы для BaseSelect
+    'baseSelect' => [
+        'selectOption' => 'Выберите опцию',
+        'noOptionsAvailable' => 'Нет доступных опций',
+        'onPage' => 'На странице',
+        'perPage' => 'На странице',
+    ],
+
+    // Переводы для API сообщений
+    'api' => [
+        'errors' => [
+            'user_not_authenticated' => 'Пользователь не аутентифицирован',
+            'creative_not_found' => 'Креатив не найден',
+            'creative_already_in_favorites' => 'Креатив уже в избранном',
+            'creative_not_found_in_favorites' => 'Креатив не найден в избранном',
+            'validation_failed' => 'Ошибка валидации',
+            'invalid_filters' => 'Неверные фильтры',
+            'failed_to_load_filter_options' => 'Не удалось загрузить опции фильтров',
+            'failed_to_get_favorites_count' => 'Не удалось получить количество избранного',
+            'failed_to_add_to_favorites' => 'Не удалось добавить в избранное',
+            'failed_to_remove_from_favorites' => 'Не удалось удалить из избранного',
+            'failed_to_check_favorite_status' => 'Не удалось проверить статус избранного',
+            'failed_to_get_filter_presets' => 'Не удалось получить пресеты фильтров',
+            'failed_to_create_filter_preset' => 'Не удалось создать пресет фильтров',
+            'failed_to_update_filter_preset' => 'Не удалось обновить пресет фильтров',
+            'failed_to_delete_filter_preset' => 'Не удалось удалить пресет фильтров',
+            'failed_to_get_filter_preset' => 'Не удалось получить пресет фильтров',
+            'filter_preset_not_found' => 'Пресет фильтров не найден',
+        ],
+        'success' => [
+            'filter_preset_created' => 'Пресет фильтров успешно создан',
+            'filter_preset_updated' => 'Пресет фильтров успешно обновлен',
+            'filter_preset_deleted' => 'Пресет фильтров ":name" успешно удален',
+        ],
+    ],
 
     // Переводы для вкладок
     'tabs' => [

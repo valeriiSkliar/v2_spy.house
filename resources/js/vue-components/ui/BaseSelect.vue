@@ -18,7 +18,7 @@
           {{ option.label }}
         </li>
         <li v-if="safeOptions.length === 0" class="base-select__no-options">
-          No options available
+          {{ translationsComputed.noOptions }}
         </li>
       </ul>
     </div>
@@ -43,7 +43,7 @@
         {{ option.label }}
       </li>
       <li v-if="safeOptions.length === 0" class="base-select__no-options">
-        {{ translations.noOptions }}
+        {{ translationsComputed.noOptions }}
       </li>
     </ul>
   </div>
@@ -64,6 +64,7 @@ interface OnPageTranslations {
 
 interface Translations {
   noOptions: string;
+  selectOption?: string;
 }
 
 interface Props {
@@ -90,6 +91,7 @@ const props = withDefaults(defineProps<Props>(), {
   }),
   translations: () => ({
     noOptions: 'No options available',
+    selectOption: 'Select option',
   }),
 });
 
@@ -97,6 +99,14 @@ const emit = defineEmits<Emits>();
 
 const isOpen = ref(false);
 const selectRef = ref<HTMLElement>();
+
+// Переводы с fallback значениями
+const translationsComputed = computed(() => ({
+  noOptions: props.translations?.noOptions || 'No options available',
+  selectOption: props.translations?.selectOption || 'Select option',
+  onPage: props.onPageTranslations?.onPage || 'On page',
+  perPage: props.onPageTranslations?.perPage || 'Per page',
+}));
 
 const selectedLabel = computed(() => {
   if (!Array.isArray(props.options)) {
@@ -110,11 +120,11 @@ const selectedLabel = computed(() => {
 
 // Для варианта с иконкой используем специальный формат отображения как в Blade
 const displayValue = computed(() => {
-  if (props.icon && props.onPageTranslations) {
+  if (props.icon) {
     const currentValue = props.value || props.initialValue;
-    return `${props.onPageTranslations.onPage} — ${currentValue}`;
+    return `${translationsComputed.value.onPage} — ${currentValue}`;
   }
-  return selectedLabel.value || props.placeholder;
+  return selectedLabel.value || translationsComputed.value.selectOption;
 });
 
 const safeOptions = computed(() => {

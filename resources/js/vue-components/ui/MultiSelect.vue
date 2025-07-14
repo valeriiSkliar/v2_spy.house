@@ -19,24 +19,25 @@
         <div class="multi-select__actions">
           <button
             type="button"
+            v-if="isSelectAllVisible"
             class="multi-select__action-btn multi-select__action-btn--select-all"
             @click.stop="selectAll"
           >
-            Отметить все
+            {{ translations.selectAll }}
           </button>
           <button
             type="button"
             class="multi-select__action-btn multi-select__action-btn--clear-all"
             @click.stop="clearAll"
           >
-            Снять выделение
+            {{ translations.clearAll }}
           </button>
         </div>
 
         <div class="multi-select__search">
           <input
             type="text"
-            placeholder="Search"
+            :placeholder="translations.search"
             class="multi-select__search-input"
             v-model="searchQuery"
             @click.stop
@@ -62,7 +63,7 @@
             <span class="multi-select__option-label">{{ option.label }}</span>
           </li>
           <li v-if="filteredOptions.length === 0" class="multi-select__no-options">
-            No options found
+            {{ translations.noOptionsFound }}
           </li>
         </ul>
       </div>
@@ -87,6 +88,14 @@ interface Props {
   disabled?: boolean;
   options?: Option[];
   showLogo?: boolean;
+  isSelectAllVisible?: boolean;
+  translations?: {
+    selectAll?: string;
+    clearAll?: string;
+    noOptionsFound?: string;
+    search?: string;
+    selectedItems?: string;
+  };
 }
 
 interface Emits {
@@ -99,6 +108,14 @@ const props = withDefaults(defineProps<Props>(), {
   disabled: false,
   options: () => [{ value: 'default', label: 'Select options' }],
   showLogo: false,
+  isSelectAllVisible: false,
+  translations: () => ({
+    selectAll: 'Select All',
+    clearAll: 'Clear All',
+    noOptionsFound: 'No options found',
+    search: 'Search',
+    selectedItems: 'selected items',
+  }),
 });
 
 const emit = defineEmits<Emits>();
@@ -106,6 +123,15 @@ const emit = defineEmits<Emits>();
 const isOpen = ref(false);
 const searchQuery = ref('');
 const multiSelectRef = ref<HTMLElement>();
+
+// Переводы с fallback значениями
+const translations = computed(() => ({
+  selectAll: props.translations?.selectAll || 'Select All',
+  clearAll: props.translations?.clearAll || 'Clear All',
+  noOptionsFound: props.translations?.noOptionsFound || 'No options found',
+  search: props.translations?.search || 'Search',
+  selectedItems: props.translations?.selectedItems || 'selected items',
+}));
 
 const filteredOptions = computed(() => {
   if (!searchQuery.value) {
@@ -121,7 +147,7 @@ const displayText = computed(() => {
   if (props.values.length === 1) {
     return getLabelByValue(props.values[0]);
   } else if (props.values.length > 1) {
-    return `${props.values.length} выбранных элемента`;
+    return `${props.values.length} ${translations.value.selectedItems}`;
   }
   return '';
 });

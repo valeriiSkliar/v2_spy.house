@@ -47,6 +47,7 @@
                 :values="store.filters.countries"
                 :options="store.countriesOptions"
                 :placeholder="translations.countries.value"
+                :translations="multiSelectTranslations"
                 @add="value => store.addToMultiSelect('countries', value)"
                 @remove="value => store.removeFromMultiSelect('countries', value)"
               />
@@ -73,6 +74,7 @@
                 :value="store.filters.sortBy"
                 :options="store.sortOptions"
                 :placeholder="translations.sortBy.value"
+                :translations="baseSelectTranslations"
                 @update:value="value => store.updateFilter('sortBy', value)"
               />
             </div>
@@ -118,6 +120,7 @@
               :values="store.filters.advertisingNetworks"
               :options="store.advertisingNetworksOptions"
               :placeholder="translations.advertisingNetworks.value"
+              :translations="multiSelectTranslations"
               @add="value => store.addToMultiSelect('advertisingNetworks', value)"
               @remove="value => store.removeFromMultiSelect('advertisingNetworks', value)"
             />
@@ -129,6 +132,7 @@
               :values="store.filters.languages"
               :options="store.languagesOptions"
               :placeholder="translations.languages.value"
+              :translations="multiSelectTranslations"
               @add="value => store.addToMultiSelect('languages', value)"
               @remove="value => store.removeFromMultiSelect('languages', value)"
             />
@@ -140,6 +144,7 @@
               :values="store.filters.operatingSystems"
               :options="store.operatingSystemsOptions"
               :placeholder="translations.operatingSystems.value"
+              :translations="multiSelectTranslations"
               @add="value => store.addToMultiSelect('operatingSystems', value)"
               @remove="value => store.removeFromMultiSelect('operatingSystems', value)"
             />
@@ -151,6 +156,7 @@
               :values="store.filters.browsers"
               :options="store.browsersOptions"
               :placeholder="translations.browsers.value"
+              :translations="multiSelectTranslations"
               @add="value => store.addToMultiSelect('browsers', value)"
               @remove="value => store.removeFromMultiSelect('browsers', value)"
             />
@@ -162,6 +168,7 @@
               :values="store.filters.devices"
               :options="store.devicesOptions"
               :placeholder="translations.devices.value"
+              :translations="multiSelectTranslations"
               @add="value => store.addToMultiSelect('devices', value)"
               @remove="value => store.removeFromMultiSelect('devices', value)"
             />
@@ -173,6 +180,7 @@
               :values="store.filters.imageSizes"
               :options="store.imageSizesOptions"
               :placeholder="translations.imageSizes.value"
+              :translations="multiSelectTranslations"
               @add="value => store.addToMultiSelect('imageSizes', value)"
               @remove="value => store.removeFromMultiSelect('imageSizes', value)"
             />
@@ -200,6 +208,7 @@
               :options="store.presetOptions"
               :placeholder="translations.savedSettings.value"
               :disabled="store.isPresetsLoading"
+              :translations="baseSelectTranslations"
               @update:value="handlePresetSelection"
             />
           </div>
@@ -234,7 +243,7 @@ import {
 import type { FilterState, SelectOptions, TabOptions } from '@/types/creatives.d';
 import { CREATIVES_CONSTANTS } from '@/types/creatives.d';
 import debounce from 'lodash.debounce';
-import { onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useCreativesFiltersStore } from '../../stores/useFiltersStore';
 import BaseSelect from '../ui/BaseSelect.vue';
 import DateSelect from '../ui/DateSelect_with_flatpickr.vue';
@@ -291,6 +300,17 @@ const translations = createReactiveTranslations(
     onlyAdult: 'onlyAdult',
     savedSettings: 'savedSettings',
     savePresetButton: 'savePresetButton',
+    // Переводы для MultiSelect
+    multiSelectAll: 'multiSelect.selectAll',
+    multiClearAll: 'multiSelect.clearAll',
+    multiNoOptionsFound: 'multiSelect.noOptionsFound',
+    multiSearch: 'multiSelect.search',
+    multiSelectedItems: 'multiSelect.selectedItems',
+    // Переводы для BaseSelect
+    baseSelectOption: 'baseSelect.selectOption',
+    baseNoOptionsAvailable: 'baseSelect.noOptionsAvailable',
+    baseOnPage: 'baseSelect.onPage',
+    basePerPage: 'baseSelect.perPage',
   },
   {
     // Fallback значения для критических переводов
@@ -312,8 +332,40 @@ const translations = createReactiveTranslations(
     onlyAdult: 'Only adult',
     savedSettings: 'Saved settings',
     savePresetButton: 'Save settings',
+    // Fallback для MultiSelect
+    multiSelectAll: 'Select All',
+    multiClearAll: 'Clear All',
+    multiNoOptionsFound: 'No options found',
+    multiSearch: 'Search',
+    multiSelectedItems: 'selected items',
+    // Fallback для BaseSelect
+    baseSelectOption: 'Select option',
+    baseNoOptionsAvailable: 'No options available',
+    baseOnPage: 'On page',
+    basePerPage: 'Per page',
   }
 );
+
+// Переводы для MultiSelect компонентов
+const multiSelectTranslations = computed(() => ({
+  selectAll: translations.multiSelectAll.value,
+  clearAll: translations.multiClearAll.value,
+  noOptionsFound: translations.multiNoOptionsFound.value,
+  search: translations.multiSearch.value,
+  selectedItems: translations.multiSelectedItems.value,
+}));
+
+// Переводы для BaseSelect компонентов
+const baseSelectTranslations = computed(() => ({
+  selectOption: translations.baseSelectOption.value,
+  noOptions: translations.baseNoOptionsAvailable.value,
+}));
+
+// Переводы для onPage в BaseSelect
+const onPageTranslations = computed(() => ({
+  onPage: translations.baseOnPage.value,
+  perPage: translations.basePerPage.value,
+}));
 
 // ============================================================================
 // СОСТОЯНИЕ
