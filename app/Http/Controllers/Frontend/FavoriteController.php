@@ -139,8 +139,8 @@ class FavoriteController extends FrontendController
             $user = $request->user();
             $creativeId = $request->creative_id;
 
-            // Проверяем, существует ли креатив
-            $creative = Creative::findOrFail($creativeId);
+            // Проверяем, существует ли креатив среди готовых к отображению
+            $creative = Creative::onlyReady()->findOrFail($creativeId);
 
             // Проверяем, не добавлен ли уже в избранное
             if ($user->hasFavoriteCreative($creativeId)) {

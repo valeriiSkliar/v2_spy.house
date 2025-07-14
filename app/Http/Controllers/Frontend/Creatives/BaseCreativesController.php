@@ -725,7 +725,8 @@ abstract class BaseCreativesController extends FrontendController
     protected function getNetworksCounts(): array
     {
         return Cache::remember('creative_networks_counts', 60 * 10, function () {
-            $counts = Creative::join('advertisment_networks', 'creatives.advertisment_network_id', '=', 'advertisment_networks.id')
+            $counts = Creative::onlyReady() // Фильтруем только обработанные и валидные креативы
+                ->join('advertisment_networks', 'creatives.advertisment_network_id', '=', 'advertisment_networks.id')
                 ->selectRaw('advertisment_networks.network_name, COUNT(*) as count')
                 ->groupBy('advertisment_networks.network_name')
                 ->pluck('count', 'network_name')
@@ -901,8 +902,14 @@ abstract class BaseCreativesController extends FrontendController
 
             $creativeId = (int)$id;
 
-            // Проверяем, существует ли креатив
-            $creative = Creative::findOrFail($creativeId);
+            // Проверяем, существует ли креатив среди готовых к отображению
+            $creative = Creative::onlyReady()->find($creativeId);
+            if (!$creative) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => __('creatives.api.errors.creative_not_found')
+                ], 404);
+            }
 
             // Проверяем, не добавлен ли уже в избранное
             if ($user->hasFavoriteCreative($creativeId)) {
@@ -1111,8 +1118,8 @@ abstract class BaseCreativesController extends FrontendController
 
             $creativeId = (int)$id;
 
-            // Проверяем, существует ли креатив
-            $creative = Creative::find($creativeId);
+            // Проверяем, существует ли креатив среди готовых к отображению
+            $creative = Creative::onlyReady()->find($creativeId);
             if (!$creative) {
                 return response()->json([
                     'status' => 'error',
@@ -1548,10 +1555,8 @@ abstract class BaseCreativesController extends FrontendController
         }
 
         // Базовый запрос для поиска похожих креативов
-        $query = Creative::where('id', '!=', $creative->id);
-        // TODO: Временно отключаем фильтрацию по обработанности и валидности
-        // ->where('is_processed', true)
-        // ->where('is_valid', true);
+        $query = Creative::where('id', '!=', $creative->id)
+            ->onlyReady(); // Фильтруем только обработанные и валидные креативы
 
         // Приоритет 1: Тот же формат
         if ($creative->format) {
@@ -1602,8 +1607,7 @@ abstract class BaseCreativesController extends FrontendController
 
             // Более широкий поиск: только формат + активные
             $additionalQuery = Creative::whereNotIn('id', $excludeIds)
-                ->where('is_processed', true)
-                ->where('is_valid', true);
+                ->onlyReady(); // Фильтруем только обработанные и валидные креативы
 
             if ($creative->format) {
                 $additionalQuery->where('format', $creative->format);
@@ -1658,7 +1662,8 @@ abstract class BaseCreativesController extends FrontendController
         }
 
         // Строим базовый запрос для подсчета общего количества
-        $baseQuery = Creative::where('id', '!=', $creative->id);
+        $baseQuery = Creative::where('id', '!=', $creative->id)
+            ->onlyReady(); // Фильтруем только обработанные и валидные креативы
 
         // Применяем те же фильтры что и в основном методе
         if ($creative->format) {
@@ -1710,7 +1715,8 @@ abstract class BaseCreativesController extends FrontendController
             $excludeIds[] = $creative->id;
 
             // Более широкий поиск
-            $additionalQuery = Creative::whereNotIn('id', $excludeIds);
+            $additionalQuery = Creative::whereNotIn('id', $excludeIds)
+                ->onlyReady(); // Фильтруем только обработанные и валидные креативы
 
             if ($creative->format) {
                 $additionalQuery->where('format', $creative->format);
@@ -1728,6 +1734,7 @@ abstract class BaseCreativesController extends FrontendController
 
             // Обновляем общее количество с учетом расширенного поиска
             $additionalCount = Creative::whereNotIn('id', [$creative->id])
+                ->onlyReady() // Фильтруем только обработанные и валидные креативы
                 ->when($creative->format, fn($q) => $q->where('format', $creative->format))
                 ->count();
             $totalCount = max($totalCount, $additionalCount);

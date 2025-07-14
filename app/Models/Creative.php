@@ -282,6 +282,14 @@ class Creative extends Model
     }
 
     /**
+     * Scope для фильтрации только обработанных и валидных креативов (основной фильтр для публичного API)
+     */
+    public function scopeOnlyReady($query)
+    {
+        return $query->where('is_processed', true)->where('is_valid', true);
+    }
+
+    /**
      * Scope для поиска по ключевым словам
      */
     public function scopeBySearchKeyword($query, $keyword)
@@ -346,6 +354,7 @@ class Creative extends Model
     public static function getFilteredCreatives(array $filters, int $perPage = 12)
     {
         $query = self::with(['country', 'language', 'browser', 'advertismentNetwork', 'source'])
+            ->onlyReady() // Фильтруем только обработанные и валидные креативы
             ->byFormat($filters['activeTab'] ?? 'push')
             ->byCountry($filters['countries'] ?? [])
             ->byLanguage($filters['languages'] ?? [])
@@ -365,7 +374,8 @@ class Creative extends Model
      */
     public static function getFilteredCount(array $filters)
     {
-        return self::byFormat($filters['activeTab'] ?? 'push')
+        return self::onlyReady() // Фильтруем только обработанные и валидные креативы
+            ->byFormat($filters['activeTab'] ?? 'push')
             ->byCountry($filters['countries'] ?? [])
             ->byLanguage($filters['languages'] ?? [])
             ->byAdvertisingNetworks($filters['advertisingNetworks'] ?? [])
@@ -383,7 +393,8 @@ class Creative extends Model
     public static function getFormatCounts()
     {
         return Cache::remember('creative_format_counts', 60 * 5, function () {
-            $counts = self::selectRaw('format, COUNT(*) as count')
+            $counts = self::onlyReady() // Фильтруем только обработанные и валидные креативы
+                ->selectRaw('format, COUNT(*) as count')
                 ->groupBy('format')
                 ->pluck('count', 'format')
                 ->toArray();

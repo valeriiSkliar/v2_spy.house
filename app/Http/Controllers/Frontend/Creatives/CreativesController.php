@@ -225,18 +225,19 @@ class CreativesController extends BaseCreativesController
     {
         try {
             // Находим креатив с предзагрузкой связанных данных
+            // Проверяем только обработанные и валидные креативы
             $creative = Creative::with([
                 'country',
                 'language',
                 'browser',
                 'advertismentNetwork',
                 'source'
-            ])->find($id);
+            ])->onlyReady()->find($id);
 
             if (!$creative) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Creative not found',
+                    'message' => 'Creative not found or not ready for display',
                     'data' => null
                 ], 404);
             }
@@ -588,12 +589,12 @@ class CreativesController extends BaseCreativesController
                 'language',
                 'browser',
                 'advertismentNetwork'
-            ])->find($id);
+            ])->onlyReady()->find($id);
 
             if (!$creative) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Creative not found',
+                    'message' => 'Creative not found or not ready for display',
                     'data' => null
                 ], 404);
             }
