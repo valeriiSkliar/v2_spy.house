@@ -117,3 +117,35 @@ if (! function_exists('App\Helpers\format_count')) {
         return number_format($count, 0);
     }
 }
+
+if (! function_exists('App\Helpers\get_tabs_order')) {
+
+    /**
+     * Возвращает фиксированный порядок отображения вкладок
+     * Должен соответствовать TABS_ORDER в types/creatives.d.ts
+     * 
+     * @return array
+     */
+    function get_tabs_order(): array
+    {
+        return ['push', 'inpage', 'facebook', 'tiktok'];
+    }
+}
+
+if (! function_exists('App\Helpers\get_tabs_data')) {
+
+    /**
+     * Возвращает данные по вкладкам для отображения
+     * 
+     * @return array
+     */
+    function get_tabs_data(): array
+    {
+        return [
+            'push' => ['label' => 'Push'],
+            'inpage' => ['label' => 'Inpage'],
+            'facebook' => ['label' => 'Facebook'],
+            'tiktok' => ['label' => 'Tiktok']
+        ];
+    }
+}

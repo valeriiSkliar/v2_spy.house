@@ -1,4 +1,12 @@
 @props(['initialTabs' => [], 'tabOptions' => [], 'tabsTranslations' => []])
+
+@php
+// Используем helper функции для получения фиксированного порядка вкладок
+// Должен соответствовать TABS_ORDER в types/creatives.d.ts
+$TABS_ORDER = App\Helpers\get_tabs_order();
+$tabsData = App\Helpers\get_tabs_data();
+@endphp
+
 <div class="vue-component-wrapper" data-vue-component="CreativesTabsComponent" data-vue-props='{
         "initialTabs": {{ json_encode($initialTabs) }},
         "tabOptions": {{ json_encode($tabOptions) }},
@@ -6,42 +14,22 @@
     }'>
     <div class="tabs-placeholder" data-vue-placeholder>
         <div class="filter-push">
-            <!-- Placeholder для вкладок -->
-            <div
-                class="filter-push__item placeholder-shimmer {{ ($tabOptions['activeTab'] ?? 'push') === 'push' ? 'active' : '' }}">
-                Push
-                @if(($tabOptions['tabCounts']['push'] ?? 0) > 0)
-                <span class="filter-push__count placeholder-shimmer">{{
-                    App\Helpers\format_count($tabOptions['tabCounts']['push'] ??
-                    0) }}</span>
+            <!-- Placeholder для вкладок в фиксированном порядке -->
+            @foreach($TABS_ORDER as $tabValue)
+            @php
+            $isActive = ($tabOptions['activeTab'] ?? 'push') === $tabValue;
+            $count = $tabOptions['tabCounts'][$tabValue] ?? 0;
+            $label = $tabsData[$tabValue]['label'];
+            @endphp
+            <div class="filter-push__item placeholder-shimmer {{ $isActive ? 'active' : '' }}">
+                {{ $label }}
+                @if($count > 0)
+                <span class="filter-push__count placeholder-shimmer">
+                    {{ App\Helpers\format_count($count) }}
+                </span>
                 @endif
             </div>
-            <div
-                class="filter-push__item placeholder-shimmer {{ ($tabOptions['activeTab'] ?? 'push') === 'inpage' ? 'active' : '' }}">
-                Inpage
-                @if(($tabOptions['tabCounts']['inpage'] ?? 0) > 0)
-                <span class="filter-push__count placeholder-shimmer">{{
-                    App\Helpers\format_count($tabOptions['tabCounts']['inpage']
-                    ?? 0) }}</span>
-                @endif
-            </div>
-            <div
-                class="filter-push__item placeholder-shimmer {{ ($tabOptions['activeTab'] ?? 'push') === 'facebook' ? 'active' : '' }}">
-                Facebook
-                @if(($tabOptions['tabCounts']['facebook'] ?? 0) > 0)
-                <span class="filter-push__count placeholder-shimmer">{{
-                    App\Helpers\format_count($tabOptions['tabCounts']['facebook'] ?? 0) }}</span>
-                @endif
-            </div>
-            <div
-                class="filter-push__item placeholder-shimmer {{ ($tabOptions['activeTab'] ?? 'push') === 'tiktok' ? 'active' : '' }}">
-                Tiktok
-                @if(($tabOptions['tabCounts']['tiktok'] ?? 0) > 0)
-                <span class="filter-push__count placeholder-shimmer">{{
-                    App\Helpers\format_count($tabOptions['tabCounts']['tiktok']
-                    ?? 0) }}</span>
-                @endif
-            </div>
+            @endforeach
         </div>
     </div>
 </div>

@@ -2,7 +2,7 @@
 <template>
   <div class="filter-push">
     <button
-      v-for="tab in store.tabOptions"
+      v-for="tab in sortedTabOptions"
       :key="tab.value"
       class="filter-push__item"
       :class="{ active: tab.value === store.tabs.activeTab }"
@@ -15,8 +15,8 @@
 </template>
 
 <script setup lang="ts">
-import { isValidTabValue, TabsState } from '@/types/creatives.d';
-import { onMounted, onUnmounted } from 'vue';
+import { isValidTabValue, TABS_ORDER, TabsState } from '@/types/creatives.d';
+import { computed, onMounted, onUnmounted } from 'vue';
 import { useCreativesFiltersStore } from '../../stores/useFiltersStore';
 
 interface Props {
@@ -39,6 +39,37 @@ const props = withDefaults(defineProps<Props>(), {
 
 // Используем новый useCreativesFiltersStore с композаблами
 const store = useCreativesFiltersStore();
+
+// ============================================================================
+// COMPUTED PROPERTIES
+// ============================================================================
+
+/**
+ * Сортированный массив вкладок в фиксированном порядке
+ * Гарантирует, что вкладки всегда отображаются в том же порядке, что и в placeholder
+ */
+const sortedTabOptions = computed(() => {
+  if (!store.tabOptions || !Array.isArray(store.tabOptions)) {
+    return [];
+  }
+
+  // Создаем Map для быстрого поиска вкладок по значению
+  const tabsMap = new Map(store.tabOptions.map((tab: any) => [tab.value, tab]));
+
+  // Возвращаем вкладки в фиксированном порядке
+  const sortedTabs = TABS_ORDER.map(tabValue => tabsMap.get(tabValue)).filter(
+    tab => tab !== undefined
+  ); // Исключаем вкладки, которых нет в данных
+
+  // Логируем порядок для отладки
+  console.log('🔄 TabsComponent sortedTabOptions:', {
+    fixedOrder: TABS_ORDER,
+    availableTabsOrder: sortedTabs.map(tab => tab.value),
+    originalTabsOrder: store.tabOptions.map((tab: any) => tab.value),
+  });
+
+  return sortedTabs;
+});
 
 // ============================================================================
 // УТИЛИТАРНЫЕ ФУНКЦИИ

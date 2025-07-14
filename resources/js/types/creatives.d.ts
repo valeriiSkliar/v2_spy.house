@@ -358,6 +358,12 @@ export const CREATIVES_CONSTANTS = {
 } as const;
 
 /**
+ * Фиксированный порядок отображения вкладок
+ * Используется для гарантированного порядка отображения как в placeholder, так и в Vue компоненте
+ */
+export const TABS_ORDER = ['push', 'inpage', 'facebook', 'tiktok'] as const;
+
+/**
  * Дефолтные значения
  */
 export const DEFAULT_FILTERS: FilterState = {
