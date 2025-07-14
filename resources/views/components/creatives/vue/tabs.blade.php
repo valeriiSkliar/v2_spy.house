@@ -8,24 +8,39 @@
         <div class="filter-push">
             <!-- Placeholder для вкладок -->
             <div
-                class="filter-push__item placeholder-shimmer {{ $tabOptions['activeTab'] === 'push' ? 'active' : '' }}">
+                class="filter-push__item placeholder-shimmer {{ ($tabOptions['activeTab'] ?? 'push') === 'push' ? 'active' : '' }}">
                 Push
-                <span class="filter-push__count placeholder-shimmer">170k</span>
+                @if(($tabOptions['tabCounts']['push'] ?? 0) > 0)
+                <span class="filter-push__count placeholder-shimmer">{{
+                    App\Helpers\format_count($tabOptions['tabCounts']['push'] ??
+                    0) }}</span>
+                @endif
             </div>
             <div
-                class="filter-push__item placeholder-shimmer {{ $tabOptions['activeTab'] === 'inpage' ? 'active' : '' }}">
-                In Page
-                <span class="filter-push__count placeholder-shimmer">3.1k</span>
+                class="filter-push__item placeholder-shimmer {{ ($tabOptions['activeTab'] ?? 'push') === 'inpage' ? 'active' : '' }}">
+                Inpage
+                @if(($tabOptions['tabCounts']['inpage'] ?? 0) > 0)
+                <span class="filter-push__count placeholder-shimmer">{{
+                    App\Helpers\format_count($tabOptions['tabCounts']['inpage']
+                    ?? 0) }}</span>
+                @endif
             </div>
             <div
-                class="filter-push__item placeholder-shimmer {{ $tabOptions['activeTab'] === 'facebook' ? 'active' : '' }}">
+                class="filter-push__item placeholder-shimmer {{ ($tabOptions['activeTab'] ?? 'push') === 'facebook' ? 'active' : '' }}">
                 Facebook
-                <span class="filter-push__count placeholder-shimmer">65.1k</span>
+                @if(($tabOptions['tabCounts']['facebook'] ?? 0) > 0)
+                <span class="filter-push__count placeholder-shimmer">{{
+                    App\Helpers\format_count($tabOptions['tabCounts']['facebook'] ?? 0) }}</span>
+                @endif
             </div>
             <div
-                class="filter-push__item placeholder-shimmer {{ $tabOptions['activeTab'] === 'tiktok' ? 'active' : '' }}">
-                TikTok
-                <span class="filter-push__count placeholder-shimmer">45.2m</span>
+                class="filter-push__item placeholder-shimmer {{ ($tabOptions['activeTab'] ?? 'push') === 'tiktok' ? 'active' : '' }}">
+                Tiktok
+                @if(($tabOptions['tabCounts']['tiktok'] ?? 0) > 0)
+                <span class="filter-push__count placeholder-shimmer">{{
+                    App\Helpers\format_count($tabOptions['tabCounts']['tiktok']
+                    ?? 0) }}</span>
+                @endif
             </div>
         </div>
     </div>

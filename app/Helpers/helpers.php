@@ -16,7 +16,7 @@ if (! function_exists('App\Helpers\sanitize_input')) {
     }
 }
 
-if (! function_exists('sanitize_url')) {
+if (! function_exists('App\Helpers\sanitize_url')) {
     /**
      * Sanitize a URL by removing potentially dangerous characters and normalizing the format
      *
@@ -36,7 +36,7 @@ if (! function_exists('sanitize_url')) {
 
         // Ensure protocol exists, default to https if not present
         if (! preg_match('~^(?:f|ht)tps?://~i', $url)) {
-            $url = 'https://'.$url;
+            $url = 'https://' . $url;
         }
 
         // Convert protocol to lowercase
@@ -66,7 +66,7 @@ if (! function_exists('sanitize_url')) {
     }
 }
 
-if (! function_exists('validation_json')) {
+if (! function_exists('App\Helpers\validation_json')) {
     /**
      * Validate if string is valid JSON
      *
@@ -82,5 +82,38 @@ if (! function_exists('validation_json')) {
         json_decode($string);
 
         return json_last_error() === JSON_ERROR_NONE;
+    }
+}
+
+if (! function_exists('App\Helpers\format_count')) {
+    /**
+     * Format count numbers to shortened format (4500 -> 4.5k, 1300 -> 1.3k)
+     *
+     * @param  int|float  $count  The count to format
+     * @return string The formatted count string
+     */
+    function format_count($count): string
+    {
+        if (!is_numeric($count) || $count < 0) {
+            return '0';
+        }
+
+        $count = (float) $count;
+
+        if ($count >= 1000000) {
+            $formatted = $count / 1000000;
+            return ($formatted == floor($formatted)) ?
+                number_format($formatted, 0) . 'M' :
+                rtrim(number_format($formatted, 1), '0') . 'M';
+        }
+
+        if ($count >= 1000) {
+            $formatted = $count / 1000;
+            return ($formatted == floor($formatted)) ?
+                number_format($formatted, 0) . 'k' :
+                rtrim(number_format($formatted, 1), '0') . 'k';
+        }
+
+        return number_format($count, 0);
     }
 }
