@@ -5,9 +5,11 @@ namespace Tests\Feature;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
+use App\Models\User;
 
 class CreativeDetailsTranslationsTest extends TestCase
 {
+    use RefreshDatabase;
     public function test_creative_details_translations_available_in_russian(): void
     {
         // Устанавливаем русскую локаль для этого теста
@@ -44,7 +46,9 @@ class CreativeDetailsTranslationsTest extends TestCase
     {
         app()->setLocale('en');
 
-        $response = $this->get('/creatives');
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get('/creatives');
 
         $response->assertStatus(200);
 
@@ -66,7 +70,9 @@ class CreativeDetailsTranslationsTest extends TestCase
     {
         app()->setLocale('ru');
 
-        $response = $this->get('/creatives');
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get('/creatives');
         $detailsTranslations = $response->viewData('detailsTranslations');
 
         // Полный список переводов требуемых компонентом CreativeDetailsComponent

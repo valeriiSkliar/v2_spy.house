@@ -64,7 +64,7 @@
         <div class="creative-item-info">
           <span class="creative-item-info__txt">{{ getNetworkText() }}</span>
         </div>
-        <div class="creative-item-info">
+        <div v-if="creative.country" class="creative-item-info">
           <img :src="getFlagIcon()" alt="" />
           {{ creative.country?.code }}
         </div>

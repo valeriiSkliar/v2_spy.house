@@ -72,12 +72,12 @@ return new class extends Migration
             $table->index(['format', 'operation_system'], 'idx_format_os');
 
             // Основные поля
-            $table->unsignedInteger('external_id')->unique()->index();
+            $table->unsignedBigInteger('external_id')->unique()->index();
             $table->boolean('is_adult')->default(false);
             $table->string('title', 128)->default('')->comment('Заголовок');
             $table->string('description', 256)->default('')->comment('Описание');
             $table->char('combined_hash', 64)->unique()->nullable()->index()->comment('Хеш');
-            $table->text('landing_url', 10240)->nullable()->comment('Ссылка на лендинг');
+            $table->text('landing_url')->nullable()->comment('Ссылка на лендинг');
             $table->timestamp('start_date')->nullable()->comment('Дата начала показа');
             $table->timestamp('end_date')->nullable()->comment('Дата окончания показа');
             $table->foreignId('source_id')
@@ -95,11 +95,11 @@ return new class extends Migration
 
 
             $table->boolean('has_video')->default(false)->comment('Флаг наличия видео');
-            $table->string('video_url', 1024)->nullable()->comment('Ссылка на видео');
-            $table->string('video_duration')->nullable()->comment('Длительность видео');
-            $table->string('main_image_url', 1024)->nullable()->comment('Ссылка на главное изображение');
+            $table->text('video_url')->nullable()->comment('Ссылка на видео');
+            $table->integer('video_duration')->nullable()->comment('Длительность видео');
+            $table->text('main_image_url')->nullable()->comment('Ссылка на главное изображение');
             $table->string('main_image_size')->nullable()->comment('Размер главного изображения');
-            $table->string('icon_url', 1024)->nullable()->comment('Ссылка на иконку');
+            $table->text('icon_url')->nullable()->comment('Ссылка на иконку');
             $table->string('icon_size')->nullable()->comment('Размер иконки');
 
             $table->integer('social_likes')->nullable()->comment('Лайки в соц. сетях');

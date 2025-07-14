@@ -196,12 +196,11 @@
           <!-- Сохраненные настройки -->
           <div class="col-12 col-md-6 col-lg-3 mb-15">
             <BaseSelect
-              :value="
-                store.filters.savedSettings.length > 0 ? store.filters.savedSettings[0] : 'default'
-              "
-              :options="[]"
+              :value="store.selectedPresetId?.toString() || 'default'"
+              :options="store.presetOptions"
               :placeholder="translations.savedSettings.value"
-              @update:value="() => {}"
+              :disabled="store.isPresetsLoading"
+              @update:value="handlePresetSelection"
             />
           </div>
 
@@ -392,6 +391,45 @@ function handleResetFilters(): void {
 
   // Эмитим событие для обратной совместимости
   emitFiltersReset();
+}
+
+/**
+ * Обработчик выбора пресета фильтров
+ */
+async function handlePresetSelection(value: string): Promise<void> {
+  try {
+    // Если выбран default или пустая строка - очищаем выбор пресета
+    if (value === 'default' || !value) {
+      store.clearSelectedPreset();
+      return;
+    }
+
+    // Преобразуем строку в число
+    const presetId = parseInt(value, 10);
+    if (isNaN(presetId)) {
+      console.error('Invalid preset ID:', value);
+      return;
+    }
+
+    // Применяем пресет через store
+    await store.applyFilterPreset(presetId);
+
+    // Синхронизируем локальное поле поиска после применения пресета
+    syncLocalSearchWithStore();
+
+    // Эмитим событие изменения фильтров
+    emitFiltersChanged();
+
+    console.log('✅ Preset applied successfully:', presetId);
+  } catch (error) {
+    console.error('❌ Error applying preset:', error);
+
+    // В случае ошибки сбрасываем выбор пресета
+    store.clearSelectedPreset();
+
+    // Показываем сообщение об ошибке
+    store.showMessage('Error loading preset', 'error');
+  }
 }
 
 /**

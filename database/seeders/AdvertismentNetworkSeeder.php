@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Storage;
 
 class AdvertismentNetworkSeeder extends Seeder
 {
+
+    private const NON_ACTIVE_NETWORKS = ['ksaazaks_test', 'mondiad'];
     /**
      * Run the database seeds.
      */
@@ -109,14 +111,14 @@ class AdvertismentNetworkSeeder extends Seeder
                     'network_display_name' => $networkDisplayName,
                     'network_name' => $name,
                     'network_logo' => Storage::url($publicPath),
-                    'is_active' => true
+                    'is_active' => !in_array($name, self::NON_ACTIVE_NETWORKS)
                 ]);
             } else {
                 Log::info("File $iconPath does not exist");
                 AdvertismentNetwork::factory()->create([
                     'network_display_name' => $networkDisplayName,
                     'network_name' => $name,
-                    'is_active' => true
+                    'is_active' => !in_array($name, self::NON_ACTIVE_NETWORKS)
                 ]);
             }
         }

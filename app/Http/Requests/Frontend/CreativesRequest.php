@@ -28,7 +28,8 @@ class CreativesRequest extends BaseRequest
      * Максимальные значения для массивов
      */
     private const MAX_ARRAY_ITEMS = [
-        'advertisingNetworks' => 50,
+        'countries' => 250, // Максимальное количество стран (статическое значение)
+        'advertisingNetworks' => 100,
         'languages' => 100,
         'operatingSystems' => 20,
         'browsers' => 50,
@@ -53,6 +54,8 @@ class CreativesRequest extends BaseRequest
             // Основные фильтры
             'searchKeyword' => ['sometimes', 'nullable', 'string', 'max:255'],
             'country' => ['sometimes', 'nullable', 'string', $this->getCountryValidationRule()],
+            'countries' => ['sometimes', 'nullable', 'array', 'max:' . self::MAX_ARRAY_ITEMS['countries']], // Добавляем валидацию для массива стран
+            'countries.*' => ['string', 'max:3', $this->getCountryValidationRule()], // Валидация каждого элемента массива
             'dateCreation' => ['sometimes', 'nullable', 'string', function ($attribute, $value, $fail) {
                 $this->validateDateRange($attribute, $value, $fail);
             }],
@@ -63,7 +66,7 @@ class CreativesRequest extends BaseRequest
             'onlyAdult' => ['sometimes', 'nullable', 'boolean'],
 
             // Массивы фильтров с оптимизированной валидацией
-            'advertisingNetworks' => ['sometimes', 'nullable', 'array', 'max:' . self::MAX_ARRAY_ITEMS['advertisingNetworks'], Rule::in(AdvertismentNetwork::forCreativeFilters()->pluck('value')->toArray())],
+            'advertisingNetworks' => ['sometimes', 'nullable', 'array', 'max:' . self::MAX_ARRAY_ITEMS['advertisingNetworks']],
             'advertisingNetworks.*' => ['string', 'max:50', $this->getAdvertisingNetworkValidationRule()],
 
             'languages' => ['sometimes', 'nullable', 'array', 'max:' . self::MAX_ARRAY_ITEMS['languages']],
@@ -133,7 +136,7 @@ class CreativesRequest extends BaseRequest
         }
 
         // Batch санитизация массивов
-        $arrayFields = ['advertisingNetworks', 'languages', 'operatingSystems', 'browsers', 'devices', 'imageSizes'];
+        $arrayFields = ['countries', 'advertisingNetworks', 'languages', 'operatingSystems', 'browsers', 'devices', 'imageSizes'];
         foreach ($arrayFields as $field) {
             if (isset($input[$field]) && is_array($input[$field])) {
                 $sanitized[$field] = $this->sanitizeArrayField($input[$field]);
@@ -142,6 +145,7 @@ class CreativesRequest extends BaseRequest
 
         // Санитизация URL массивов (comma-separated)
         $urlArrayFields = [
+            'cr_countries',
             'cr_advertisingNetworks',
             'cr_languages',
             'cr_operatingSystems',
@@ -190,6 +194,7 @@ class CreativesRequest extends BaseRequest
         $urlToFilterMapping = [
             'cr_searchKeyword' => 'searchKeyword',
             'cr_country' => 'country',
+            'cr_countries' => 'countries', // Добавляем маппинг для массива стран
             'cr_dateCreation' => 'dateCreation',
             'cr_sortBy' => 'sortBy',
             'cr_periodDisplay' => 'periodDisplay',
@@ -211,6 +216,7 @@ class CreativesRequest extends BaseRequest
 
         // Обработка массивов с оптимизацией
         $urlArrayFields = [
+            'cr_countries' => 'countries', // Добавляем обработку массива стран
             'cr_advertisingNetworks' => 'advertisingNetworks',
             'cr_languages' => 'languages',
             'cr_operatingSystems' => 'operatingSystems',
@@ -313,6 +319,7 @@ class CreativesRequest extends BaseRequest
         $validValues = $this->getAllValidValues();
 
         $arrayFieldsMapping = [
+            'countries' => $validValues['countries'], // Добавляем валидацию для стран
             'advertisingNetworks' => $validValues['advertisingNetworks'],
             'languages' => $validValues['languages'],
             'operatingSystems' => $validValues['operatingSystems'],
@@ -339,6 +346,7 @@ class CreativesRequest extends BaseRequest
     {
         return Cache::remember('all_valid_filter_values', self::VALIDATION_CACHE_TTL, function () {
             return [
+                'countries' => IsoEntity::countries()->active()->pluck('iso_code_2')->toArray(), // Добавляем валидные коды стран
                 'advertisingNetworks' => AdvertismentNetwork::forCreativeFilters()->pluck('value')->toArray(),
                 'languages' => IsoEntity::languages()->active()->pluck('iso_code_2')->toArray(),
                 'operatingSystems' => array_column(OperationSystem::getForSelect(), 'value'),
@@ -371,6 +379,7 @@ class CreativesRequest extends BaseRequest
         ];
 
         // Добавляем правила для URL массивов с валидацией содержимого
+        $baseRules['cr_countries'] = ['sometimes', 'nullable', 'string', 'max:2000', $this->getCommaSeparatedCountriesValidationRule()]; // Добавляем для стран
         $baseRules['cr_advertisingNetworks'] = ['sometimes', 'nullable', 'string', 'max:500', $this->getCommaSeparatedAdvertisingNetworksValidationRule()];
         $baseRules['cr_languages'] = ['sometimes', 'nullable', 'string', 'max:500', $this->getCommaSeparatedLanguagesValidationRule()];
         $baseRules['cr_operatingSystems'] = ['sometimes', 'nullable', 'string', 'max:500', $this->getCommaSeparatedOperatingSystemsValidationRule()];
@@ -470,6 +479,25 @@ class CreativesRequest extends BaseRequest
     /**
      * Правила валидации для comma-separated URL параметров
      */
+    private function getCommaSeparatedCountriesValidationRule(): callable
+    {
+        return function ($attribute, $value, $fail) {
+            if (empty($value)) return;
+
+            $validCountries = Cache::remember('valid_countries', self::VALIDATION_CACHE_TTL, function () {
+                return IsoEntity::countries()->active()->pluck('iso_code_2')->toArray();
+            });
+
+            $items = $this->parseCommaSeparatedString($value);
+            foreach ($items as $item) {
+                if (!$this->isValidCountryCodeCached($item)) {
+                    $fail("Указанный код страны не доступен: {$item}");
+                    return;
+                }
+            }
+        };
+    }
+
     private function getCommaSeparatedAdvertisingNetworksValidationRule(): callable
     {
         return function ($attribute, $value, $fail) {
@@ -721,6 +749,10 @@ class CreativesRequest extends BaseRequest
             'searchKeyword.string' => 'Поисковое слово должно быть строкой',
             'searchKeyword.max' => 'Поисковое слово не должно превышать 255 символов',
             'country.string' => 'Код страны должен быть строкой',
+            'countries.array' => 'Страны должны быть массивом',
+            'countries.max' => 'Превышено максимальное количество стран',
+            'countries.*.string' => 'Код страны должен быть строкой',
+            'countries.*.max' => 'Код страны не должен превышать 3 символа',
             'sortBy.in' => 'Недопустимое значение сортировки',
             'activeTab.in' => 'Недопустимое значение вкладки',
             'onlyAdult.boolean' => 'Фильтр для взрослых должен быть булевым значением',

@@ -16,7 +16,7 @@
                     <a href="#" class="btn justify-content-start _flex w-100 _medium _gray">
                         <span class="icon-favorite-empty font-16 mr-2"></span>
                         {{ __('creatives.favorites') }}
-                        <x-creatives.vue.favorites-counter :initialCount="43" :translations="[
+                        <x-creatives.vue.favorites-counter :initialCount="$favoritesCount" :translations="[
                                 'favoritesCountTooltip' => 'Количество избранных креативов. Нажмите для обновления.'
                             ]" />
                     </a>
@@ -46,8 +46,9 @@
     {{-- Компонент списка креативов с новой системой композаблов --}}
 
     <x-creatives.vue.list :listTranslations="$listTranslations" :perPage="12" :activeTab="$activeTab"
-        :detailsTranslations="$detailsTranslations ?? []" :showSimilarCreatives="false"
-        :cardTranslations="$cardTranslations ?? []" />
+        :detailsTranslations="$allTranslations ?? []"
+        :showSimilarCreatives="$userData['show_similar_creatives'] ?? false" :cardTranslations="$cardTranslations ?? []"
+        :userData="$userData" />
 
 
     {{-- Компонент пагинации --}}

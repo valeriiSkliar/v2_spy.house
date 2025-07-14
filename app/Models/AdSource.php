@@ -17,6 +17,14 @@ class AdSource extends Model
     protected $fillable = [
         'source_name',
         'source_display_name',
+        'parser_status',
+        'parser_state',
+        'parser_last_error',
+        'parser_last_error_at',
+        'parser_last_error_code',
+        'parser_last_error_message',
+        'parser_last_error_trace',
+        'parser_last_error_file',
     ];
 
     /**
@@ -27,6 +35,9 @@ class AdSource extends Model
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'parser_state' => 'array',
+        'parser_last_error' => 'array',
+        'parser_last_error_at' => 'datetime',
     ];
 
     /**

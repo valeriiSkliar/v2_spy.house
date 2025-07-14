@@ -5,6 +5,7 @@
 'detailsTranslations' => [],
 'showSimilarCreatives' => false,
 'cardTranslations' => [],
+'userData' => [],
 ])
 <div class="vue-component-wrapper" data-vue-component="CreativesListComponent" data-vue-props='{
         "translations": {{ json_encode($listTranslations) }},
@@ -12,7 +13,8 @@
         "activeTab": {{ json_encode($activeTab) }},
         "detailsTranslations": {{ json_encode($detailsTranslations) }},
         "showSimilarCreatives": {{ json_encode($showSimilarCreatives) }},
-        "cardTranslations": {{ json_encode($cardTranslations) }}
+        "cardTranslations": {{ json_encode($cardTranslations) }},
+        "userData": {{ json_encode($userData) }}
     }' data-vue-placeholder-manual>
 
     <!-- Placeholder карточек креативов (количество = perPage) -->
@@ -27,7 +29,8 @@
         @endfor
 
         {{-- Компонент деталей креатива (Vue Island) --}}
-        <x-creatives.vue.creative-details :showSimilarCreatives="true" :translations="$detailsTranslations ?? []" />
+        <x-creatives.vue.creative-details :showSimilarCreatives="$showSimilarCreatives"
+            :translations="$detailsTranslations ?? []" />
     </div>
 </div>
 </div>

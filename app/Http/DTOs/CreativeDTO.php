@@ -143,7 +143,7 @@ class CreativeDTO implements Arrayable, Jsonable
 
         // activity_title - локализованный заголовок активности (только если не задано значение из модели)
         if ($this->activity_title === null && $this->is_active !== null) {
-            $this->activity_title = $this->is_active ? __('creatives.active') : __('creatives.was_active');
+            $this->activity_title = $this->is_active ? __('creatives.activity_title_active') : __('creatives.activity_title_was_active');
         }
 
         // isFavorite - требует userId для проверки
@@ -157,9 +157,9 @@ class CreativeDTO implements Arrayable, Jsonable
      */
     private function checkIfFavorite(int $userId): bool
     {
-        // TODO: Реализовать проверку избранного через модель
-        // Пример: return UserFavorite::where('user_id', $userId)->where('creative_id', $this->id)->exists();
-        return false; // Заглушка
+        return \App\Models\Favorite::where('user_id', $userId)
+            ->where('creative_id', $this->id)
+            ->exists();
     }
 
 
@@ -195,9 +195,10 @@ class CreativeDTO implements Arrayable, Jsonable
      */
     private static function batchCheckFavorites(int $userId, array $creativeIds): array
     {
-        // TODO: Реализовать батчевую проверку избранного
-        // Пример: return UserFavorite::where('user_id', $userId)->whereIn('creative_id', $creativeIds)->pluck('creative_id')->toArray();
-        return []; // Заглушка
+        return \App\Models\Favorite::where('user_id', $userId)
+            ->whereIn('creative_id', $creativeIds)
+            ->pluck('creative_id')
+            ->toArray();
     }
 
     /**

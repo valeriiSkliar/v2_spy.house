@@ -15,6 +15,14 @@ return new class extends Migration
             $table->id();
             $table->string('source_name', 50)->unique()->comment('Системное имя источника');
             $table->string('source_display_name', 100)->comment('Отображаемое имя источника');
+            $table->string('parser_status')->default('inactive')->comment('Статус парсера');
+            $table->json('parser_state')->nullable()->comment('Состояние парсера');
+            $table->json('parser_last_error')->nullable()->comment('Детали последней ошибки');
+            $table->timestamp('parser_last_error_at')->nullable()->comment('Время последней ошибки');
+            $table->integer('parser_last_error_code')->nullable()->comment('Код последней ошибки');
+            $table->text('parser_last_error_message')->nullable()->comment('Сообщение последней ошибки');
+            $table->text('parser_last_error_trace')->nullable()->comment('Трассировка последней ошибки');
+            $table->string('parser_last_error_file')->nullable()->comment('Файл последней ошибки');
             $table->timestamps();
         });
     }

@@ -11,14 +11,28 @@
           <span class="multi-select__placeholder">{{ placeholder }}</span>
         </template>
         <template v-else>
-          <span v-for="value in values" :key="value" class="multi-select__tag">
-            {{ getLabelByValue(value) }}
-            <button class="multi-select__remove" @click.stop="removeValue(value)">×</button>
-          </span>
+          <span class="multi-select__selected-text">{{ displayText }}</span>
         </template>
       </div>
 
       <div class="multi-select__dropdown" v-show="isOpen">
+        <div class="multi-select__actions">
+          <button
+            type="button"
+            class="multi-select__action-btn multi-select__action-btn--select-all"
+            @click.stop="selectAll"
+          >
+            Отметить все
+          </button>
+          <button
+            type="button"
+            class="multi-select__action-btn multi-select__action-btn--clear-all"
+            @click.stop="clearAll"
+          >
+            Снять выделение
+          </button>
+        </div>
+
         <div class="multi-select__search">
           <input
             type="text"
@@ -103,6 +117,15 @@ const filteredOptions = computed(() => {
   );
 });
 
+const displayText = computed(() => {
+  if (props.values.length === 1) {
+    return getLabelByValue(props.values[0]);
+  } else if (props.values.length > 1) {
+    return `${props.values.length} выбранных элемента`;
+  }
+  return '';
+});
+
 function getLabelByValue(value: string): string {
   const option = props.options.find(option => option.value === value);
   return option ? option.label : value;
@@ -123,6 +146,22 @@ function toggleOption(value: string): void {
   } else {
     emit('add', value);
   }
+}
+
+function selectAll(): void {
+  const availableOptions = props.options.filter(option => option.value !== 'default');
+
+  availableOptions.forEach(option => {
+    if (!props.values.includes(option.value)) {
+      emit('add', option.value);
+    }
+  });
+}
+
+function clearAll(): void {
+  props.values.forEach(value => {
+    emit('remove', value);
+  });
 }
 
 function removeValue(value: string): void {

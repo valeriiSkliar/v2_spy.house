@@ -3,6 +3,9 @@
 namespace App\Providers;
 
 use App\View\Composers\ApiTokenComposer;
+use App\View\Composers\BlogComposer;
+use App\View\Composers\MainPageCommentsComposer;
+use App\View\Composers\SubscriptionComposer;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -32,5 +35,14 @@ class AppServiceProvider extends ServiceProvider
         // Register view composers
         View::composer('layouts.app', ApiTokenComposer::class);
         View::composer('layouts.authorized', ApiTokenComposer::class);
+
+        // Register subscription composer for home page
+        View::composer('index', SubscriptionComposer::class);
+
+        // Register blog composer for home page
+        View::composer('index', BlogComposer::class);
+
+        // Register main page comments composer for home page
+        View::composer('index', MainPageCommentsComposer::class);
     }
 }
