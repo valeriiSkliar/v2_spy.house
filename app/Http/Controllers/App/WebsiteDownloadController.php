@@ -63,7 +63,7 @@ class WebsiteDownloadController extends Controller
                 ->where(function ($query) use ($sanitizedUrl) {
                     // Check both exact URL and transformed URL
                     $query->where('url', $sanitizedUrl)
-                        ->orWhere('url', 'like', '%'.parse_url($sanitizedUrl, PHP_URL_HOST).'%');
+                        ->orWhere('url', 'like', '%' . parse_url($sanitizedUrl, PHP_URL_HOST) . '%');
                 })
                 ->whereIn('status', ['pending', 'in_progress', 'completed'])
                 ->first();
@@ -83,14 +83,14 @@ class WebsiteDownloadController extends Controller
             try {
                 $this->checkWebsiteAvailability($sanitizedUrl);
             } catch (\Exception $e) {
-                Log::error('Failed to check website availability: '.$e->getMessage(), ['url' => $sanitizedUrl]);
+                Log::error('Failed to check website availability: ' . $e->getMessage(), ['url' => $sanitizedUrl]);
                 Toast::error(__('landings.downloadFailedUrlDisabled.description'));
 
                 return redirect()->back()->withInput();
             }
 
             if (! $this->antiFloodService->check($request->user()->id, 'website-download', 2, 3600)) {
-                Log::error('Limit reached for user '.$request->user()->id);
+                Log::error('Limit reached for user ' . $request->user()->id);
                 Toast::error(__('landings.antiFlood.description'));
 
                 return redirect()->back()->withInput();
@@ -100,7 +100,7 @@ class WebsiteDownloadController extends Controller
             $uuid = Str::uuid();
             $monitor = WebsiteDownloadMonitor::create([
                 'url' => $sanitizedUrl,
-                'output_path' => 'private/website-downloads/'.$uuid,
+                'output_path' => 'website-downloads/' . $uuid,
                 'user_id' => Auth::id(),
                 'status' => 'pending',
                 'progress' => 0,
@@ -200,7 +200,7 @@ class WebsiteDownloadController extends Controller
             if (! $response->successful()) {
                 $response = Http::timeout(10)->withoutVerifying()->get($url);
                 if (! $response->successful()) {
-                    throw new \Exception('Website returned status code: '.$response->status());
+                    throw new \Exception('Website returned status code: ' . $response->status());
                 }
             }
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
@@ -208,7 +208,7 @@ class WebsiteDownloadController extends Controller
                 'url' => $url,
                 'error' => $e->getMessage(),
             ]);
-            throw new \Exception('Failed to connect to website: '.$e->getMessage());
+            throw new \Exception('Failed to connect to website: ' . $e->getMessage());
         } catch (\Exception $e) {
             Log::error('Website availability check failed (General)', [
                 'url' => $url,

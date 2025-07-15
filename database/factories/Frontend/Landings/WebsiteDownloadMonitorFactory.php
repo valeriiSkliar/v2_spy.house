@@ -33,7 +33,7 @@ class WebsiteDownloadMonitorFactory extends Factory
 
         return [
             'url' => $this->faker->url,
-            'output_path' => "private/website-downloads/{$outputPathUuid}",
+            'output_path' => "website-downloads/{$outputPathUuid}",
             'status' => $status,
             'progress' => $status === WebSiteDownloadMonitorStatus::COMPLETED ? 100 : ($status === WebSiteDownloadMonitorStatus::PENDING ? $this->faker->numberBetween(1, 99) : 0),
             'error' => $status === WebSiteDownloadMonitorStatus::FAILED ? $this->faker->sentence : null,

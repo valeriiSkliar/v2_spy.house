@@ -16,7 +16,7 @@ class LandingDownloadService
     {
         $tempDir = null;
         try {
-            $folderPath = 'private/website-downloads/'.basename($landing->output_path);
+            $folderPath = 'website-downloads/' . basename($landing->output_path);
 
             Log::info('Starting download process for landing', [
                 'landing_id' => $landing->id,
@@ -46,17 +46,17 @@ class LandingDownloadService
             if (! file_exists($tempDir)) {
                 mkdir($tempDir, 0755, true);
             }
-            $tempSubDir = $tempDir.'/'.Str::random(40);
+            $tempSubDir = $tempDir . '/' . Str::random(40);
             mkdir($tempSubDir, 0755, true);
 
             // Генерируем имя ZIP-файла и его путь
-            $zipFileName = Str::random(40).'.zip';
-            $zipPath = $tempSubDir.'/'.$zipFileName;
+            $zipFileName = Str::random(40) . '.zip';
+            $zipPath = $tempSubDir . '/' . $zipFileName;
 
             // Создаём ZIP-архив
             $zip = new ZipArchive;
             if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-                throw new \Exception('Unable to create ZIP archive at: '.$zipPath);
+                throw new \Exception('Unable to create ZIP archive at: ' . $zipPath);
             }
 
             // Получаем файлы и директории
@@ -109,7 +109,7 @@ class LandingDownloadService
                 200,
                 [
                     'Content-Type' => 'application/zip',
-                    'Content-Disposition' => 'attachment; filename="landing-'.$landing->id.'.zip"',
+                    'Content-Disposition' => 'attachment; filename="landing-' . $landing->id . '.zip"',
                 ]
             );
         } catch (\Exception $e) {
@@ -124,7 +124,7 @@ class LandingDownloadService
             ]);
 
             return response()->json([
-                'message' => 'An error occurred while preparing your download: '.$e->getMessage(),
+                'message' => 'An error occurred while preparing your download: ' . $e->getMessage(),
                 'status' => 'error',
             ], 500);
         }
@@ -141,7 +141,7 @@ class LandingDownloadService
 
         $files = array_diff(scandir($dir), ['.', '..']);
         foreach ($files as $file) {
-            $path = $dir.'/'.$file;
+            $path = $dir . '/' . $file;
             is_dir($path) ? $this->removeDirectory($path) : unlink($path);
         }
         rmdir($dir);

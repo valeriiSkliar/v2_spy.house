@@ -54,7 +54,7 @@ class WebHTTrackService
         }
 
         // Create directory in private storage
-        $directory = 'private/website-downloads/'.basename($outputPath);
+        $directory = 'website-downloads/' . basename($outputPath);
         Storage::makeDirectory($directory, 0750);
         $fullPath = Storage::path($directory);
 
@@ -90,9 +90,9 @@ class WebHTTrackService
         // Wait for the process to finish
         $process->wait(function ($type, $buffer) use ($process) {
             if ($type === Process::ERR) {
-                Log::warning('HTTrack Error: '.$buffer);
+                Log::warning('HTTrack Error: ' . $buffer);
             } else {
-                Log::info('HTTrack Output: '.$buffer);
+                Log::info('HTTrack Output: ' . $buffer);
                 // Check for the specific message indicating time limit reached
                 if (strpos($buffer, 'Time limit of 3 minutes reached. Stopping mirror gracefully.') !== false) {
                     // Stop the process gracefully

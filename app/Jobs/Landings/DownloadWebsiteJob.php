@@ -46,7 +46,7 @@ class DownloadWebsiteJob implements ShouldQueue
      */
     public function handle(WebHTTrackService $webHTTrackService): void
     {
-        $outputPath = "private/website-downloads/{$this->uuid}";
+        $outputPath = "website-downloads/{$this->uuid}";
         $monitor = WebsiteDownloadMonitor::where('output_path', $outputPath)->first();
 
         if (! $monitor) {
@@ -83,7 +83,7 @@ class DownloadWebsiteJob implements ShouldQueue
             }
 
             if (! $process->isSuccessful()) {
-                throw new \RuntimeException('Download process failed: '.$process->getErrorOutput());
+                throw new \RuntimeException('Download process failed: ' . $process->getErrorOutput());
             }
 
             // Check for the presence of index.html or similar files
@@ -92,7 +92,7 @@ class DownloadWebsiteJob implements ShouldQueue
             $downloadPath = Storage::path($outputPath);
 
             foreach ($indexFiles as $indexFile) {
-                if (file_exists($downloadPath.'/'.$indexFile)) {
+                if (file_exists($downloadPath . '/' . $indexFile)) {
                     $indexFound = true;
                     break;
                 }
@@ -105,7 +105,7 @@ class DownloadWebsiteJob implements ShouldQueue
             // Verify the index file has content
             $foundIndexFile = null;
             foreach ($indexFiles as $indexFile) {
-                $filePath = $downloadPath.'/'.$indexFile;
+                $filePath = $downloadPath . '/' . $indexFile;
                 if (file_exists($filePath) && filesize($filePath) > 0) {
                     $foundIndexFile = $filePath;
                     break;
