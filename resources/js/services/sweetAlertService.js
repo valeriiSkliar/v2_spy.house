@@ -47,8 +47,8 @@ class SweetAlertService {
       allowEscapeKey: false,
       customClass: {
         ...this.defaultConfig.customClass,
-        confirmButton: 'swal-confirm-btn btn-primary',
-        cancelButton: 'swal-cancel-btn btn-danger',
+        confirmButton: 'btn _flex _green _big ml-4',
+        cancelButton: 'btn _flex _red _big',
       },
       ...options,
     };
