@@ -42,7 +42,7 @@
         </div>
     </div>
     <div class="d-flex gap-3">
-        <x-profile.submit-button formId="change-email-form" :label="__('profile.confirm_button')" />
+        <x-profile.submit-button class="mr-4" formId="change-email-form" :label="__('profile.confirm_button')" />
         <div class="mb-20">
             <button data-action="cancel-email-update" type="button" class="btn _flex _red _big">
                 {{ __('profile.cancel_button') }}
