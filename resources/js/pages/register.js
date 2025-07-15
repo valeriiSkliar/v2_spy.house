@@ -1,6 +1,7 @@
 /**
  * Registration form handler
  */
+import '../base-select.js'; // Импорт общей функциональности select'ов
 import loader, { hideInButton, showInButton } from '../components/loader.js';
 import { MessengerStateManager } from '../components/profile/messenger-state-manager.js';
 import { createAndShowToast } from '../utils/uiHelpers.js';
@@ -26,7 +27,8 @@ class RegistrationForm {
   }
 
   initCustomSelects() {
-    // Initialize custom selects with data-target attribute
+    // base-select.js уже обрабатывает стандартные select'ы
+    // Здесь добавляем только кастомную логику для удаления класса is-empty
     const customSelects = this.form.querySelectorAll('.base-select[data-target]');
 
     customSelects.forEach(select => {
@@ -35,28 +37,16 @@ class RegistrationForm {
         return;
       }
 
-      const targetName = select.getAttribute('data-target');
-      const targetInput = this.form.querySelector(`input[name="${targetName}"]`);
-      const options = select.querySelectorAll('.base-select__option[data-value]');
+      // Слушаем событие от base-select.js
+      select.addEventListener('baseSelect:change', event => {
+        // Remove empty class when selection is made
+        select.classList.remove('is-empty');
 
-      if (!targetInput) {
-        console.warn(`Target input not found for select: ${targetName}`);
-        return;
-      }
-
-      options.forEach(option => {
-        option.addEventListener('click', () => {
-          const value = option.getAttribute('data-value');
-          targetInput.value = value;
-
-          // Remove empty class when selection is made
-          select.classList.remove('is-empty');
-
-          // Special handling for messenger type
-          if (targetName === 'messenger_type' && this.messengerManager) {
-            this.messengerManager.updateFormInputs(value);
-          }
-        });
+        // Special handling for messenger type
+        const targetName = select.getAttribute('data-target');
+        if (targetName === 'messenger_type' && this.messengerManager) {
+          this.messengerManager.updateFormInputs(event.detail.value);
+        }
       });
     });
   }

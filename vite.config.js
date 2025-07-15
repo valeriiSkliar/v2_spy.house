@@ -116,7 +116,8 @@ export default defineConfig({
             normalizedId.includes('useFiltersStore') ||
             normalizedId.includes('useCreatives') ||
             normalizedId.includes('useFiltersSynchronization') ||
-            normalizedId.includes('useCreativesUrlSync')
+            normalizedId.includes('useCreativesUrlSync') ||
+            normalizedId.includes('base-select.js')
           ) {
             return true;
           }
@@ -128,6 +129,10 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('components/loader')) {
+            return 'app';
+          }
+
+          if (id.includes('base-select.js')) {
             return 'app';
           }
 

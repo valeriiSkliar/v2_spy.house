@@ -127,6 +127,6 @@
 </form>
 @endsection
 
-@push('page-scripts')
+@push('vite-scripts')
 @vite(['resources/js/pages/register.js'])
 @endpush

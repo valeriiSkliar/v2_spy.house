@@ -13,7 +13,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const dropdown = select.querySelector('.base-select__dropdown');
     const options = select.querySelectorAll('.base-select__option');
     const valueElement = select.querySelector('.base-select__value');
-    const hiddenInput = select.closest('.form-item')?.querySelector('input[type="hidden"]');
+    // Ищем hidden input по data-target атрибуту или в form-item
+    const targetName = select.getAttribute('data-target');
+    let hiddenInput = null;
+    if (targetName) {
+      hiddenInput = document.querySelector(`input[name="${targetName}"]`);
+    } else {
+      hiddenInput = select.closest('.form-item')?.querySelector('input[type="hidden"]');
+    }
 
     if (trigger) {
       trigger.addEventListener('click', function (e) {
