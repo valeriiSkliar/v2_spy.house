@@ -33,11 +33,11 @@
                         <div class="offer__btn">
                             @guest
                             <a href="{{ route('register') }}" class="btn _flex _green _large min-170">{{
-                                __('main_page.offer.button') }}</a>
+                                __('main_page.get_started') }}</a>
                             @endguest
                             @auth
                             <a href="{{ route('creatives.index') }}" class="btn _flex _green _large min-170">{{
-                                __('main_page.offer.button') }}</a>
+                                __('main_page.get_started') }}</a>
                             @endauth
                         </div>
                         <div class="offer__winner">

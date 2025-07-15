@@ -33,7 +33,11 @@ use Illuminate\Support\Facades\Auth;
     <link href="https://cdn.jsdelivr.net/npm/swiper@8.4.7/swiper-bundle.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick-theme.min.css" rel="stylesheet">
-
+    <style>
+        .title-label {
+            padding: 8px 10px;
+        }
+    </style>
     <!-- Scripts -->
     @vite([
     'resources/scss/app.scss',
