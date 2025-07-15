@@ -122,6 +122,12 @@ return [
         'confirmation_title' => 'Подтверждение смены email',
         'confirmation_message' => 'Для подтверждения смены email введите код из письма',
     ],
+    'validation' => [
+        'avatar_required' => 'Пожалуйста, выберите файл для загрузки.',
+        'avatar_must_be_image' => 'Файл должен быть изображением.',
+        'avatar_must_be_png' => 'Изображение должно быть в формате PNG.',
+        'avatar_max_size' => 'Размер файла не должен превышать 200 КБ.',
+    ],
     'error' => [
         'current_password_incorrect' => 'Проверьте правильность введенных данных.',
         'settings_update_error' => 'Ошибка обновления данных.',
