@@ -12,6 +12,12 @@ import { VALIDATION_PATTERNS, ValidationMethods } from '../../validation/validat
  * Initialize jQuery Validation for profile settings form
  */
 function initProfileSettingsValidation($form) {
+  // Check if jQuery Validation is available
+  if (!$ || !$.validator) {
+    console.warn('jQuery Validation is not available, using fallback validation');
+    return createFallbackValidator($form);
+  }
+
   // Add custom validation methods
   addCustomValidationMethods();
 
@@ -107,6 +113,12 @@ function initProfileSettingsValidation($form) {
  * Add custom validation methods
  */
 function addCustomValidationMethods() {
+  // Check if jQuery Validation is available
+  if (!$ || !$.validator) {
+    console.error('jQuery Validation is not available');
+    return;
+  }
+
   // Pattern validation method
   $.validator.addMethod(
     'pattern',
@@ -144,4 +156,16 @@ function updateMessengerPlaceholder($input, messengerType) {
 }
 
 // Export for use in other modules
+/**
+ * Fallback validator when jQuery Validation is not available
+ */
+function createFallbackValidator($form) {
+  console.log('Creating fallback validator for profile settings form');
+  return {
+    form: () => true, // Always return true for now
+    element: () => true, // Always return true for now
+    destroy: () => {}, // No-op
+  };
+}
+
 export { initProfileSettingsValidation };

@@ -1,3 +1,5 @@
+@vite('resources/js/pages/profile.js')
+
 <script type="module">
     document.addEventListener('DOMContentLoaded', function() {
 

@@ -1,8 +1,9 @@
 import jQuery from 'jquery';
-import 'jquery-validation';
-import 'slick-carousel';
 window.jQuery = jQuery;
 window.$ = jQuery;
+
+import 'jquery-validation';
+import 'slick-carousel';
 
 import './bootstrap';
 
@@ -42,7 +43,6 @@ import './libs/main';
 // import "./comments.js";
 // import "./search-suggestions.js";
 import './carousel.js';
-import './components/profile/profile-settings-form-validation.js';
 import { initLogin2FA } from './pages/login.js';
 // import './pages/verify-email.js';
 import './components/tariffs/payment-form-validation';

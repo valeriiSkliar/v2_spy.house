@@ -1,4 +1,10 @@
 // Entry point for services page
+import jQuery from 'jquery';
+window.jQuery = jQuery;
+window.$ = jQuery;
+
+import 'jquery-validation';
+
 /* @vite-ignore */
 import './pages/services';
 

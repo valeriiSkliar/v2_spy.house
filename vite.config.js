@@ -13,6 +13,7 @@ export default defineConfig({
         'resources/js/app.js',
         'resources/js/landings.js',
         'resources/js/services.js',
+        'resources/js/pages/profile.js',
         'resources/js/pages/profile/disable-2fa.js',
         'resources/js/pages/verify-email.js',
         'resources/js/pages/reset-password.js',
@@ -96,6 +97,14 @@ export default defineConfig({
             normalizedId.includes('/stores/') ||
             normalizedId.includes('/composables/') ||
             normalizedId.includes('/pages/') ||
+            normalizedId.includes('/components/') ||
+            normalizedId.includes('/helpers/') ||
+            normalizedId.includes('/utils/') ||
+            normalizedId.includes('/validation/') ||
+            normalizedId.includes('/validation-constants.js') ||
+            normalizedId.includes('/validation-methods.js') ||
+            normalizedId.includes('/validation-patterns.js') ||
+            normalizedId.includes('/validation-messages.js') ||
             normalizedId.includes('vue-islands') ||
             normalizedId.includes('pinia') ||
             normalizedId.includes('useFiltersStore') ||
