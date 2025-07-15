@@ -113,7 +113,7 @@ return [
 
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'noreply@spy.house'),
-        'name' => env('MAIL_FROM_NAME', 'SPY.HOUSE'),
+        'name' => env('MAIL_FROM_NAME', 'spy.house'),
     ],
 
     /*
