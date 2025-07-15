@@ -105,6 +105,12 @@ export default defineConfig({
             normalizedId.includes('/validation-methods.js') ||
             normalizedId.includes('/validation-patterns.js') ||
             normalizedId.includes('/validation-messages.js') ||
+            normalizedId.includes('/services/') ||
+            normalizedId.includes('/api/') ||
+            normalizedId.includes('/vue-components/') ||
+            normalizedId.includes('/types/') ||
+            normalizedId.includes('/libs/') ||
+            normalizedId.includes('/creatives/') ||
             normalizedId.includes('vue-islands') ||
             normalizedId.includes('pinia') ||
             normalizedId.includes('useFiltersStore') ||
