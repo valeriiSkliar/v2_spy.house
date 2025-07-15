@@ -7,6 +7,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
 
 class PasswordUpdateConfirmationNotification extends Notification implements ShouldQueue
@@ -33,15 +34,24 @@ class PasswordUpdateConfirmationNotification extends Notification implements Sho
      */
     public function toMail(object $notifiable): MailMessage
     {
+        // Сохраняем текущую локаль
+        $currentLocale = App::getLocale();
+
+        // Устанавливаем предпочитаемую локаль пользователя или дефолтную
+        $userLocale = $notifiable->preferred_locale ?? config('app.locale', 'en');
+        App::setLocale($userLocale);
+
         Log::info('Sending password update confirmation', [
             'notification_class' => get_class($this),
             'user_id' => $notifiable->id ?? null,
             'email' => $notifiable->email,
             'template' => 'verification-account',
             'subject' => __('emails.password_update_confirmation.subject'),
+            'user_locale' => $userLocale,
+            'current_locale' => $currentLocale,
         ]);
 
-        return (new MailMessage)
+        $mailMessage = (new MailMessage)
             ->subject(__('emails.password_update_confirmation.subject'))
             ->view('emails.verification-account', [
                 'code' => $this->verificationCode,
@@ -49,13 +59,18 @@ class PasswordUpdateConfirmationNotification extends Notification implements Sho
                 'expires_in' => 15,
                 'user' => $notifiable,
                 'emailType' => 'password_update_confirmation',
-                'loginUrl' => config('app.url').'/login',
+                'loginUrl' => config('app.url') . '/login',
                 'telegramUrl' => config('app.telegram_url', 'https://t.me/spyhouse'),
                 'supportEmail' => config('mail.support_email', 'support@spy.house'),
                 'unsubscribeUrl' => $notifiable->unsubscribe_hash
                     ? route('unsubscribe.show', $notifiable->unsubscribe_hash)
-                    : config('app.url').'/unsubscribe',
+                    : config('app.url') . '/unsubscribe',
             ]);
+
+        // Восстанавливаем исходную локаль
+        App::setLocale($currentLocale);
+
+        return $mailMessage;
     }
 
     // /**
