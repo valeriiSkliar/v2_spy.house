@@ -1,4 +1,5 @@
 // Entry point for services page
+/* @vite-ignore */
 import './pages/services';
 
 // Инициализация функциональности на детальной странице сервиса

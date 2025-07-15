@@ -95,6 +95,7 @@ export default defineConfig({
             normalizedId.includes('.vue') ||
             normalizedId.includes('/stores/') ||
             normalizedId.includes('/composables/') ||
+            normalizedId.includes('/pages/') ||
             normalizedId.includes('vue-islands') ||
             normalizedId.includes('pinia') ||
             normalizedId.includes('useFiltersStore') ||
