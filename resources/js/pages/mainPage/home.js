@@ -13,15 +13,18 @@ jQuery(document).ready(function () {
   });
   //------------ END
   //------------h1 slider START
-  $('#typeit').typeIt({
-    strings: points,
-    speed: 120,
-    startDelay: 1000,
-    cursor: false,
-    breakLines: false,
-    loop: true,
-    deleteDelay: 1000,
-  });
+  // Проверяем существование переменной points перед инициализацией TypeIt
+  if (typeof points !== 'undefined' && $('#typeit').length > 0) {
+    $('#typeit').typeIt({
+      strings: points,
+      speed: 120,
+      startDelay: 1000,
+      cursor: false,
+      breakLines: false,
+      loop: true,
+      deleteDelay: 1000,
+    });
+  }
   //------------h1 slider END
 
   //------------Blog slider START
