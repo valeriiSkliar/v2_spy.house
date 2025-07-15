@@ -16,9 +16,7 @@
                             class="btn__count">31</span></a>
                 </div>
                 <div class="col-12 col-md-auto mb-15">
-                    <x-common.base-select-alpina id="creatives-per-page" :options="$perPageOptions"
-                        :initial-selected-value="$perPage" placeholder="{{ __('creatives.filter.on-page') }}"
-                        icon="list" store-path="creatives.perPage" />
+
                 </div>
             </div>
         </div>
