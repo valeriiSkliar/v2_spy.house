@@ -127,7 +127,7 @@ class User extends Authenticatable implements MustVerifyEmail
                 'name' => 'Trial',
                 'css_class' => 'trial',
                 'expires_at' => $this->subscription_time_end ? $this->subscription_time_end->format('d.m.Y') : null,
-                'status' => 'Триал активен',
+                'status' => 'Активная',
                 'is_active' => true,
                 'is_trial' => true,
                 'show_similar_creatives' => false, // Триал не имеет доступа к похожим креативам
