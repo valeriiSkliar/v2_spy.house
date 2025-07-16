@@ -48,7 +48,7 @@ class BaseNotificationController extends FrontendController
             $notifications[] = [
                 'id' => $notification->id,
                 'read' => ! is_null($notification->read_at),
-                'date' => $notification->created_at->format('d.m.y (H:i)'),
+                'date' => $notification->created_at->format('d.m.y / H:i'),
                 'title' => $data['title'] ?? ($notificationType ? $notificationType->name : 'Notification'),
                 'content' => $data['message'] ?? ($notificationType ? $notificationType->description : 'You have a new notification'),
                 'icon' => $data['icon'] ?? 'bell',
