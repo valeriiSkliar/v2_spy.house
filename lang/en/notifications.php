@@ -3,7 +3,7 @@
 return [
     'title' => 'Notifications',
     'per_page' => 'Per page — ',
-    'mark_all_read' => 'Mark all as read',
+    'mark_all_read' => 'Read all',
     'acquainted' => 'Acknowledged',
     'you_have_a_new_notification' => 'You have a new notification',
     'notification' => 'Notification',

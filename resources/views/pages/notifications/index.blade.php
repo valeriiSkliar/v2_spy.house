@@ -11,7 +11,7 @@
                 :placeholder="$perPageOptionsPlaceholder" :icon="'list'" />
         </div>
     </div>
-    <div class="col-12 col-md-6 col-lg-3 mb-15">
+    <div class="col-12 col-md-6 col-lg-auto mb-15">
         <button id="mark-all-read" @disabled($unreadCount===0) type="button" class="btn _flex _green _medium w-100"
             data-url="{{ route('notifications.markAllAsRead') }}">{{ __('notifications.mark_all_read') }}</button>
     </div>
