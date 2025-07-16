@@ -1,4 +1,4 @@
-.aside._home{
+.aside._home {
   top: 0;
   padding: 84px 0 0 0;
   background: #243035;
@@ -6,41 +6,70 @@
   width: 100%;
   overflow: hidden;
   font-size: 15px;
-  .aside__content{
+  .aside__content {
     overflow-y: auto;
     padding: 30px 15px;
   }
-  .aside-menu > ul > li > a{
+  .aside-menu > ul > li > a {
     justify-content: center;
   }
-  .aside__btn{
+  .aside__btn {
     max-width: 250px;
     margin: 0 auto 30px;
-  }
-  .aside__contacts{
-    text-align: center;
-    .link{
-      color: #A4AAB5;
+    .lang-menu {
+      margin-bottom: 10px;
+      .base-select {
+        width: fit-content;
+        height: 100%;
+        &__option {
+          padding-left: 10px;
+          padding-right: 10px;
+        }
+        .base-select__trigger {
+          height: 50px;
+          padding-left: 20px;
+          padding-right: 20px;
+          font-size: 16px;
+          font-weight: 700;
+          border-radius: 15px;
+          background: rgba(0, 0, 0, 0.25);
+          .base-select__arrow {
+            right: 10px;
+            background-size: 10px;
+          }
+        }
+        .base-select__dropdown {
+          min-width: unset !important;
+          left: 50% !important;
+          transform: translateX(-50%) !important;
+        }
+      }
     }
   }
-  .btn{
+  .aside__contacts {
+    text-align: center;
+    .link {
+      color: #a4aab5;
+    }
+  }
+  .btn {
     font-size: 15px;
   }
-  .base-select{
-    .base-select__trigger{
+  .base-select {
+    .base-select__trigger {
       height: 50px;
       border-radius: 10px;
       padding-left: 25px;
       justify-content: center;
       font-size: 15px;
-      .base-select__arrow{
+      .base-select__arrow {
         right: 10px;
       }
     }
-    .base-select__dropdown{
-      color: #2B373D;
+    .base-select__dropdown {
+      color: #2b373d;
     }
-    .base-select__option{
+    .base-select__option {
       padding-left: 25px;
     }
   }
