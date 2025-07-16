@@ -21,6 +21,48 @@ return [
     'extend' => 'Extend',
     'select' => 'Select',
 
+    // Current tariff component localization
+    'current_tariff' => [
+        'status' => [
+            'active' => 'Active',
+            'inactive' => 'Inactive',
+            'expired' => 'Expired',
+        ],
+        'valid_until' => 'Valid until <span>:date</span>',
+        'free_tariff' => 'Free plan',
+    ],
+
+    // Features component localization
+    'features' => [
+        'title' => 'What\'s included',
+        'main' => [
+            'unlimited_clicks' => 'Unlimited clicks',
+            'bot_protection' => 'Protection from bots and all ad sources',
+            'spy_protection' => 'Protection from spy services',
+            'vpn_proxy_protection' => 'VPN/Proxy protection',
+            'realtime_stats' => 'Real-time statistics',
+            'php_integration' => 'PHP Integration',
+            'premium_geo_db' => 'Premium GEO Database',
+            'ipv4_support' => 'IPv4 Support',
+        ],
+        'additional' => [
+            'unlimited_clicks_extra' => 'Unlimited clicks',
+            'ipv6_support' => 'IPv6 Support',
+            'isp_support' => 'ISP Support',
+            'referrer_support' => 'Referrer Support',
+            'device_filtering' => 'Device filtering',
+            'os_filtering' => 'Operating system filtering',
+            'browser_filtering' => 'Browser filtering',
+            'blacklist_filtering' => 'Blacklist filtering',
+            'all_traffic_sources' => 'All traffic sources support',
+            'customer_support' => 'Customer support',
+        ],
+        'toggle' => [
+            'show_all' => 'Show all',
+            'hide' => 'Hide',
+        ],
+    ],
+
     'previous' => 'Previous',
     'next' => 'Next',
 

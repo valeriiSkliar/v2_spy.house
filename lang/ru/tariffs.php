@@ -21,6 +21,48 @@ return [
     'extend' => 'Продлить',
     'select' => 'Выбрать',
 
+    // Current tariff component localization
+    'current_tariff' => [
+        'status' => [
+            'active' => 'Активная',
+            'inactive' => 'Неактивная',
+            'expired' => 'Истекла',
+        ],
+        'valid_until' => 'Действительна до <span>:date</span>',
+        'free_tariff' => 'Бесплатный тариф',
+    ],
+
+    // Features component localization
+    'features' => [
+        'title' => 'Что входит',
+        'main' => [
+            'unlimited_clicks' => 'Безлимит кликов',
+            'bot_protection' => 'Защита от ботов и всех рекл. источников',
+            'spy_protection' => 'Защита от спай сервисов',
+            'vpn_proxy_protection' => 'Защита от VPN/Proxy',
+            'realtime_stats' => 'Статистика в реальном времени',
+            'php_integration' => 'PHP Интеграция',
+            'premium_geo_db' => 'Премиум ГЕО Базы',
+            'ipv4_support' => 'Поддержка IPv4',
+        ],
+        'additional' => [
+            'unlimited_clicks_extra' => 'Безлимит кликов',
+            'ipv6_support' => 'Поддержка IPv6',
+            'isp_support' => 'Поддержка ISP',
+            'referrer_support' => 'Поддержка Referrer',
+            'device_filtering' => 'Фильтрация по устройствам',
+            'os_filtering' => 'Фильтрация по операционным системам',
+            'browser_filtering' => 'Фильтрация по браузерам',
+            'blacklist_filtering' => 'Фильтрация по черным спискам',
+            'all_traffic_sources' => 'Поддержка всех источников трафика',
+            'customer_support' => 'Служба поддержки',
+        ],
+        'toggle' => [
+            'show_all' => 'Показать все',
+            'hide' => 'Скрыть',
+        ],
+    ],
+
     'previous' => 'Предыдущая',
     'next' => 'Следующая',
 
