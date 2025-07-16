@@ -12,6 +12,15 @@ return [
     'sale' => 'Скидка',
     'header_title' => 'Тарифы',
 
+    // Card component localization
+    'per_month' => 'за месяц',
+    'per_year' => 'за год',
+    'discount_percent' => 'Скидка :percent%',
+    'search_requests' => 'Поисковых запросов',
+    'priority_support' => 'Приоритетная',
+    'extend' => 'Продлить',
+    'select' => 'Выбрать',
+
     'previous' => 'Предыдущая',
     'next' => 'Следующая',
 

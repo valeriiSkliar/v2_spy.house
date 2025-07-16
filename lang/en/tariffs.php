@@ -12,6 +12,15 @@ return [
     'sale' => 'Discount',
     'header_title' => 'Tariffs',
 
+    // Card component localization
+    'per_month' => 'per month',
+    'per_year' => 'per year',
+    'discount_percent' => 'Discount :percent%',
+    'search_requests' => 'Search requests',
+    'priority_support' => 'Priority',
+    'extend' => 'Extend',
+    'select' => 'Select',
+
     'previous' => 'Previous',
     'next' => 'Next',
 
