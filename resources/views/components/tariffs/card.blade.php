@@ -6,8 +6,7 @@
             <div class="rate-item-head__term">за месяц</div>
         </div>
         <div data-tub="year" data-group="pay">
-            <div class="rate-item-head__price">${{ number_format($tariff->amount * 12 * (1 -
-                $tariff->early_discount / 100), 2) }}</div>
+            <div class="rate-item-head__price">${{ number_format($tariff->amount_yearly ) }}</div>
             <div class="rate-item-head__term">за год</div>
             @if($tariff->early_discount > 0)
             <div class="rate-item-head__discount">Скидка {{ $tariff->early_discount }}%</div>

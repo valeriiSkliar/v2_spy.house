@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name')->comment('Subscription plan name');
             $table->decimal('amount', 10, 2)->comment('Subscription price');
+            $table->decimal('amount_yearly', 10, 2)->nullable()->comment('Subscription price for yearly payment');
             $table->decimal('early_discount', 5, 2)->nullable()->comment('Early bird discount percentage');
             $table->integer('api_request_count')->default(0)->comment('Monthly API request limit');
             $table->integer('search_request_count')->default(0)->comment('Monthly search request limit');

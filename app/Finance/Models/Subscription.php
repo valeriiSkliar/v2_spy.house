@@ -20,6 +20,7 @@ class Subscription extends Model
     protected $fillable = [
         'name',
         'amount',
+        'amount_yearly',
         'early_discount',
         'api_request_count',
         'search_request_count',
@@ -35,6 +36,7 @@ class Subscription extends Model
     {
         return [
             'amount' => 'float',
+            'amount_yearly' => 'float',
             'early_discount' => 'float',
             'api_request_count' => 'integer',
             'search_request_count' => 'integer',
@@ -135,15 +137,16 @@ class Subscription extends Model
      */
     public function getFormattedYearlyAmount(): string
     {
-        return '$' . number_format($this->getYearlyAmount(), 2);
+        return '$' . number_format($this->amount_yearly, 2);
     }
+
 
     /**
      * Get amount by billing type
      */
     public function getAmountByBillingType(string $billingType): float
     {
-        return $billingType === 'year' ? $this->getYearlyAmount() : $this->amount;
+        return $billingType === 'year' ? $this->amount_yearly : $this->amount;
     }
 
     /**
