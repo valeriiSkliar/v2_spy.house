@@ -442,7 +442,7 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
     private static function validatePerPage($value, bool $safe = false): int
     {
         $perPage = (int)$value;
-        $allowedValues = [6, 12, 24, 48, 96];
+        $allowedValues = [12, 24, 48, 96];
 
         if (in_array($perPage, $allowedValues)) {
             return $perPage;
