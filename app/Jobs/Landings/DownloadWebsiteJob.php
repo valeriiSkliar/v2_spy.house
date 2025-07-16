@@ -125,6 +125,9 @@ class DownloadWebsiteJob implements ShouldQueue
             // Mark as completed with 100% progress
             $monitor->updateProgress(100);
 
+            // Fix file permissions for web server access
+            $this->fixFilePermissions($outputPath);
+
             // Notify user of completion
             $monitor->user->notify(new WebsiteDownloadStatus(
                 $this->url,
@@ -169,5 +172,103 @@ class DownloadWebsiteJob implements ShouldQueue
             'exception' => $exception->getMessage(),
             'user_id' => $this->userId,
         ]);
+    }
+
+    /**
+     * Fix file permissions for web server access
+     * 
+     * @param string $outputPath The output path relative to storage
+     */
+    private function fixFilePermissions(string $outputPath): void
+    {
+        try {
+            $fullPath = Storage::path($outputPath);
+
+            Log::info('Fixing file permissions for landing', [
+                'output_path' => $outputPath,
+                'full_path' => $fullPath,
+            ]);
+
+            if (!file_exists($fullPath)) {
+                Log::warning('Directory does not exist for permission fix', [
+                    'full_path' => $fullPath,
+                ]);
+                return;
+            }
+
+            // Change ownership to www-data:www-data
+            $this->changeOwnership($fullPath, 'www-data', 'www-data');
+
+            // Set directory permissions to 755 (readable by web server)
+            $this->changePermissions($fullPath, 0755, true);
+
+            // Set file permissions to 644 (readable by web server)
+            $this->changePermissions($fullPath, 0644, false);
+
+            Log::info('File permissions fixed successfully', [
+                'output_path' => $outputPath,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to fix file permissions', [
+                'output_path' => $outputPath,
+                'error' => $e->getMessage(),
+            ]);
+            // Don't throw - permissions issue shouldn't fail the entire download
+        }
+    }
+
+    /**
+     * Recursively change ownership of files and directories
+     */
+    private function changeOwnership(string $path, string $user, string $group): void
+    {
+        if (is_dir($path)) {
+            // Change ownership of directory
+            @chown($path, $user);
+            @chgrp($path, $group);
+
+            // Recursively change ownership of contents
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($path, \RecursiveDirectoryIterator::SKIP_DOTS),
+                \RecursiveIteratorIterator::SELF_FIRST
+            );
+
+            foreach ($iterator as $item) {
+                @chown($item->getPathname(), $user);
+                @chgrp($item->getPathname(), $group);
+            }
+        } else {
+            @chown($path, $user);
+            @chgrp($path, $group);
+        }
+    }
+
+    /**
+     * Recursively change permissions of files and directories
+     */
+    private function changePermissions(string $path, int $permissions, bool $directoriesOnly): void
+    {
+        if (is_dir($path)) {
+            if ($directoriesOnly) {
+                @chmod($path, $permissions);
+            }
+
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($path, \RecursiveDirectoryIterator::SKIP_DOTS),
+                \RecursiveIteratorIterator::SELF_FIRST
+            );
+
+            foreach ($iterator as $item) {
+                if ($directoriesOnly && $item->isDir()) {
+                    @chmod($item->getPathname(), $permissions);
+                } elseif (!$directoriesOnly && $item->isFile()) {
+                    @chmod($item->getPathname(), $permissions);
+                }
+            }
+        } else {
+            if (!$directoriesOnly) {
+                @chmod($path, $permissions);
+            }
+        }
     }
 }
