@@ -22,7 +22,7 @@
                 {{ __('tariffs.trial') }}
             </x-tariff-link>
         </div>
-        @else
+        @elseif($user->email_verified_at)
         {{-- Current Subscription --}}
         <div class="header__tariff">
             <x-tariff-link :type="$currentTariff['css_class']" data-toggle="modal"
