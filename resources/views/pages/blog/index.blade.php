@@ -38,7 +38,7 @@
 @endsection
 
 @section('bottom-banner')
-<a href="#" target="_blank" class="banner-item mb-20">
+{{-- <a href="#" target="_blank" class="banner-item mb-20">
     <img src="/img/7e520e96565eeafe22e8a1249c5f7896.gif" alt="">
-</a>
+</a> --}}
 @endsection
