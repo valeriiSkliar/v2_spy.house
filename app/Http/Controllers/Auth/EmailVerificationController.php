@@ -27,7 +27,7 @@ class EmailVerificationController extends Controller
         $user = $request->user();
 
         if ($user->hasVerifiedEmail()) {
-            return redirect()->intended(route('profile.settings', absolute: false) . '?verified=1');
+            return redirect()->intended(route('tariffs.index', absolute: false));
         }
 
         $userId = $user->id;
@@ -71,7 +71,7 @@ class EmailVerificationController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => __('auth.email_verification.already_verified'),
-                'redirect' => route('profile.settings', absolute: false) . '?verified=1',
+                'redirect' => route('tariffs.index', absolute: false),
             ]);
         }
 
@@ -113,7 +113,7 @@ class EmailVerificationController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => __('auth.email_verification.already_verified'),
-                'redirect' => route('profile.settings', absolute: false) . '?verified=1',
+                'redirect' => route('tariffs.index', absolute: false),
             ]);
         }
 
@@ -296,7 +296,7 @@ class EmailVerificationController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('auth.email_verification.success'),
-            'redirect' => route('profile.settings', absolute: false) . '?verified=1',
+            'redirect' => route('tariffs.index', absolute: false),
         ]);
     }
 }

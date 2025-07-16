@@ -111,7 +111,7 @@ function initVerificationForm(form, inputs) {
 
       if (response.ok && data.success) {
         // createAndShowToast(data.message || 'Аккаунт успешно подтвержден', 'success');
-        window.location.href = data.redirect || '/profile/settings';
+        window.location.href = data.redirect || '/tariffs';
       } else {
         loader.hide();
         createAndShowToast(data.message || 'Ошибка подтверждения кода', 'error');
