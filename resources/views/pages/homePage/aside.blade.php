@@ -1,21 +1,8 @@
 <aside class="aside _home ">
     <div class="aside__content">
         <div class="aside__btn">
-            {{-- <div class="aside__lang">
-                <div class="lang-menu mb-10">
-                    <div class="base-select">
-                        <div class="base-select__trigger">
-                            <span class="base-select__value"><img src="img/flags/US.svg" alt="">Eng</span>
-                            <span class="base-select__arrow"></span>
-                        </div>
-                        <ul class="base-select__dropdown" style="display: none;">
-                            <li class="base-select__option is-selected"><img src="img/flags/US.svg" alt="">Eng</li>
-                            <li class="base-select__option"><img src="img/flags/UA.svg" alt="">Uk</li>
-                            <li class="base-select__option"><img src="img/flags/ES.svg" alt="">Esp</li>
-                        </ul>
-                    </div>
-                </div>
-            </div> --}}
+            <x-frontend.language-selector />
+
             @guest
             <a href="{{ route('login') }}" class="btn _flex w-100 mb-10 _dark">{{ __('auth.login') }}</a>
             <a href="{{ route('register') }}" class="btn _flex w-100 mb-10 _green">{{ __('auth.registration') }}</a>
