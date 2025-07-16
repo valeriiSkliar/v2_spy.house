@@ -63,6 +63,30 @@ return [
         ],
     ],
 
+    // Payments table localization
+    'payments_table' => [
+        'title' => 'Мои платежи',
+        'columns' => [
+            'date' => 'Дата',
+            'name' => 'Название',
+            'type' => 'Тип',
+            'payment_method' => 'Метод оплаты',
+            'amount' => 'Сумма',
+            'status' => 'Статус',
+        ],
+    ],
+
+    'promo_code' => [
+        'title' => 'Промокод',
+        'description' => 'Введите промокод, чтобы получить скидку',
+        'apply' => 'Применить',
+        'cancel' => 'Отменить',
+    ],
+
+    'payment_info' => [
+        'change_tariff_message' => 'Смена тарифа на :tariff_name начнется после окончания текущей подписки ',
+    ],
+
     'previous' => 'Предыдущая',
     'next' => 'Следующая',
 

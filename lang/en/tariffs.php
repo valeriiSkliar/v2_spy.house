@@ -63,6 +63,30 @@ return [
         ],
     ],
 
+    // Payments table localization
+    'payments_table' => [
+        'title' => 'My payments',
+        'columns' => [
+            'date' => 'Date',
+            'name' => 'Name',
+            'type' => 'Type',
+            'payment_method' => 'Payment method',
+            'amount' => 'Amount',
+            'status' => 'Status',
+        ],
+    ],
+
+    'promo_code' => [
+        'title' => 'Promo code',
+        'description' => 'Enter promo code to get discount',
+        'apply' => 'Apply',
+        'cancel' => 'Cancel',
+    ],
+
+    'payment_info' => [
+        'change_tariff_message' => 'Changing tariff to :tariff_name will start after the current subscription expires ',
+    ],
+
     'previous' => 'Previous',
     'next' => 'Next',
 

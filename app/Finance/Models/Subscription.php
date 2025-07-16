@@ -162,7 +162,7 @@ class Subscription extends Model
      */
     public function getBillingPeriodName(string $billingType): string
     {
-        return $billingType === 'year' ? 'год' : 'месяц';
+        return $billingType === 'year' ? __('tariffs.for_a_year') : __('tariffs.for_a_month');
     }
 
     /**
