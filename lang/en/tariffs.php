@@ -7,8 +7,8 @@ return [
     'basic' => 'Basic',
     'premium' => 'Premium',
     'enterprise' => 'Enterprise',
-    'for_a_month' => 'Per month',
-    'for_a_year' => 'Per year',
+    'for_a_month' => 'For a month',
+    'for_a_year' => 'For a year',
     'sale' => 'Discount',
     'header_title' => 'Tariffs',
 

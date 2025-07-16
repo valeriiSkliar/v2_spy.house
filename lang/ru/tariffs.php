@@ -7,8 +7,8 @@ return [
     'basic' => 'Basic',
     'premium' => 'Premium',
     'enterprise' => 'Enterprise',
-    'for_a_month' => 'За месяц',
-    'for_a_year' => 'За год',
+    'for_a_month' => 'При оплате за месяц',
+    'for_a_year' => 'При оплате за год',
     'sale' => 'Скидка',
     'header_title' => 'Тарифы',
 
