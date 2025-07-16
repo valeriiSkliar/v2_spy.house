@@ -11,10 +11,10 @@ return [
         'download_landing_link' => 'Enter link to download landing',
     ],
     'perPage' => [
-        '12' => '12 per page',
-        '24' => '24 per page',
-        '48' => '48 per page',
-        '96' => '96 per page',
+        '12' => '12',
+        '24' => '24',
+        '48' => '48',
+        '96' => '96',
     ],
     'services-sort' => [
         'transitions' => [
