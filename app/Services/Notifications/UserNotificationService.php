@@ -31,7 +31,8 @@ class UserNotificationService
 
     public function sendWelcomeInAppNotification(User $user): void
     {
-        // Implement in-app notification logic here
+        $user->notify(new \App\Notifications\WelcomeInAppNotification());
+
         Log::info('Welcome in-app notification sent', [
             'user_id' => $user->id,
         ]);

@@ -160,6 +160,9 @@ class EmailVerificationController extends Controller
                 'verification_date' => now()->format('Y-m-d H:i:s'),
             ]));
 
+            // Отправляем приветственное уведомление после подтверждения email
+            $user->sendWelcomeInAppNotification();
+
             // Add or update user in Resend audience
             try {
                 $unsubscribeHash = $user->unsubscribe_hash ?? Str::random(32);
