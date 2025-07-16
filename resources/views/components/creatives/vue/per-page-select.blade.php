@@ -22,7 +22,7 @@
             </div>
             <ul class="base-select__dropdown" style="display: none;">
                 @foreach($options as $option)
-                <li class="base-select__option{{ $option['value'] == $activePerPage ? ' is-selected' : '' }}">
+                <li class="base-select__option{{ (int)$option['value'] === (int)$activePerPage ? ' is-selected' : '' }}">
                     {{ $option['label'] }}
                 </li>
                 @endforeach

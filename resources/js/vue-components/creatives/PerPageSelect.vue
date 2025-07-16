@@ -11,7 +11,10 @@
           :key="option.value"
           :data-value="option.value"
           class="base-select__option"
-          :class="{ 'is-selected': option.value === currentPerPageValue }"
+          :class="{
+            'is-selected': Number(option.value) === currentPerPageValue,
+            'debug-option': true,
+          }"
           @click="selectOption(option)"
         >
           {{ option.label }}
@@ -73,6 +76,14 @@ const selectRef = ref<HTMLElement>();
 // Локальное состояние perPage до инициализации Store
 const localPerPage = ref<number>(props.initialPerPage);
 
+console.log('📄 PerPageSelect: Initial setup', {
+  propsInitialPerPage: props.initialPerPage,
+  localPerPageValue: localPerPage.value,
+  propsOptions: props.options,
+  storeInitialized: store.isInitialized,
+  storePerPage: store.filters.perPage,
+});
+
 // ============================================================================
 // COMPUTED PROPERTIES
 // ============================================================================
@@ -85,14 +96,18 @@ const translationsComputed = computed(() => ({
 }));
 
 const perPageOptions = computed(() => {
-  return props.options.filter(option => option.value > 0);
+  const filtered = props.options.filter(option => option.value > 0);
+  console.log('📄 PerPageSelect perPageOptions computed:', {
+    allOptions: props.options,
+    filteredOptions: filtered,
+    currentValue: currentPerPageValue.value,
+  });
+  return filtered;
 });
 
 const displayValue = computed(() => {
-  // Используем значение из Store если он инициализирован, иначе локальное значение
-  const currentValue = store.isInitialized
-    ? store.filters.perPage ?? localPerPage.value
-    : localPerPage.value;
+  // Используем currentPerPageValue для консистентности
+  const currentValue = currentPerPageValue.value;
   return `${translationsComputed.value.onPage} ${currentValue}`;
 });
 
@@ -104,7 +119,21 @@ const isComponentReady = computed(() => {
 });
 
 const currentPerPageValue = computed(() => {
-  return store.isInitialized ? store.filters.perPage ?? localPerPage.value : localPerPage.value;
+  // Приоритет: Store > localPerPage > props.initialPerPage
+  const result =
+    store.isInitialized && store.filters.perPage !== undefined
+      ? Number(store.filters.perPage)
+      : Number(localPerPage.value);
+
+  console.log('📄 PerPageSelect currentPerPageValue computed:', {
+    result,
+    storeInitialized: store.isInitialized,
+    storePerPage: store.filters.perPage,
+    localPerPage: localPerPage.value,
+    propsInitialPerPage: props.initialPerPage,
+  });
+
+  return result;
 });
 
 // ============================================================================
@@ -112,15 +141,26 @@ const currentPerPageValue = computed(() => {
 // ============================================================================
 function toggleDropdown(): void {
   isOpen.value = !isOpen.value;
+  console.log('📄 PerPageSelect: Dropdown toggled', {
+    isOpen: isOpen.value,
+    currentValue: currentPerPageValue.value,
+    options: perPageOptions.value.map(opt => ({
+      value: opt.value,
+      label: opt.label,
+      isSelected: Number(opt.value) === currentPerPageValue.value,
+    })),
+  });
 }
 
 function selectOption(option: PerPageOption): void {
+  const numericValue = Number(option.value);
+
   // Обновляем локальное значение
-  localPerPage.value = option.value;
+  localPerPage.value = numericValue;
 
   // Если store инициализирован, обновляем его (данные перезагрузятся автоматически через watcher)
   if (store.isInitialized) {
-    store.updateFilter('perPage', option.value);
+    store.updateFilter('perPage', numericValue);
   }
 
   // Закрываем dropdown
@@ -128,6 +168,7 @@ function selectOption(option: PerPageOption): void {
 
   console.log('📄 PerPageSelect: Selected option', {
     value: option.value,
+    numericValue,
     label: option.label,
     localPerPage: localPerPage.value,
     storePerPage: store.filters.perPage,
@@ -152,13 +193,25 @@ function handleClickOutside(event: Event): void {
 watch(
   () => store.filters.perPage,
   (newValue, oldValue) => {
-    if (newValue !== oldValue) {
+    if (newValue !== oldValue && newValue !== undefined) {
       console.log('📄 PerPageSelect: Store perPage changed', {
         from: oldValue,
         to: newValue,
+        localPerPage: localPerPage.value,
+        storeInitialized: store.isInitialized,
       });
+
+      // Синхронизируем локальное значение с Store только если Store инициализирован
+      if (store.isInitialized) {
+        const numericValue = Number(newValue);
+        if (numericValue !== localPerPage.value) {
+          console.log('📄 PerPageSelect: Syncing store value to local:', numericValue);
+          localPerPage.value = numericValue;
+        }
+      }
     }
-  }
+  },
+  { immediate: true }
 );
 
 // Следим за инициализацией store
@@ -172,7 +225,8 @@ watch(
         propsInitialPerPage: props.initialPerPage,
       });
 
-      // Синхронизируем Store с локальным значением
+      // При инициализации Store, локальное значение имеет приоритет
+      // потому что оно было установлено из URL параметров или props
       if (store.filters.perPage !== localPerPage.value) {
         console.log('📄 PerPageSelect: Syncing local perPage to store:', localPerPage.value);
         store.updateFilter('perPage', localPerPage.value);
@@ -182,20 +236,7 @@ watch(
   { immediate: true }
 );
 
-// Следим за изменениями perPage в store и синхронизируем с локальным значением
-watch(
-  () => store.filters.perPage,
-  newStoreValue => {
-    if (
-      store.isInitialized &&
-      newStoreValue !== undefined &&
-      newStoreValue !== localPerPage.value
-    ) {
-      console.log('📄 PerPageSelect: Syncing store perPage to local:', newStoreValue);
-      localPerPage.value = newStoreValue;
-    }
-  }
-);
+// Удаляем дублирующий watcher - синхронизация теперь в первом watcher
 
 // ============================================================================
 // LIFECYCLE
@@ -210,9 +251,19 @@ onMounted(() => {
     isStoreInitialized: store.isInitialized,
     options: perPageOptions.value,
     translations: props.translations,
+    currentPerPageValue: currentPerPageValue.value,
   });
 
-  // Если Store уже инициализирован при монтировании, синхронизируем
+  // Проверяем какое значение выбрано по умолчанию
+  perPageOptions.value.forEach(option => {
+    const isSelected = Number(option.value) === currentPerPageValue.value;
+    console.log(
+      `📄 PerPageSelect: Option ${option.value} (${option.label}) - selected: ${isSelected}`
+    );
+  });
+
+  // Если Store уже инициализирован при монтировании,
+  // приоритет у локального значения (из URL или props)
   if (store.isInitialized && store.filters.perPage !== localPerPage.value) {
     console.log(
       '📄 PerPageSelect: Store already initialized, syncing local to store:',
