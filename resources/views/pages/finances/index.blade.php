@@ -14,7 +14,7 @@
 
 <x-separator height="50" />
 
-@if (isset($transactions))
+@if (isset($transactions) && $transactions->isNotEmpty())
 <h2>{{ __('finances.deposit_history_title') }}</h2>
 
 {{-- Контейнер для AJAX контента --}}

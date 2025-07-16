@@ -17,6 +17,7 @@
     </div>
 </div>
 <div class="sep _h60"></div>
+@if (isset($payments) && $payments->isNotEmpty())
 <x-tariffs.payments-table :payments="$payments" />
 
 {{-- Контейнер для пагинации --}}
@@ -26,6 +27,7 @@
         :pagination="$payments" />
     @endif
 </div>
+@endif
 @endsection
 
 @push('scripts')
