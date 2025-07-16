@@ -168,8 +168,8 @@ class CreativesFiltersDTO implements Arrayable, Jsonable
             $errors[] = 'page must be between 1 and 10000';
         }
 
-        if (isset($data['perPage']) && (!is_numeric($data['perPage']) || $data['perPage'] < 6 || $data['perPage'] > 100)) {
-            $errors[] = 'perPage must be between 6 and 100';
+        if (isset($data['perPage']) && (!is_numeric($data['perPage']) || $data['perPage'] < 12 || $data['perPage'] > 100)) {
+            $errors[] = 'perPage must be between 12 and 100';
         }
 
         // Валидация activeTab

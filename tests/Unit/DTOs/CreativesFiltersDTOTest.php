@@ -119,7 +119,7 @@ class CreativesFiltersDTOTest extends TestCase
         $this->assertContains('searchKeyword must be less than 255 characters', $errors);
         $this->assertContains('Invalid country in countries array: INVALID_COUNTRY', $errors);
         $this->assertContains('page must be between 1 and 10000', $errors);
-        $this->assertContains('perPage must be between 6 and 100', $errors);
+        $this->assertContains('perPage must be between 12 and 100', $errors);
         $this->assertContains('Invalid activeTab value', $errors);
     }
 
@@ -253,7 +253,7 @@ class CreativesFiltersDTOTest extends TestCase
 
     public function test_dto_validates_per_page_values()
     {
-        $validPerPage = [6, 12, 24, 48, 96];
+        $validPerPage = [12, 24, 48, 96];
 
         foreach ($validPerPage as $perPage) {
             $dto = CreativesFiltersDTO::fromArraySafe(['perPage' => $perPage]);
@@ -262,7 +262,6 @@ class CreativesFiltersDTOTest extends TestCase
 
         // Тестируем поиск ближайшего значения
         $testCases = [
-            [5, 6],     // Ближайшее к 5 это 6
             [10, 12],   // Ближайшее к 10 это 12
             [30, 24],   // Ближайшее к 30 это 24
             [60, 48],   // Ближайшее к 60 это 48

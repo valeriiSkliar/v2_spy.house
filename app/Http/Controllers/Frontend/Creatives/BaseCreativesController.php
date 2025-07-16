@@ -101,7 +101,9 @@ abstract class BaseCreativesController extends FrontendController
     {
         try {
             // Создаем DTO для фильтров с автоматической валидацией и санитизацией
-            $filtersDTO = CreativesFiltersDTO::fromRequest($request);
+            // ИСПРАВЛЕНИЕ: Используем обработанные фильтры с URL приоритетами вместо сырых данных
+            $processedFilters = $request->getCreativesFilters();
+            $filtersDTO = CreativesFiltersDTO::fromArraySafe($processedFilters);
 
             // Получаем реальные данные из БД вместо мок-данных
             $creativesData = $this->getCreativesFromDatabase($filtersDTO->toArray(), $filtersDTO->perPage);
@@ -199,7 +201,9 @@ abstract class BaseCreativesController extends FrontendController
     {
         try {
             // Создаем DTO из текущих фильтров
-            $filtersDTO = CreativesFiltersDTO::fromRequest($request);
+            // ИСПРАВЛЕНИЕ: Используем обработанные фильтры с URL приоритетами вместо сырых данных
+            $processedFilters = $request->getCreativesFilters();
+            $filtersDTO = CreativesFiltersDTO::fromArraySafe($processedFilters);
 
             // Получаем все опции с учетом текущих фильтров
             $options = $this->getSelectOptions($filtersDTO);

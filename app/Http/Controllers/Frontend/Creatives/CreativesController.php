@@ -12,7 +12,9 @@ class CreativesController extends BaseCreativesController
     public function index(CreativesRequest $request)
     {
         // Создаем DTO для фильтров с автоматической валидацией и санитизацией
-        $filtersDTO = CreativesFiltersDTO::fromRequest($request);
+        // ИСПРАВЛЕНИЕ: Используем обработанные фильтры с URL приоритетами вместо сырых данных
+        $processedFilters = $request->getCreativesFilters();
+        $filtersDTO = CreativesFiltersDTO::fromArraySafe($processedFilters);
 
         // Дефолтные значения фильтров (состояние) - что выбрано по умолчанию
         $defaultFilters = $this->getDefaultFilters();
@@ -108,7 +110,9 @@ class CreativesController extends BaseCreativesController
     {
         try {
             // Создаем DTO для фильтров с автоматической валидацией и санитизацией
-            $filtersDTO = CreativesFiltersDTO::fromRequest($request);
+            // ИСПРАВЛЕНИЕ: Используем обработанные фильтры с URL приоритетами вместо сырых данных
+            $processedFilters = $request->getCreativesFilters();
+            $filtersDTO = CreativesFiltersDTO::fromArraySafe($processedFilters);
             $filters = $filtersDTO->toArray();
 
             // Получаем реальное количество из БД
