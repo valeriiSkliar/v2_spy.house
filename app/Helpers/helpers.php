@@ -149,3 +149,19 @@ if (! function_exists('App\Helpers\get_tabs_data')) {
         ];
     }
 }
+
+if (! function_exists('App\Helpers\mask_string')) {
+    /**
+     * Mask a string by showing parts at the beginning and end, hiding the middle with asterisks
+     *
+     * @param  string  $string  The string to mask
+     * @return string The masked string
+     */
+    function mask_string($string): string
+    {
+        $length         = mb_strlen($string);
+        $visibleCount   = (int) round($length / 4);
+        $hiddenCount    = $length - ($visibleCount * 2);
+        return mb_substr($string, 0, $visibleCount) . str_repeat('*', $hiddenCount) . mb_substr($string, ($visibleCount * -1), $visibleCount);
+    }
+}

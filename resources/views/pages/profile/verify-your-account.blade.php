@@ -6,8 +6,7 @@
     <div class="verify-account__figure"><img src="img/figure-verify-acc.svg" alt=""></div>
     <h1 class="mb-25">Подтвердите свой аккаунт</h1>
     <p class="mb-25">Мы отправили вам 6-значный код на ваш email, введите его и ваш аккаунт будет активирован.</p>
-    <p class="mb-30"><strong>{{ substr(auth()->user()->email, 0, 4) . '...' . strstr(auth()->user()->email, '@')
-            }}</strong></p>
+    <p class="mb-30"><strong>{{ \App\Helpers\mask_string(auth()->user()->email) }}</strong></p>
     <form
         action="{{ route('verification.verify.post', ['id' => auth()->user()->id, 'hash' => sha1(auth()->user()->email)]) }}"
         method="POST" id="verify-account-form">
