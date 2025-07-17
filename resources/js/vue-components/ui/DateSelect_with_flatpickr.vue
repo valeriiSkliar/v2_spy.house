@@ -123,7 +123,7 @@ const props = withDefaults(defineProps<Props>(), {
   enableCustomDate: false,
   customDateLabel: 'Custom Date',
   customDatePlaceholder: 'Pick a date',
-  dateFormat: 'Y-m-d',
+  dateFormat: 'd.m.Y',
   mode: 'single',
   emitOnPartialRange: false,
 });
@@ -189,7 +189,11 @@ const hasIncompleteRange = computed(() => {
 });
 
 function formatDate(date: Date): string {
-  return date.toLocaleDateString();
+  // D.M.YYYY — без ведущих нулей
+  const day = date.getDate();
+  const month = date.getMonth() + 1;
+  const year = date.getFullYear();
+  return `${day}.${month}.${year}`;
 }
 
 function toggleDropdown(): void {

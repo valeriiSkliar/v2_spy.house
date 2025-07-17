@@ -60,7 +60,7 @@
                 :options="store.dateRanges"
                 :enable-custom-date="true"
                 :mode="'range'"
-                :date-format="'d-m-Y'"
+                :date-format="'d.m.Y'"
                 :placeholder="translations.dateCreation.value"
                 :custom-date-label="translations.customDateLabel.value"
                 @update:value="value => store.updateFilter('dateCreation', value)"
@@ -182,7 +182,7 @@
               :translations="baseSelectTranslations"
               @add="value => store.addToMultiSelect('imageSizes', value)"
               @remove="value => store.removeFromMultiSelect('imageSizes', value)"
-            />        
+            />
           </div>
 
           <!-- Только для взрослых -->
