@@ -41,13 +41,13 @@
               </div>
             </div>
 
-            <!-- Выбор стран (мультиселект) -->
+            <!-- Выбор стран (BaseSelect с поддержкой массивов) -->
             <div class="col-12 col-md-6 col-lg-3 mb-10 w-lg-1 flex-grow-1">
-              <MultiSelect
+              <BaseSelectArrayAdapter
                 :values="store.filters.countries"
                 :options="store.countriesOptions"
                 :placeholder="translations.countries.value"
-                :translations="multiSelectTranslations"
+                :translations="baseSelectTranslations"
                 @add="value => store.addToMultiSelect('countries', value)"
                 @remove="value => store.removeFromMultiSelect('countries', value)"
               />
@@ -246,6 +246,7 @@ import debounce from 'lodash.debounce';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useCreativesFiltersStore } from '../../stores/useFiltersStore';
 import BaseSelect from '../ui/BaseSelect.vue';
+import BaseSelectArrayAdapter from '../ui/BaseSelectArrayAdapter.vue';
 import DateSelect from '../ui/DateSelect_with_flatpickr.vue';
 import MultiSelect from '../ui/MultiSelect.vue';
 
