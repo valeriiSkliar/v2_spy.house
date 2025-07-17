@@ -52,14 +52,17 @@
                 :description="__('profile.2fa.info_message_description_authenticator')" />
         </div>
     </div>
-    <div class="d-flex gap-3">
-        <x-profile.submit-button class="mr-4" formId="change-password-form" :label="__('profile.confirm_button')" />
-        <div class="mb-20">
+    <div class="row _offset20 mb-20 ">
+        <div class="col-6 col-md-3 col-lg-2">
+            <x-profile.submit-button class="mr-4 w-mob-100 w-100" formId="change-password-form" :label="__('profile.confirm_button')" />
 
-            <button data-action="cancel-password" type="button" class="btn _flex _red _big">
+        </div>
+        <div class="col-6 col-md-3 col-lg-2">
+            <button data-action="cancel-password" type="button" class="btn _flex _red _big w-mob-100 w-100">
                 {{ __('profile.cancel_button') }}
             </button>
         </div>
+
     </div>
     @endif
     <x-profile.success-message status="password-updated" :message="__('profile.password_updated')" />
