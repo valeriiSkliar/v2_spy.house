@@ -15,57 +15,57 @@ jQuery(document).ready(function () {
     });
 
     //--------rating------------------------------------
-    if ($('.article-rate__rating').length > 0) {
-        $(".article-rate__rating").starRating({
-            emptyColor: '#CEF0DE',
-            strokeColor: '#CEF0DE',
-            hoverColor: '#3DC98A',
-            useFullStars: true,
-            ratedColor: '#3DC98A',
-            strokeWidth: 0,
-            starSize: 40,
-            disableAfterRate: true,
-            //starShape: 'rounded',
-            callback: function (currentRating, $el) {
+    // if ($('.article-rate__rating').length > 0) {
+    //     $(".article-rate__rating").starRating({
+    //         emptyColor: '#CEF0DE',
+    //         strokeColor: '#CEF0DE',
+    //         hoverColor: '#3DC98A',
+    //         useFullStars: true,
+    //         ratedColor: '#3DC98A',
+    //         strokeWidth: 0,
+    //         starSize: 40,
+    //         disableAfterRate: true,
+    //         //starShape: 'rounded',
+    //         callback: function (currentRating, $el) {
 
-            }
-        });
-    }
+    //         }
+    //     });
+    // }
 
-    //--------slick------------------------------------
-    if ($('#slick-demo-1').length > 0){
-        $('#slick-demo-1').slick({
-            dots: false,
-            infinite: true,
-            speed: 300,
-            slidesToShow: 1,
-            slidesToScroll: 1,
-            prevArrow: '#slick-demo-1-prev',
-            nextArrow: '#slick-demo-1-next',
-            rows: 4,
-            responsive: [
-                {
-                    breakpoint: 1200,
-                    settings: {
-                        variableWidth: true,
-                        rows: 1,
-                    }
-                },
-            ]
-        });
-    }
-    if ($('#slick-demo-2').length > 0){
-        $('#slick-demo-2').slick({
-            dots: false,
-            infinite: true,
-            speed: 300,
-            slidesToShow: 1,
-            slidesToScroll: 1,
-            prevArrow: '#slick-demo-2-prev',
-            nextArrow: '#slick-demo-2-next',
-            variableWidth: true,
-        });
-    }
+    // //--------slick------------------------------------
+    // if ($('#slick-demo-1').length > 0){
+    //     $('#slick-demo-1').slick({
+    //         dots: false,
+    //         infinite: true,
+    //         speed: 300,
+    //         slidesToShow: 1,
+    //         slidesToScroll: 1,
+    //         prevArrow: '#slick-demo-1-prev',
+    //         nextArrow: '#slick-demo-1-next',
+    //         rows: 4,
+    //         responsive: [
+    //             {
+    //                 breakpoint: 1200,
+    //                 settings: {
+    //                     variableWidth: true,
+    //                     rows: 1,
+    //                 }
+    //             },
+    //         ]
+    //     });
+    // }
+    // if ($('#slick-demo-2').length > 0){
+    //     $('#slick-demo-2').slick({
+    //         dots: false,
+    //         infinite: true,
+    //         speed: 300,
+    //         slidesToShow: 1,
+    //         slidesToScroll: 1,
+    //         prevArrow: '#slick-demo-2-prev',
+    //         nextArrow: '#slick-demo-2-next',
+    //         variableWidth: true,
+    //     });
+    // }
     //--------Aside blog------------------------------------
 
     if ($('.blog-layout__aside').length > 0){

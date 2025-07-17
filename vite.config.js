@@ -54,6 +54,11 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['jquery', 'alpinejs'],
+    exclude: ['bootstrap'],
+  },
+  define: {
+    global: 'globalThis',
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
   },
   build: {
     chunkSizeWarningLimit: 400,
@@ -92,32 +97,25 @@ export default defineConfig({
         moduleSideEffects: id => {
           const normalizedId = id.replace(/\\/g, '/');
 
+          // Все файлы в resources/js/ должны попасть в бандл
+          if (normalizedId.includes('resources/js/')) {
+            return true;
+          }
+
+          // Специальная обработка для jQuery и Bootstrap
+          if (normalizedId.includes('jquery') || normalizedId.includes('bootstrap')) {
+            return false;
+          }
+
+          // Дополнительные условия для специфичных файлов
           if (
             normalizedId.includes('.vue') ||
-            normalizedId.includes('/stores/') ||
-            normalizedId.includes('/composables/') ||
-            normalizedId.includes('/pages/') ||
-            normalizedId.includes('/components/') ||
-            normalizedId.includes('/helpers/') ||
-            normalizedId.includes('/utils/') ||
-            normalizedId.includes('/validation/') ||
-            normalizedId.includes('/validation-constants.js') ||
-            normalizedId.includes('/validation-methods.js') ||
-            normalizedId.includes('/validation-patterns.js') ||
-            normalizedId.includes('/validation-messages.js') ||
-            normalizedId.includes('/services/') ||
-            normalizedId.includes('/api/') ||
-            normalizedId.includes('/vue-components/') ||
-            normalizedId.includes('/types/') ||
-            normalizedId.includes('/libs/') ||
-            normalizedId.includes('/creatives/') ||
             normalizedId.includes('vue-islands') ||
             normalizedId.includes('pinia') ||
             normalizedId.includes('useFiltersStore') ||
             normalizedId.includes('useCreatives') ||
             normalizedId.includes('useFiltersSynchronization') ||
-            normalizedId.includes('useCreativesUrlSync') ||
-            normalizedId.includes('base-select.js')
+            normalizedId.includes('useCreativesUrlSync')
           ) {
             return true;
           }
@@ -127,40 +125,17 @@ export default defineConfig({
         tryCatchDeoptimization: false,
       },
       output: {
-        manualChunks(id) {
-          if (id.includes('components/loader')) {
-            return 'app';
-          }
-
-          if (id.includes('base-select.js')) {
-            return 'app';
-          }
-
-          if (id.includes('node_modules/jquery')) {
-            return 'vendor-jquery';
-          }
-
-          if (id.includes('sweetalert2') || id.includes('flatpickr')) {
-            return 'vendor-ui';
-          }
-
-          if (id.includes('bootstrap')) {
-            return 'vendor-bootstrap';
-          }
-
-          if (id.includes('swiper')) {
-            return 'vendor-sliders';
-          }
-
-          if (id.includes('alpinejs')) {
-            return 'vendor-alpine';
-          }
-
-          if (id.includes('node_modules')) {
-            return 'vendor-misc';
-          }
+        manualChunks: {
+          'vendor-jquery': ['jquery'],
+          'vendor-ui': ['sweetalert2', 'flatpickr'],
         },
+        globals: {
+          jquery: 'jQuery',
+          $: 'jQuery',
+        },
+        format: 'es',
       },
+      external: [],
     },
   },
 });

@@ -1,30 +1,3 @@
-<div class="modal fade modal-subscription-activated" id="modal-subscription-activated" style="z-index: 10005;">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <button type="button" class="btn-icon _gray btn-close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true"><span class="icon-x"></span></span>
-            </button>
-            <div class="subscription-activated">
-                <div class="subscription-activated-icon icon-check-circle">
-                    <div class="tariff-name _start">Start</div>
-                </div>
-                <h2 class="font-20 mb-20">Subscription activated</h2>
-                <p class="mb-30">
-                    Your <strong>"Start"</strong> subscription is active. <br>
-                    Valid until: <span class="icon-clock"></span> <strong>02.05.25</strong>
-                </p>
-                <div class="row justify-content-center">
-                    <div class="col-auto">
-                        <button class="btn _flex _green _medium min-120">Ok</button>
-                    </div>
-                    <div class="col-auto">
-                        <button class="btn _flex _gray _medium min-120">Change tariff</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <div class="modal fade modal-contacts" id="modal-contacts" style="z-index: 10005;">
     <div class="modal-dialog">
@@ -71,12 +44,45 @@
                     </div>
                     <div class="col-12 mb-15">
                         <textarea placeholder="Message"></textarea>
-                    </div>
-                    <div class="col-6 mb-15">
-                        <img src="/img/reCAPTCHA%20v2%20checkbox.png" alt="" class="w-100">
-                    </div>
+                    </div>                
                     <div class="col-12 mb-15">
                         <button type="submit" class="btn _flex _green _medium min-120 w-mob-100">Send</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade modal-contacts" id="add-review" style="z-index: 10005;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <button type="button" class="btn-icon _gray btn-close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true"><span class="icon-x"></span></span>
+            </button>
+            <div class="modal-head">
+                <h2 class="mb-2">Leave your review</h2>
+            </div>
+            <form action="">
+                <div class="row _offset20">
+                    <div class="col-12 mb-15">
+                        <textarea placeholder="Review text"></textarea>
+                    </div>
+                    <div class="col-12 mb-15">
+                        <div class="rate-service max-w-full">
+                            <div class="row align-items-center _offset30">
+                                <div class="col-12 col-md-8 pt-2 pb-2">
+                                    <h4>How do you like our service?</h4>
+                                    <p class="mb-0">Rate from 1 to 5 stars — your opinion matters to us!</p>
+                                </div>
+                                <div class="col-12 col-md-4 pt-2 pb-2">
+                                    <div class="rate-service__rating"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>                
+                    <div class="col-12 mb-15">
+                        <button type="submit" class="btn _flex _green min-120 w-mob-100">Send</button>
                     </div>
                 </div>
             </form>
