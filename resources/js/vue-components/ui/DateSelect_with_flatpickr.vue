@@ -539,6 +539,7 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss">
+@use 'sass:color';
 .filter-date-select {
   position: relative;
   display: flex;
@@ -607,15 +608,21 @@ onUnmounted(() => {
   cursor: pointer;
   border-radius: 3px;
   margin-bottom: 2px;
-}
-
-.range-option:hover {
-  background-color: #f5f5f5;
+  &:active {
+    background-color: var(--color-primary-light, rgba(59, 130, 246, 0.2));
+    color: var(--color-primary);
+  }
+  &:hover {
+    background-color: var(--color-primary-light, rgba(59, 130, 246, 0.1));
+  }
+  &:focus {
+    outline: 1px solid var(--color-primary);
+  }
 }
 
 .range-option.active {
-  background-color: #e3f2fd;
-  font-weight: 500;
+  background-color: var(--color-primary-light, rgba(59, 130, 246, 0.2));
+  color: var(--color-primary);
 }
 
 .range-option:last-child {
