@@ -127,11 +127,11 @@
 
           <!-- Языки -->
           <div class="col-12 col-md-6 col-lg-3 mb-15">
-            <MultiSelect
+            <BaseSelectArrayAdapter
               :values="store.filters.languages"
               :options="store.languagesOptions"
               :placeholder="translations.languages.value"
-              :translations="multiSelectTranslations"
+              :translations="baseSelectTranslations"
               @add="value => store.addToMultiSelect('languages', value)"
               @remove="value => store.removeFromMultiSelect('languages', value)"
             />
@@ -139,11 +139,11 @@
 
           <!-- Операционные системы -->
           <div class="col-12 col-md-6 col-lg-3 mb-15">
-            <MultiSelect
+            <BaseSelectArrayAdapter
               :values="store.filters.operatingSystems"
               :options="store.operatingSystemsOptions"
               :placeholder="translations.operatingSystems.value"
-              :translations="multiSelectTranslations"
+              :translations="baseSelectTranslations"
               @add="value => store.addToMultiSelect('operatingSystems', value)"
               @remove="value => store.removeFromMultiSelect('operatingSystems', value)"
             />
@@ -151,11 +151,11 @@
 
           <!-- Браузеры -->
           <div class="col-12 col-md-6 col-lg-3 mb-15">
-            <MultiSelect
+            <BaseSelectArrayAdapter
               :values="store.filters.browsers"
               :options="store.browsersOptions"
               :placeholder="translations.browsers.value"
-              :translations="multiSelectTranslations"
+              :translations="baseSelectTranslations"
               @add="value => store.addToMultiSelect('browsers', value)"
               @remove="value => store.removeFromMultiSelect('browsers', value)"
             />
@@ -163,11 +163,11 @@
 
           <!-- Устройства -->
           <div class="col-12 col-md-6 col-lg-3 mb-15">
-            <MultiSelect
+            <BaseSelectArrayAdapter
               :values="store.filters.devices"
               :options="store.devicesOptions"
               :placeholder="translations.devices.value"
-              :translations="multiSelectTranslations"
+              :translations="baseSelectTranslations"
               @add="value => store.addToMultiSelect('devices', value)"
               @remove="value => store.removeFromMultiSelect('devices', value)"
             />
@@ -175,14 +175,14 @@
 
           <!-- Размеры изображений -->
           <div class="col-12 col-md-6 col-lg-3 mb-15">
-            <MultiSelect
+            <BaseSelectArrayAdapter
               :values="store.filters.imageSizes"
               :options="store.imageSizesOptions"
               :placeholder="translations.imageSizes.value"
-              :translations="multiSelectTranslations"
+              :translations="baseSelectTranslations"
               @add="value => store.addToMultiSelect('imageSizes', value)"
               @remove="value => store.removeFromMultiSelect('imageSizes', value)"
-            />
+            />        
           </div>
 
           <!-- Только для взрослых -->
