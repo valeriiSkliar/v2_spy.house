@@ -13,4 +13,5 @@
     @include('pages.homePage.footer')
     @include('pages.homePage.aside')
 </div>
+@include('partials.modals')
 @endsection

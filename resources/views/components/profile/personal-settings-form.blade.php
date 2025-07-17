@@ -3,23 +3,23 @@
     @csrf
     @method('PUT')
     <x-profile.user-info :user="$user" />
-    <div class="col _offset20 mb-20">
-        <div class="col-12 col-md-6 col-lg-4">
+    <div class="row-col _offset20 mb-30">
+        <div class="col-12 col-md-6 col-lg-4 pl-0">
             <x-profile.form-field name="login" type="text" :label="__('profile.personal_info.login_label')"
                 :value="$user->login ?? ''" />
         </div>
 
-        <div class="col-12 col-md-6 col-lg-4">
+        <div class="col-12 col-md-6 col-lg-4 pl-0">
             <x-profile.socials-messanger-field :user="$user" :label="__('profile.personal_info.messanger_label')"
                 :value="$user->messanger" />
         </div>
 
-        <div class="col-12 col-md-6 col-lg-4">
+        <div class="col-12 col-md-6 col-lg-4 pl-0">
             <x-profile.select-field name="experience" :label="__('profile.personal_info.experience_label')"
                 :value="$user->experience" :options="$experiences"
                 :display-default-value="$displayDefaultValues['experience']" />
         </div>
-        <div class="col-12 col-md-6 col-lg-4">
+        <div class="col-12 col-md-6 col-lg-4 pl-0">
             <x-profile.select-field name="scope_of_activity" :label="__('profile.personal_info.scope_label')"
                 :value="$user->scope_of_activity" :options="$scopes"
                 :display-default-value="$displayDefaultValues['scope_of_activity']" />

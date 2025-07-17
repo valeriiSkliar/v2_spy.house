@@ -4,8 +4,8 @@
     class="profile-form">
     @csrf
     @if(!$passwordUpdatePending)
-    <div class="col _offset20 mb-10">
-        <div class="col-12 col-md-6 col-lg-4">
+    <div class="row-col _offset20 mb-30">
+        <div class="col-12 col-md-6 col-lg-4 pl-0">
             <div class="form-item mb-20">
                 <label class="d-block mb-10">{{ __('profile.security_settings.current_password_label') }}</label>
                 <div class="form-password">
@@ -21,11 +21,11 @@
                 @enderror
             </div>
         </div>
-        <div class="col-12 col-md-6 col-lg-4">
+        <div class="col-12 col-md-6 col-lg-4 pl-0">
             <x-profile.password-field tabindex="2" name="password" type="password"
                 :label="__('profile.security_settings.new_password_label')" data-pass-switch="pass-2" />
         </div>
-        <div class="col-12 col-md-6 col-lg-4">
+        <div class="col-12 col-md-6 col-lg-4 pl-0">
             <x-profile.password-field tabindex="3" name="password_confirmation" type="password"
                 :label="__('profile.security_settings.new_password_confirmation_label')" data-pass-switch="pass-3"
                 :value="old('password_confirmation')" />
