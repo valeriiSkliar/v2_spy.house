@@ -1,6 +1,23 @@
 <?php
 
 return [
+    // --- Добавлено для блока тарифов ---
+    'prices_title' => 'Тарифы',
+    'unlimited' => 'Безлимитно',
+    'creative_downloads' => 'креативных загрузок',
+    'api_requests' => 'API-запросов',
+    'get_started' => 'Начать',
+    'start_price_month' => '30',
+    'start_price_year' => '288',
+    'premium_price_month' => '100',
+    'premium_price_year' => '960',
+    'start_search_request_count' => '1,000',
+    'start_api_request_count' => '500',
+    'prices_fallback' => [
+        'downloads' => ':count креативных загрузок',
+        'api' => ':count API-запросов',
+    ],
+    // --- /конец добавленного ---
     'trial' => 'Trial',
     'free' => 'Free',
     'start' => 'Starter',

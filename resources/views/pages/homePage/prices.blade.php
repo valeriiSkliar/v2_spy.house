@@ -2,7 +2,7 @@
     <div class="container">
         <div class="row align-items-end _offset30">
             <div class="col-12 col-md-7 mb-md-4">
-                <div class="title-label _white" data-aos-delay="200" data-aos="fade-up">Prices</div>
+                <div class="title-label _white" data-aos-delay="200" data-aos="fade-up">{{ __('tariffs.prices_title') }}</div>
                 <h2 class="title" data-aos-delay="200" data-aos="fade-up">{!! __('main_page.prices_blok.title') !!}</h2>
             </div>
             <div class="col-12 col-md-5 pb-2">
@@ -41,7 +41,7 @@
                     {{-- Monthly pricing --}}
                     <div class="active" data-tub="month" data-group="pay">
                         <div class="price-item__price">${{ number_format($subscription->amount, 0) }}</div>
-                        <div class="price-item__term">per month</div>
+                        <div class="price-item__term">{{ __('tariffs.per_month') }}</div>
                     </div>
 
                     {{-- Yearly pricing with discount --}}
@@ -53,27 +53,26 @@
                         }
                         @endphp
                         <div class="price-item__price">${{ number_format($yearlyAmount, 0) }}</div>
-                        <div class="price-item__term">per year</div>
+                        <div class="price-item__term">{{ __('tariffs.per_year') }}</div>
                     </div>
 
                     <div class="price-item__info">
                         @if($subscription->search_request_count >= 10000)
-                        <p><strong>Unlimited</strong> creative downloads</p>
+                        <p><strong>{{ __('tariffs.unlimited') }}</strong> {{ __('tariffs.creative_downloads') }}</p>
                         @else
-                        <p><strong>{{ number_format($subscription->search_request_count) }}</strong> creative downloads
-                        </p>
+                        <p><strong>{{ number_format($subscription->search_request_count) }}</strong> {{ __('tariffs.creative_downloads') }}</p>
                         @endif
 
                         @if($subscription->api_request_count >= 10000)
-                        <p><strong>Unlimited</strong> API requests</p>
+                        <p><strong>{{ __('tariffs.unlimited') }}</strong> {{ __('tariffs.api_requests') }}</p>
                         @else
-                        <p><strong>{{ number_format($subscription->api_request_count) }}</strong> API requests</p>
+                        <p><strong>{{ number_format($subscription->api_request_count) }}</strong> {{ __('tariffs.api_requests') }}</p>
                         @endif
                     </div>
 
                     <div class="price-item__btn">
                         <a href="{{ route('tariffs.payment', ['slug' => $subscription->getSlug(), 'billingType' => 'month']) }}"
-                            class="btn _flex _border-green2 _large min-170">Get Started</a>
+                            class="btn _flex _border-green2 _large min-170">{{ __('tariffs.get_started') }}</a>
                     </div>
                 </div>
             </div>
@@ -82,43 +81,41 @@
             {{-- Fallback если подписки не загружены --}}
             <div class="prices-list__item">
                 <div class="price-item">
-                    <div class="price-item__tariff _starter">Starter</div>
+                    <div class="price-item__tariff _starter">{{ __('tariffs.start') }}</div>
                     <div class="active" data-tub="month" data-group="pay">
-                        <div class="price-item__price">$30</div>
-                        <div class="price-item__term">per month</div>
+                        <div class="price-item__price">${{ __('tariffs.start_price_month') }}</div>
+                        <div class="price-item__term">{{ __('tariffs.per_month') }}</div>
                     </div>
                     <div data-tub="year" data-group="pay">
-                        <div class="price-item__price">$288</div>
-                        <div class="price-item__term">per year</div>
+                        <div class="price-item__price">${{ __('tariffs.start_price_year') }}</div>
+                        <div class="price-item__term">{{ __('tariffs.per_year') }}</div>
                     </div>
                     <div class="price-item__info">
-                        <p><strong>1,000</strong> creative downloads</p>
-                        <p><strong>500</strong> API requests</p>
+                        <p><strong>{{ __('tariffs.start_search_request_count') }}</strong> {{ __('tariffs.creative_downloads') }}</p>
+                        <p><strong>{{ __('tariffs.start_api_request_count') }}</strong> {{ __('tariffs.api_requests') }}</p>
                     </div>
                     <div class="price-item__btn">
-                        <a href="{{ route('register') }}" class="btn _flex _border-green2 _large min-170">Get
-                            Started</a>
+                        <a href="{{ route('register') }}" class="btn _flex _border-green2 _large min-170">{{ __('tariffs.get_started') }}</a>
                     </div>
                 </div>
             </div>
             <div class="prices-list__item">
                 <div class="price-item">
-                    <div class="price-item__tariff _premium">Premium</div>
+                    <div class="price-item__tariff _premium">{{ __('tariffs.premium') }}</div>
                     <div class="active" data-tub="month" data-group="pay">
-                        <div class="price-item__price">$100</div>
-                        <div class="price-item__term">per month</div>
+                        <div class="price-item__price">${{ __('tariffs.premium_price_month') }}</div>
+                        <div class="price-item__term">{{ __('tariffs.per_month') }}</div>
                     </div>
                     <div data-tub="year" data-group="pay">
-                        <div class="price-item__price">$960</div>
-                        <div class="price-item__term">per year</div>
+                        <div class="price-item__price">${{ __('tariffs.premium_price_year') }}</div>
+                        <div class="price-item__term">{{ __('tariffs.per_year') }}</div>
                     </div>
                     <div class="price-item__info">
-                        <p><strong>Unlimited</strong> creative downloads</p>
-                        <p><strong>Unlimited</strong> API requests</p>
+                        <p><strong>{{ __('tariffs.unlimited') }}</strong> {{ __('tariffs.creative_downloads') }}</p>
+                        <p><strong>{{ __('tariffs.unlimited') }}</strong> {{ __('tariffs.api_requests') }}</p>
                     </div>
                     <div class="price-item__btn">
-                        <a href="{{ route('register') }}" class="btn _flex _border-green2 _large min-170">Get
-                            Started</a>
+                        <a href="{{ route('register') }}" class="btn _flex _border-green2 _large min-170">{{ __('tariffs.get_started') }}</a>
                     </div>
                 </div>
             </div>

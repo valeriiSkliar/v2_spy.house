@@ -1,6 +1,23 @@
 <?php
 
 return [
+    // --- Added for prices block localization ---
+    'prices_title' => 'Tariffs',
+    'unlimited' => 'Unlimited',
+    'creative_downloads' => 'creative downloads',
+    'api_requests' => 'API requests',
+    'get_started' => 'Get Started',
+    'prices_fallback' => [
+        'downloads' => ':count creative downloads',
+        'api' => ':count API requests',
+    ],
+    'start_price_month' => '30',
+    'start_price_year' => '288',
+    'premium_price_month' => '100',
+    'premium_price_year' => '960',
+    'start_search_request_count' => '1,000',
+    'start_api_request_count' => '500',
+    // --- /end prices block localization ---
     'trial' => 'Trial',
     'free' => 'Free',
     'start' => 'Starter',
