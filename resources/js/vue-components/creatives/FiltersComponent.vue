@@ -115,12 +115,11 @@
 
           <!-- Рекламные сети -->
           <div class="col-12 col-md-6 col-lg-3 mb-15">
-            <MultiSelect
-              :show-logo="true"
+            <BaseSelectArrayAdapter
               :values="store.filters.advertisingNetworks"
               :options="store.advertisingNetworksOptions"
               :placeholder="translations.advertisingNetworks.value"
-              :translations="multiSelectTranslations"
+              :translations="baseSelectTranslations"
               @add="value => store.addToMultiSelect('advertisingNetworks', value)"
               @remove="value => store.removeFromMultiSelect('advertisingNetworks', value)"
             />

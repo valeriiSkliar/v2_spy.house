@@ -15,6 +15,7 @@
           :class="{ 'is-selected': String(option.value) === String(value) }"
           @click="selectOption(option)"
         >
+          <img v-if="option.logo" :src="option.logo" alt="" class="base-select__logo" />
           {{ option.label }}
         </li>
         <li v-if="safeOptions.length === 0" class="base-select__no-options">
@@ -40,6 +41,9 @@
         :class="{ 'is-selected': String(option.value) === String(value) }"
         @click="selectOption(option)"
       >
+        <div class="multi-select__option-logo" v-if="option.logo" >
+          <img :src="option.logo" alt="Logo" />
+        </div>
         {{ option.label }}
       </li>
       <li v-if="safeOptions.length === 0" class="base-select__no-options">
@@ -63,6 +67,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue';
 interface Option {
   value: string;
   label: string;
+  logo?: string;
 }
 
 interface OnPageTranslations {
