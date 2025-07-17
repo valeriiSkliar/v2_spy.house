@@ -559,7 +559,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-radius: 4px;
+  border-radius: 10px;
 
   span {
     font-size: 14px;
@@ -582,14 +582,13 @@ onUnmounted(() => {
 
 .date-options-dropdown {
   position: absolute;
-  top: 100%;
+  top: 115%;
   left: 0;
   right: 0;
   background: white;
   border: 1px solid #ddd;
-  border-top: none;
   z-index: 1000;
-  border-radius: 0 0 4px 4px;
+  border-radius: 10px;
   // max-height: 400px; // Ограничиваем максимальную высоту
   // overflow: hidden; // Скрываем переполнение
 }
@@ -685,7 +684,7 @@ onUnmounted(() => {
     border-top: 1px solid #eee;
     margin-top: 0;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border-radius: 0 0 4px 4px;
+    border-radius: 10px;
     width: 100%;
 
     &.open {
