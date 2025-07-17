@@ -53,7 +53,7 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ['jquery', 'alpinejs'],
+    include: ['jquery', 'slick-carousel'],
     exclude: ['bootstrap'],
   },
   define: {
@@ -126,7 +126,7 @@ export default defineConfig({
       },
       output: {
         manualChunks: {
-          'vendor-jquery': ['jquery'],
+          'vendor-jquery': ['jquery', 'slick-carousel'],
           'vendor-ui': ['sweetalert2', 'flatpickr'],
         },
         globals: {

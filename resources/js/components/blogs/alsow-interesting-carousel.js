@@ -199,7 +199,11 @@ const readOftenCarousel = new ReadOftenCarousel();
  * Инициализация карусели "Также интересно"
  * Зачем: публичный API для инициализации
  */
-const initAlsowInterestingArticlesCarousel = () => {
+const initAlsowInterestingArticlesCarousel = async () => {
+  const dependenciesOk = await checkDependencies();
+  if (!dependenciesOk) {
+    return false;
+  }
   return alsowCarousel.init();
 };
 
@@ -207,7 +211,11 @@ const initAlsowInterestingArticlesCarousel = () => {
  * Инициализация карусели "Часто читают"
  * Зачем: публичный API для инициализации
  */
-const initReadOftenArticlesCarousel = () => {
+const initReadOftenArticlesCarousel = async () => {
+  const dependenciesOk = await checkDependencies();
+  if (!dependenciesOk) {
+    return false;
+  }
   return readOftenCarousel.init();
 };
 
@@ -238,15 +246,33 @@ const reinitAllCarousels = () => {
  * Проверка совместимости с jQuery и Slick
  * Зачем: предотвращение ошибок при отсутствии зависимостей
  */
-const checkDependencies = () => {
+const checkDependencies = async () => {
+  console.log('Checking dependencies...');
+  console.log('jQuery available:', typeof $ !== 'undefined');
+  console.log('jQuery version:', typeof $ !== 'undefined' ? $.fn.jquery : 'N/A');
+  console.log('Slick available:', typeof $ !== 'undefined' && typeof $.fn.slick !== 'undefined');
+  
   if (typeof $ === 'undefined') {
     console.error('jQuery is required for carousels');
     return false;
   }
 
+  // Если Slick не найден, попробуем загрузить его динамически
   if (typeof $.fn.slick === 'undefined') {
-    console.error('Slick carousel plugin is required');
-    return false;
+    console.log('Slick not found, trying to load dynamically...');
+    try {
+      await import('slick-carousel');
+      console.log('Slick loaded dynamically');
+      
+      // Проверим еще раз
+      if (typeof $.fn.slick === 'undefined') {
+        console.error('Slick carousel plugin is required');
+        return false;
+      }
+    } catch (error) {
+      console.error('Failed to load slick carousel:', error);
+      return false;
+    }
   }
 
   return true;
@@ -256,8 +282,9 @@ const checkDependencies = () => {
  * Инициализация с проверкой зависимостей
  * Зачем: безопасная инициализация при готовности DOM
  */
-const initCarouselsWhenReady = () => {
-  if (!checkDependencies()) {
+const initCarouselsWhenReady = async () => {
+  const dependenciesOk = await checkDependencies();
+  if (!dependenciesOk) {
     return;
   }
 

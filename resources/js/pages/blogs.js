@@ -941,12 +941,12 @@ function initBlogShowPage() {
  * Универсальная инициализация каруселей
  * Зачем: карусели могут быть на любой странице блога
  */
-function initUniversalCarousels() {
+async function initUniversalCarousels() {
   console.log('Initializing universal carousels...');
 
   // Инициализируем карусели независимо от типа страницы
-  const alsowCarouselResult = initAlsowInterestingArticlesCarousel();
-  const readOftenCarouselResult = initReadOftenArticlesCarousel();
+  const alsowCarouselResult = await initAlsowInterestingArticlesCarousel();
+  const readOftenCarouselResult = await initReadOftenArticlesCarousel();
 
   console.log('Carousel initialization results:', {
     alsowCarousel: alsowCarouselResult,
@@ -985,8 +985,8 @@ document.addEventListener('DOMContentLoaded', function () {
   initResponsiveHandlers();
 
   // Инициализируем карусели только один раз с задержкой
-  setTimeout(() => {
-    initUniversalCarousels();
+  setTimeout(async () => {
+    await initUniversalCarousels();
   }, 200);
 
   initUniversalComments();
