@@ -6,9 +6,19 @@
             </button>
         </div>
         <div class="header__left">
-            <a href="/" class="header__logo"><img src="img/logo.svg?v=2" alt=""></a>
+            <a href="/" class="header__logo">
+                <img src="img/logo_main_page.svg" alt="">
+            </a>
         </div>
         <nav class="header__nav">
+            <style>
+                .header__nav ul li a {
+                    font-size: 16px;
+                }
+                .header__right a{
+                    font-size: 16px;
+                }
+                </style>
             <ul>
                 <li><a href="#features">{{ __('main_page.features') }}</a></li>
                 <li><a href="#prices">{{ __('main_page.prices') }}</a></li>

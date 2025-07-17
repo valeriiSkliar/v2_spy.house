@@ -23,7 +23,7 @@ return [
         'telegram_chat' => 'Telegram chat',
     ],
     'offer' => [
-        'title' => 'All competitor creatives are here',
+        'title' => 'All competitors creatives are here',
         'description' => 'Spy House — a service for spying on advertising in popular formats',
         'winner_title' => 'Best Affiliate Spy Tool',
         'winner_desc' => 'Conversion Club 2021 Award',

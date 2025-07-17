@@ -47,8 +47,8 @@
                     {{-- Yearly pricing with discount --}}
                     <div data-tub="year" data-group="pay">
                         @php
-                        $yearlyAmount = $subscription->amount * 12;
-                        if ($subscription->early_discount) {
+                        $yearlyAmount = $subscription->amount_yearly ?? $subscription->amount * 12;
+                        if ($subscription->early_discount && !$subscription->amount_yearly) {
                         $yearlyAmount = $yearlyAmount * (1 - $subscription->early_discount / 100);
                         }
                         @endphp
