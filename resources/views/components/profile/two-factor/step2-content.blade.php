@@ -26,12 +26,16 @@
                         :description="__('profile.2fa.info_message_description_authenticator')" />
                 </div>
             </div>
-
-            <div class="d-flex justify-content-start mt-4 gap-3">
-                <button type="button"
-                    class="btn _flex _red _big min-200 mt-15 w-mob-100 js-back-to-step1">Назад</button>
-                <button type="submit" class="btn _flex _green _big min-200 mt-15 w-mob-100 js-submit-2fa">{{
-                    __('profile.confirm_button') }}</button>
+            <div class="row _offset20 mb-20 ">
+                <div class="col-6 col-md-3 col-lg-2">
+                    <button type="submit" class="btn _flex _green _big min-200 w-100 mt-15 w-mob-100 js-submit-2fa">{{
+                        __('profile.confirm_button') }}</button>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <button type="button"
+                        class="btn _flex _red _big w-mob-100 w-100 js-back-to-step1">{{ __('profile.cancel_button') }}
+                    </button>
+                </div>
             </div>
         </form>
     </div>

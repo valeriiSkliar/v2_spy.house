@@ -19,7 +19,17 @@
                     :description="__('profile.2fa.info_message_description_authenticator')" />
             </div>
         </div>
-        <div class="d-flex gap-3 confirmation-method__btn">
+        <div class="row _offset20 mb-20 ">
+            <div class="col-6 col-md-3 col-lg-2">
+                <x-profile.submit-button class="mr-4 w-mob-100 w-100" formId="personal-greeting-form" :label="__('profile.confirm_button')" />
+            </div>
+            <div class="col-6 col-md-3 col-lg-2">
+                <button data-action="cancel-personal-greeting" type="button" class="btn _flex _red _big w-mob-100 w-100">
+                    {{ __('profile.cancel_button') }}
+                </button>
+            </div>
+        </div>
+        {{-- <div class="d-flex gap-3 confirmation-method__btn">
             <x-profile.submit-button formId="personal-greeting-form" :label="__('profile.confirm_button')"
                 class="mr-4" />
             <div class="mb-20">
@@ -28,6 +38,6 @@
                     {{ __('profile.cancel_button') }}
                 </a>
             </div>
-        </div>
+        </div> --}}
     </form>
 </div>
