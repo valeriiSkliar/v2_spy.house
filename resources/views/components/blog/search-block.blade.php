@@ -10,7 +10,7 @@
             <div class="blog-filter-order__label">{{ __('blog.search.order') }}</div>
             <div class="blog-filter-order__item">
                 <!-- asc desc -->
-                <button class="w-100 btn _flex _medium sorting-btn asc">{{ __('blog.search.latest') }} <span
+                <button class="w-100 btn _flex _medium sorting-btn asc">{{ __('blog.search.popular') }} <span
                         class="sorting-btn__icon"></span></button>
             </div>
             <div class="blog-filter-order__item">
