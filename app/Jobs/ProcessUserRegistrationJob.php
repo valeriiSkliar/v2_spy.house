@@ -47,7 +47,7 @@ class ProcessUserRegistrationJob implements ShouldQueue
 
         // Отправляем приветственные уведомления
         Log::debug('Sending welcome email notification', ['user_id' => $this->user->id]);
-        $this->user->sendWelcomeNotification();
+        // $this->user->sendWelcomeNotification();
         Log::debug('Welcome email notification sent', ['user_id' => $this->user->id]);
 
         // WelcomeInAppNotification теперь отправляется после подтверждения email
