@@ -4,6 +4,13 @@ return [
     'category' => 'Категория',
     'search_by_keyword' => 'Поиск по ключевым словам',
     'view_all_results' => 'Показать все :total результаты',
+    'search' => [
+        'placeholder' => 'Поиск по блогам',
+        'order' => 'Сортировка:',
+        'popular' => 'Популярные',
+        'viewed' => 'Просмотренные',
+
+    ],
     'success' => [
         'search_results_fetched_successfully' => 'Результаты поиска успешно получены',
     ],

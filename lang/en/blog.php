@@ -4,6 +4,12 @@ return [
     'category' => 'Category',
     'search_by_keyword' => 'Search by keyword',
     'view_all_results' => 'View all :total results',
+    'search' => [
+        'placeholder' => 'Search blogs',
+        'order' => 'Sort by:',
+        'popular' => 'Popular',
+        'viewed' => 'Most Viewed',
+    ],
     'success' => [
         'search_results_fetched_successfully' => 'Search results fetched successfully',
     ],
