@@ -100,9 +100,10 @@ class ApiBlogController extends BaseBlogController
 
         // Применяем фильтр поиска
         if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                    ->orWhere('content', 'like', "%{$search}%");
+            $locale = app()->getLocale();
+            $query->where(function ($q) use ($search, $locale) {
+                $q->whereRaw('LOWER(JSON_UNQUOTE(JSON_EXTRACT(title, "$.' . $locale . '"))) LIKE ?', ['%' . strtolower($search) . '%'])
+                    ->orWhereRaw('LOWER(JSON_UNQUOTE(JSON_EXTRACT(content, "$.' . $locale . '"))) LIKE ?', ['%' . strtolower($search) . '%']);
             });
         }
 
@@ -420,11 +421,12 @@ class ApiBlogController extends BaseBlogController
         }
 
         // Выполняем поиск
+        $locale = app()->getLocale();
         $articles = BlogPost::query()
             ->where('is_published', true)
-            ->where(function ($q) use ($query) {
-                $q->where('title', 'like', "%{$query}%")
-                    ->orWhere('content', 'like', "%{$query}%");
+            ->where(function ($q) use ($query, $locale) {
+                $q->whereRaw('LOWER(JSON_UNQUOTE(JSON_EXTRACT(title, "$.' . $locale . '"))) LIKE ?', ['%' . strtolower($query) . '%'])
+                    ->orWhereRaw('LOWER(JSON_UNQUOTE(JSON_EXTRACT(content, "$.' . $locale . '"))) LIKE ?', ['%' . strtolower($query) . '%']);
             })
             ->with(['author', 'categories'])
             ->orderBy('created_at', 'desc')
@@ -433,9 +435,9 @@ class ApiBlogController extends BaseBlogController
 
         $totalResults = BlogPost::query()
             ->where('is_published', true)
-            ->where(function ($q) use ($query) {
-                $q->where('title', 'like', "%{$query}%")
-                    ->orWhere('content', 'like', "%{$query}%");
+            ->where(function ($q) use ($query, $locale) {
+                $q->whereRaw('LOWER(JSON_UNQUOTE(JSON_EXTRACT(title, "$.' . $locale . '"))) LIKE ?', ['%' . strtolower($query) . '%'])
+                    ->orWhereRaw('LOWER(JSON_UNQUOTE(JSON_EXTRACT(content, "$.' . $locale . '"))) LIKE ?', ['%' . strtolower($query) . '%']);
             })
             ->count();
 

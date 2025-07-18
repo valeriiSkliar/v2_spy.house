@@ -22,7 +22,7 @@ class BlogController extends BaseBlogController
 
         if ($searchQuery) {
             $searchQuery = $this->sanitizeInput($searchQuery);
-            $articlesQuery->where('title', 'like', '%' . $searchQuery . '%');
+            $articlesQuery->whereRaw('LOWER(JSON_UNQUOTE(JSON_EXTRACT(title, "$.' . app()->getLocale() . '"))) LIKE ?', ['%' . strtolower($searchQuery) . '%']);
         }
 
         $totalArticlesCount = $articlesQuery->count();
@@ -110,8 +110,11 @@ class BlogController extends BaseBlogController
             ->where('is_published', true)
             ->with(['author', 'categories'])
             ->when($searchQuery, function ($query, $search) {
-                $query->where('title', 'like', "%{$search}%")
-                    ->orWhere('content', 'like', "%{$search}%");
+                $locale = app()->getLocale();
+                $query->where(function ($q) use ($search, $locale) {
+                    $q->whereRaw('LOWER(JSON_UNQUOTE(JSON_EXTRACT(title, "$.' . app()->getLocale() . '"))) LIKE ?', ['%' . strtolower($search) . '%'])
+                        ->orWhereRaw('LOWER(JSON_UNQUOTE(JSON_EXTRACT(content, "$.' . app()->getLocale() . '"))) LIKE ?', ['%' . strtolower($search) . '%']);
+                });
             })
             ->orderBy('created_at', 'desc')
             ->paginate(12)
