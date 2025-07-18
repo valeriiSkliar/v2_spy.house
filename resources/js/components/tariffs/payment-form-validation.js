@@ -28,14 +28,19 @@ class PaymentFormValidator {
 
     // Предотвращаем двойную отправку
     if (this.isValidating) {
+      console.log('Payment form already processing, ignoring duplicate submission');
       return;
     }
 
-    // const submitBtn = this.form.querySelector('button[type="submit"]');
-    // const originalText = submitBtn.textContent;
+    const submitBtn = this.form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
 
     try {
       this.isValidating = true;
+      
+      // Немедленно блокируем кнопку отправки
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Обработка...';
 
       // Показываем состояние загрузки
       this.setLoadingState(this.paymentContainer, true, this.loader);
@@ -59,7 +64,13 @@ class PaymentFormValidator {
         console.error('Error calling createAndShowToast:', toastError);
       }
     } finally {
-      this.isValidating = false;
+      // Восстанавливаем кнопку с задержкой для предотвращения быстрых повторных нажатий
+      setTimeout(() => {
+        this.isValidating = false;
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }, 2000);
+      
       this.setLoadingState(this.paymentContainer, false);
     }
   }
@@ -91,7 +102,6 @@ class PaymentFormValidator {
 
   async processPayment() {
     const submitBtn = this.form.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
 
     try {
       // Показываем состояние обработки платежа
@@ -100,6 +110,9 @@ class PaymentFormValidator {
       const formData = new FormData(this.form);
       // Добавляем маркер что валидация была пройдена
       formData.append('_validation_passed', '1');
+      
+      // Добавляем timestamp для предотвращения кэширования
+      formData.append('_timestamp', Date.now().toString());
 
       const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
@@ -116,6 +129,7 @@ class PaymentFormValidator {
 
       if (response.ok && result.success) {
         // Success - handle different payment methods
+        submitBtn.textContent = 'Переход к оплате...';
 
         // For USER_BALANCE payments, redirect to success page
         if (result.redirect_url) {
@@ -129,7 +143,14 @@ class PaymentFormValidator {
         }
       } else {
         // Error - show message
-        createAndShowToast(result.error || 'Произошла ошибка при создании платежа', 'error');
+        const errorMessage = result.error || 'Произошла ошибка при создании платежа';
+        
+        // Проверяем если это ошибка дублирования платежа
+        if (errorMessage.includes('дубликат') || errorMessage.includes('уже обработан') || errorMessage.includes('уже обрабатывается')) {
+          createAndShowToast(errorMessage, 'warning');
+        } else {
+          createAndShowToast(errorMessage, 'error');
+        }
       }
     } catch (error) {
       console.error('Network error:', error);

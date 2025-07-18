@@ -302,22 +302,27 @@ class TariffController extends Controller
      */
     protected function processBalancePayment($user, $tariff, string $billingType)
     {
+        // Генерируем идемпотентный ключ на основе параметров запроса
+        $idempotencyKey = md5($user->id . $tariff->id . $billingType . time());
+        
         Log::info('TariffController: Начало обработки платежа с баланса', [
             'user_id' => $user->id,
             'tariff_id' => $tariff->id,
             'billing_type' => $billingType,
             'user_balance' => $user->available_balance,
+            'idempotency_key' => $idempotencyKey,
         ]);
 
         try {
-            // Обрабатываем платеж через BalanceService (который уже содержит логику компенсации времени)
-            $result = $this->balanceService->processSubscriptionPaymentFromBalance($user, $tariff, $billingType);
+            // Обрабатываем платеж через BalanceService с идемпотентным ключом
+            $result = $this->balanceService->processSubscriptionPaymentFromBalance($user, $tariff, $billingType, $idempotencyKey);
 
             if (! $result['success']) {
                 Log::warning('TariffController: Ошибка платежа с баланса', [
                     'user_id' => $user->id,
                     'tariff_id' => $tariff->id,
                     'error' => $result['error'],
+                    'idempotency_key' => $idempotencyKey,
                 ]);
 
                 return response()->json([
@@ -331,6 +336,7 @@ class TariffController extends Controller
                 'tariff_id' => $tariff->id,
                 'payment_id' => $result['payment']->id,
                 'message' => $result['message'],
+                'idempotency_key' => $idempotencyKey,
             ]);
 
             return response()->json([
@@ -347,6 +353,7 @@ class TariffController extends Controller
                 'tariff_id' => $tariff->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
+                'idempotency_key' => $idempotencyKey,
             ]);
 
             return response()->json([

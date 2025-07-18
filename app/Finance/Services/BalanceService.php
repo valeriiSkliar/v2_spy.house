@@ -25,8 +25,57 @@ class BalanceService
     /**
      * Оплатить подписку с баланса пользователя
      */
-    public function processSubscriptionPaymentFromBalance(User $user, Subscription $subscription, string $billingType = 'month'): array
+    public function processSubscriptionPaymentFromBalance(User $user, Subscription $subscription, string $billingType = 'month', ?string $idempotencyKey = null): array
     {
+        // Генерируем идемпотентный ключ если не передан
+        if (!$idempotencyKey) {
+            $idempotencyKey = Str::uuid();
+        }
+
+        // Проверяем на дублирование платежа по idempotency_key
+        $existingPayment = Payment::where('idempotency_key', $idempotencyKey)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if ($existingPayment) {
+            Log::warning('BalanceService: Обнаружен дубликат платежа по idempotency_key', [
+                'user_id' => $user->id,
+                'idempotency_key' => $idempotencyKey,
+                'existing_payment_id' => $existingPayment->id,
+                'existing_payment_status' => $existingPayment->status,
+            ]);
+
+            return [
+                'success' => false,
+                'error' => 'Платеж с таким идентификатором уже обработан',
+                'payment_id' => $existingPayment->id,
+            ];
+        }
+
+        // Проверяем на недавние платежи (защита от двойных кликов)
+        $recentPayment = Payment::where('user_id', $user->id)
+            ->where('subscription_id', $subscription->id)
+            ->where('payment_method', PaymentMethod::USER_BALANCE)
+            ->where('created_at', '>=', now()->subSeconds(10))
+            ->where('status', '!=', PaymentStatus::FAILED)
+            ->first();
+
+        if ($recentPayment) {
+            Log::warning('BalanceService: Обнаружен недавний платеж', [
+                'user_id' => $user->id,
+                'subscription_id' => $subscription->id,
+                'recent_payment_id' => $recentPayment->id,
+                'recent_payment_time' => $recentPayment->created_at,
+                'seconds_ago' => $recentPayment->created_at->diffInSeconds(now()),
+            ]);
+
+            return [
+                'success' => false,
+                'error' => 'Платеж уже обрабатывается. Пожалуйста, подождите.',
+                'payment_id' => $recentPayment->id,
+            ];
+        }
+
         // Вычисляем сумму
         $amount = $subscription->amount;
         if ($billingType === 'year') {
@@ -39,25 +88,12 @@ class BalanceService
             'amount' => $amount,
             'billing_type' => $billingType,
             'current_balance' => $user->available_balance,
+            'idempotency_key' => $idempotencyKey,
         ]);
-
-        // Проверяем достаточность средств
-        if ($this->hasInsufficientBalance($user, $amount)) {
-            Log::warning('BalanceService: Недостаточно средств на балансе', [
-                'user_id' => $user->id,
-                'required_amount' => $amount,
-                'available_balance' => $user->available_balance,
-            ]);
-
-            return [
-                'success' => false,
-                'error' => 'Недостаточно средств на балансе. Требуется: $' . number_format($amount, 2) . ', доступно: $' . number_format($user->available_balance, 2),
-            ];
-        }
 
         // Выполняем операцию в транзакции с optimistic locking
         try {
-            return DB::transaction(function () use ($user, $subscription, $amount, $billingType) {
+            return DB::transaction(function () use ($user, $subscription, $amount, $billingType, $idempotencyKey) {
                 // Перезагружаем пользователя с блокировкой для чтения
                 $userForUpdate = User::where('id', $user->id)
                     ->where('balance_version', $user->balance_version)
@@ -68,13 +104,19 @@ class BalanceService
                     throw new \Exception('Баланс был изменен другой операцией. Повторите попытку.');
                 }
 
-                // Повторная проверка баланса после блокировки
+                // Проверяем достаточность средств после получения блокировки
                 if ($this->hasInsufficientBalance($userForUpdate, $amount)) {
-                    throw new \Exception('Недостаточно средств на балансе после блокировки');
+                    Log::warning('BalanceService: Недостаточно средств на балансе', [
+                        'user_id' => $userForUpdate->id,
+                        'required_amount' => $amount,
+                        'available_balance' => $userForUpdate->available_balance,
+                    ]);
+
+                    throw new \Exception('Недостаточно средств на балансе. Требуется: $' . number_format($amount, 2) . ', доступно: $' . number_format($userForUpdate->available_balance, 2));
                 }
 
-                // Создаем платеж
-                $payment = $this->createBalancePayment($userForUpdate, $subscription, $amount, $billingType);
+                // Создаем платеж с переданным idempotency_key
+                $payment = $this->createBalancePayment($userForUpdate, $subscription, $amount, $billingType, $idempotencyKey);
 
                 // Списываем средства с баланса
                 $this->deductFromBalance($userForUpdate, $amount);
@@ -118,7 +160,7 @@ class BalanceService
     /**
      * Создать запись о платеже с баланса
      */
-    protected function createBalancePayment(User $user, Subscription $subscription, float $amount, string $billingType): Payment
+    protected function createBalancePayment(User $user, Subscription $subscription, float $amount, string $billingType, string $idempotencyKey): Payment
     {
         return Payment::create([
             'user_id' => $user->id,
@@ -130,7 +172,7 @@ class BalanceService
             'external_number' => 'TN' . $user->id . $subscription->id . time(),
             'invoice_number' => 'IN' . strtoupper(Str::random(10)),
             'webhook_token' => Str::random(64),
-            'idempotency_key' => Str::uuid(),
+            'idempotency_key' => $idempotencyKey,
         ]);
     }
 
