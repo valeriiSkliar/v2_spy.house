@@ -7,27 +7,7 @@
                 <a href="{{ route($homeRoute) }}" class="btn _flex _dark2 pe-3">
                     <span class="icon-home mr-2 font-20"></span>{{ __('auth.go_home') }}
                 </a>
-                <div class="lang-menu">
-                    <div class="base-select base-select_login">
-                        <div class="base-select__trigger">
-                            <span class="base-select__value">
-                                <img src="{{ asset('img/flags/US.svg') }}" alt="">Eng
-                            </span>
-                            <span class="base-select__arrow"></span>
-                        </div>
-                        <ul class="base-select__dropdown" style="display: none;">
-                            <li class="base-select__option is-selected">
-                                <img src="{{ asset('img/flags/US.svg') }}" alt="">Eng
-                            </li>
-                            <li class="base-select__option">
-                                <img src="{{ asset('img/flags/UA.svg') }}" alt="">Uk
-                            </li>
-                            <li class="base-select__option">
-                                <img src="{{ asset('img/flags/ES.svg') }}" alt="">Esp
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+                <x-frontend.language-selector />
             </div>
             <div class="login-body__main">
                 <div class="login-body__logo">
