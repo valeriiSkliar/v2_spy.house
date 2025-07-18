@@ -67,6 +67,289 @@ php artisan queue:work rabbitmq --queue=mail --tries=3 --timeout=60 --sleep=3 --
 
 To monitor queue status and messages, access the RabbitMQ management interface at http://localhost:15672 (default credentials: guest/guest)
 
+### Quick Start with Persistent Workers Script
+
+For development or simple production setups, you can use the provided `start-workers.sh` script that runs workers persistently without time limits:
+
+```bash
+# Make the script executable
+chmod +x start-workers.sh
+
+# Start all persistent workers
+./start-workers.sh
+
+# Check worker status
+./start-workers.sh check
+
+# Stop all workers
+./start-workers.sh stop
+
+# Restart all workers
+./start-workers.sh restart
+
+# View worker logs (real-time monitoring)
+tail -f storage/logs/worker-*.log
+
+# View specific queue logs
+tail -f storage/logs/worker-mail.log        # Mail queue
+tail -f storage/logs/worker-collect-ads.log # Ad collection
+tail -f storage/logs/worker-default.log     # Default queue
+```
+
+**Key features of the persistent script:**
+
+- ❌ **No `--max-time` limit** - workers run indefinitely
+- ✅ **Memory management** - 512MB limit per worker with `--memory=512`
+- ✅ **Daemon mode** - workers run in background with `--daemon`
+- ✅ **PID tracking** - saves process IDs for management
+- ✅ **Optimized settings** - different timeouts for different queue types
+- ✅ **Management functions** - start/stop/check/restart capabilities
+- 🔒 **Duplicate protection** - prevents starting workers when already running
+- 🔒 **Process validation** - checks worker health before operations
+- 🔧 **Graceful restart** - proper stop/start sequence with safety delays
+
+**Worker configuration:**
+
+- **Default queue**: 2 workers, 300s timeout
+- **Collect-ads queue**: 2 workers, 600s timeout (heavy processing)
+- **Push-house-ads queue**: 1 worker, 600s timeout
+- **Mail queue**: 2 workers, 120s timeout (high priority)
+- **Delayed queue**: 1 worker, 300s timeout
+- **Website-downloads queue**: 1 worker, 300s timeout
+
+**Safety Features and Error Prevention:**
+
+The script includes several safety mechanisms to prevent common issues:
+
+```bash
+# If workers are already running, the script will warn and exit
+./start-workers.sh start
+# Output: WARNING: 9 workers are already running!
+#         Use './start-workers.sh stop' first or './start-workers.sh restart'
+
+# Safe restart with automatic stop/start sequence
+./start-workers.sh restart
+# Stops all workers → waits 2 seconds → starts fresh workers
+
+# Health check shows detailed worker status
+./start-workers.sh check
+# Output: Worker PID 12345 is running
+#         Worker PID 12346 is running
+#         ... (shows all 9 workers)
+```
+
+**Performance Monitoring:**
+
+Monitor worker performance and resource usage:
+
+```bash
+# Check worker resource usage
+ps aux | grep "queue:work" | grep -v grep
+
+# Monitor memory usage by workers
+ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%mem | grep "queue:work"
+
+# Check worker count and status
+./start-workers.sh check | wc -l  # Should show 9 workers
+
+# Monitor logs for errors or performance issues
+grep -i "error\|exception\|timeout" storage/logs/worker-*.log
+```
+
+**Troubleshooting:**
+
+If you encounter duplicate workers or processes, use these commands:
+
+```bash
+# Check system-wide queue workers
+ps aux | grep "queue:work" | grep -v grep
+
+# Count active workers (should be 9-10 including cursor process)
+ps aux | grep "queue:work" | grep -v grep | wc -l
+
+# Force kill all queue workers (if needed)
+pkill -f "queue:work"
+
+# Clean start after force kill
+./start-workers.sh start
+```
+
+**When to Use Persistent Script vs Supervisor:**
+
+| Feature                | Persistent Script           | Supervisor                      |
+| ---------------------- | --------------------------- | ------------------------------- |
+| **Setup Complexity**   | ✅ Simple (just run script) | ⚠️ Requires configuration files |
+| **Automatic Restart**  | ❌ Manual restart needed    | ✅ Automatic on crash/reboot    |
+| **Process Monitoring** | ✅ Basic (check command)    | ✅ Advanced (web interface)     |
+| **Log Management**     | ✅ Basic (file rotation)    | ✅ Advanced (structured logs)   |
+| **Development Use**    | ✅ Perfect for dev/testing  | ⚠️ Overkill for development     |
+| **Production Use**     | ⚠️ Good for simple setups   | ✅ Recommended for production   |
+| **System Integration** | ❌ No systemd integration   | ✅ Full system service          |
+| **Memory Monitoring**  | ✅ Basic (--memory limit)   | ✅ Advanced monitoring          |
+
+**Recommendation:**
+
+- Use **Persistent Script** for development, testing, and simple production deployments
+- Use **Supervisor** for serious production environments with high availability requirements
+
+### Production Queue Management with Supervisor
+
+For production environments, use **Supervisor** to manage queue workers as background processes that run continuously without stopping.
+
+#### Installing Supervisor
+
+**Ubuntu/Debian:**
+
+```bash
+sudo apt-get update
+sudo apt-get install supervisor
+```
+
+#### Supervisor Configuration
+
+Create configuration files for queue workers:
+
+**1. Main Queue Worker (`/etc/supervisor/conf.d/spyhouse-queue-worker.conf`):**
+
+```ini
+[program:spyhouse-queue-worker]
+process_name=%(program_name)s_%(process_num)02d
+command=php /path/to/your/project/artisan queue:work rabbitmq --queue=default,collect-ads,push-house-ads,delayed,mail,website-downloads --tries=3 --timeout=300 --sleep=3
+directory=/path/to/your/project
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+user=www-data
+numprocs=2
+redirect_stderr=true
+stdout_logfile=/var/log/supervisor/spyhouse-queue-worker.log
+stdout_logfile_maxbytes=10MB
+stdout_logfile_backups=5
+stopwaitsecs=30
+```
+
+**2. High Priority Mail Queue (`/etc/supervisor/conf.d/spyhouse-mail-queue.conf`):**
+
+```ini
+[program:spyhouse-mail-queue]
+process_name=%(program_name)s_%(process_num)02d
+command=php /path/to/your/project/artisan queue:work rabbitmq --queue=mail --tries=3 --timeout=120 --sleep=1
+directory=/path/to/your/project
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+user=www-data
+numprocs=1
+redirect_stderr=true
+stdout_logfile=/var/log/supervisor/spyhouse-mail-queue.log
+stdout_logfile_maxbytes=10MB
+stdout_logfile_backups=5
+stopwaitsecs=30
+```
+
+**3. Ad Collection Queue (`/etc/supervisor/conf.d/spyhouse-ads-queue.conf`):**
+
+```ini
+[program:spyhouse-ads-queue]
+process_name=%(program_name)s_%(process_num)02d
+command=php /path/to/your/project/artisan queue:work rabbitmq --queue=collect-ads,push-house-ads --tries=5 --timeout=600 --sleep=5
+directory=/path/to/your/project
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+user=www-data
+numprocs=1
+redirect_stderr=true
+stdout_logfile=/var/log/supervisor/spyhouse-ads-queue.log
+stdout_logfile_maxbytes=10MB
+stdout_logfile_backups=5
+stopwaitsecs=30
+```
+
+#### Important Configuration Notes:
+
+- **NO `--max-jobs` parameter**: Workers will run indefinitely without stopping
+- **`autostart=true`**: Workers start automatically when supervisor starts
+- **`autorestart=true`**: Workers restart automatically if they crash
+- **`numprocs`**: Number of worker processes to run (adjust based on your server capacity)
+- **`user=www-data`**: Run workers under web server user (adjust if different)
+- **`timeout`**: Longer timeouts for heavy processing queues (ads collection)
+- **Path replacement**: Replace `/path/to/your/project` with your actual project path
+
+#### Supervisor Management Commands:
+
+```bash
+# Reload supervisor configuration
+sudo supervisorctl reread
+sudo supervisorctl update
+
+# Start all queue workers
+sudo supervisorctl start spyhouse-queue-worker:*
+sudo supervisorctl start spyhouse-mail-queue:*
+sudo supervisorctl start spyhouse-ads-queue:*
+
+# Stop all queue workers
+sudo supervisorctl stop spyhouse-queue-worker:*
+sudo supervisorctl stop spyhouse-mail-queue:*
+sudo supervisorctl stop spyhouse-ads-queue:*
+
+# Restart all queue workers
+sudo supervisorctl restart spyhouse-queue-worker:*
+sudo supervisorctl restart spyhouse-mail-queue:*
+sudo supervisorctl restart spyhouse-ads-queue:*
+
+# Check status of all workers
+sudo supervisorctl status
+
+# View real-time logs
+sudo supervisorctl tail -f spyhouse-queue-worker stdout
+sudo supervisorctl tail -f spyhouse-mail-queue stdout
+sudo supervisorctl tail -f spyhouse-ads-queue stdout
+```
+
+#### Monitoring and Logs:
+
+- **Log files**: Located in `/var/log/supervisor/`
+- **Log rotation**: Automatic (10MB max, 5 backups)
+- **Real-time monitoring**: Use `supervisorctl status` and `tail` commands
+
+#### Supervisor Service Management:
+
+```bash
+# Enable supervisor to start on boot
+sudo systemctl enable supervisor
+
+# Start supervisor service
+sudo systemctl start supervisor
+
+# Check supervisor service status
+sudo systemctl status supervisor
+
+# Restart supervisor service
+sudo systemctl restart supervisor
+```
+
+#### Best Practices for Production:
+
+1. **Monitor Memory Usage**: Queue workers can accumulate memory over time
+2. **Regular Restarts**: Consider periodic restarts via cron (optional)
+3. **Log Monitoring**: Set up log rotation and monitoring alerts
+4. **Resource Allocation**: Adjust `numprocs` based on server capacity
+5. **Queue Separation**: Use dedicated workers for different queue types
+
+#### Optional: Memory Management
+
+If workers accumulate too much memory, add periodic restarts via cron:
+
+```bash
+# Add to crontab (sudo crontab -e)
+# Restart queue workers every 6 hours to prevent memory leaks
+0 */6 * * * /usr/bin/supervisorctl restart spyhouse-queue-worker:* spyhouse-mail-queue:* spyhouse-ads-queue:*
+```
+
 ## Advertisement Networks Synchronization
 
 The application includes a system for synchronizing advertisement networks from external FeedHouse API. This system detects new networks and logs them for administrator review.
