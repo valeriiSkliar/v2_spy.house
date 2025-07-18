@@ -2,13 +2,8 @@
     <div class="rate-current">
         <div class="rate-current__title">{{ $currentTariff['name'] }}</div>
         @php
-        $statusKey = match($currentTariff['status']) {
-        'Активная' => 'active',
-        'Неактивная' => 'inactive',
-        'Истекла' => 'expired',
-        default => 'inactive'
-        };
-        $isActive = $currentTariff['status'] === 'Активная';
+        $isActive = $currentTariff['is_active'];
+        $statusKey = $isActive ? 'active' : 'inactive';
         @endphp
         @if($isActive)
         <div class="rate-current__status">{{ __('tariffs.current_tariff.status.' . $statusKey) }}</div>
