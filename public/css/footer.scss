@@ -1,0 +1,172 @@
+footer {
+  padding: 35px 0 35px 0;
+  background: #38364B;
+  .footerBlock {
+    @include flexbox();
+    @include justify-content(space-between);
+    .leftside {
+      .bottomLogo {
+        display: block;
+        width: 229px;
+        height: 71px;
+        background: url("../images/mainpage/footerLogo.svg") left top no-repeat;
+        background-size: contain;
+        margin-bottom: 24px;
+      }
+
+      .copyrights {
+        font-weight: 300;
+        font-size: 13px;
+        color: #888696;
+        margin-bottom: 10px;
+      }
+
+      .bottomMenuBl {
+        ul {
+          @include flexbox();
+          @include align-items(center);
+
+          li {
+            list-style: none;
+            margin-right: 20px;
+            &:last-child {
+              margin-right: 0;
+            }
+            a {
+              display: block;
+              font-weight: 300;
+              font-size: 13px;
+              text-decoration-line: underline;
+              color: #B7B5C9;
+              -webkit-transition: all .3s;
+              -moz-transition: all .3s;
+              -ms-transition: all .3s;
+              -o-transition: all .3s;
+              transition: all .3s;
+              &:hover, &:active, &:focus {
+                text-decoration: none;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .rightside {
+      margin-right: 200px;
+      margin-top: 70px;
+      .contactsBlock {
+        .tgBlock {
+          margin-right: 55px;
+        }
+        @include flexbox();
+
+        .textBl {
+          @include flexbox();
+          @include align-items(center);
+          .text {
+            font-size: 14px;
+            color: #949AAA;
+
+          }
+          .icon {
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: left top;
+            margin-right: 5px;
+            &.tgIcon {
+              background-image: url("../images/mainpage/tgIcon.svg");
+              width: 20px;
+              min-width: 20px;
+              height: 17px;
+            }
+            &.emailIcon {
+              background-image: url("../images/mainpage/envelopeIcon.svg");
+              width: 20px;
+              min-width: 20px;
+              height: 16px;
+            }
+          }
+        }
+        .valBl, .valBl a{
+          font-weight: 600;
+          font-size: 20px;
+          color: #BBB9CE;
+          -webkit-transition: all .3s;
+          -moz-transition: all .3s;
+          -ms-transition: all .3s;
+          -o-transition: all .3s;
+          transition: all .3s;
+          &:hover,&:active,&:focus {
+            opacity: .7;
+          }
+        }
+      }
+
+    }
+  }
+}
+@media (max-width: 1100px) {
+  footer .footerBlock .rightside {
+    margin-right: 50px;
+  }
+}
+@media (max-width: 900px) {
+  footer .footerBlock .rightside {
+    margin-right: 0;
+  }
+}
+@media (max-width: 767.33px) {
+  footer .footerBlock {
+    @include flex-direction(column-reverse);
+    @include align-items(center);
+    position: relative;
+  }
+  footer .footerBlock .leftside .bottomLogo {
+    margin: 0 auto;
+    position: relative;
+    top: -160px;
+  }
+  footer .footerBlock .rightside .contactsBlock {
+    margin-top: 40px;
+  }
+
+  footer .footerBlock .leftside .bottomMenuBl ul {
+    display: block;
+  }
+  footer .footerBlock .leftside .bottomMenuBl ul li {
+    text-align: center;
+    margin-bottom: 10px;
+    position: relative;
+    top: -30px;
+    margin-right: 0;
+  }
+  footer .footerBlock .leftside .copyrights {
+    position: absolute;
+    bottom: -20px;
+  }
+  footer .footerBlock .rightside .contactsBlock .textBl {
+    @include justify-content(center)
+  }
+  footer .footerBlock .rightside .contactsBlock .valBl, footer .footerBlock .rightside .contactsBlock .valBl a {
+    text-align: center;
+  }
+}
+
+@media (max-width: 560px) {
+  footer .footerBlock .rightside .contactsBlock {
+    @include flex-direction(column);
+  }
+  footer .footerBlock .rightside .contactsBlock .tgBlock {
+    margin-right: 0;
+    margin-bottom: 20px;
+  }
+  footer .footerBlock .leftside .bottomLogo {
+    top: -230px;
+  }
+}
+
+footer.innerFooter {
+  padding-left: 20px;
+  padding-right: 20px;
+}
