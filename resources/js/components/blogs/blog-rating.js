@@ -100,5 +100,9 @@ export function initRating(ratingContainersElement = null) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+  const blogLayout = document.querySelector('.blog-layout');
+  if (!blogLayout) {
+    return;
+  }
   initRating();
 });

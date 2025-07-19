@@ -251,7 +251,7 @@ const checkDependencies = async () => {
   console.log('jQuery available:', typeof $ !== 'undefined');
   console.log('jQuery version:', typeof $ !== 'undefined' ? $.fn.jquery : 'N/A');
   console.log('Slick available:', typeof $ !== 'undefined' && typeof $.fn.slick !== 'undefined');
-  
+
   if (typeof $ === 'undefined') {
     console.error('jQuery is required for carousels');
     return false;
@@ -263,7 +263,7 @@ const checkDependencies = async () => {
     try {
       await import('slick-carousel');
       console.log('Slick loaded dynamically');
-      
+
       // Проверим еще раз
       if (typeof $.fn.slick === 'undefined') {
         console.error('Slick carousel plugin is required');
@@ -283,6 +283,10 @@ const checkDependencies = async () => {
  * Зачем: безопасная инициализация при готовности DOM
  */
 const initCarouselsWhenReady = async () => {
+  const blogLayout = document.querySelector('.blog-layout');
+  if (!blogLayout) {
+    return;
+  }
   const dependenciesOk = await checkDependencies();
   if (!dependenciesOk) {
     return;
