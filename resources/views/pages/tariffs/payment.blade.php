@@ -1,4 +1,4 @@
-@extends('layouts.main')
+@extends('layouts.main-app')
 
 @section('page-content')
 <x-tariffs.payment-header />
@@ -8,3 +8,7 @@
     <x-tariffs.payment-form :tariff="$tariff" :billingType="$billingType" :isRenewal="$isRenewal" />
 </div>
 @endsection
+
+@push('scripts')
+@vite(['resources/js/tariffs-payments.js', 'resources/js/tariffs.js'])
+@endpush
