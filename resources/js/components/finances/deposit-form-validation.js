@@ -12,10 +12,13 @@ class DepositFormValidator {
     this.container = document.getElementById('deposit-form-container');
     this.loader = null;
     this.isValidating = false;
+    this.currencySymbol = null; // Добавляем ссылку на символ валюты
 
     if (this.form) {
       // Помечаем форму как использующую новый валидатор
       this.form.setAttribute('data-has-new-validator', 'true');
+      // Находим и сохраняем ссылку на символ валюты
+      this.currencySymbol = this.form.querySelector('.form-price__currency');
       this.init();
     } else {
       console.warn('DepositFormValidator: Форма депозита не найдена');
@@ -261,6 +264,9 @@ class DepositFormValidator {
       field.classList.remove('error');
     });
 
+    // Скрываем символ валюты при наличии ошибок
+    this.hideCurrencySymbol();
+
     // Добавляем класс error к полям с ошибками
     Object.keys(errors).forEach(fieldName => {
       const field = this.form.querySelector(`[name="${fieldName}"]`);
@@ -272,6 +278,7 @@ class DepositFormValidator {
           field.classList.remove('error');
           field.removeEventListener('input', removeError);
           field.removeEventListener('change', removeError);
+          this.showCurrencySymbol();
         };
 
         field.addEventListener('input', removeError);
@@ -301,6 +308,24 @@ class DepositFormValidator {
 
     this.form.removeEventListener('submit', this.handleSubmit.bind(this));
     this.form.submit();
+  }
+
+  /**
+   * Скрывает символ валюты
+   */
+  hideCurrencySymbol() {
+    if (this.currencySymbol) {
+      this.currencySymbol.style.display = 'none';
+    }
+  }
+
+  /**
+   * Показывает символ валюты
+   */
+  showCurrencySymbol() {
+    if (this.currencySymbol) {
+      this.currencySymbol.style.display = 'block';
+    }
   }
 }
 
