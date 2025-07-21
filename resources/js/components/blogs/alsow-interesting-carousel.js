@@ -151,27 +151,25 @@ class AlsowInterestingCarousel extends CarouselManager {
 class ReadOftenCarousel extends CarouselManager {
   constructor() {
     super('#read-often-articles-carousel-container', {
-      vertical: true,
-      slidesToShow: 4,
-      slidesToScroll: 1,
-      verticalSwiping: true,
+      // vertical: true,
+      slidesToShow: 1,
+      rows: 2,
+      slidesToScroll: 2,
       prevArrow: '#read-often-articles-carousel-prev',
       nextArrow: '#read-often-articles-carousel-next',
       responsive: [
         {
           breakpoint: 1024,
           settings: {
-            slidesToShow: 3,
-            slidesToScroll: 1,
+            slidesToShow: 1,
+            slidesToScroll: 2,
           },
         },
         {
           breakpoint: 768,
           settings: {
-            vertical: false,
-            verticalSwiping: false,
             slidesToShow: 1,
-            slidesToScroll: 1,
+            slidesToScroll: 2,
           },
         },
       ],
