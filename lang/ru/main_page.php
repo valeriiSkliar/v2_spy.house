@@ -65,6 +65,27 @@ return [
         'button_year' => 'За год',
         'button_year_discount' => 'For a year :discount%',
     ],
+    'modals' => [
+        'contact' => [
+            'title' => 'Контакты',
+            'description' => 'Если у вас есть вопросы, вы можете написать любому из наших менеджеров',
+            'manager_maksim' => 'Максим',
+            'telegram_chat' => 'Telegram чат',
+            'form_title' => 'Или используйте форму ниже',
+            'form_description' => 'Если у вас есть предложения или пожелания, пожалуйста, напишите нам.',
+            'name_placeholder' => 'Имя',
+            'email_placeholder' => 'G-mail',
+            'message_placeholder' => 'Сообщение',
+            'send_button' => 'Отправить',
+        ],
+        'review' => [
+            'title' => 'Оставьте ваш отзыв',
+            'review_placeholder' => 'Текст отзыва',
+            'rating_title' => 'Как вам наш сервис?',
+            'rating_description' => 'Оцените от 1 до 5 звёзд — ваше мнение важно для нас!',
+            'send_button' => 'Отправить',
+        ],
+    ],
 
     'features' => 'Возможности',
     'prices' => 'Цены',
