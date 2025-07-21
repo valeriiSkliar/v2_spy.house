@@ -27,7 +27,12 @@ use Illuminate\Support\Facades\Auth;
     <link rel="stylesheet" href="{{ asset('css-from-dev/DatePicker-D52j4JiE.css') }}">
     <link rel="stylesheet" href="{{ asset('css-new/aos-plugin.css') }}">
     <link rel="stylesheet" href="{{ asset('css-new/style.css') }}">
-
+    <style>
+        html,
+        boby {
+            scroll-behavior: smooth;
+        }
+    </style>
 </head>
 
 <body {{ Request::is('/') ? 'data-aos-easing="ease" data-aos-duration="1000" data-aos-delay="0"' : '' }}>
