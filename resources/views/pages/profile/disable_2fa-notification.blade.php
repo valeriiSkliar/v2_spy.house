@@ -26,7 +26,7 @@
         </div>
 
         <div id="form-section" style="display: none;">
-            <!-- Форма будет загружена асинхронно -->
+            <!-- The form will be loaded asynchronously -->
         </div>
         {{--
     </div> --}}

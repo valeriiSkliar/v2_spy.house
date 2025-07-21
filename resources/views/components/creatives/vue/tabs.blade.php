@@ -14,7 +14,7 @@ $tabsData = App\Helpers\get_tabs_data();
     }'>
     <div class="tabs-placeholder" data-vue-placeholder>
         <div class="filter-push">
-            <!-- Placeholder для вкладок в фиксированном порядке -->
+            <!-- Placeholder for tabs in a fixed order -->
             @foreach($TABS_ORDER as $tabValue)
             @php
             $isActive = ($tabOptions['activeTab'] ?? 'push') === $tabValue;

@@ -4,7 +4,7 @@
 <h1 class="mb-25">{{ __('profile.2fa.setup_title') }}</h1>
 
 <div class="section profile-settings mb-20">
-    <!-- Сообщения о статусе -->
+    <!-- Status messages -->
     @if (session('status') == '2fa-enabled')
     <div class="message _bg _with-border font-weight-500">
         <span class="icon-warning font-18"></span>
@@ -22,7 +22,7 @@
     </div>
     @endif
 
-    <!-- Основной контент -->
+    <!-- Main content -->
     @if ($user->google_2fa_enabled)
     <p>{{ __('profile.2fa.current_status_enabled') }}</p>
     <form method="POST" action="{{ route('profile.disable-2fa') }}">
@@ -47,7 +47,7 @@
             <div class="step-2fa__content">
                 <p class="mb-30">{{ __('profile.2fa.scan_qr_instructions') }}</p>
                 <div class="row _offset20 pt-2 align-items-center">
-                    <!-- QR-код -->
+                    <!-- QR code -->
                     <div class="col-12 col-md-6 col-lg-4">
                         <div class="mb-30">
                             <div class="step-2fa__qr">
@@ -55,7 +55,7 @@
                             </div>
                         </div>
                     </div>
-                    <!-- Токен аккаунта -->
+                    <!-- Account token -->
                     <div class="col-12 col-md-6 col-lg-4">
                         <div class="mb-30">
                             <div class="step-2fa__key">
@@ -75,7 +75,7 @@
                     </div>
                 </div>
 
-                <!-- Форма подтверждения -->
+                <!-- Confirmation form -->
                 <form method="POST" action="{{ route('profile.store-2fa') }}">
                     @csrf
                     {{-- <div class="row _offset20 pt-2">
@@ -101,7 +101,7 @@
                         </div>
                     </div> --}}
 
-                    <!-- Поле для OTP -->
+                    <!-- OTP field -->
                     {{-- <div class="form-item mb-30">
                         <label class="d-block mb-10" for="one_time_password">
                             {{ __('profile.2fa.otp_label') }}
@@ -119,7 +119,7 @@
                         @enderror
                     </div> --}}
 
-                    <!-- Кнопка подтверждения -->
+                    <!-- Confirmation button -->
                     <div class="mb-20">
                         <button type="submit" class="btn _flex _green _big min-200 w-mob-100">
                             {{ __('profile.2fa.enable_button') }}
