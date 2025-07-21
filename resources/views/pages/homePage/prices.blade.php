@@ -82,7 +82,7 @@
             </div>
             @endforeach
             @else
-            {{-- Fallback если подписки не загружены --}}
+            {{-- Fallback if subscriptions are not loaded --}}
             <div class="prices-list__item">
                 <div class="price-item">
                     <div class="price-item__tariff _starter">{{ __('tariffs.start') }}</div>

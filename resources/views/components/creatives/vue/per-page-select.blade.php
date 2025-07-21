@@ -7,13 +7,13 @@
 'activePerPage' => 12,
 ])
 
-{{-- Vue островок для выбора количества элементов на странице --}}
+{{-- Vue island for selecting the number of items per page --}}
 <div data-vue-component="PerPageSelect" data-vue-props="{{ json_encode([
         'options' => $options,
         'translations' => $translations,
         'initialPerPage' => $activePerPage
     ]) }}" class="vue-per-page-select-container">
-    {{-- Placeholder пока Vue компонент не загрузился --}}
+    {{-- Placeholder until Vue component is loaded --}}
     <div data-vue-placeholder class="base-select-icon">
         <div class="base-select">
             <div class="base-select__trigger">

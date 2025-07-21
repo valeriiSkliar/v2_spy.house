@@ -17,7 +17,7 @@
     <div class="rate-item-body">
         <div class="rate-item-body__desc">
             <p><strong>{{ $tariff->search_request_count }}</strong> {{ __('tariffs.search_requests') }}</p>
-            {{-- <p><strong>{{ $tariff->api_request_count }}</strong> запросов API</p> --}}
+            {{-- <p><strong>{{ $tariff->api_request_count }}</strong> API requests</p> --}}
         </div>
         @for($i = 0; $i < 7; $i++) <div class="rate-item-body__row"><span class="icon-check"></span>
     </div>

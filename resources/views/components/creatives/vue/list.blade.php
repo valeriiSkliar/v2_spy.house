@@ -28,7 +28,7 @@
         </div>
         @endfor
 
-        {{-- Компонент деталей креатива (Vue Island) --}}
+        {{-- Creative details component (Vue Island) --}}
         <x-creatives.vue.creative-details :showSimilarCreatives="$showSimilarCreatives"
             :translations="$detailsTranslations ?? []" />
     </div>

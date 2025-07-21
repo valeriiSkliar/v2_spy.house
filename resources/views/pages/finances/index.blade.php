@@ -17,12 +17,12 @@
 @if (isset($transactions) && $transactions->isNotEmpty())
 <h2>{{ __('finances.deposit_history_title') }}</h2>
 
-{{-- Контейнер для AJAX контента --}}
+{{-- AJAX content container --}}
 <div id="transactions-container" data-transactions-ajax-url="{{ route('api.finances.list') }}">
     <x-finances.transactions-list :transactions="$transactions" />
 </div>
 
-{{-- Контейнер для пагинации --}}
+{{-- Pagination container --}}
 <div id="transactions-pagination-container" data-pagination-container>
     @if ($transactions->hasPages())
     {{ $transactions->links() }}

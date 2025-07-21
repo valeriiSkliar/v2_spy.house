@@ -5,14 +5,14 @@
 'showLoader' => true
 ])
 
-{{-- Vue островок для интерактивного счетчика избранного --}}
+{{-- Vue island for interactive favorites counter --}}
 <div data-vue-component="FavoritesCounter" data-vue-props="{{ json_encode([
         'initialCount' => $initialCount,
         'translations' => $translations,
         'enableAnimation' => $enableAnimation,
         'showLoader' => $showLoader
     ]) }}" class="vue-favorites-counter-container">
-    {{-- Placeholder пока Vue компонент не загрузился --}}
+    {{-- Placeholder until Vue component is loaded --}}
     <span data-vue-placeholder class="btn__count favorites-counter-placeholder" style="opacity: 0.7;">
         {{ $initialCount }}
     </span>

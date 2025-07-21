@@ -1,4 +1,4 @@
-{{-- Уведомления о типе операции --}}
+{{-- Notifications about operation type --}}
 {{-- @if($isRenewal ?? false) --}}
 {{-- <div class="alert alert-info mb-15">
     <div class="d-flex align-items-center">

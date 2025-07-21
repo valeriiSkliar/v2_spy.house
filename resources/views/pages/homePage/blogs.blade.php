@@ -62,7 +62,7 @@
                 </div>
                 @endforeach
                 @else
-                {{-- Fallback если статьи не загружены --}}
+                {{-- Fallback if articles are not loaded --}}
                 <div class="article">
                     <a href="{{ route('blog.index') }}" class="article__thumb thumb">
                         <img src="https://via.placeholder.com/400x250?text=Blog+Post" alt="Blog Post">

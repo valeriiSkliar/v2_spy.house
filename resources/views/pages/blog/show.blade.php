@@ -70,12 +70,12 @@
         </div>
         @endguest
 
-        {{-- AJAX контейнер для списка комментариев --}}
+        {{-- AJAX container for comment list --}}
         <div id="comments-list-container">
             <x-blog.comment-list-with-reply-form :comments="$comments" :article="$article" />
         </div>
 
-        {{-- AJAX контейнер для пагинации --}}
+        {{-- AJAX container for pagination --}}
         <div id="comments-pagination-container" data-pagination-container>
             @if($comments->hasPages())
             {{ $comments->links('components.blog.comment.async-pagination', ['paginator' => $comments]) }}

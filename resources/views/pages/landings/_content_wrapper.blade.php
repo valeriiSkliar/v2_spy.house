@@ -14,12 +14,12 @@
 
     @if ($landings->hasPages())
     <div class="pagination-controls mt-4"
-         data-pagination-container {{-- Маркер для JS --}}
-         data-target-selector="#landings-content-wrapper" {{-- Что обновлять --}}
-         data-ajax-url="{{ route('landings.list.ajax') }}" {{-- Куда делать запрос --}}
-         data-filter-form-selector="#landings-sort-form" {{-- Откуда брать фильтры --}}
+         data-pagination-container {{-- JS marker --}}
+         data-target-selector="#landings-content-wrapper" {{-- What to update --}}
+         data-ajax-url="{{ route('landings.list.ajax') }}" {{-- Where to send the request --}}
+         data-filter-form-selector="#landings-sort-form" {{-- Where to get filters from --}}
     >
-        {{-- Используем новый шаблон 'components.custom-pagination' --}}
+        {{-- Using the new 'components.custom-pagination' template --}}
         {{ $landings->appends(request()->except('page'))->links('common.pagination.spy-pagination-default') }}
     </div>
     @endif

@@ -23,7 +23,7 @@ $vueProps = [
 @endphp
 
 <div data-vue-component="SearchCountComponent" data-vue-props="{{ json_encode($vueProps) }}">
-    {{-- Placeholder для SSR --}}
+    {{-- Placeholder for SSR --}}
     <div data-vue-placeholder class="mb-20">
         <div class="search-count">
             <span>{{ $initialCount }}</span>
