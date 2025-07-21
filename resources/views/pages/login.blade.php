@@ -12,7 +12,7 @@
     <div class="form-item mb-3">
         <input type="email" name="email" class="input-h-57 @error('email') error @enderror"
             placeholder="{{ __('auth.email') }}" value="{{ old('email') }}" readonly autocomplete="off"
-            onfocus="this.removeAttribute('readonly');" autofocus>
+            onfocus="this.removeAttribute('readonly');">
         {{-- @error('email')
         <span class="invalid-feedback" role="alert">
             <strong>{{ $message }}</strong>
