@@ -1,4 +1,4 @@
-@extends('layouts.main')
+@extends('layouts.main-app')
 
 @section('page-content')
 <span style="display: none;" id="landings-page-content"></span>

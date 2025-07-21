@@ -12,7 +12,7 @@ export default defineConfig({
         //     // Затем JS файлы
         'resources/js/app.js',
         'resources/js/finances.js',
-        //     'resources/js/landings.js',
+        'resources/js/landings.js',
         'resources/js/services.js',
         'resources/js/pages/profile.js',
         'resources/js/pages/profile/disable-2fa.js',
