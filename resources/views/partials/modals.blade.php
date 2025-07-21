@@ -1,4 +1,3 @@
-
 <div class="modal fade modal-contacts" id="modal-contacts" style="z-index: 10005;">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -44,7 +43,7 @@
                     </div>
                     <div class="col-12 mb-15">
                         <textarea placeholder="Message"></textarea>
-                    </div>                
+                    </div>
                     <div class="col-12 mb-15">
                         <button type="submit" class="btn _flex _green _medium min-120 w-mob-100">Send</button>
                     </div>
@@ -80,7 +79,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>                
+                    </div>
                     <div class="col-12 mb-15">
                         <button type="submit" class="btn _flex _green min-120 w-mob-100">Send</button>
                     </div>
@@ -89,3 +88,8 @@
         </div>
     </div>
 </div>
+
+{{-- Push modal to global stack --}}
+@if(auth()->check() && isset($currentTariff))
+<x-modals.subscribtion-activated :currentTariff="$currentTariff" />
+@endif

@@ -24,14 +24,14 @@
         @endphp
 
 
-        @if($user->isTrialPeriod())
+        @if(Auth::check() && $user->isTrialPeriod())
         <div class="header__tariff">
             <x-tariff-link :type="'trial'" data-toggle="modal" data-target="#modal-current-subscription"
                 style="cursor: pointer;">
                 {{ __('tariffs.trial') }}
             </x-tariff-link>
         </div>
-        @elseif($user->email_verified_at)
+        @elseif(Auth::check() && $user->email_verified_at)
         {{-- Current Subscription --}}
         <div class="header__tariff">
             <x-tariff-link :type="$currentTariff['css_class']" data-toggle="modal"
@@ -53,9 +53,12 @@
 
         @else
         {{-- Guest User --}}
+
+        @if(Auth::check())
         <div class="header__tariff">
             <x-tariff-link>{{ __('tariffs.free') }}</x-tariff-link>
         </div>
+        @endif
         @endauth
 
         <div class="header__lang">
