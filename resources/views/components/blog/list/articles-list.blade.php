@@ -10,7 +10,7 @@
 
     <x-slot name="info">
         <div class="article-info">
-            <div class="article-info__item icon-date">{{ $heroArticle->created_at->format('d.m.y') }}</div>
+            <div class="article-info__item icon-date">{{ $heroArticle->created_at->format('d.m.y / H:i') }}</div>
             <a href="{{ route('blog.show', $heroArticle->slug) }}#comments" class="article-info__item icon-comment1">
                 {{ $heroArticle->comments->count() }}
             </a>
@@ -55,7 +55,7 @@
 
     <x-slot name="info">
         <div class="article-info">
-            <div class="article-info__item icon-date">{{ $article->created_at->format('d.m.y') }}</div>
+            <div class="article-info__item icon-date">{{ $article->created_at->format('d.m.y / H:i') }}</div>
             <a href="{{ route('blog.show', $article->slug) }}#comments" class="article-info__item icon-comment1">
                 {{ $article->comments->count() }}
             </a>

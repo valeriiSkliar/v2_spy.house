@@ -28,7 +28,8 @@
                     </a>
                     <div class="article__info">
                         <div class="article-info">
-                            <div class="article-info__item icon-date">{{ $post->created_at->format('d.m.y') }}</div>
+                            <div class="article-info__item icon-date">{{ $post->created_at->format('d.m.y / H:i') }}
+                            </div>
                             <a href="{{ route('blog.show', $post->slug) }}#comments"
                                 class="article-info__item icon-comment1">{{ $post->comments_count }}</a>
                             <div class="article-info__item icon-view">{{ number_format($post->views_count) }}</div>
@@ -68,7 +69,7 @@
                     </a>
                     <div class="article__info">
                         <div class="article-info">
-                            <div class="article-info__item icon-date">{{ date('d.m.y') }}</div>
+                            <div class="article-info__item icon-date">{{ date('d.m.y / H:i') }}</div>
                             <a href="#" class="article-info__item icon-comment1">0</a>
                             <div class="article-info__item icon-view">0</div>
                             <div class="article-info__item icon-rating">5.0</div>
