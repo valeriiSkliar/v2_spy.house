@@ -47,5 +47,15 @@ return [
     'messages' => [
         'deposit_success' => 'Deposit request sent successfully',
         'deposit_error' => 'Error creating deposit',
+        'amount' => [
+            'required' => 'Deposit amount is required',
+            'numeric' => 'Amount must be a number',
+            'min' => 'Minimum deposit amount: :min',
+            'max' => 'Maximum deposit amount: :max',
+        ],
+        'payment_method' => [
+            'required' => 'Please select a payment method',
+            'in' => 'Invalid payment method',
+        ],
     ],
 ];
