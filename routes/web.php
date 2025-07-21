@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\ModalController;
 use App\Http\Controllers\LanguageController;
@@ -18,6 +19,9 @@ Route::get('/terms', function () {
 })->name('terms');
 
 Route::get('/modal/{tab}', [ModalController::class, 'loadModal'])->name('modal.load');
+
+// Contact form routes
+Route::post('/contact', [ContactController::class, 'send'])->name('contact.send');
 
 Route::get('/api', [ApiController::class, 'index'])->name('api.index');
 

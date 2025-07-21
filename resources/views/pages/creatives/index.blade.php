@@ -1,9 +1,9 @@
-@extends('layouts.main')
+@extends('layouts.main-app')
 
 @section('page-content')
 <div>
     <h1>{{ __('creatives.title') }}</h1>
-    {{-- Пример использования Vue 3 островков в Blade шаблонах --}}
+    {{-- Example of using Vue 3 islands in Blade templates --}}
 
     <div class="row align-items-center">
         <div class="col-12 col-md-auto mb-20 flex-grow-1">
@@ -22,7 +22,7 @@
                     </a>
                 </div>
                 <div class="col-12 col-md-auto mb-15">
-                    {{-- Компонент выбора количества креативов на странице --}}
+                    {{-- Component for selecting the number of creatives per page --}}
                     <x-creatives.vue.per-page-select :options="$perPage['perPageOptions']"
                         :activePerPage="$perPage['activePerPage']" :translations="[
                             'onPage' => $listTranslations['onPage'] ?? 'На странице',
@@ -34,16 +34,16 @@
     </div>
     {{-- @dd($selectOptions) --}}
 
-    {{-- DEBUG: Проверим что передается в filtersTranslations --}}
+    {{-- DEBUG: Check what is passed to filtersTranslations --}}
     {{-- @dump($filtersTranslations) --}}
 
     <x-creatives.vue.filters :filters="$filters" :selectOptions="$selectOptions"
         :filtersTranslations="$filtersTranslations" :tabOptions="$tabOptions" />
 
-    {{-- Search count component - Vue островок --}}
+    {{-- Search count component - Vue Island --}}
     <x-creatives.vue.search-count :initialCount="$searchCount" />
 
-    {{-- Компонент списка креативов с новой системой композаблов --}}
+    {{-- Creatives list component with new composables system --}}
 
     <x-creatives.vue.list :listTranslations="$listTranslations" :perPage="12" :activeTab="$activeTab"
         :detailsTranslations="$allTranslations ?? []"
@@ -51,14 +51,14 @@
         :userData="$userData" />
 
 
-    {{-- Компонент пагинации --}}
+    {{-- Pagination component --}}
     <x-creatives.vue.pagination :translations="$listTranslations" :showInfo="false" :maxVisiblePages="5"
         :alwaysShowFirstLast="true" />
 
 </div>
 
 
-{{-- Подключение скрипта Vue островков --}}
+{{-- Vue islands script connection --}}
 @vite(['resources/js/vue-islands.ts'])
 
 {{--

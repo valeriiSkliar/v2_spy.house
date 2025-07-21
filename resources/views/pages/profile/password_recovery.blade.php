@@ -1,4 +1,4 @@
-@extends('layouts.auth')
+@extends('layouts.body')
 
 @section('form-content')
 <form method="POST" action="{{ route('password.email') }}" id="forgot-password-form">
@@ -25,6 +25,6 @@
 </form>
 @endsection
 
-@push('page-scripts')
+@push('scripts')
 @vite('resources/js/pages/forgot-password.js')
 @endpush

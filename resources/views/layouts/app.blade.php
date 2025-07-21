@@ -16,13 +16,8 @@ use Illuminate\Support\Facades\Auth;
     @endif
     @endif
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>{{ config('app.name', 'spy.house') }}</title>
 
-    <!-- Scripts -->
-    @vite(['resources/js/app.js', 'resources/scss/app.scss'])
-
-    <!-- Frontend Translations -->
-    <x-frontend-translations />
 </head>
 
 <body class="">

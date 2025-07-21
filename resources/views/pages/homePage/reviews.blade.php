@@ -41,7 +41,7 @@
                 </div>
             </div>
             @empty
-            {{-- Fallback для случая, когда нет отзывов в БД --}}
+            {{-- Fallback for when there are no reviews in the DB --}}
             <div class="review">
                 <div class="review__head">
                     <div class="review__avatar thumb">

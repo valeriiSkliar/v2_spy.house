@@ -1,4 +1,4 @@
-@extends('layouts.authorized')
+@extends('layouts.main-app')
 
 @section('page-content')
 <x-services.show.back-to-list-button :route="'services.index'" :text="__('services.buttons.back_to_list')" />

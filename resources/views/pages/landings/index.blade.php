@@ -1,4 +1,4 @@
-@extends('layouts.main')
+@extends('layouts.main-app')
 
 @section('page-content')
 <span style="display: none;" id="landings-page-content"></span>
@@ -21,5 +21,13 @@
 @endsection
 
 @push('scripts')
+<script>
+    window.routes = {
+    landingsAjaxList: '{{ route("landings.list.ajax") }}',
+    landingsAjaxStore: '{{ route("landings.store.ajax") }}',
+    landingsAjaxDestroyBase: '{{ route("landings.destroy.ajax", ["landing" => ":id"]) }}',
+};
+</script>
+@vite(['resources/js/landings.js'])
 @vite('resources/js/landings.js')
 @endpush

@@ -12,6 +12,6 @@
         'showSimilarCreatives' => $showSimilarCreatives,
         'translations' => $translations,
     ]) }}" class="vue-island-creative-details">
-    {{-- Placeholder не нужен, так как компонент скрыт по умолчанию через CSS --}}
-    {{-- Компонент отображается только когда store.isDetailsVisible = true --}}
+    {{-- Placeholder is not needed, as the component is hidden by default via CSS --}}
+    {{-- The component is displayed only when store.isDetailsVisible = true --}}
 </div>

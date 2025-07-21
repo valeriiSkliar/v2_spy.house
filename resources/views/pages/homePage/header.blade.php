@@ -15,10 +15,11 @@
                 .header__nav ul li a {
                     font-size: 16px;
                 }
-                .header__right a{
+
+                .header__right a {
                     font-size: 16px;
                 }
-                </style>
+            </style>
             <ul>
                 <li><a href="#features">{{ __('main_page.features') }}</a></li>
                 <li><a href="#prices">{{ __('main_page.prices') }}</a></li>
@@ -43,7 +44,7 @@
             @guest
 
             <div class="header__login-mobile">
-                <a href="#" class="btn-icon _dark"><span class="icon-login font-20"></span></a>
+                <a href="{{ route('login') }}" class="btn-icon _dark"><span class="icon-login font-20"></span></a>
             </div>
             @endguest
             @auth
@@ -56,14 +57,6 @@
                 </a>
             </div>
             @endauth
-            <!-- User Login
-            <div class="user-preview">
-                <a href="#" class="user-preview__trigger">
-                    <div class="user-preview__avatar thumb"><span>LV</span></div>
-                    <div class="user-preview__name">Lysenko V.</div>
-                </a>
-            </div>
-            -->
         </div>
     </div>
 </header>

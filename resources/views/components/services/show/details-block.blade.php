@@ -1,12 +1,12 @@
 @props(['service', 'isPromo' => false, 'userRating' => null])
 <div data-service-id="{{ $service['id'] }}" class="single-market">
     <div class="row _offset30">
-        <div class="col-12 col-md-6 col-lg-4">
+        <div class="col-12 col-md-auto">
             <div class="single-market__thumb">
                 <img src="{{ $service['logo'] }}" alt="{{ $service['name'] }}">
             </div>
         </div>
-        <div class="col-12 col-md-6 col-lg-4 w-1 flex-grow-1">
+        <div class="col-12 col-md-auto w-1 flex-grow-1">
             <div class="row align-items-center _offset30">
                 <div class="col-12 col-md-auto order-md-3">
                     <x-services.show.follow-button :service="$service" :route="'services.redirect'" :target="'_blank'"
@@ -24,7 +24,7 @@
         </div>
     </div>
     <div class="row align-items-end _offset30">
-        <div class="col-12 col-md-6 col-lg-4 pb-3">
+        <div class="col-12 col-md-auto col-lg-auto pb-3">
             <x-services.show.follow-button :service="$service" :route="'services.redirect'" :target="'_blank'"
                 :buttonText="__('services.buttons.follow')" />
         </div>

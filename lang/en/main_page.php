@@ -65,6 +65,27 @@ return [
         'button_year' => 'Per year',
         'button_year_discount' => 'For a year :discount%',
     ],
+    'modals' => [
+        'contact' => [
+            'title' => 'Contacts',
+            'description' => 'If you have any questions, you can write to any of our managers',
+            'manager_maksim' => 'Maksim',
+            'telegram_chat' => 'Telegram chat',
+            'form_title' => 'Or use the form below',
+            'form_description' => 'If you have any suggestions or wishes, please write to us.',
+            'name_placeholder' => 'Name',
+            'email_placeholder' => 'G-mail',
+            'message_placeholder' => 'Message',
+            'send_button' => 'Send',
+        ],
+        'review' => [
+            'title' => 'Leave your review',
+            'review_placeholder' => 'Review text',
+            'rating_title' => 'How do you like our service?',
+            'rating_description' => 'Rate from 1 to 5 stars — your opinion matters to us!',
+            'send_button' => 'Send',
+        ],
+    ],
 
     'features' => 'Features',
     'prices' => 'Prices',

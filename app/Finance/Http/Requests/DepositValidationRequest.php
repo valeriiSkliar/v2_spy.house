@@ -42,12 +42,12 @@ class DepositValidationRequest extends BaseRequest
     public function messages(): array
     {
         return [
-            'amount.required' => 'Сумма пополнения обязательна',
-            'amount.numeric' => 'Сумма должна быть числом',
-            'amount.min' => 'Минимальная сумма пополнения: $50',
-            'amount.max' => 'Максимальная сумма пополнения: $1,000',
-            'payment_method.required' => 'Выберите способ оплаты',
-            'payment_method.in' => 'Некорректный способ оплаты',
+            'amount.required' => __('finances.messages.amount.required'),
+            'amount.numeric' => __('finances.messages.amount.numeric'),
+            'amount.min' => __('finances.messages.amount.min', ['min' => 50]),
+            'amount.max' => __('finances.messages.amount.max', ['max' => 5000]),
+            'payment_method.required' => __('finances.messages.payment_method.required'),
+            'payment_method.in' => __('finances.messages.payment_method.in'),
         ];
     }
 

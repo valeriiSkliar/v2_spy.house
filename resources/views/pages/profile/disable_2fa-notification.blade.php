@@ -1,4 +1,4 @@
-@extends('layouts.main')
+@extends('layouts.main-app')
 
 @section('page-content')
 <h1 class="mb-25">{{ __('profile.2fa.setup_title') }}</h1>
@@ -26,7 +26,7 @@
         </div>
 
         <div id="form-section" style="display: none;">
-            <!-- Форма будет загружена асинхронно -->
+            <!-- The form will be loaded asynchronously -->
         </div>
         {{--
     </div> --}}

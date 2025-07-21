@@ -1,7 +1,9 @@
 <aside class="aside _home ">
     <div class="aside__content">
         <div class="aside__btn">
-            <x-frontend.language-selector />
+            <div class="lang-menu">
+                <x-frontend.language-selector class="mb-10" />
+            </div>
 
             @guest
             <a href="{{ route('login') }}" class="btn _flex w-100 mb-10 _dark">{{ __('auth.login') }}</a>

@@ -12,7 +12,7 @@
             </div>
         </div>
 
-        {{-- <p class="mb-30">Введите код из приложения для подтверждения активации двухфакторной аутентификации</p>
+        {{-- <p class="mb-30">Enter the code from the app to confirm two-factor authentication activation</p>
         --}}
 
         <form class="mt-3" id="twoFactorFormAjax" data-ajax-url="{{ route('profile.store-2fa-ajax') }}">

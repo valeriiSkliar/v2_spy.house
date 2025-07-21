@@ -2,7 +2,8 @@
     <div class="container">
         <div class="row align-items-end _offset30">
             <div class="col-12 col-md-7 mb-md-4">
-                <div class="title-label _white" data-aos-delay="200" data-aos="fade-up">{{ __('tariffs.prices_title') }}</div>
+                <div class="title-label _white" data-aos-delay="200" data-aos="fade-up">{{ __('tariffs.prices_title') }}
+                </div>
                 <h2 class="title" data-aos-delay="200" data-aos="fade-up">{!! __('main_page.prices_blok.title') !!}</h2>
             </div>
             <div class="col-12 col-md-5 pb-2">
@@ -35,7 +36,8 @@
             @foreach($subscriptions as $subscription)
             <div class="prices-list__item">
                 <div class="price-item">
-                    <div class="price-item__tariff _{{ strtolower($subscription->name) }}">{{ $subscription->name }}
+                    <div class="price-item__tariff _{{ App\Helpers\tariff_name_mapping($subscription->name) }}">{{
+                        $subscription->name }}
                     </div>
 
                     {{-- Monthly pricing --}}
@@ -60,13 +62,15 @@
                         @if($subscription->search_request_count >= 10000)
                         <p><strong>{{ __('tariffs.unlimited') }}</strong> {{ __('tariffs.creative_downloads') }}</p>
                         @else
-                        <p><strong>{{ number_format($subscription->search_request_count) }}</strong> {{ __('tariffs.creative_downloads') }}</p>
+                        <p><strong>{{ number_format($subscription->search_request_count) }}</strong> {{
+                            __('tariffs.creative_downloads') }}</p>
                         @endif
 
                         @if($subscription->api_request_count >= 10000)
                         <p><strong>{{ __('tariffs.unlimited') }}</strong> {{ __('tariffs.api_requests') }}</p>
                         @else
-                        <p><strong>{{ number_format($subscription->api_request_count) }}</strong> {{ __('tariffs.api_requests') }}</p>
+                        <p><strong>{{ number_format($subscription->api_request_count) }}</strong> {{
+                            __('tariffs.api_requests') }}</p>
                         @endif
                     </div>
 
@@ -78,7 +82,7 @@
             </div>
             @endforeach
             @else
-            {{-- Fallback если подписки не загружены --}}
+            {{-- Fallback if subscriptions are not loaded --}}
             <div class="prices-list__item">
                 <div class="price-item">
                     <div class="price-item__tariff _starter">{{ __('tariffs.start') }}</div>
@@ -91,11 +95,14 @@
                         <div class="price-item__term">{{ __('tariffs.per_year') }}</div>
                     </div>
                     <div class="price-item__info">
-                        <p><strong>{{ __('tariffs.start_search_request_count') }}</strong> {{ __('tariffs.creative_downloads') }}</p>
-                        <p><strong>{{ __('tariffs.start_api_request_count') }}</strong> {{ __('tariffs.api_requests') }}</p>
+                        <p><strong>{{ __('tariffs.start_search_request_count') }}</strong> {{
+                            __('tariffs.creative_downloads') }}</p>
+                        <p><strong>{{ __('tariffs.start_api_request_count') }}</strong> {{ __('tariffs.api_requests') }}
+                        </p>
                     </div>
                     <div class="price-item__btn">
-                        <a href="{{ route('register') }}" class="btn _flex _border-green2 _large min-170">{{ __('tariffs.get_started') }}</a>
+                        <a href="{{ route('register') }}" class="btn _flex _border-green2 _large min-170">{{
+                            __('tariffs.get_started') }}</a>
                     </div>
                 </div>
             </div>
@@ -115,7 +122,8 @@
                         <p><strong>{{ __('tariffs.unlimited') }}</strong> {{ __('tariffs.api_requests') }}</p>
                     </div>
                     <div class="price-item__btn">
-                        <a href="{{ route('register') }}" class="btn _flex _border-green2 _large min-170">{{ __('tariffs.get_started') }}</a>
+                        <a href="{{ route('register') }}" class="btn _flex _border-green2 _large min-170">{{
+                            __('tariffs.get_started') }}</a>
                     </div>
                 </div>
             </div>

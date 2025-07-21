@@ -52,6 +52,6 @@
 </form>
 @endsection
 
-@push('page-scripts')
+@push('scripts')
 @vite('resources/js/pages/reset-password.js')
 @endpush

@@ -7,7 +7,7 @@
                 <a href="{{ route($homeRoute) }}" class="btn _flex _dark2 pe-3">
                     <span class="icon-home mr-2 font-20"></span>{{ __('auth.go_home') }}
                 </a>
-                <x-frontend.language-selector />
+                <x-frontend.language-selector secondaryClass="base-select_login" />
             </div>
             <div class="login-body__main">
                 <div class="login-body__logo">

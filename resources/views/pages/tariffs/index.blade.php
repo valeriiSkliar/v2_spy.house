@@ -1,4 +1,4 @@
-@extends('layouts.main')
+@extends('layouts.main-app')
 
 @section('page-content')
 <x-tariffs.header />
@@ -20,7 +20,7 @@
 @if (isset($payments) && $payments->isNotEmpty())
 <x-tariffs.payments-table :payments="$payments" />
 
-{{-- Контейнер для пагинации --}}
+{{-- Pagination container --}}
 <div id="payments-pagination-container" data-pagination-container>
     @if ($payments->hasPages())
     <x-tariffs.payments-pagination :currentPage="$payments->currentPage()" :totalPages="$payments->lastPage()"

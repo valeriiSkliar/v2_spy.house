@@ -1,0 +1,130 @@
+.paginationBlock {
+  margin: 47px 0;
+  ul {
+    @include flexbox();
+    @include align-items(center);
+    @include justify-content(center);
+
+    li {
+      list-style: none;
+      margin-right: 19px;
+      a {
+
+      }
+      span {
+
+      }
+
+
+      &.start,&.end,&.prev,&.next {
+        span, a {
+          display: block;
+          opacity: 0.5;
+          border: 1px solid #3B4A51;
+          @include border-radius(3px);
+          height: 41px;
+          min-height: 41px;
+          line-height: 41px;
+          padding: 0 15px;
+          font-size: 14px;
+          color: #3B4A51;
+        }
+        a {
+          opacity: 1;
+          border: 1px solid #3B4A51;
+
+        }
+      }
+
+      &.prev,&.next {
+        span,a {
+          background-image: url("../images/paginationPrevIcon.svg");
+          background-position: center center;
+          background-repeat: no-repeat;
+        }
+      }
+      &.next {
+        -webkit-transform: matrix(-1, 0, 0, 1, 0, 0);
+        -moz-transform: matrix(-1, 0, 0, 1, 0, 0);
+        -ms-transform: matrix(-1, 0, 0, 1, 0, 0);
+        -o-transform: matrix(-1, 0, 0, 1, 0, 0);
+        transform: matrix(-1, 0, 0, 1, 0, 0);
+      }
+
+      &.pageNum {
+        a,span {
+          font-weight: normal;
+          font-size: 18px;
+          color: #3B4A51;
+        }
+        &.active {
+          span,a {
+            background: #3DC98A;
+            @include border-radius(3px);
+            font-weight: 600;
+            font-size: 18px;
+            color: #FFFFFF;
+            width: 27px;
+            min-width: 27px;
+            height: 31px;
+            line-height: 31px;
+            display: block;
+            text-align: center;
+          }
+        }
+      }
+
+    }
+  }
+  .pageInfo {
+    margin-top: 17px;
+    font-size: 14px;
+    line-height: 17px;
+    color: #88959B;
+    text-align: center;
+    .current {
+      font-weight: 600;
+      font-size: 14px;
+    }
+  }
+}
+
+@media (max-width: 767.33px) {
+  .paginationBlock {
+    max-width: 430px;
+    margin: 47px auto 60px auto;
+  }
+  .paginationBlock ul {
+    position: relative;
+  }
+  .paginationBlock ul li {
+    margin-right: 15px;
+  }
+  .paginationBlock ul li.start,
+  .paginationBlock ul li.end {
+    position: absolute;
+    top: 55px;
+  }
+  .paginationBlock ul li.start {
+    left: 0;
+  }
+  .paginationBlock ul li.end {
+    right: 0;
+
+  }
+  .paginationBlock ul li.prev {
+    position: absolute;
+    left: 0;
+  }
+  .paginationBlock ul li.next {
+    position: absolute;
+    right: 0;
+
+  }
+  .paginationBlock .pagestext {
+    display: none;
+  }
+  .paginationBlock .pageInfo {
+    margin-top: 36px;
+  }
+}

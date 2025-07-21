@@ -17,7 +17,7 @@
         "userData": {{ json_encode($userData) }}
     }' data-vue-placeholder-manual>
 
-    <!-- Placeholder карточек креативов (количество = perPage) -->
+    <!-- Placeholder for creative cards (quantity = perPage) -->
     <div class="creatives-list" @if ($activeTab==='facebook' || $activeTab==='tiktok' ) {{ '_social' }} @endif
         data-vue-placeholder>
         <div class="creatives-list__items">
@@ -28,7 +28,7 @@
         </div>
         @endfor
 
-        {{-- Компонент деталей креатива (Vue Island) --}}
+        {{-- Creative details component (Vue Island) --}}
         <x-creatives.vue.creative-details :showSimilarCreatives="$showSimilarCreatives"
             :translations="$detailsTranslations ?? []" />
     </div>

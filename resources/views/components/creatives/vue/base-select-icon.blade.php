@@ -10,7 +10,7 @@
 ],
 ])
 
-{{-- Vue островок для интерактивного выбора количества креативов на странице --}}
+{{-- Vue island for interactive selection of the number of creatives per page --}}
 <div data-vue-component="BaseSelect" data-vue-props="{{ json_encode([
         'options' => $options,
         'value' => $value,
@@ -19,7 +19,7 @@
         'placeholder' => $placeholder,
         'onPageTranslations' => $onPageTranslations
     ]) }}" class="vue-base-select-icon-container">
-    {{-- Placeholder пока Vue компонент не загрузился --}}
+    {{-- Placeholder until Vue component is loaded --}}
     <div data-vue-placeholder class="base-select-icon">
         <div class="base-select">
             <div class="base-select__trigger"><span class="base-select__value">{{ $onPageTranslations['onPage'] }} —

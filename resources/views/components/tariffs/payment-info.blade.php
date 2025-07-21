@@ -1,4 +1,4 @@
-{{-- Уведомления о типе операции --}}
+{{-- Notifications about operation type --}}
 {{-- @if($isRenewal ?? false) --}}
 {{-- <div class="alert alert-info mb-15">
     <div class="d-flex align-items-center">
@@ -30,7 +30,7 @@
     <div class="row align-items-center _offset30">
         <div class="col-12 col-md-auto">
             <div class="tariff-pay__name">
-                <div class="tariff-name _{{ strtolower($tariff->name) }}">{{ $tariff->name }}</div>
+                <div class="tariff-name _{{ App\Helpers\tariff_name_mapping($tariff->name) }}">{{ $tariff->name }}</div>
             </div>
         </div>
         <div class="col-auto">

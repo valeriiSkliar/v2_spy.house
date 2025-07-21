@@ -1,4 +1,4 @@
-<div class="rate-item _{{ strtolower($tariff->name) }}">
+<div class="rate-item _{{ App\Helpers\tariff_name_mapping($tariff->name) }}">
     <div class="rate-item-head">
         <div class="rate-item-head__title">{{ $tariff->name }}</div>
         <div class="active" data-tub="month" data-group="pay">
@@ -17,7 +17,7 @@
     <div class="rate-item-body">
         <div class="rate-item-body__desc">
             <p><strong>{{ $tariff->search_request_count }}</strong> {{ __('tariffs.search_requests') }}</p>
-            {{-- <p><strong>{{ $tariff->api_request_count }}</strong> запросов API</p> --}}
+            {{-- <p><strong>{{ $tariff->api_request_count }}</strong> API requests</p> --}}
         </div>
         @for($i = 0; $i < 7; $i++) <div class="rate-item-body__row"><span class="icon-check"></span>
     </div>

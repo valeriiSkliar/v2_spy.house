@@ -12,7 +12,7 @@
         "alwaysShowFirstLast": {{ json_encode($alwaysShowFirstLast) }}
     }' data-vue-placeholder-manual>
 
-    <!-- Placeholder для пагинации -->
+    <!-- Placeholder for pagination -->
     <div class="pagination-placeholder" data-vue-placeholder>
         <nav class="pagination-nav" role="navigation" aria-label="pagination">
             <ul class="pagination-list">

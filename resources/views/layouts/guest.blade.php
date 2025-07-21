@@ -23,8 +23,8 @@ use Illuminate\Support\Facades\Auth;
     <link href="{{ asset('css/profile-avatar-upload.css') }}" rel="stylesheet"> --}}
 
     <!-- Scripts -->
-    @vite([ 'resources/js/app.js', 'resources/scss/app.scss'])
-    @stack('vite-scripts')
+    {{-- @vite([ 'resources/js/app.js', 'resources/scss/app.scss']) --}}
+    {{-- @stack('vite-scripts') --}}
 
     <!-- Frontend Translations -->
     <x-frontend-translations />

@@ -1,4 +1,4 @@
-@extends('layouts.guest')
+@extends('layouts.body')
 
 @section('content')
 <div class="wrapper login-page">
@@ -23,5 +23,5 @@
 
 @push('scripts')
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-@stack('page-scripts')
 @endpush
+@stack('page-scripts')

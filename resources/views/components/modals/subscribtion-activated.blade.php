@@ -1,5 +1,5 @@
 <div class="modal fade modal-current-subscription" id="modal-current-subscription" tabindex="-1" role="dialog"
-    aria-labelledby="modal-current-subscription-label" aria-hidden="true" style="z-index: 1070;">
+    aria-labelledby="modal-current-subscription-label" aria-hidden="true" style="z-index: 10005;">
     <div class="modal-dialog">
         <div class="modal-content">
             <button type="button" class="btn-icon _gray btn-close" data-bs-dismiss="modal" aria-label="Close">

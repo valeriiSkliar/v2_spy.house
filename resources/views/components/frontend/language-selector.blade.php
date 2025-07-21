@@ -1,6 +1,6 @@
-@props(['class' => '', 'id' => ''])
+@props(['class' => '', 'id' => '', 'secondaryClass' => ''])
 <div class="lang-menu {{ $class }}" id="{{ $id }}">
-    <div class="base-select">
+    <div class="base-select {{ $secondaryClass }}">
         <div class="base-select__trigger">
             @php
             $currentLocale = app()->getLocale();
@@ -8,6 +8,7 @@
             @endphp
             <span class="base-select__value">
                 <img src="/img/flags/{{ $currentLanguage['flag'] }}.svg" alt="">
+                {{ strtoupper($currentLocale) }}
             </span>
             <span class="base-select__arrow"></span>
         </div>
@@ -17,6 +18,8 @@
                 data-lang="{{ $locale }}">
                 <a href="{{ route('language.switch', $locale) }}">
                     <img src="/img/flags/{{ $properties['flag'] }}.svg" alt="">
+                    {{ strtoupper($locale) }}
+
                 </a>
             </li>
             @endforeach

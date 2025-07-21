@@ -9,7 +9,9 @@ use App\View\Composers\SubscriptionComposer;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
+use App\Services\CustomQRCodeService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -18,7 +20,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Регистрируем кастомный QR-код сервис для Google2FA
+        $this->app->bind('app.qrcode.service', function ($app) {
+            return new CustomQRCodeService();
+        });
     }
 
     /**
@@ -59,5 +64,16 @@ class AppServiceProvider extends ServiceProvider
 
         // Register main page comments composer for home page
         View::composer('index', MainPageCommentsComposer::class);
+
+        // Настраиваем Google2FA для использования нашего кастомного QR-кода сервиса
+        $this->app->resolving('pragmarx.google2fa', function ($google2fa, $app) {
+            try {
+                $customQRService = $app->make('app.qrcode.service');
+                $google2fa->setQrCodeService($customQRService);
+            } catch (\Exception $e) {
+                Log::error('Failed to set custom QR service: ' . $e->getMessage());
+                // Fallback to default service
+            }
+        });
     }
 }

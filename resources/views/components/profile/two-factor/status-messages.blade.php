@@ -1,4 +1,4 @@
-<!-- Сообщения о статусе -->
+<!-- Status messages -->
 @if (session('status') == '2fa-enabled')
 <div class="message _bg _with-border font-weight-500">
     <span class="icon-warning font-18"></span>

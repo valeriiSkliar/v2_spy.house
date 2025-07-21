@@ -1,1 +1,1 @@
-{{-- Пустой шаблон для случаев, когда email уже отправлен через Mailable --}}
+{{-- Empty template for cases where the email has already been sent via Mailable --}}

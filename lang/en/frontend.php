@@ -42,4 +42,12 @@ return [
         'invalid_credentials' => 'Invalid login credentials',
         'login_error' => 'An error occurred during login. Please try again.',
     ],
+
+    'contact' => [
+        'name' => 'Name',
+        'email' => 'Email',
+        'message' => 'Message',
+        'success_message' => 'Your message has been sent successfully! We will contact you soon.',
+        'error_message' => 'An error occurred while sending the message. Please try again or contact us via Telegram.',
+    ],
 ];

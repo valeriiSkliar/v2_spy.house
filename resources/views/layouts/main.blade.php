@@ -15,3 +15,4 @@
 </div>
 @include('partials.modals')
 @endsection
+@include('partials.footer')

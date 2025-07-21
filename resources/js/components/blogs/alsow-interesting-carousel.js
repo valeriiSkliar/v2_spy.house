@@ -151,27 +151,25 @@ class AlsowInterestingCarousel extends CarouselManager {
 class ReadOftenCarousel extends CarouselManager {
   constructor() {
     super('#read-often-articles-carousel-container', {
-      vertical: true,
-      slidesToShow: 4,
-      slidesToScroll: 1,
-      verticalSwiping: true,
+      // vertical: true,
+      slidesToShow: 1,
+      rows: 2,
+      slidesToScroll: 2,
       prevArrow: '#read-often-articles-carousel-prev',
       nextArrow: '#read-often-articles-carousel-next',
       responsive: [
         {
           breakpoint: 1024,
           settings: {
-            slidesToShow: 3,
-            slidesToScroll: 1,
+            slidesToShow: 1,
+            slidesToScroll: 2,
           },
         },
         {
           breakpoint: 768,
           settings: {
-            vertical: false,
-            verticalSwiping: false,
             slidesToShow: 1,
-            slidesToScroll: 1,
+            slidesToScroll: 2,
           },
         },
       ],
@@ -251,7 +249,7 @@ const checkDependencies = async () => {
   console.log('jQuery available:', typeof $ !== 'undefined');
   console.log('jQuery version:', typeof $ !== 'undefined' ? $.fn.jquery : 'N/A');
   console.log('Slick available:', typeof $ !== 'undefined' && typeof $.fn.slick !== 'undefined');
-  
+
   if (typeof $ === 'undefined') {
     console.error('jQuery is required for carousels');
     return false;
@@ -263,7 +261,7 @@ const checkDependencies = async () => {
     try {
       await import('slick-carousel');
       console.log('Slick loaded dynamically');
-      
+
       // Проверим еще раз
       if (typeof $.fn.slick === 'undefined') {
         console.error('Slick carousel plugin is required');
@@ -283,6 +281,10 @@ const checkDependencies = async () => {
  * Зачем: безопасная инициализация при готовности DOM
  */
 const initCarouselsWhenReady = async () => {
+  const blogLayout = document.querySelector('.blog-layout');
+  if (!blogLayout) {
+    return;
+  }
   const dependenciesOk = await checkDependencies();
   if (!dependenciesOk) {
     return;

@@ -1,0 +1,20 @@
+<svg width="28" height="20" viewBox="0 0 28 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="0.25" y="0.25" width="27.5" height="19.5" rx="1.75" fill="white" stroke="#F5F5F5" stroke-width="0.5"/>
+<mask id="mask0_14715_7280" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="0" y="0" width="28" height="20">
+<rect x="0.25" y="0.25" width="27.5" height="19.5" rx="1.75" fill="white" stroke="white" stroke-width="0.5"/>
+</mask>
+<g mask="url(#mask0_14715_7280)">
+<rect x="-6.31149" y="-2.58301" width="2.66667" height="49.3333" transform="rotate(-55 -6.31149 -2.58301)" fill="#E3243B"/>
+<rect width="2.66667" height="49.3333" transform="matrix(-0.573576 -0.819152 -0.819152 0.573576 35.6295 -2.58301)" fill="#E3243B"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M15.7408 2.66634H13.5925L13.6798 2.61514L12.693 2.0453L13.9689 2.18776L13.7895 1.33301L14.6666 2.0453L15.5438 1.33301L15.3644 2.18776L16.6403 2.0453L15.6535 2.61514L15.7408 2.66634Z" fill="#FAEF32"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M12.6667 5.16602C12.6667 4.79521 12.6667 4.38163 12.6667 3.99929C12.6667 3.26291 13.2636 2.66602 14 2.66602H15.3333C16.0697 2.66602 16.6667 3.26291 16.6667 3.99929C16.6667 4.38163 16.6667 4.79521 16.6667 5.16602C16.6667 6.95173 14.6667 7.66602 14.6667 7.66602C14.6667 7.66602 12.6667 6.95173 12.6667 5.16602Z" fill="#E3243B"/>
+<mask id="mask1_14715_7280" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="12" y="2" width="5" height="6">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M12.6667 5.16602C12.6667 4.79521 12.6667 4.38163 12.6667 3.99929C12.6667 3.26291 13.2636 2.66602 14 2.66602H15.3333C16.0697 2.66602 16.6667 3.26291 16.6667 3.99929C16.6667 4.38163 16.6667 4.79521 16.6667 5.16602C16.6667 6.95173 14.6667 7.66602 14.6667 7.66602C14.6667 7.66602 12.6667 6.95173 12.6667 5.16602Z" fill="white"/>
+</mask>
+<g mask="url(#mask1_14715_7280)">
+<rect x="14.3333" y="6.66602" width="0.666667" height="0.666667" rx="0.333333" fill="#FAEF32"/>
+<rect x="13.3333" y="5.33301" width="2.66667" height="0.666667" rx="0.333333" fill="#FAEF32"/>
+<rect x="13.3333" y="4" width="2.66667" height="0.666667" rx="0.333333" fill="#FAEF32"/>
+</g>
+</g>
+</svg>
