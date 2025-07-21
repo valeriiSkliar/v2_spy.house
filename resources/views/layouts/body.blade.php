@@ -38,6 +38,8 @@ use Illuminate\Support\Facades\Auth;
 <body {{ Request::is('/') ? 'data-aos-easing="ease" data-aos-duration="1000" data-aos-delay="0"' : '' }}>
     @yield('content')
 
+    @vite(['resources/js/components/contact-form.js'])
+
     {{-- scripts --}}
     @include('partials.modals')
     <!-- Frontend Translations -->

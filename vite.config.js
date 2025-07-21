@@ -37,6 +37,9 @@ export default defineConfig({
         //     // main page js
         'resources/js/pages/mainPage/main.js',
         //     'resources/js/pages/mainPage/home.js',
+
+        // Components
+        'resources/js/components/contact-form.js',
       ],
       refresh: true,
     }),

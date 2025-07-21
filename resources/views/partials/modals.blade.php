@@ -33,17 +33,26 @@
             <div class="sep"></div>
             <h3 class="mb-2">{{ __('main_page.modals.contact.form_title') }}</h3>
             <p class="mb-20">{{ __('main_page.modals.contact.form_description') }}</p>
-            <form action="">
+            <form action="{{ route('contact.send') }}" method="POST">
+                @csrf
                 <div class="row _offset20">
                     <div class="col-12 col-md-6 mb-15">
-                        <input type="text" placeholder="{{ __('main_page.modals.contact.name_placeholder') }}">
+                        <input type="text" name="name"
+                            placeholder="{{ __('main_page.modals.contact.name_placeholder') }}">
                     </div>
                     <div class="col-12 col-md-6 mb-15">
-                        <input type="email" placeholder="{{ __('main_page.modals.contact.email_placeholder') }}">
+                        <input type="email" name="email"
+                            placeholder="{{ __('main_page.modals.contact.email_placeholder') }}">
                     </div>
                     <div class="col-12 mb-15">
-                        <textarea placeholder="{{ __('main_page.modals.contact.message_placeholder') }}"></textarea>
+                        <textarea name="message" placeholder="{{ __('main_page.modals.contact.message_placeholder') }}"
+                            rows="4"></textarea>
                     </div>
+                    {{-- @if(config('captcha.enabled', true)) --}}
+                    <div class="col-12 mb-15">
+                        <x-recaptcha-custom id="contact-recaptcha" />
+                    </div>
+                    {{-- @endif --}}
                     <div class="col-12 mb-15">
                         <button type="submit" class="btn _flex _green _medium min-120 w-mob-100">{{
                             __('main_page.modals.contact.send_button') }}</button>
@@ -102,3 +111,10 @@ $currentTariff = $user->currentTariff();
 
 {{-- Global modal container for dynamic modals --}}
 <div id="global-modal-container"></div>
+
+{{-- reCAPTCHA configuration for JavaScript --}}
+<script>
+    window.recaptchaConfig = {
+        enabled: {{ config('captcha.enabled', true) ? 'true' : 'false' }}
+    };
+</script>

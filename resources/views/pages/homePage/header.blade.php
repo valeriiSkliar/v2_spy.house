@@ -57,14 +57,6 @@
                 </a>
             </div>
             @endauth
-            <!-- User Login
-            <div class="user-preview">
-                <a href="#" class="user-preview__trigger">
-                    <div class="user-preview__avatar thumb"><span>LV</span></div>
-                    <div class="user-preview__name">Lysenko V.</div>
-                </a>
-            </div>
-            -->
         </div>
     </div>
 </header>
