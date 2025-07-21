@@ -165,3 +165,20 @@ if (! function_exists('App\Helpers\mask_string')) {
         return mb_substr($string, 0, $visibleCount) . str_repeat('*', $hiddenCount) . mb_substr($string, ($visibleCount * -1), $visibleCount);
     }
 }
+
+if (! function_exists('App\Helpers\tariff_name_mapping')) {
+    /**
+     * Map tariff name to display name
+     *
+     * @param  string  $name  The tariff name
+     * @return string The display name
+     */
+    function tariff_name_mapping($name): string
+    {
+        $name = strtolower($name);
+        return match ($name) {
+            'starter' => 'start',
+            default => $name,
+        };
+    }
+}

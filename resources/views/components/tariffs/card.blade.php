@@ -1,4 +1,4 @@
-<div class="rate-item _{{ strtolower($tariff->name) }}">
+<div class="rate-item _{{ App\Helpers\tariff_name_mapping($tariff->name) }}">
     <div class="rate-item-head">
         <div class="rate-item-head__title">{{ $tariff->name }}</div>
         <div class="active" data-tub="month" data-group="pay">
