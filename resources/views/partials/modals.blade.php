@@ -90,6 +90,13 @@
 </div>
 
 {{-- Push modal to global stack --}}
-@if(auth()->check() && isset($currentTariff))
+@if(auth()->check())
+@php
+$user = auth()->user();
+$currentTariff = $user->currentTariff();
+@endphp
 <x-modals.subscribtion-activated :currentTariff="$currentTariff" />
 @endif
+
+{{-- Global modal container for dynamic modals --}}
+<div id="global-modal-container"></div>
