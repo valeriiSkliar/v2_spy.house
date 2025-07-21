@@ -51,7 +51,7 @@ use Illuminate\Support\Facades\Auth;
     <script src="{{ asset('js/main.js') }}"></script>
     <script src="{{ asset('js/home.js') }}"></script>
     @else
-    @vite(['resources/js/app.js'])
+    @vite(['resources/js/app.js', 'resources/scss/app.scss'])
     @endif
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

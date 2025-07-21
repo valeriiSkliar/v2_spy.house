@@ -8,7 +8,7 @@ export default defineConfig({
     laravel({
       input: [
         //     // ВАЖНО: CSS файлы ПЕРВЫМИ для правильного каскада
-        //     'resources/scss/app.scss',
+        'resources/scss/app.scss',
         //     // Затем JS файлы
         'resources/js/app.js',
         'resources/js/finances.js',
@@ -23,7 +23,7 @@ export default defineConfig({
         'resources/js/tariffs-payments.js',
         'resources/js/tariffs.js',
         'resources/js/pages/blogs.js',
-        //     'resources/js/vue-islands.ts',
+        'resources/js/vue-islands.ts',
         //     // Статические ресурсы
         'resources/img/telegram.svg',
         'resources/img/viber.svg',

@@ -4,8 +4,8 @@ window.$ = jQuery;
 
 import 'jquery-validation';
 import 'slick-carousel';
-import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
+import 'slick-carousel/slick/slick.css';
 
 import './bootstrap';
 
@@ -23,7 +23,7 @@ import './components/modal';
 import './components/current-subscription-modal';
 
 // Import the toast system
-import './components/toasts';
+// import './components/toasts';
 
 // Import SweetAlert2 service
 import './services/sweetAlertExamples';
@@ -47,8 +47,8 @@ import './libs/main';
 import './carousel.js';
 import { initLogin2FA } from './pages/login.js';
 // import './pages/verify-email.js';
-import './components/tariffs/payment-form-validation';
-import './tariffs';
+// import './components/tariffs/payment-form-validation';
+// import './tariffs';
 
 // Initialize notification checking (check every minute)
 document.addEventListener('DOMContentLoaded', function () {
