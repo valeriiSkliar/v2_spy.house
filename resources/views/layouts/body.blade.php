@@ -28,7 +28,6 @@ use Illuminate\Support\Facades\Auth;
     <link rel="stylesheet" href="{{ asset('css-new/aos-plugin.css') }}">
     <link rel="stylesheet" href="{{ asset('css-new/style.css') }}">
 
-    <x-frontend-translations />
 </head>
 
 <body {{ Request::is('/') ? 'data-aos-easing="ease" data-aos-duration="1000" data-aos-delay="0"' : '' }}>
@@ -36,7 +35,8 @@ use Illuminate\Support\Facades\Auth;
 
     {{-- scripts --}}
     @include('partials.modals')
-
+    <!-- Frontend Translations -->
+    <x-frontend-translations />
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
