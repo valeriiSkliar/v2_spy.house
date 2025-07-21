@@ -1,6 +1,6 @@
-@props(['class' => '', 'id' => ''])
+@props(['class' => '', 'id' => '', 'secondaryClass' => ''])
 <div class="lang-menu {{ $class }}" id="{{ $id }}">
-    <div class="base-select">
+    <div class="base-select {{ $secondaryClass }}">
         <div class="base-select__trigger">
             @php
             $currentLocale = app()->getLocale();
