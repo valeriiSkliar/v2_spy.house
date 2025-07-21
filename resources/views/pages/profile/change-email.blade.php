@@ -1,4 +1,4 @@
-@extends('layouts.main')
+@extends('layouts.main-app')
 
 @section('page-content')
 <h1 class="mb-25">Change Email</h1>
@@ -50,6 +50,6 @@ $isExpired = $updateExpiresAt && now()->isAfter($updateExpiresAt);
 </div>
 @endsection
 
-@section('scripts')
+@push('scripts')
 <x-profile.scripts />
-@endsection
+@endpush

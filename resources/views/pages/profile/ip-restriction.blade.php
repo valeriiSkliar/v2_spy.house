@@ -1,4 +1,4 @@
-@extends('layouts.main')
+@extends('layouts.main-app')
 
 @section('page-content')
 
@@ -13,6 +13,6 @@
 <!-- IP Restriction auto-resize is handled by update-ip-restriction.js -->
 @endpush
 
-@section('scripts')
+@push('scripts')
 <x-profile.scripts />
-@endsection
+@endpush

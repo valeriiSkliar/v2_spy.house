@@ -1,4 +1,4 @@
-@extends('layouts.main')
+@extends('layouts.main-app')
 
 @section('page-content')
 <h1 class="mb-25">{{ __('profile.settings_page_title') }}</h1>

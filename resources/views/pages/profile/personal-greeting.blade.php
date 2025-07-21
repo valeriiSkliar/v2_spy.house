@@ -1,4 +1,4 @@
-@extends('layouts.main')
+@extends('layouts.main-app')
 
 @section('page-content')
 <h1 class="mb-25">{{ __('profile.personal_greeting.page_title') }}</h1>
@@ -56,6 +56,6 @@ $isExpired = $updateExpiresAt && now()->isAfter($updateExpiresAt);
 </div>
 @endsection
 
-@section('scripts')
+@push('scripts')
 <x-profile.scripts />
-@endsection
+@endpush
