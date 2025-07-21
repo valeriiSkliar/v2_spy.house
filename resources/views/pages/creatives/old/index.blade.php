@@ -63,7 +63,7 @@
 @endsection
 
 @push('scripts')
-@vite(['resources/js/creatives/app.js'])
+{{-- @vite(['resources/js/creatives/app.js']) --}}
 <script type="module">
     // Передаем счетчики табов в JavaScript для Alpine.js
     window.creativesTabCounts = @json($counts);
